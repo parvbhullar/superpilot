@@ -25,7 +25,6 @@ from superpilot.core.planning.settings import LanguageModelConfiguration
 from superpilot.core.resource.model_providers.openai import OpenAIModelName
 from superpilot.core.resource.model_providers.schema import ModelProviderCredentials
 from superpilot.framework.abilities import (
-    SearchAndSummarizeAbility,
     TextSummarizeAbility,
 )
 from superpilot.core.resource.model_providers import (
@@ -178,9 +177,8 @@ ALLOWED_ABILITY = {
     # SearchAndSummarizeAbility.name(): SearchAndSummarizeAbility.default_configuration,
     TextSummarizeAbility.name(): TextSummarizeAbility.default_configuration,
 }
-from superpilot.framework.test_env_simple import get_env
-from superpilot.core.pilot import SuperPilot, PilotSettings
-from superpilot.core.runner.client_lib.logging import get_client_logger
+from superpilot.tests.test_env_simple import get_env
+from superpilot.core.pilot import SuperPilot
 
 # Flow executor -> Context
 #
