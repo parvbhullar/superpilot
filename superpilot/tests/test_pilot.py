@@ -1,12 +1,11 @@
 import asyncio
 import os
 import sys
-import time
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 import logging
 from superpilot.framework.abilities import (
-    SearchAndSummarizeAbility,
     TextSummarizeAbility,
 )
 from superpilot.core.resource.model_providers import (
@@ -21,8 +20,8 @@ ALLOWED_ABILITY = {
     # SearchAndSummarizeAbility.name(): SearchAndSummarizeAbility.default_configuration,
     TextSummarizeAbility.name(): TextSummarizeAbility.default_configuration,
 }
-from superpilot.framework.test_env_simple import get_env
-from superpilot.core.pilot import SuperPilot, PilotSettings
+from superpilot.tests.test_env_simple import get_env
+from superpilot.core.pilot import SuperPilot
 from superpilot.core.configuration import get_config
 
 # Flow executor -> Context
