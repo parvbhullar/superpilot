@@ -1,11 +1,11 @@
 import click
 
 from superpilot.core.pilot import AgentSettings, SimpleAgent
-from superpilot.core.runner.client_lib.logging import get_client_logger
+from superpilot.app.client_lib.logging import get_client_logger
 
 
 async def run_superpilot(user_configuration: dict):
-    """Run the Auto-GPT CLI client."""
+    """Run the Superpilot CLI client."""
 
     client_logger = get_client_logger()
     client_logger.debug("Getting pilot settings")
@@ -27,7 +27,7 @@ async def run_superpilot(user_configuration: dict):
         # Step 2. Get a name and goals for the pilot.
         # First we need to figure out what the user wants to do with the pilot.
         # We'll do this by asking the user for a prompt.
-        user_objective = click.prompt("What do you want Auto-GPT to do?")
+        user_objective = click.prompt("What do you want Superpilot to do?")
         # Ask a language model to determine a name and goals for a suitable pilot.
         name_and_goals = await SimpleAgent.determine_pilot_name_and_goals(
             user_objective,

@@ -3,24 +3,24 @@ from pathlib import Path
 import click
 import yaml
 
-from superpilot.core.runner.cli_app.main import run_superpilot
-from superpilot.core.runner.client_lib.shared_click_commands import (
+from superpilot.app.cli_app.main import run_superpilot
+from superpilot.app.client_lib.shared_click_commands import (
     DEFAULT_SETTINGS_FILE,
     make_settings,
 )
-from superpilot.core.runner.client_lib.utils import coroutine, handle_exceptions
+from superpilot.app.client_lib.utils import coroutine, handle_exceptions
 
 
 @click.group()
-def autogpt():
+def superpilot():
     """Temporary command group for v2 commands."""
     pass
 
 
-autogpt.add_command(make_settings)
+superpilot.add_command(make_settings)
 
 
-@autogpt.command()
+@superpilot.command()
 @click.option(
     "--settings-file",
     type=click.Path(),
@@ -33,8 +33,8 @@ autogpt.add_command(make_settings)
 )
 @coroutine
 async def run(settings_file: str, pdb: bool) -> None:
-    """Run the Auto-GPT pilot."""
-    click.echo("Running Auto-GPT pilot...")
+    """Run the Superpilot ."""
+    click.echo("Running Superpilot ...")
     settings_file = Path(settings_file)
     settings = {}
     if settings_file.exists():
@@ -44,4 +44,4 @@ async def run(settings_file: str, pdb: bool) -> None:
 
 
 if __name__ == "__main__":
-    autogpt()
+    superpilot()

@@ -4,8 +4,11 @@ from superpilot.core.configuration.schema import SystemConfiguration
 from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.schema import StepExecutionNature
 from superpilot.core.planning.settings import (
-    LanguageModelConfiguration, PromptStrategiesConfiguration, LanguageModelClassification
+    LanguageModelConfiguration,
+    PromptStrategiesConfiguration,
+    LanguageModelClassification,
 )
+from superpilot.core.planning import strategies
 
 
 class TaskPilotConfiguration(SystemConfiguration):
@@ -15,6 +18,6 @@ class TaskPilotConfiguration(SystemConfiguration):
     location: PluginLocation
     models: Dict[LanguageModelClassification, LanguageModelConfiguration]
     execution_nature: StepExecutionNature = StepExecutionNature.SINGLE
-    prompt_strategies: PromptStrategiesConfiguration
+    prompt_strategy: strategies.NextAbilityConfiguration = None
     memory_provider_required: bool = False
     workspace_required: bool = False

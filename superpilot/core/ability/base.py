@@ -1,7 +1,7 @@
 import abc
 from pprint import pformat
 from typing import ClassVar, List
-
+import logging
 import inflection
 from pydantic import Field
 
@@ -94,6 +94,16 @@ class Ability(abc.ABC):
                 "required": self.required_arguments(),
             },
         }
+
+    @classmethod
+    def create_ability(
+            cls,
+            ability_type: type,  # Assuming you pass the Class itself
+            logger: logging.Logger,
+            configuration: AbilityConfiguration,
+    ) -> "Ability":
+        # Instantiate and return Ability
+        return ability_type(logger=logger, configuration=configuration)
 
 
 class AbilityRegistry(abc.ABC):
