@@ -55,7 +55,7 @@ class ResearchPluginService(PluginService):
         # TODO: Implement a discovery system for finding plugins by name from known
         #   storage locations. E.g. if we know that path_type is a file path, we can
         #   search the workspace for it. If it's an import path, we can check the core
-        #   system and the auto_gpt_plugins package.
+        #   system and the superpilot_plugins package.
         raise NotImplemented("Resolving plugin name to path is not implemented.")
 
     #####################################
