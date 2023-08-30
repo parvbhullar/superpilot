@@ -7,7 +7,7 @@ import distro
 import inflection
 from pydantic import BaseModel
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from superpilot.core.ability.base import Ability
 from typing import Dict, List
@@ -113,6 +113,9 @@ class FlowModel(BaseModel):
     query: str
     steps: List[Step]
 
+
+open_ai_creds = ModelProviderCredentials()
+open_ai_creds.api_key = os.environ["OPENAI_API_KEY"]
 
 OpenAIProvider.default_settings.credentials = ModelProviderCredentials()
 
