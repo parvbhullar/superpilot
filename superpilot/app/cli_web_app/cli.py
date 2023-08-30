@@ -10,25 +10,25 @@ import requests
 import uvicorn
 import yaml
 
-from superpilot.core.runner.client_lib.shared_click_commands import (
+from superpilot.app.client_lib.shared_click_commands import (
     DEFAULT_SETTINGS_FILE,
     make_settings,
     status,
 )
-from superpilot.core.runner.client_lib.utils import coroutine
+from superpilot.app.client_lib.utils import coroutine
 
 
 @click.group()
-def autogpt():
+def superpilot():
     """Temporary command group for v2 commands."""
     pass
 
 
-autogpt.add_command(make_settings)
-autogpt.add_command(status)
+superpilot.add_command(make_settings)
+superpilot.add_command(status)
 
 
-@autogpt.command()
+@superpilot.command()
 @click.option(
     "host",
     "--host",
@@ -44,10 +44,10 @@ autogpt.add_command(status)
     type=click.INT,
 )
 def server(host: str, port: int) -> None:
-    """Run the Auto-GPT runner httpserver."""
-    click.echo("Running Auto-GPT runner httpserver...")
+    """Run the Superpilot runner httpserver."""
+    click.echo("Running Superpilot runner httpserver...")
     uvicorn.run(
-        "superpilot.core.runner.cli_web_app.server.api:app",
+        "superpilot.app.cli_web_app.server.api:app",
         workers=1,
         host=host,
         port=port,
@@ -55,7 +55,7 @@ def server(host: str, port: int) -> None:
     )
 
 
-@autogpt.command()
+@superpilot.command()
 @click.option(
     "--settings-file",
     type=click.Path(),
@@ -63,24 +63,24 @@ def server(host: str, port: int) -> None:
 )
 @coroutine
 async def client(settings_file) -> None:
-    """Run the Auto-GPT runner client."""
+    """Run the Superpilot runner client."""
     settings_file = pathlib.Path(settings_file)
     settings = {}
     if settings_file.exists():
         settings = yaml.safe_load(settings_file.read_text())
 
-    from superpilot.core.runner.cli_web_app.client.client import run
+    from superpilot.app.cli_web_app.client.client import run
 
-    with autogpt_server():
+    with superpilot_server():
         run()
 
 
 @contextlib.contextmanager
-def autogpt_server():
+def superpilot_server():
     host = "localhost"
     port = 8080
     cmd = shlex.split(
-        f"{sys.executable} autogpt/core/runner/cli_web_app/cli.py server --host {host} --port {port}"
+        f"{sys.executable} superpilot/core/runner/cli_web_app/cli.py server --host {host} --port {port}"
     )
     server_process = subprocess.Popen(
         args=cmd,
@@ -98,4 +98,4 @@ def autogpt_server():
 
 
 if __name__ == "__main__":
-    autogpt()
+    superpilot()
