@@ -26,5 +26,5 @@ setup(
     packages=find_packages(exclude=["contrib", "docs", "examples"]),
     python_requires=">=3.10",
     install_requires=requirements,
-    dependency_links=["https://github.com/huggingface/setfit.git"],
+    dependency_links=["https://github.com/huggingface/setfit"],
 )
