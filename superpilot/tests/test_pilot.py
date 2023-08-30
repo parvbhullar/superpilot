@@ -41,15 +41,16 @@ async def test_pilot():
     logger = logging.getLogger("SearchAndSummarizeAbility")
     context = Context()
 
+    config = get_config()
     open_ai_creds = ModelProviderCredentials()
-    open_ai_creds.api_key = os.environ["OPENAI_API_KEY"]
+    open_ai_creds.api_key = config.openai_api_key
 
-    OpenAIProvider.default_settings.credentials = ModelProviderCredentials()
+    OpenAIProvider.default_settings.credentials = open_ai_creds
 
     model_providers = {ModelProviderName.OPENAI: OpenAIProvider()}
-    config = get_config()
+
     ability_settings = SuperAbilityRegistry.default_settings
-    ability_settings.configuration.config = config
+    # ability_settings.configuration.config = config
     ability_settings.configuration.abilities = {
         ability_name: ability for ability_name, ability in ALLOWED_ABILITY.items()
     }
@@ -72,7 +73,8 @@ async def test_pilot():
 
     user_objectives = "What is the weather in Mumbai"
     # SuperPilot.default_settings.configuration
-    pilot = SuperPilot(SuperPilot.default_settings, ability_registry, planner, env)
+    pilot_settings = SuperPilot.default_settings
+    pilot = SuperPilot(pilot_settings, ability_registry, planner, env)
     print(await pilot.initialize(user_objectives))
     print("***************** Pilot Initiated - Planing Started ******************************\n")
     print(await pilot.plan())

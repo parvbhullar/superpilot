@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Any, Dict
 
 from superpilot.core.ability import (
-    AbilityAction,
     SimpleAbilityRegistry,
 )
 from superpilot.core.environment.base import Environment

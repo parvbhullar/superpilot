@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import APIRouter, FastAPI, Request
 
-from superpilot.core.runner.cli_web_app.server.schema import InteractRequestBody
+from superpilot.app.cli_web_app.server.schema import InteractRequestBody
 
 router = APIRouter()
 

@@ -24,7 +24,6 @@ class AbilityRegistryConfiguration(SystemConfiguration):
     """Configuration for the AbilityRegistry subsystem."""
 
     abilities: Dict[str, AbilityConfiguration]
-    config: Config = None
 
 
 class AbilityRegistrySettings(SystemSettings):
