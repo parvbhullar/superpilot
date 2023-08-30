@@ -7,6 +7,7 @@ from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
 
 
 class CreateNewAbility(Ability):
+
     default_configuration = AbilityConfiguration(
         location=PluginLocation(
             storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
@@ -95,3 +96,7 @@ class CreateNewAbility(Ability):
     ) -> AbilityAction:
         breakpoint()
 
+    @classmethod
+    def create_new_ability(cls, logger: logging.Logger,
+                       configuration: AbilityConfiguration) -> "CreateNewAbility":
+        return cls(logger, configuration)
