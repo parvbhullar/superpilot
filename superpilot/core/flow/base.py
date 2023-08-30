@@ -4,7 +4,7 @@ from typing import ClassVar
 import inflection
 
 from superpilot.core.context.schema import Context
-from superpilot.core.flow.settings import TaskPilotConfiguration, FlowConfiguration
+from superpilot.core.flow.settings import TaskPilotConfiguration
 
 
 class TaskPilot(abc.ABC):

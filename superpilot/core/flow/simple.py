@@ -39,11 +39,7 @@ class SimpleTaskPilot(TaskPilot):
             storage_route="superpilot.core.flow.simple.SimpleTaskPilot",
         ),
         execution_nature=StepExecutionNature.SEQUENTIAL,
-        prompt_strategies=PromptStrategiesConfiguration(
-            step_execution=strategies.StepExecution.default_configuration,
-            next_ability=strategies.NextAbility.default_configuration,
-            step_response=strategies.StepStrategy.default_configuration,
-        ),
+        prompt_strategy=strategies.NextAbility.default_configuration,
         models={
             LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
                 model_name=OpenAIModelName.GPT3,
@@ -75,17 +71,9 @@ class SimpleTaskPilot(TaskPilot):
         for model, model_config in self._configuration.models.items():
             self._providers[model] = model_providers[model_config.provider_name]
 
-        self._prompt_strategies = {
-            "execution": strategies.StepExecution(
-                **self._configuration.prompt_strategies.step_execution.dict()
-            ),
-            "response": strategies.StepStrategy(
-                **self._configuration.prompt_strategies.step_response.dict()
-            ),
-            "next_ability": strategies.NextAbility(
-                **self._configuration.prompt_strategies.next_ability.dict()
-            ),
-        }
+        self._prompt_strategy = strategies.NextAbility(
+                **self._configuration.prompt_strategy.dict()
+            )
 
     async def execute(self, task: Task, context_res: Context, *args, **kwargs) -> Context:
         if self._execution_nature == StepExecutionNature.PARALLEL:
@@ -131,7 +119,7 @@ class SimpleTaskPilot(TaskPilot):
         self, task: Task, ability_schema: List[dict], **kwargs
     ) -> LanguageModelResponse:
         return await self.chat_with_model(
-            self._prompt_strategies["execution"],
+            self._prompt_strategy,
             task=task,
             ability_schema=ability_schema,
             **kwargs,
@@ -141,7 +129,7 @@ class SimpleTaskPilot(TaskPilot):
         self, task: Task, ability_schema: List[dict], **kwargs
     ) -> LanguageModelResponse:
         return await self.chat_with_model(
-            self._prompt_strategies["next_ability"],
+            self._prompt_strategy,
             task=task,
             ability_schema=ability_schema,
             **kwargs,

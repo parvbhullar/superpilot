@@ -208,7 +208,7 @@ if __name__ == "__main__":
     model_providers = {ModelProviderName.OPENAI: OpenAIProvider()}
     config = get_config()
     ability_settings = SuperAbilityRegistry.default_settings
-    ability_settings.configuration.config = config
+    # ability_settings.configuration.config = config
     ability_settings.configuration.abilities = {
         ability_name: ability for ability_name, ability in ALLOWED_ABILITY.items()
     }
@@ -249,7 +249,7 @@ if __name__ == "__main__":
                 **step.ability.arguments,
             }
             ability_settings = SuperAbilityRegistry.default_settings
-            ability_settings.configuration.config = config
+            # ability_settings.configuration.config = config
 
             abilities = {}
             abilities[step.ability.name] = ALLOWED_ABILITY[step.ability.name]
