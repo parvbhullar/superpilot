@@ -3,7 +3,7 @@ from pathlib import Path
 import click
 import yaml
 
-from superpilot.core.runner.cli_app.main import run_auto_gpt
+from superpilot.core.runner.cli_app.main import run_superpilot
 from superpilot.core.runner.client_lib.shared_click_commands import (
     DEFAULT_SETTINGS_FILE,
     make_settings,
@@ -39,7 +39,7 @@ async def run(settings_file: str, pdb: bool) -> None:
     settings = {}
     if settings_file.exists():
         settings = yaml.safe_load(settings_file.read_text())
-    main = handle_exceptions(run_auto_gpt, with_debugger=pdb)
+    main = handle_exceptions(run_superpilot, with_debugger=pdb)
     await main(settings)
 
 

@@ -10,7 +10,7 @@ from superpilot.core.runner.client_lib.logging import get_client_logger
 import asyncio
 
 
-async def run_auto_gpt(user_configuration: dict):
+async def run_superpilot(user_configuration: dict):
     """Run the Superpilot CLI client."""
 
     client_logger = get_client_logger()
@@ -126,4 +126,4 @@ def parse_ability_result(ability_result) -> str:
 
 
 if __name__ == "__main__":
-    asyncio.run(run_auto_gpt({}))
+    asyncio.run(run_superpilot({}))

@@ -4,7 +4,7 @@ from superpilot.core.pilot import AgentSettings, SimpleAgent
 from superpilot.core.runner.client_lib.logging import get_client_logger
 
 
-async def run_auto_gpt(user_configuration: dict):
+async def run_superpilot(user_configuration: dict):
     """Run the Auto-GPT CLI client."""
 
     client_logger = get_client_logger()
