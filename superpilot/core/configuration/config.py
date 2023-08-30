@@ -16,6 +16,8 @@ class Config(SystemSettings, arbitrary_types_allowed=True):
     # Application Settings #
     ########################
     debug_mode: bool = False
+    # OpenAI
+    openai_api_key: Optional[str] = None
 
     # Google
     google_api_key: Optional[str] = None
@@ -56,6 +58,7 @@ class ConfigBuilder(Configurable[Config]):
             "github_username": os.getenv("GITHUB_USERNAME"),
             "google_api_key": os.getenv("GOOGLE_API_KEY"),
             "serp_api_key": os.getenv("SERP_API_KEY"),
+            "openai_api_key": os.getenv("OPENAI_API_KEY"),
             "google_custom_search_engine_id": os.getenv("CUSTOM_SEARCH_ENGINE_ID"),
         }
 

@@ -35,10 +35,41 @@ def get_env(user_configuration: dict):
         # Bootstrapping #
         #################
         # Step 1. Collate the user's settings with the default system settings.
+        user_configuration['environment'] = {
+                "name": "simple_environment",
+                "description": "A simple environment.",
+                "configuration": {
+                  "creation_time": "20230826_154959",
+                  "request_id": "20230826_154959",
+                  "systems": {
+                    "ability_registry": {
+                      "storage_format": "installed_package",
+                      "storage_route": "superpilot.core.ability.SuperAbilityRegistry"
+                    },
+                    "memory": {
+                      "storage_format": "installed_package",
+                      "storage_route": "superpilot.core.memory.SimpleMemory"
+                    },
+                    "openai_provider": {
+                      "storage_format": "installed_package",
+                      "storage_route": "superpilot.core.resource.model_providers.OpenAIProvider"
+                    },
+                    "planning": {
+                      "storage_format": "installed_package",
+                      "storage_route": "superpilot.core.planning.SimplePlanner"
+                    },
+                    "workspace": {
+                      "storage_format": "installed_package",
+                      "storage_route": "superpilot.core.workspace.SimpleWorkspace"
+                    }
+                  }
+                }
+              }
         environment_settings: EnvSettings = SimpleEnv.compile_settings(
             client_logger,
             user_configuration,
         )
+
 
         # Step 2. Provision the environment.
         environment_workspace = SimpleEnv.provision_environment(environment_settings, client_logger)
