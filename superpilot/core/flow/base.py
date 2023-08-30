@@ -24,22 +24,3 @@ class TaskPilot(abc.ABC):
     @staticmethod
     def _parse_response(response_content: dict) -> dict:
         return {"content": response_content["content"]}
-
-
-class Flow(abc.ABC):
-    """A class representing an pilot flow."""
-
-    default_configuration: ClassVar[FlowConfiguration]
-
-    @classmethod
-    def name(cls) -> str:
-        """The name of the flow."""
-        return inflection.underscore(cls.__name__)
-
-    @abc.abstractmethod
-    async def __call__(self, *args, **kwargs) -> Context:
-        ...
-
-    @staticmethod
-    def _parse_response(response_content: dict) -> dict:
-        return {"content": response_content["content"]}

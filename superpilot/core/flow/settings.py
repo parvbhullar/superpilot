@@ -7,22 +7,6 @@ from superpilot.core.planning.settings import (
     LanguageModelConfiguration, PromptStrategiesConfiguration, LanguageModelClassification
 )
 
-from superpilot.core.plugin.base import (
-    PluginLocation,
-)
-
-
-class FlowConfiguration(SystemConfiguration):
-    """Struct for model configuration."""
-
-    from superpilot.core.plugin.base import PluginLocation
-
-    location: PluginLocation
-    language_model: LanguageModelConfiguration = None
-    execution_strategy: PromptStrategy = None
-    memory_provider_required: bool = False
-    workspace_required: bool = False
-
 
 class TaskPilotConfiguration(SystemConfiguration):
     """Struct for model configuration."""

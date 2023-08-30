@@ -23,6 +23,7 @@ ALLOWED_ABILITY = {
 from superpilot.tests.test_env_simple import get_env
 from superpilot.core.pilot import SuperPilot
 from superpilot.core.configuration import get_config
+from superpilot.core.resource.model_providers.schema import ModelProviderCredentials
 
 # Flow executor -> Context
 #
@@ -39,6 +40,11 @@ async def test_pilot():
 
     logger = logging.getLogger("SearchAndSummarizeAbility")
     context = Context()
+
+    open_ai_creds = ModelProviderCredentials()
+    open_ai_creds.api_key = os.environ["OPENAI_API_KEY"]
+
+    OpenAIProvider.default_settings.credentials = ModelProviderCredentials()
 
     model_providers = {ModelProviderName.OPENAI: OpenAIProvider()}
     config = get_config()
@@ -65,7 +71,7 @@ async def test_pilot():
     # environment_workspace = SuperPilot.provision_environment(environment_settings, client_logger)
 
     user_objectives = "What is the weather in Mumbai"
-
+    # SuperPilot.default_settings.configuration
     pilot = SuperPilot(SuperPilot.default_settings, ability_registry, planner, env)
     print(await pilot.initialize(user_objectives))
     print("***************** Pilot Initiated - Planing Started ******************************\n")
