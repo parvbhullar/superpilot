@@ -12,6 +12,11 @@ from superpilot.core.planning.simple import PromptStrategy
 from superpilot.core.resource.model_providers import (
     LanguageModelMessage, LanguageModelFunction,
 )
+from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
+from superpilot.core.resource.model_providers import (
+    ModelProviderName,
+    OpenAIModelName,
+)
 from typing import Callable, ClassVar, List, Union
 from superpilot.core.configuration.schema import (
     SystemConfiguration,
@@ -30,6 +35,28 @@ class AbilityConfiguration(SystemConfiguration):
     prompt_strategy: PromptStrategy = None
     memory_provider_required: bool = False
     workspace_required: bool = False
+
+    @classmethod
+    def create_ability_configuration(
+            cls,
+            location_route: str,
+            model_name: str = OpenAIModelName.GPT3_16K,
+            provider_name: str = ModelProviderName.OPENAI,
+            temperature: str = 0.9,
+            prompt_strategy: PromptStrategy = None,
+    ) -> "AbilityConfiguration":
+        return AbilityConfiguration(
+            location=PluginLocation(
+                storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
+                storage_route=location_route,
+            ),
+            language_model_required=LanguageModelConfiguration(
+                model_name=model_name,
+                provider_name=provider_name,
+                temperature=temperature,
+            ),
+            prompt_strategy=prompt_strategy,
+        )
 
 
 class Ability(abc.ABC):

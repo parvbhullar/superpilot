@@ -15,6 +15,22 @@ from superpilot.core.resource.model_providers import (
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.super import SuperAbilityRegistry
 
+default_configuration = AbilityConfiguration(
+        location=PluginLocation(
+            storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
+            storage_route="superpilot.framework.abilities.text_summarise.TextSummarizeAbility",
+        ),
+        language_model_required=LanguageModelConfiguration(
+            model_name=OpenAIModelName.GPT3_16K,
+            provider_name=ModelProviderName.OPENAI,
+            temperature=0.9,
+        ),
+        prompt_strategy=SummarizerStrategy(
+            model_classification=SummarizerStrategy.default_configuration.model_classification,
+            system_prompt=SummarizerStrategy.default_configuration.system_prompt,
+            user_prompt_template=SummarizerStrategy.default_configuration.user_prompt_template,
+        ),
+    )
 
 ALLOWED_ABILITY = {
     # SearchAndSummarizeAbility.name(): SearchAndSummarizeAbility.default_configuration,
