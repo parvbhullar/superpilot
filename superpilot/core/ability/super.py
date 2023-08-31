@@ -67,21 +67,18 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
     ) -> None:
         ability_class = SimplePluginService.get_plugin(ability_configuration.location)
         ability_args = {
-            "environment": self._environment,
             "configuration": ability_configuration,
         }
         if ability_configuration.packages_required:
             # TODO: Check packages are installed and maybe install them.
             pass
-        # if ability_configuration.memory_provider_required:
-        #     ability_args["memory"] = self._memory
-        # if ability_configuration.workspace_required:
-        #     ability_args["workspace"] = self._workspace
-        # if ability_configuration.language_model_required:
-        #     ability_args["language_model_provider"] = self._model_providers[
-        #         ability_configuration.language_model_required.provider_name
-        #     ]
-        ability = ability_class(**ability_args)
+        system_parameters = ability_class.__init__.__annotations__
+        for parameter_name in system_parameters:
+            if parameter_name not in ability_args and parameter_name != 'environment':
+                ability_args[parameter_name] = self._environment.get(parameter_name)
+        if 'environment' in system_parameters:
+            ability_args['environment'] = self._environment
+        ability = ability_class(**ability_args) 
         self._abilities.append(ability)
 
     def list_abilities(self) -> List[str]:
