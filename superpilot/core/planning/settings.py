@@ -17,6 +17,13 @@ class LanguageModelConfiguration(SystemConfiguration):
     temperature: float = UserConfigurable()
 
 
+class PromptStrategyConfiguration(SystemConfiguration):
+    model_classification: LanguageModelClassification = UserConfigurable()
+    system_prompt: str = UserConfigurable()
+    user_prompt_template: str = UserConfigurable()
+    parser: dict = UserConfigurable()
+
+
 class PromptStrategiesConfiguration(SystemConfiguration):
     name_and_goals: strategies.NameAndGoalsConfiguration = None
     initial_plan: strategies.InitialPlanConfiguration = None

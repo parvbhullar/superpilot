@@ -17,7 +17,7 @@ from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning import strategies
 from superpilot.core.planning.schema import (
     LanguageModelResponse,
-    StepExecutionNature,
+    ExecutionNature,
     Task,
 )
 from superpilot.core.planning.settings import (
@@ -38,7 +38,7 @@ class SimpleTaskPilot(TaskPilot):
             storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
             storage_route="superpilot.core.flow.simple.SimpleTaskPilot",
         ),
-        execution_nature=StepExecutionNature.SEQUENTIAL,
+        execution_nature=ExecutionNature.SEQUENTIAL,
         prompt_strategy=strategies.NextAbility.default_configuration,
         models={
             LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
@@ -58,7 +58,7 @@ class SimpleTaskPilot(TaskPilot):
         self,
         ability_registry: AbilityRegistry,
         model_providers: Dict[ModelProviderName, LanguageModelProvider],
-        execution_nature: StepExecutionNature = StepExecutionNature.SEQUENTIAL,
+        execution_nature: ExecutionNature = ExecutionNature.SEQUENTIAL,
         configuration: TaskPilotConfiguration = default_configuration,
         logger: logging.Logger = logging.getLogger(__name__),
     ) -> None:
@@ -76,7 +76,7 @@ class SimpleTaskPilot(TaskPilot):
             )
 
     async def execute(self, task: Task, context_res: Context, *args, **kwargs) -> Context:
-        if self._execution_nature == StepExecutionNature.PARALLEL:
+        if self._execution_nature == ExecutionNature.PARALLEL:
             tasks = [
                 self.perform_ability(task, [ability.dump()], context_res, **kwargs)
                 for ability in self._ability_registry.abilities()
@@ -84,7 +84,7 @@ class SimpleTaskPilot(TaskPilot):
             res_list = await asyncio.gather(*tasks)
             for response in res_list:
                 context_res.extend(response)
-        elif self._execution_nature == StepExecutionNature.AUTO:
+        elif self._execution_nature == ExecutionNature.AUTO:
             context_res = self.perform_ability(
                 task, self._ability_registry.dump_abilities(), context_res, **kwargs
             )
@@ -100,7 +100,7 @@ class SimpleTaskPilot(TaskPilot):
     async def perform_ability(
         self, task: Task, ability_schema: List[dict], context, **kwargs
     ) -> Context:
-        if self._execution_nature == StepExecutionNature.AUTO:
+        if self._execution_nature == ExecutionNature.AUTO:
             response = await self.determine_next_ability(
                 task, ability_schema, context=context.format_numbered(), **kwargs
             )

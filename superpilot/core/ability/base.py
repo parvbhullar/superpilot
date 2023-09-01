@@ -32,18 +32,19 @@ class AbilityConfiguration(SystemConfiguration):
     location: PluginLocation
     packages_required: List[str] = Field(default_factory=list)
     language_model_required: LanguageModelConfiguration = None
-    prompt_strategy: PromptStrategy = None
     memory_provider_required: bool = False
     workspace_required: bool = False
 
     @classmethod
     def create_ability_configuration(
             cls,
-            location_route: str,
-            model_name: str = OpenAIModelName.GPT3_16K,
+            location_route: str = "superpilot.core.builtins.QueryLanguageModel",
+            model_name: str = OpenAIModelName.GPT3,
             provider_name: str = ModelProviderName.OPENAI,
             temperature: str = 0.9,
             prompt_strategy: PromptStrategy = None,
+            memory_provider_required: bool = False,
+            workspace_required: bool = False,
     ) -> "AbilityConfiguration":
         return AbilityConfiguration(
             location=PluginLocation(
@@ -55,7 +56,8 @@ class AbilityConfiguration(SystemConfiguration):
                 provider_name=provider_name,
                 temperature=temperature,
             ),
-            prompt_strategy=prompt_strategy,
+            memory_provider_required=memory_provider_required,
+            workspace_required=workspace_required,
         )
 
 
@@ -92,20 +94,6 @@ class Ability(abc.ABC):
 
     def __str__(self) -> str:
         return pformat(self.dump)
-
-    async def chat_with_model(self,
-        model_prompt: List[LanguageModelMessage],
-        functions: List[LanguageModelFunction] = [],
-        completion_parser: Callable[[str], dict] = None,
-        **kwargs
-    ) -> List[str]:
-        model_response = await self._language_model_provider.create_language_completion(
-            model_prompt=model_prompt,
-            functions=functions,
-            model_name=self._configuration.language_model_required.model_name,
-            completion_parser=completion_parser or self._parse_response,
-        )
-        return model_response
 
     @staticmethod
     def _parse_response(response_content: dict) -> dict:
