@@ -3,7 +3,7 @@ import functools
 import logging
 import math
 import time
-from typing import Callable, List, TypeVar
+from typing import Callable, List, TypeVar, Optional
 
 import openai
 from openai.error import APIError, RateLimitError
@@ -269,6 +269,34 @@ class OpenAIProvider(
 
     def __repr__(self):
         return "OpenAIProvider()"
+
+    @classmethod
+    def create_provider(
+            cls,
+            api_key: Optional[str],
+            retries_per_request: int = 10,
+            total_budget: float = float("inf"),
+            graceful_shutdown_threshold: float = 0.005,
+            warning_threshold: float = 0.01,
+            logger: Optional[logging.Logger] = None
+    ) -> "OpenAIProvider":
+        # Configure logger
+        if logger is None:
+            logger = logging.getLogger(__name__)
+
+        # Initialize settings
+        settings = OpenAISettings(
+            configuration=OpenAIConfiguration(retries_per_request=retries_per_request),
+            credentials=ModelProviderCredentials(api_key=api_key),
+            budget=OpenAIModelProviderBudget(
+                total_budget=total_budget,
+                graceful_shutdown_threshold=graceful_shutdown_threshold,
+                warning_threshold=warning_threshold,
+            ),
+        )
+
+        # Instantiate and return OpenAIProvider
+        return OpenAIProvider(settings=settings, logger=logger)
 
 
 async def _create_embedding(text: str, *_, **kwargs) -> openai.Embedding:

@@ -9,7 +9,7 @@ from superpilot.core.configuration import (
     SystemConfiguration,
     SystemSettings,
 )
-from superpilot.core.memory.base import Memory
+from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
 from superpilot.core.plugin.simple import SimplePluginService
 from superpilot.core.resource.model_providers import (
     LanguageModelProvider,
@@ -17,7 +17,6 @@ from superpilot.core.resource.model_providers import (
 )
 from superpilot.core.workspace.base import Workspace
 from superpilot.core.environment import Environment
-from superpilot.core.configuration.config import Config
 
 
 class AbilityRegistryConfiguration(SystemConfiguration):
@@ -109,3 +108,4 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
 
     def abilities(self) -> List[Ability]:
         return self._abilities
+

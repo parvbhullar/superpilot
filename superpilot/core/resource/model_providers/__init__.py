@@ -24,6 +24,8 @@ from superpilot.core.resource.model_providers.schema import (
     ModelProviderService,
     ModelProviderSettings,
     ModelProviderUsage,
+    SchemaModel,
+    schema_function,
 )
 
 __all__ = [
@@ -41,4 +43,10 @@ __all__ = [
     "OPEN_AI_MODELS",
     "OpenAIProvider",
     "OpenAISettings",
+    "ModelProviderBudget",
+    "ModelProviderCredentials",
+    "ModelProviderModelInfo",
+    "ModelProviderModelResponse",
+    "ModelProviderService",
+    "ModelProviderUsage",
 ]

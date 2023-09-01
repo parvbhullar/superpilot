@@ -15,22 +15,6 @@ from superpilot.core.resource.model_providers import (
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.super import SuperAbilityRegistry
 
-default_configuration = AbilityConfiguration(
-        location=PluginLocation(
-            storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
-            storage_route="superpilot.framework.abilities.text_summarise.TextSummarizeAbility",
-        ),
-        language_model_required=LanguageModelConfiguration(
-            model_name=OpenAIModelName.GPT3_16K,
-            provider_name=ModelProviderName.OPENAI,
-            temperature=0.9,
-        ),
-        prompt_strategy=SummarizerStrategy(
-            model_classification=SummarizerStrategy.default_configuration.model_classification,
-            system_prompt=SummarizerStrategy.default_configuration.system_prompt,
-            user_prompt_template=SummarizerStrategy.default_configuration.user_prompt_template,
-        ),
-    )
 
 ALLOWED_ABILITY = {
     # SearchAndSummarizeAbility.name(): SearchAndSummarizeAbility.default_configuration,
@@ -58,12 +42,17 @@ async def test_pilot():
     context = Context()
 
     config = get_config()
-    open_ai_creds = ModelProviderCredentials()
-    open_ai_creds.api_key = config.openai_api_key
 
-    OpenAIProvider.default_settings.credentials = open_ai_creds
+    # Load Model Providers
+    open_ai_provider = OpenAIProvider.create_provider(config.openai_api_key)
+    model_providers = {ModelProviderName.OPENAI: open_ai_provider}
 
-    model_providers = {ModelProviderName.OPENAI: OpenAIProvider()}
+    # Load Prompt Strategy
+
+
+    # Load Abilities
+
+
 
     ability_settings = SuperAbilityRegistry.default_settings
     # ability_settings.configuration.config = config

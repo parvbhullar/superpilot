@@ -1,8 +1,7 @@
 """The command system provides a way to extend the functionality of the AI pilot."""
 from superpilot.core.ability.base import Ability, AbilityRegistry
 from superpilot.core.ability.simple import AbilityRegistrySettings, SimpleAbilityRegistry
-from superpilot.core.ability.super import SuperAbilityRegistry
-from superpilot.core.ability.research import AbilityRegistrySettings, ResearchAbilityRegistry
+from superpilot.core.ability.super import SuperAbilityRegistry, SuperAbility
 from superpilot.core.ability.schema import AbilityAction
 from superpilot.core.status import ShortStatus, Status
 
