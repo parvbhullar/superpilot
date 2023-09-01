@@ -25,6 +25,8 @@ setup(
     keywords="superpilot multi-role multi-agent programming gpt llm",
     packages=find_packages(exclude=["contrib", "docs", "examples"]),
     python_requires=">=3.10",
-    install_requires=requirements,
-    dependency_links=["https://github.com/huggingface/setfit"],
+    install_requires=[
+        *requirements,
+        "setfit @ git+https://github.com/huggingface/setfit.git",
+    ],
 )
