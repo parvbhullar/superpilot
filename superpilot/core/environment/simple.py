@@ -65,7 +65,7 @@ class SimpleEnv(Environment, Configurable):
         self,
         settings: EnvSystemSettings,
         logger: logging.Logger,
-        ability_registry: SimpleAbilityRegistry,
+        # ability_registry: SimpleAbilityRegistry,
         memory: SimpleMemory,
         openai_provider: OpenAIProvider,
         planning: SimplePlanner,
@@ -74,7 +74,7 @@ class SimpleEnv(Environment, Configurable):
         self.configuration = settings.configuration
         self.env_config = ConfigBuilder.build_config_from_env()
         self.logger = logger
-        self.ability_registry = ability_registry
+        # self.ability_registry = ability_registry
         self.memory = memory
         # FIXME: Need some work to make this work as a dict of providers
         #  Getting the construction of the config to work is a bit tricky
@@ -118,14 +118,14 @@ class SimpleEnv(Environment, Configurable):
             workspace=environment_args["workspace"],
         )
 
-        environment_args["ability_registry"] = cls._get_system_instance(
-            "ability_registry",
-            environment_settings,
-            logger,
-            workspace=environment_args["workspace"],
-            memory=environment_args["memory"],
-            model_providers={"openai": environment_args["openai_provider"]},
-        )
+        # environment_args["ability_registry"] = cls._get_system_instance(
+        #     "ability_registry",
+        #     environment_settings,
+        #     logger,
+        #     workspace=environment_args["workspace"],
+        #     memory=environment_args["memory"],
+        #     model_providers={"openai": environment_args["openai_provider"]},
+        # )
 
         return cls(**environment_args)
 
@@ -165,8 +165,12 @@ class SimpleEnv(Environment, Configurable):
         system_locations = configuration_dict["environment"]["configuration"]["systems"]
 
         # Build up default configuration
+        system_parameters = cls.__init__.__annotations__
         for system_name, system_location in system_locations.items():
             logger.debug(f"Compiling configuration for system {system_name}")
+            if system_name not in system_parameters:
+                logger.debug(f"System {system_name} not found in Base Model class.")
+                continue
             system_class = SimplePluginService.get_plugin(system_location)
             configuration_dict[system_name] = system_class.build_environment_configuration(
                 user_configuration.get(system_name, {})
@@ -210,11 +214,17 @@ class SimpleEnv(Environment, Configurable):
         system_locations = environment_settings.environment.configuration.systems.dict()
         system_settings = getattr(environment_settings, system_name)
         system_class = SimplePluginService.get_plugin(system_locations[system_name])
+        system_parameter = system_class.__init__.__annotations__
+        system_kwargs = {}
+        for key in kwargs:
+            if key in system_parameter:
+                system_kwargs[key] = kwargs[key]
+        if 'logger' in system_parameter:
+            system_kwargs['logger'] = logger.getChild(system_name)
         system_instance = system_class(
             system_settings,
             *args,
-            logger=logger.getChild(system_name),
-            **kwargs,
+            **system_kwargs,
         )
         return system_instance
 

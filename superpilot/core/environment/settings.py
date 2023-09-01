@@ -28,7 +28,7 @@ class EnvSystemSettings(SystemSettings):
 
 class EnvSettings(BaseModel):
     environment: EnvSystemSettings
-    ability_registry: AbilityRegistrySettings
+    # ability_registry: AbilityRegistrySettings
     memory: MemorySettings
     openai_provider: OpenAISettings
     planning: PlannerSettings
