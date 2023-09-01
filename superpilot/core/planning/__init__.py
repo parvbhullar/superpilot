@@ -9,4 +9,4 @@ from superpilot.core.planning.schema import (
 )
 from superpilot.core.planning.settings import PlannerSettings
 from superpilot.core.planning.simple import SimplePlanner
-from superpilot.core.planning.research import ResearchPlanner
+from superpilot.core.planning.base import PromptStrategy

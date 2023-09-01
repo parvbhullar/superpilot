@@ -91,7 +91,7 @@ class SuperPilot(Pilot, Configurable):
     async def plan(self):
         return await self.build_initial_plan()
 
-    async def execute_step(self, *args, **kwargs):
+    async def execute(self, *args, **kwargs):
         self._logger.info(f"Executing step {self._configuration.cycle_count}")
         pass
 

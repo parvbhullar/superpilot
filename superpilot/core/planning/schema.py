@@ -83,7 +83,7 @@ class Task(BaseModel):
 TaskContext.update_forward_refs()
 
 
-class StepExecutionNature(str, enum.Enum):
+class ExecutionNature(str, enum.Enum):
     SINGLE = "single"
     PARALLEL = "parallel"
     SEQUENTIAL = "sequential"

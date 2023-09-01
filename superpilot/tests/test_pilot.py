@@ -42,12 +42,17 @@ async def test_pilot():
     context = Context()
 
     config = get_config()
-    open_ai_creds = ModelProviderCredentials()
-    open_ai_creds.api_key = config.openai_api_key
 
-    OpenAIProvider.default_settings.credentials = open_ai_creds
+    # Load Model Providers
+    open_ai_provider = OpenAIProvider.create_provider(config.openai_api_key)
+    model_providers = {ModelProviderName.OPENAI: open_ai_provider}
 
-    model_providers = {ModelProviderName.OPENAI: OpenAIProvider()}
+    # Load Prompt Strategy
+
+
+    # Load Abilities
+
+
 
     ability_settings = SuperAbilityRegistry.default_settings
     # ability_settings.configuration.config = config
@@ -63,7 +68,7 @@ async def test_pilot():
     )
 
     planner = env.get("planning")
-    ability_registry = env.get("ability_registry")
+    # ability_registry = env.get("ability_registry")
 
     # user_configuration = {}
     # pilot_settings = SuperPilot.compile_settings(client_logger, user_configuration)
@@ -74,7 +79,7 @@ async def test_pilot():
     user_objectives = "What is the weather in Mumbai"
     # SuperPilot.default_settings.configuration
     pilot_settings = SuperPilot.default_settings
-    pilot = SuperPilot(pilot_settings, ability_registry, planner, env)
+    pilot = SuperPilot(pilot_settings, super_ability_registry, planner, env)
     print(await pilot.initialize(user_objectives))
     print("***************** Pilot Initiated - Planing Started ******************************\n")
     print(await pilot.plan())
@@ -92,6 +97,7 @@ async def test_pilot():
         #     break
         # ability_result = await pilot.execute_next_ability(user_input)
         # print(parse_ability_result(ability_result))
+        break
 
 
 if __name__ == "__main__":

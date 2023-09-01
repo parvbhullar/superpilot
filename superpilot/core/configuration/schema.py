@@ -58,6 +58,8 @@ class Configurable(abc.ABC, Generic[S]):
         return cls.default_settings.__class__.parse_obj(final_configuration)
 
 
+
+
 def _get_user_config_fields(instance: BaseModel) -> Dict[str, Any]:
     """
     Get the user config fields of a Pydantic model instance.
