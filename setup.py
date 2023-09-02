@@ -19,7 +19,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/parvbhullar/superpilot",
-    author="Alexander Wu",
+    author="ParvBhullar",
     author_email="parvinder@recalll.co",
     license="MIT",
     keywords="superpilot multi-role multi-agent programming gpt llm",
