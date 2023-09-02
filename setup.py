@@ -19,12 +19,14 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/parvbhullar/superpilot",
-    author="Alexander Wu",
+    author="ParvBhullar",
     author_email="parvinder@recalll.co",
     license="MIT",
     keywords="superpilot multi-role multi-agent programming gpt llm",
     packages=find_packages(exclude=["contrib", "docs", "examples"]),
     python_requires=">=3.10",
-    install_requires=requirements,
-    dependency_links=["https://github.com/huggingface/setfit"],
+    install_requires=[
+        *requirements,
+        "setfit @ git+https://github.com/huggingface/setfit.git",
+    ],
 )

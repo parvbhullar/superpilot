@@ -37,6 +37,10 @@ class BasePilot(Pilot):
         ...
 
     @abc.abstractmethod
+    async def execute(self, *args, **kwargs):
+        ...
+
+    @abc.abstractmethod
     async def watch(self, *args, **kwargs):
         ...
 

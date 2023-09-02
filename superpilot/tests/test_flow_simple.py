@@ -4,7 +4,7 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
 import logging
-from superpilot.core.flow.simple import SimpleTaskPilot
+from superpilot.core.flow.simple import SuperTaskPilot
 from superpilot.core.configuration.config import get_config
 from superpilot.framework.abilities import (
     TextSummarizeAbility,
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     ability_registry = env.get("ability_registry")
 
 
-    search_step = SimpleTaskPilot(super_ability_registry, model_providers)
+    search_step = SuperTaskPilot(super_ability_registry, model_providers)
     # search_step.run(query, context)
     # flow = SimpleFlow(query)
     # flow_res = asyncio.run(

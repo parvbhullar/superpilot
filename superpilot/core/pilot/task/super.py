@@ -4,7 +4,7 @@ import platform
 import time
 from typing import List, Dict
 
-from superpilot.core.flow.base import TaskPilot, TaskPilotConfiguration
+from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.base import AbilityRegistry
 from superpilot.core.plugin.simple import (
@@ -32,11 +32,11 @@ from superpilot.core.resource.model_providers import (
 )
 
 
-class SimpleTaskPilot(TaskPilot):
+class SuperTaskPilot(TaskPilot):
     default_configuration = TaskPilotConfiguration(
         location=PluginLocation(
             storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
-            storage_route="superpilot.core.flow.simple.SimpleTaskPilot",
+            storage_route="superpilot.core.flow.simple.SuperTaskPilot",
         ),
         execution_nature=ExecutionNature.SEQUENTIAL,
         prompt_strategy=strategies.NextAbility.default_configuration,
@@ -58,13 +58,12 @@ class SimpleTaskPilot(TaskPilot):
         self,
         ability_registry: AbilityRegistry,
         model_providers: Dict[ModelProviderName, LanguageModelProvider],
-        execution_nature: ExecutionNature = ExecutionNature.SEQUENTIAL,
         configuration: TaskPilotConfiguration = default_configuration,
         logger: logging.Logger = logging.getLogger(__name__),
     ) -> None:
         self._logger = logger
         self._configuration = configuration
-        self._execution_nature = execution_nature
+        self._execution_nature = configuration.execution_nature
         self._ability_registry = ability_registry
 
         self._providers: Dict[LanguageModelClassification, LanguageModelProvider] = {}
