@@ -21,14 +21,14 @@ several key components including OpenAI Provider, SuperPrompt, AbilityRegistry, 
 2. Use the `OpenAIProvider.factory()` method to create an OpenAI Provider instance.
 3. Store this instance in the `model_providers` dictionary for later use.
 
-\`\`\`python
+```python
 from superpilot.core.resource.model_providers import OpenAIProvider, ModelProviderName
 from superpilot.core.configuration import get_config
 
 config = get_config()
 open_ai_provider = OpenAIProvider.factory(config.openai_api_key)
 model_providers = {ModelProviderName.OPENAI: open_ai_provider}
-\`\`\`
+```
 
 ## Creating SuperPrompt
 
@@ -39,12 +39,12 @@ model_providers = {ModelProviderName.OPENAI: open_ai_provider}
 2. Initialize a SuperPrompt object.
 3. Build the prompt using `build_prompt()` method.
 
-\`\`\`python
+```python
 from superpilot.core.planning.strategies.super import SuperPrompt
 
 super_prompt = SuperPrompt.factory()
 prompt = super_prompt.build_prompt("Your Query Here")
-\`\`\`
+```
 
 ## Setting Up AbilityRegistry
 
@@ -54,7 +54,7 @@ prompt = super_prompt.build_prompt("Your Query Here")
 1. Import the `SuperAbilityRegistry` class.
 2. Initialize it with the allowed abilities.
 
-\`\`\`python
+```python
 from superpilot.core.ability.super import SuperAbilityRegistry
 from superpilot.tests.test_env_simple import get_env
 
@@ -64,7 +64,7 @@ ALLOWED_ABILITY = {
 }
 
 super_ability_registry = SuperAbilityRegistry.factory(env, ALLOWED_ABILITY)
-\`\`\`
+```
 
 ## Executing SuperTaskPilot
 
@@ -74,11 +74,11 @@ super_ability_registry = SuperAbilityRegistry.factory(env, ALLOWED_ABILITY)
 1. Import the `SuperTaskPilot` class.
 2. Initialize it with the `super_ability_registry` and `model_providers`.
 
-\`\`\`python
+```python
 from superpilot.core.pilot.task.super import SuperTaskPilot
 
 search_step = SuperTaskPilot(super_ability_registry, model_providers)
-\`\`\`
+```
 
 
 **Credits:** This framework relies on [AutoGPT's ](https://github.com/Significant-Gravitas/Auto-GPT) core library for its underlying functionalities.
