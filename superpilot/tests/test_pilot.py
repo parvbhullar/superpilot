@@ -15,7 +15,7 @@ from superpilot.core.resource.model_providers import (
 )
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.super import SuperAbilityRegistry
-from superpilot.core.pilot.task.simple import SimpleTaskPilot
+from superpilot.core.pilot.task.super import SuperTaskPilot
 
 
 ALLOWED_ABILITY = {
@@ -72,7 +72,7 @@ async def test_pilot():
 
     super_ability_registry = SuperAbilityRegistry.factory(env, ALLOWED_ABILITY)
 
-    search_step = SimpleTaskPilot(super_ability_registry, model_providers)
+    search_step = SuperTaskPilot(super_ability_registry, model_providers)
 
     planner = env.get("planning")
     # ability_registry = env.get("ability_registry")

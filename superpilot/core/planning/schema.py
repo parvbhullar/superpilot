@@ -84,7 +84,7 @@ TaskContext.update_forward_refs()
 
 
 class ExecutionNature(str, enum.Enum):
-    SINGLE = "single"
+    SIMPLE = "simple"
     PARALLEL = "parallel"
     SEQUENTIAL = "sequential"
     AUTO = "auto"
