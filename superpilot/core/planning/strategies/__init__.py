@@ -22,9 +22,6 @@ from superpilot.core.planning.strategies.step_execution import (
     StepExecution,
     StepExecutionConfiguration,
 )
-from superpilot.core.planning.strategies.super import (
-    SuperPrompt,
-)
 
 
 __all__ = [
@@ -40,5 +37,4 @@ __all__ = [
     "StepStrategyConfiguration",
     "StepExecution",
     "StepExecutionConfiguration",
-    "SuperPrompt",
 ]

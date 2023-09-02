@@ -271,7 +271,7 @@ class OpenAIProvider(
         return "OpenAIProvider()"
 
     @classmethod
-    def create_provider(
+    def factory(
             cls,
             api_key: Optional[str],
             retries_per_request: int = 10,
@@ -285,14 +285,15 @@ class OpenAIProvider(
             logger = logging.getLogger(__name__)
 
         # Initialize settings
-        settings = OpenAISettings(
-            configuration=OpenAIConfiguration(retries_per_request=retries_per_request),
-            credentials=ModelProviderCredentials(api_key=api_key),
-            budget=OpenAIModelProviderBudget(
-                total_budget=total_budget,
-                graceful_shutdown_threshold=graceful_shutdown_threshold,
-                warning_threshold=warning_threshold,
-            ),
+        settings = cls.default_settings
+        settings.configuration.retries_per_request = retries_per_request
+        settings.credentials.api_key = api_key
+        settings.budget.total_budget = total_budget
+        settings.budget.graceful_shutdown_threshold = graceful_shutdown_threshold
+        settings.budget.warning_threshold = warning_threshold
+
+        settings = cls.build_configuration(
+            settings.dict()
         )
 
         # Instantiate and return OpenAIProvider

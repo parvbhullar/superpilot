@@ -36,13 +36,12 @@ class AbilityConfiguration(SystemConfiguration):
     workspace_required: bool = False
 
     @classmethod
-    def create_ability_configuration(
+    def factory(
             cls,
             location_route: str = "superpilot.core.builtins.QueryLanguageModel",
             model_name: str = OpenAIModelName.GPT3,
             provider_name: str = ModelProviderName.OPENAI,
             temperature: str = 0.9,
-            prompt_strategy: PromptStrategy = None,
             memory_provider_required: bool = False,
             workspace_required: bool = False,
     ) -> "AbilityConfiguration":

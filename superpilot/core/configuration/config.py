@@ -37,7 +37,7 @@ class ConfigBuilder(Configurable[Config]):
     def build_config_from_env(cls, workdir: Path = None) -> Config:
         config_dict_without_none_values = cls.load_env(workdir)
 
-        config = cls.build_environment_configuration(config_dict_without_none_values)
+        config = cls.build_configuration(config_dict_without_none_values)
 
         # Set secondary config variables (that depend on other config variables)
 

@@ -18,7 +18,7 @@ from superpilot.core.planning.schema import (
     LanguageModelResponse,
     Task,
 )
-from superpilot.core.flow.simple import SimpleTaskPilot
+from superpilot.core.pilot.task import SimpleTaskPilot
 from superpilot.core.configuration.config import get_config
 from superpilot.core.planning.strategies.step_flow import StepFlow
 from superpilot.core.planning.settings import LanguageModelConfiguration

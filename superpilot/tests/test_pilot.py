@@ -11,9 +11,11 @@ from superpilot.framework.abilities import (
 from superpilot.core.resource.model_providers import (
     ModelProviderName,
     OpenAIProvider,
+    OpenAIModelName
 )
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.super import SuperAbilityRegistry
+from superpilot.core.pilot.task.simple import SimpleTaskPilot
 
 
 ALLOWED_ABILITY = {
@@ -24,6 +26,8 @@ from superpilot.tests.test_env_simple import get_env
 from superpilot.core.pilot import SuperPilot
 from superpilot.core.configuration import get_config
 from superpilot.core.resource.model_providers.schema import ModelProviderCredentials
+from superpilot.core.planning.base import PromptStrategy 
+from superpilot.core.planning.strategies.super import SuperPrompt
 
 # Flow executor -> Context
 #
@@ -43,29 +47,32 @@ async def test_pilot():
 
     config = get_config()
 
+    print(config.openai_api_key)
     # Load Model Providers
-    open_ai_provider = OpenAIProvider.create_provider(config.openai_api_key)
+    open_ai_provider = OpenAIProvider.factory(config.openai_api_key)
     model_providers = {ModelProviderName.OPENAI: open_ai_provider}
 
     # Load Prompt Strategy
-
-
+    super_prompt = SuperPrompt.factory()
     # Load Abilities
+    prompt = super_prompt.build_prompt(query)
+    print(prompt)
+    def parser(content):
+        return content
 
-
-
-    ability_settings = SuperAbilityRegistry.default_settings
-    # ability_settings.configuration.config = config
-    ability_settings.configuration.abilities = {
-        ability_name: ability for ability_name, ability in ALLOWED_ABILITY.items()
-    }
+    response = await open_ai_provider.create_language_completion(
+        prompt.messages,
+        prompt.functions,
+        OpenAIModelName.GPT3,
+        parser,
+    )
+    print(response)
 
     env = get_env({})
 
-    super_ability_registry = SuperAbilityRegistry(
-        ability_settings,
-        environment=env,
-    )
+    super_ability_registry = SuperAbilityRegistry.factory(env, ALLOWED_ABILITY)
+
+    search_step = SimpleTaskPilot(super_ability_registry, model_providers)
 
     planner = env.get("planning")
     # ability_registry = env.get("ability_registry")
@@ -79,10 +86,10 @@ async def test_pilot():
     user_objectives = "What is the weather in Mumbai"
     # SuperPilot.default_settings.configuration
     pilot_settings = SuperPilot.default_settings
-    pilot = SuperPilot(pilot_settings, super_ability_registry, planner, env)
-    print(await pilot.initialize(user_objectives))
+    # pilot = SuperPilot(pilot_settings, super_ability_registry, planner, env)
+    # print(await pilot.initialize(user_objectives))
     print("***************** Pilot Initiated - Planing Started ******************************\n")
-    print(await pilot.plan())
+    # print(await pilot.plan())
     print("***************** Pilot Initiated - Planing Completed ******************************\n")
     while True:
         print("***************** Pilot Started - Exec Started ******************************\n")
