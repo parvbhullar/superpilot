@@ -28,24 +28,29 @@ class SearchAndSummarizeAbility(Ability):
             model_name=OpenAIModelName.GPT3_16K,
             provider_name=ModelProviderName.OPENAI,
             temperature=0.9,
-        ),
-        prompt_strategy=SummarizerStrategy(
-            model_classification=SummarizerStrategy.default_configuration.model_classification,
-            system_prompt=SummarizerStrategy.default_configuration.system_prompt,
-            user_prompt_template=SummarizerStrategy.default_configuration.user_prompt_template,
-        ),
+        )
+
     )
 
     def __init__(
         self,
             environment: Environment,
             configuration: AbilityConfiguration = default_configuration,
+            prompt_strategy: SummarizerStrategy = None,
     ):
         self._logger: logging.Logger = environment.get("logger")
         self._configuration = configuration
         self._env_config: Config = environment.get("env_config")
         self._language_model_provider = environment.get("model_providers").get(configuration.language_model_required.provider_name)
         self._search_engine = SearchEngine(config=self._env_config, engine=SearchEngineType.DIRECT_GOOGLE)
+
+        if prompt_strategy is None:
+            prompt_strategy = SummarizerStrategy(
+                model_classification=SummarizerStrategy.default_configuration.model_classification,
+                system_prompt=SummarizerStrategy.default_configuration.system_prompt,
+                user_prompt_template=SummarizerStrategy.default_configuration.user_prompt_template,
+            )
+        self._prompt_strategy = prompt_strategy
 
     @classmethod
     def description(cls) -> str:
