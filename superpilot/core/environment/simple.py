@@ -137,6 +137,49 @@ class SimpleEnv(Environment, Configurable):
     ################################################################
 
     @classmethod
+    def factory(cls, user_configuration: dict, logger: logging.Logger) -> "SimpleEnv":
+
+        logger.debug("Getting environment settings")
+
+        environment_workspace = (
+            user_configuration.get("workspace", {}).get("configuration", {}).get("root", "")
+        )
+
+        # Configure logging before we do anything else.
+        # logger.set_level(logging.DEBUG if debug else logging.INFO)
+
+        # working_directory = Path(__file__).parent.parent.parent
+
+        # Load the configuration from the environment.
+        # config = ConfigBuilder.load_env(workdir=working_directory)
+        # user_configuration['config'] = config
+
+        if not environment_workspace:  # We don't have an environment yet.
+            #################
+            # Bootstrapping #
+            #################
+            # Step 1. Collate the user's settings with the default system settings.
+            environment_settings: EnvSettings = cls.compile_settings(
+                logger,
+                user_configuration,
+            )
+
+            # Step 2. Provision the environment.
+            environment_workspace = cls.provision_environment(
+                environment_settings, logger
+            )
+            print("environment is provisioned")
+
+        # launch environment interaction loop
+        environment = cls.from_workspace(
+            environment_workspace,
+            logger,
+        )
+        print("environment is loaded")
+        # print(environment._configuration)
+        return environment
+
+    @classmethod
     def build_user_configuration(cls) -> dict[str, Any]:
         """Build the user's configuration."""
         configuration_dict = {
@@ -157,7 +200,7 @@ class SimpleEnv(Environment, Configurable):
         """Compile the user's configuration with the defaults."""
         logger.debug("Processing environment system configuration.")
         configuration_dict = {
-            "environment": cls.build_environment_configuration(
+            "environment": cls.build_configuration(
                 user_configuration.get("environment", {})
             ).dict(),
         }
@@ -172,7 +215,7 @@ class SimpleEnv(Environment, Configurable):
                 logger.debug(f"System {system_name} not found in Base Model class.")
                 continue
             system_class = SimplePluginService.get_plugin(system_location)
-            configuration_dict[system_name] = system_class.build_environment_configuration(
+            configuration_dict[system_name] = system_class.build_configuration(
                 user_configuration.get(system_name, {})
             ).dict()
 

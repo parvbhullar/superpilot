@@ -15,7 +15,7 @@ from superpilot.core.resource.model_providers import (
 )
 from superpilot.core.planning.settings import PromptStrategyConfiguration
 from pydantic import Field
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 
 
 class BaseContent(SchemaModel):
@@ -39,26 +39,26 @@ class SuperPrompt(PromptStrategy):
 
     DEFAULT_USER_PROMPT_TEMPLATE = "'{user_objective}'"
 
-    DEFAULT_PARSER = BaseContent
+    DEFAULT_PARSER_SCHEMA = BaseContent.function_schema()
 
     default_configuration = PromptStrategyConfiguration(
         model_classification=LanguageModelClassification.SMART_MODEL,
         system_prompt=DEFAULT_SYSTEM_PROMPT,
         user_prompt_template=DEFAULT_USER_PROMPT_TEMPLATE,
-        parser=DEFAULT_PARSER,
+        parser_schema=DEFAULT_PARSER_SCHEMA,
     )
 
     def __init__(
         self,
-        model_classification: LanguageModelClassification,
-        system_prompt: str,
-        user_prompt_template: str,
-        parser: SchemaModel,
+        model_classification: LanguageModelClassification = default_configuration.model_classification,
+        system_prompt: str = default_configuration.system_prompt,
+        user_prompt_template: str = default_configuration.user_prompt_template,
+        parser_schema: Dict = None,
     ):
         self._model_classification = model_classification
         self._system_prompt_message = system_prompt
         self._user_prompt_template = user_prompt_template
-        self._parser = parser
+        self._parser_schema = parser_schema
 
     @property
     def model_classification(self) -> LanguageModelClassification:
@@ -75,12 +75,15 @@ class SuperPrompt(PromptStrategy):
                 user_objective=user_objective,
             ),
         )
-        parser_function = LanguageModelFunction(
-            json_schema=self._parser.schema,
-        )
+        functions = []
+        if self._parser_schema is not None:
+            parser_function = LanguageModelFunction(
+                json_schema=self._parser_schema,
+            )
+            functions.append(parser_function)
         prompt = LanguageModelPrompt(
             messages=[system_message, user_message],
-            functions=[parser_function],
+            functions=functions,
             # TODO
             tokens_used=0,
         )
@@ -100,5 +103,19 @@ class SuperPrompt(PromptStrategy):
 
         """
         # parsed_response = json_loads(response_content["function_call"]["arguments"])
-        parsed_response = self._parser.from_response(response_content)
+        parsed_response = json_loads(response_content["function_call"]["arguments"])
+        # parsed_response = self._parser_schema.from_response(response_content)
         return parsed_response
+
+    @classmethod
+    def factory(cls, system_prompt=None, user_prompt_template=None, parser=None, model_classification=None):
+        config = cls.default_configuration.dict()
+        if model_classification:
+            config['model_classification'] = model_classification
+        if system_prompt:
+            config['system_prompt'] = system_prompt
+        if user_prompt_template:
+            config['user_prompt_template'] = user_prompt_template
+        if parser:
+            config['parser_schema'] = parser
+        return cls(**config)

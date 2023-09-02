@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional, Union
 
 from superpilot.core.ability.base import Ability, AbilityConfiguration, AbilityRegistry
 from superpilot.core.ability.builtins import BUILTIN_ABILITIES
@@ -108,4 +108,26 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
 
     def abilities(self) -> List[Ability]:
         return self._abilities
+
+    @classmethod
+    def factory(
+            cls,
+            environment: Environment,
+            allowed_abilities: Optional[Dict] = None
+    ) -> "SuperAbilityRegistry":
+        # Generate default settings
+        ability_settings = SuperAbilityRegistry.default_settings
+
+        # Optionally override model providers
+        # if model_providers:
+        #     ability_settings.configuration.model_providers = model_providers
+
+        # Optionally override abilities
+        if allowed_abilities:
+            ability_settings.configuration.abilities = {
+                ability_name: ability for ability_name, ability in allowed_abilities.items()
+            }
+
+        # Instantiate and return SuperAbilityRegistry
+        return cls(ability_settings, environment)
 

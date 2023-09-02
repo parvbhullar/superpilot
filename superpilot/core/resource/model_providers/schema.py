@@ -119,8 +119,8 @@ class ModelProviderUsage(ProviderUsage):
 
 class ModelProviderBudget(ProviderBudget):
     total_budget: float = UserConfigurable()
-    total_cost: float
-    remaining_budget: float
+    total_cost: float = 0
+    remaining_budget: float = 0
     usage: ModelProviderUsage
 
     def update_usage_and_cost(
@@ -283,7 +283,7 @@ class schema_function:
 
 class SchemaModel(BaseModel):
     @classmethod
-    def function_schema(cls):
+    def function_schema(cls) -> dict:
         schema = cls.schema()
         parameters = {
             k: v for k, v in schema.items() if k not in ("title", "description")

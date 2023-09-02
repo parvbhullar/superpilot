@@ -18,7 +18,7 @@ from superpilot.core.planning.schema import (
     LanguageModelResponse,
     Task,
 )
-from superpilot.core.flow.simple import SimpleTaskPilot
+from superpilot.core.pilot.task import SuperTaskPilot
 from superpilot.core.configuration.config import get_config
 from superpilot.core.planning.strategies.step_flow import StepFlow
 from superpilot.core.planning.settings import LanguageModelConfiguration
@@ -217,7 +217,7 @@ if __name__ == "__main__":
         ability_settings,
         environment=env,
     )
-    search_step = SimpleTaskPilot(super_ability_registry, model_providers)
+    search_step = SuperTaskPilot(super_ability_registry, model_providers)
     flow = SimpleFlow(user_objectives)
     print("\n\n")
     t1 = time.time()
@@ -265,7 +265,7 @@ if __name__ == "__main__":
             print(f"******************** Runing Goal {index+1} ********************\n")
             print(f"Objective: {objective}")
             print(f"abilities: {abilities}")
-            search_step = SimpleTaskPilot(super_ability_registry, model_providers)
+            search_step = SuperTaskPilot(super_ability_registry, model_providers)
             context_res = asyncio.run(search_step.execute(task, context_res, **kargs))
             print(f"****************** Executed Goal {index+1} ******************\n")
             t2 = time.time()

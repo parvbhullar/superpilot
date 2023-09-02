@@ -26,24 +26,27 @@ class TextSummarizeAbility(Ability):
             model_name=OpenAIModelName.GPT3_16K,
             provider_name=ModelProviderName.OPENAI,
             temperature=0.9,
-        ),
-        prompt_strategy=SummarizerStrategy(
-            model_classification=SummarizerStrategy.default_configuration.model_classification,
-            system_prompt=SummarizerStrategy.default_configuration.system_prompt,
-            user_prompt_template=SummarizerStrategy.default_configuration.user_prompt_template,
-        ),
+        )
     )
 
     def __init__(
         self,
             environment: Environment,
             configuration: AbilityConfiguration = default_configuration,
+            prompt_strategy: SummarizerStrategy = None,
     ):
         self._configuration = configuration
         self._logger: logging.Logger = environment.get("logger")
         self._env_config: Config = environment.get("env_config")
         self._language_model_provider: OpenAIProvider = environment.get("model_providers").get(
             configuration.language_model_required.provider_name)
+        if prompt_strategy is None:
+            prompt_strategy = SummarizerStrategy(
+                model_classification=SummarizerStrategy.default_configuration.model_classification,
+                system_prompt=SummarizerStrategy.default_configuration.system_prompt,
+                user_prompt_template=SummarizerStrategy.default_configuration.user_prompt_template,
+            )
+        self._prompt_strategy = prompt_strategy
 
     @classmethod
     def description(cls) -> str:
@@ -102,7 +105,7 @@ class TextSummarizeAbility(Ability):
             "content": text_summary,
             "question": query,
         }
-        prompt = self._configuration.prompt_strategy.build_prompt(**template_kwargs)
+        prompt = self._prompt_strategy.build_prompt(**template_kwargs)
 
         model_response = await self.chat_with_model(
             model_prompt=prompt.messages,

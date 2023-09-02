@@ -49,15 +49,13 @@ class Configurable(abc.ABC, Generic[S]):
         return _get_user_config_fields(cls.default_settings)
 
     @classmethod
-    def build_environment_configuration(cls, configuration: dict) -> S:
+    def build_configuration(cls, configuration: dict) -> S:
         """Process the configuration for this object."""
 
         defaults = cls.default_settings.dict()
         final_configuration = deep_update(defaults, configuration)
 
         return cls.default_settings.__class__.parse_obj(final_configuration)
-
-
 
 
 def _get_user_config_fields(instance: BaseModel) -> Dict[str, Any]:
