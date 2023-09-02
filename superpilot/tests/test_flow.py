@@ -9,7 +9,7 @@ from superpilot.framework.abilities import SearchAndSummarizeAbility, TextSummar
 from typing import List, Dict
 from typing_extensions import Literal
 import asyncio
-from superpilot.core.flow.simple import SimpleTaskPilot
+from superpilot.core.flow.simple import SuperTaskPilot
 
 class Step:
     def __init__(self, task: Task, abilities: List[Ability], execution_nature: Literal['single', 'parallel', 'seq']):
