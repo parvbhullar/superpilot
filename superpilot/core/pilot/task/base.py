@@ -5,10 +5,10 @@ import inflection
 
 from superpilot.core.context.schema import Context
 from superpilot.core.pilot.task.settings import TaskPilotConfiguration
-from superpilot.core.pilot.base import BasePilot
+from superpilot.core.pilot.base import Pilot
 
 
-class TaskPilot(abc.ABC):
+class TaskPilot(Pilot, abc.ABC):
     """A class representing a pilot step."""
 
     default_configuration: ClassVar[TaskPilotConfiguration]
@@ -20,6 +20,10 @@ class TaskPilot(abc.ABC):
 
     @abc.abstractmethod
     async def execute(self, *args, **kwargs) -> Context:
+        ...
+
+    @abc.abstractmethod
+    def __repr__(self):
         ...
 
     @staticmethod

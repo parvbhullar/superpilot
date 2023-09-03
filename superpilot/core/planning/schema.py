@@ -27,12 +27,16 @@ class LanguageModelClassification(str, enum.Enum):
 class LanguageModelPrompt(BaseModel):
     messages: List[LanguageModelMessage]
     functions: List[LanguageModelFunction] = Field(default_factory=list)
+    function_call: LanguageModelFunction = None
 
     def get_messages(self):
         return [m.to_dict() for m in self.messages]
 
     def get_functions(self):
         return [f.to_dict() for f in self.functions]
+
+    def get_function_call(self):
+        return self.function_call.json_schema or "auto"
 
     def __str__(self):
         return "\n\n".join([f"{m.role.value}: {m.content}" for m in self.messages])
@@ -77,6 +81,43 @@ class Task(BaseModel):
     ready_criteria: List[str]
     acceptance_criteria: List[str]
     context: TaskContext = Field(default_factory=TaskContext)
+
+    @classmethod
+    def factory(cls,
+                objective: str,
+                type: str = TaskType.RESEARCH,
+                priority: int = 1,
+                ready_criteria: List[str] = None,
+                acceptance_criteria: List[str] = None,
+                context: TaskContext = None):
+        if ready_criteria is None:
+            ready_criteria = [""]
+        if acceptance_criteria is None:
+            acceptance_criteria = [""]
+        if context is None:
+            context = TaskContext()
+
+        return cls(objective=objective,
+                   type=type,
+                   priority=priority,
+                   ready_criteria=ready_criteria,
+                   acceptance_criteria=acceptance_criteria,
+                   context=context)
+
+    def generate_kwargs(self) -> dict[str, str]:
+        action_history = "\n".join([str(action) for action in self.context.prior_actions])
+        additional_info = "\n".join(self.context.supplementary_info)
+        user_input = "\n".join(self.context.user_input)
+        acceptance_criteria = "\n".join(self.acceptance_criteria)
+
+        return {
+            "task_objective": self.objective,
+            "cycle_count": self.context.cycle_count,
+            "action_history": action_history,
+            "additional_info": additional_info,
+            "user_input": user_input,
+            "acceptance_criteria": acceptance_criteria
+        }
 
 
 # Need to resolve the circular dependency between Task and TaskContext once both models are defined.

@@ -16,6 +16,7 @@ from superpilot.core.resource.model_providers import (
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.super import SuperAbilityRegistry
 from superpilot.core.pilot.task.super import SuperTaskPilot
+from superpilot.core.pilot.task.simple import SimpleTaskPilot
 
 
 ALLOWED_ABILITY = {
@@ -27,7 +28,7 @@ from superpilot.core.pilot import SuperPilot
 from superpilot.core.configuration import get_config
 from superpilot.core.resource.model_providers.schema import ModelProviderCredentials
 from superpilot.core.planning.base import PromptStrategy 
-from superpilot.core.planning.strategies.super import SuperPrompt
+from superpilot.core.planning.strategies.simple import SimplePrompt
 
 # Flow executor -> Context
 #
@@ -42,7 +43,6 @@ async def test_pilot():
     # query = "How to file the GSTR1"
     query = "What is the weather in Mumbai"
 
-    logger = logging.getLogger("SearchAndSummarizeAbility")
     context = Context()
 
     config = get_config()
@@ -52,8 +52,15 @@ async def test_pilot():
     open_ai_provider = OpenAIProvider.factory(config.openai_api_key)
     model_providers = {ModelProviderName.OPENAI: open_ai_provider}
 
+    task_pilot = SimpleTaskPilot(model_providers=model_providers)
+
+    print("***************** Executing SimplePilot ******************************\n")
+    response = await task_pilot.execute(query, context)
+    print(response)
+    print("***************** Executing SimplePilot Completed ******************************\n")
+    exit(0)
     # Load Prompt Strategy
-    super_prompt = SuperPrompt.factory()
+    super_prompt = SimplePrompt.factory()
     # Load Abilities
     prompt = super_prompt.build_prompt(query)
     print(prompt)
@@ -73,6 +80,10 @@ async def test_pilot():
     super_ability_registry = SuperAbilityRegistry.factory(env, ALLOWED_ABILITY)
 
     search_step = SuperTaskPilot(super_ability_registry, model_providers)
+
+
+
+
 
     planner = env.get("planning")
     # ability_registry = env.get("ability_registry")
