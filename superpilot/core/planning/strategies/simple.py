@@ -30,14 +30,27 @@ class BaseContent(SchemaModel):
     )
 
 
-class SuperPrompt(PromptStrategy):
+class SimplePrompt(PromptStrategy):
     DEFAULT_SYSTEM_PROMPT = (
         "Your job is to respond to a user-defined query by answering the question, "
         "Or completing the task it could be passing the format and generating the "
         "requested response in given function call model."
     )
 
-    DEFAULT_USER_PROMPT_TEMPLATE = "'{user_objective}'"
+    DEFAULT_USER_PROMPT_TEMPLATE = (
+        "Your current task is '{task_objective}'.\n"
+        "You have taken {cycle_count} actions on this task already. "
+        "Here is the actions you have taken and their results:\n"
+        "{action_history}\n\n"
+        "Here is additional information that may be useful to you:\n"
+        "{additional_info}\n\n"
+        "Additionally, you should consider the following:\n"
+        "{user_input}\n\n"
+        "Your task of '{task_objective}' is complete when the following acceptance criteria have been met:\n"
+        "{acceptance_criteria}\n\n"
+        "Please choose one of the provided functions to accomplish this task. \n"
+        "Use the provided information to make your decision. if information is not provided use your knowledge.\n"
+    )
 
     DEFAULT_PARSER_SCHEMA = BaseContent.function_schema()
 
@@ -64,15 +77,17 @@ class SuperPrompt(PromptStrategy):
     def model_classification(self) -> LanguageModelClassification:
         return self._model_classification
 
-    def build_prompt(self, user_objective: str = "", **kwargs) -> LanguageModelPrompt:
+    def build_prompt(self, task_objective: str = "", **kwargs) -> LanguageModelPrompt:
+        template_kwargs = self.get_template_kwargs(task_objective, kwargs)
+
         system_message = LanguageModelMessage(
             role=MessageRole.SYSTEM,
-            content=self._system_prompt_message,
+            content=self._system_prompt_message.format(**template_kwargs),
         )
         user_message = LanguageModelMessage(
             role=MessageRole.USER,
             content=self._user_prompt_template.format(
-                user_objective=user_objective,
+                **template_kwargs
             ),
         )
         functions = []
@@ -84,10 +99,24 @@ class SuperPrompt(PromptStrategy):
         prompt = LanguageModelPrompt(
             messages=[system_message, user_message],
             functions=functions,
+            function_call=None if not functions else functions[0],
             # TODO
             tokens_used=0,
         )
         return prompt
+
+    def get_template_kwargs(self, task_objective, kwargs):
+        template_kwargs = {
+            "task_objective": task_objective,
+            "cycle_count": 0,
+            "action_history": "",
+            "additional_info": "",
+            "user_input": "",
+            "acceptance_criteria": "",
+        }
+        # Update default kwargs with any provided kwargs
+        template_kwargs.update(kwargs)
+        return template_kwargs
 
     def parse_response_content(
         self,
@@ -102,8 +131,9 @@ class SuperPrompt(PromptStrategy):
             The parsed response.
 
         """
-        # parsed_response = json_loads(response_content["function_call"]["arguments"])
         parsed_response = json_loads(response_content["function_call"]["arguments"])
+        # print(response_content)
+        # parsed_response = json_loads(response_content["content"])
         # parsed_response = self._parser_schema.from_response(response_content)
         return parsed_response
 
