@@ -46,26 +46,6 @@ super_prompt = SimplePrompt.factory()
 prompt = super_prompt.build_prompt("Your Query Here")
 ```
 
-## Setting Up AbilityRegistry
-
-**Purpose:** To manage and register the abilities that your application will use.
-
-### Steps:
-1. Import the `SuperAbilityRegistry` class.
-2. Initialize it with the allowed abilities.
-
-```python
-from superpilot.core.ability.super import SuperAbilityRegistry
-from superpilot.tests.test_env_simple import get_env
-
-env = get_env({})
-ALLOWED_ABILITY = {
-    TextSummarizeAbility.name(): TextSummarizeAbility.default_configuration,
-}
-
-super_ability_registry = SuperAbilityRegistry.factory(env, ALLOWED_ABILITY)
-```
-
 # Using SimpleTaskPilot
 
 ## Initial Setup
@@ -146,6 +126,27 @@ The output should be displayed on the console.
 1. Import the `SuperTaskPilot` class.
 2. Initialize it with the `super_ability_registry` and `model_providers`.
 
+
+## Setting Up AbilityRegistry
+
+**Purpose:** To manage and register the abilities that your application will use.
+
+### Steps:
+1. Import the `SuperAbilityRegistry` class.
+2. Initialize it with the allowed abilities.
+
+```python
+from superpilot.core.ability.super import SuperAbilityRegistry
+from superpilot.tests.test_env_simple import get_env
+
+env = get_env({})
+ALLOWED_ABILITY = {
+    TextSummarizeAbility.name(): TextSummarizeAbility.default_configuration,
+}
+
+super_ability_registry = SuperAbilityRegistry.factory(env, ALLOWED_ABILITY)
+```
+
 ```python
 from superpilot.core.pilot.task.super import SuperTaskPilot
 
@@ -153,4 +154,5 @@ search_step = SuperTaskPilot(super_ability_registry, model_providers)
 ```
 
 
-**Credits:** This framework relies on [AutoGPT's](https://github.com/Significant-Gravitas/Auto-GPT) core library for its underlying functionalities.
+
+**Credits:** This framework relies on [AutoGPT's](https://github.com/Significant-Gravitas/Auto-GPT/tree/master/autogpt/core) core library for its underlying functionalities.
