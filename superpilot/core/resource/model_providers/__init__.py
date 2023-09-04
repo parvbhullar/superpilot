@@ -27,6 +27,7 @@ from superpilot.core.resource.model_providers.schema import (
     SchemaModel,
     schema_function,
 )
+from superpilot.core.resource.model_providers.factory import ModelProviderFactory
 
 __all__ = [
     "ModelProvider",
@@ -49,4 +50,5 @@ __all__ = [
     "ModelProviderModelResponse",
     "ModelProviderService",
     "ModelProviderUsage",
+    "ModelProviderFactory",
 ]
