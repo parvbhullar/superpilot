@@ -11,7 +11,8 @@ from superpilot.framework.abilities import (
 from superpilot.core.resource.model_providers import (
     ModelProviderName,
     OpenAIProvider,
-    OpenAIModelName
+    OpenAIModelName,
+    ModelProviderFactory,
 )
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.super import SuperAbilityRegistry
@@ -26,8 +27,6 @@ ALLOWED_ABILITY = {
 from superpilot.tests.test_env_simple import get_env
 from superpilot.core.pilot import SuperPilot
 from superpilot.core.configuration import get_config
-from superpilot.core.resource.model_providers.schema import ModelProviderCredentials
-from superpilot.core.planning.base import PromptStrategy 
 from superpilot.core.planning.strategies.simple import SimplePrompt
 
 # Flow executor -> Context
@@ -48,6 +47,8 @@ async def test_pilot():
     config = get_config()
 
     print(config.openai_api_key)
+    # builder = ModelProviderFactory()
+    # model_providers = builder.load_providers()
     # Load Model Providers
     open_ai_provider = OpenAIProvider.factory(config.openai_api_key)
     model_providers = {ModelProviderName.OPENAI: open_ai_provider}
@@ -57,13 +58,16 @@ async def test_pilot():
     print("***************** Executing SimplePilot ******************************\n")
     response = await task_pilot.execute(query, context)
     print(response)
-    print("***************** Executing SimplePilot Completed ******************************\n")
+    print(
+        "***************** Executing SimplePilot Completed ******************************\n"
+    )
     exit(0)
     # Load Prompt Strategy
     super_prompt = SimplePrompt.factory()
     # Load Abilities
     prompt = super_prompt.build_prompt(query)
     print(prompt)
+
     def parser(content):
         return content
 
@@ -81,10 +85,6 @@ async def test_pilot():
 
     search_step = SuperTaskPilot(super_ability_registry, model_providers)
 
-
-
-
-
     planner = env.get("planning")
     # ability_registry = env.get("ability_registry")
 
@@ -99,11 +99,17 @@ async def test_pilot():
     pilot_settings = SuperPilot.default_settings
     # pilot = SuperPilot(pilot_settings, super_ability_registry, planner, env)
     # print(await pilot.initialize(user_objectives))
-    print("***************** Pilot Initiated - Planing Started ******************************\n")
+    print(
+        "***************** Pilot Initiated - Planing Started ******************************\n"
+    )
     # print(await pilot.plan())
-    print("***************** Pilot Initiated - Planing Completed ******************************\n")
+    print(
+        "***************** Pilot Initiated - Planing Completed ******************************\n"
+    )
     while True:
-        print("***************** Pilot Started - Exec Started ******************************\n")
+        print(
+            "***************** Pilot Started - Exec Started ******************************\n"
+        )
         # current_task, next_ability = await pilot.determine_next_ability(plan)
         # print(parse_next_ability(current_task, next_ability))
         # user_input = click.prompt(
