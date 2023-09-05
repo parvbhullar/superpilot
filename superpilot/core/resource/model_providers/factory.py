@@ -7,8 +7,9 @@ from superpilot.core.plugin.simple import (
 )
 from superpilot.core.resource.model_providers import (
     ModelProviderName,
+    LanguageModelProvider
 )
-from superpilot.core.configuration import SystemConfiguration
+from superpilot.core.configuration import SystemConfiguration, SystemSettings
 
 
 class ModelProviderConfiguration(SystemConfiguration):
@@ -16,33 +17,71 @@ class ModelProviderConfiguration(SystemConfiguration):
     location: PluginLocation
 
 
+class ProviderFactorySettings(SystemSettings):
+    models: Dict[str, ModelProviderConfiguration]
+
+
 class ModelProviderFactory:
-    default_model_providers: Dict[ModelProviderName, ModelProviderConfiguration] = {
-        ModelProviderName.OPENAI: ModelProviderConfiguration(
-            user_configuration={},
-            location=PluginLocation(
-                storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
-                storage_route="superpilot.core.resource.model_providers.OpenAIProvider",
-            ),
+    default_settings = ProviderFactorySettings(
+        name="simple_model_provider_factory",
+        description="A simple model provider factory.",
+        models={
+            ModelProviderName.OPENAI: ModelProviderConfiguration(
+                user_configuration={},
+                location=PluginLocation(
+                    storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
+                    storage_route="superpilot.core.resource.model_providers.OpenAIProvider",
+                ),
+            )
+        }
+    )
+
+    def __init__(
+        self,
+        settings: ProviderFactorySettings,
+        logger: logging.Logger,
+        model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
+    ):
+        self._settings = settings
+        self._logger = logger
+        self._model_providers = model_providers
+
+    @classmethod
+    def factory(
+        cls,
+        model_provider_configs: Dict[
+            ModelProviderName, ModelProviderConfiguration
+        ] = None,
+        logger: logging.Logger = None,
+    ):
+        if logger is None:
+            logger = logging.getLogger(cls.__name__)
+        model_providers = cls.load_providers(
+            model_provider_configs=model_provider_configs,
+            logger=logger,
         )
-    }
+        return cls(
+            settings=cls.default_settings,
+            logger=logger,
+            model_providers=model_providers,
+        )
 
     @classmethod
     def load_providers(
         cls,
         model_provider_configs: Dict[
             ModelProviderName, ModelProviderConfiguration
-        ] = {},
+        ] = None,
         logger: logging.Logger = None,
     ):
         if logger is None:
             logger = logging.getLogger(cls.__name__)
 
         if model_provider_configs is not None:
-            cls.default_model_providers.update(model_provider_configs)
+            cls.default_settings.models.update(model_provider_configs)
 
         model_providers = {}
-        for model_provider_name, config in cls.default_model_providers.items():
+        for model_provider_name, config in cls.default_settings.models.items():
             model_providers.update(
                 {
                     model_provider_name: cls._get_model_provider_instance(
@@ -87,6 +126,5 @@ class ModelProviderFactory:
 
 # Usage example
 if __name__ == "__main__":
-    builder = ModelProviderFactory()
-    model_providers = builder.load_providers()
-    print(model_providers)
+    model_provider_list = ModelProviderFactory.load_providers()
+    print(model_provider_list)
