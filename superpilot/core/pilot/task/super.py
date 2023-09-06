@@ -33,6 +33,7 @@ from superpilot.core.resource.model_providers import (
 
 
 class SuperTaskPilot(TaskPilot):
+
     default_configuration = TaskPilotConfiguration(
         location=PluginLocation(
             storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
@@ -166,6 +167,9 @@ class SuperTaskPilot(TaskPilot):
             "current_time": time.strftime("%c"),
         }
         return template_kwargs
+
+    def __repr__(self):
+        return f"SuperTaskPilot({self._configuration})"
 
 
 def get_os_info() -> str:
