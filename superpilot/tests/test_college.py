@@ -11,6 +11,7 @@ from superpilot.core.resource.model_providers import (
     ModelProviderName,
     OpenAIProvider,
 )
+from superpilot.core.planning.schema import Task
 from superpilot.core.context.schema import Context
 from superpilot.examples.pilots.tasks.overview import CollegeOverViewTaskPilot
 from superpilot.core.ability.super import SuperAbilityRegistry
@@ -20,6 +21,7 @@ ALLOWED_ABILITY = {
     TextSummarizeAbility.name(): TextSummarizeAbility.default_configuration,
 }
 from superpilot.tests.test_env_simple import get_env
+import asyncio
 
 
 if __name__ == "__main__":
@@ -27,9 +29,10 @@ if __name__ == "__main__":
 
     logger = logging.getLogger("SearchAndSummarizeAbility")
     context = Context()
-
-    model_providers = {ModelProviderName.OPENAI: OpenAIProvider()}
     config = get_config()
+    model_providers = {
+        ModelProviderName.OPENAI: OpenAIProvider.factory(api_key=config.openai_api_key)
+    }
 
     env = get_env({})
     print("************************************************************")
@@ -38,4 +41,6 @@ if __name__ == "__main__":
     overview_task_pilot = CollegeOverViewTaskPilot(
         super_ability_registry, model_providers
     )
+    task = Task.factory(query)
+    context = asyncio.run(overview_task_pilot.execute(task, context))
     print(context.format_numbered())

@@ -26,20 +26,21 @@ class TextSummarizeAbility(Ability):
             model_name=OpenAIModelName.GPT3_16K,
             provider_name=ModelProviderName.OPENAI,
             temperature=0.9,
-        )
+        ),
     )
 
     def __init__(
         self,
-            environment: Environment,
-            configuration: AbilityConfiguration = default_configuration,
-            prompt_strategy: SummarizerStrategy = None,
+        environment: Environment,
+        configuration: AbilityConfiguration = default_configuration,
+        prompt_strategy: SummarizerStrategy = None,
     ):
         self._configuration = configuration
         self._logger: logging.Logger = environment.get("logger")
         self._env_config: Config = environment.get("env_config")
-        self._language_model_provider: OpenAIProvider = environment.get("model_providers").get(
-            configuration.language_model_required.provider_name)
+        self._language_model_provider: OpenAIProvider = environment.get(
+            "model_providers"
+        ).get(configuration.language_model_required.provider_name)
         if prompt_strategy is None:
             prompt_strategy = SummarizerStrategy(
                 model_classification=SummarizerStrategy.default_configuration.model_classification,
@@ -107,10 +108,11 @@ class TextSummarizeAbility(Ability):
         }
         prompt = self._prompt_strategy.build_prompt(**template_kwargs)
 
-        model_response = await self.chat_with_model(
+        model_response = await self._language_model_provider.create_language_completion(
             model_prompt=prompt.messages,
             functions=prompt.functions,
             completion_parser=self._parse_response,
+            model_name=self._configuration.language_model_required.model_name,
         )
         # print(model_response)
         text_summary = model_response.content["content"]
