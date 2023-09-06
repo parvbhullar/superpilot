@@ -1,3 +1,5 @@
+# flake8: noqa
+
 from __future__ import annotations
 
 from typing import List, Literal, Optional
@@ -147,7 +149,7 @@ def create_chat_completion(
             if message is not None:
                 return message
 
-    chat_completion_kwargs.update(config.get_openai_credentials(model))
+    # chat_completion_kwargs.update(config.get_openai_credentials(model))
 
     if functions:
         chat_completion_kwargs["functions"] = [
