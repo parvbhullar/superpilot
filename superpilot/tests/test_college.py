@@ -1,3 +1,5 @@
+# flake8: noqa
+
 import os
 import sys
 
@@ -7,6 +9,8 @@ from superpilot.core.configuration.config import get_config
 from superpilot.framework.abilities import (
     TextSummarizeAbility,
 )
+
+from superpilot.examples.abilities.search_college_overview import SearchCollegeOverview
 from superpilot.core.resource.model_providers import (
     ModelProviderName,
     OpenAIProvider,
@@ -18,14 +22,15 @@ from superpilot.core.ability.super import SuperAbilityRegistry
 
 
 ALLOWED_ABILITY = {
-    TextSummarizeAbility.name(): TextSummarizeAbility.default_configuration,
+    SearchCollegeOverview.name(): SearchCollegeOverview.default_configuration,
+    # TextSummarizeAbility.name(): TextSummarizeAbility.default_configuration,
 }
 from superpilot.tests.test_env_simple import get_env
 import asyncio
 
 
 if __name__ == "__main__":
-    query = "What is the weather in Mumbai"
+    query = "Raj Kumar Goel Institute Of Technology"
 
     logger = logging.getLogger("SearchAndSummarizeAbility")
     context = Context()
