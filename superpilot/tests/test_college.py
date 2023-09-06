@@ -11,6 +11,7 @@ from superpilot.framework.abilities import (
 )
 
 from superpilot.examples.abilities.search_college_overview import SearchCollegeOverview
+from superpilot.examples.abilities.generate_md import GenerateMarkdownContent
 from superpilot.core.resource.model_providers import (
     ModelProviderName,
     OpenAIProvider,
@@ -23,6 +24,7 @@ from superpilot.core.ability.super import SuperAbilityRegistry
 
 ALLOWED_ABILITY = {
     SearchCollegeOverview.name(): SearchCollegeOverview.default_configuration,
+    GenerateMarkdownContent.name(): GenerateMarkdownContent.default_configuration,
     # TextSummarizeAbility.name(): TextSummarizeAbility.default_configuration,
 }
 from superpilot.tests.test_env_simple import get_env

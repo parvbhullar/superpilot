@@ -92,9 +92,12 @@ class BaseCollegeTaskPilot(TaskPilot):
             )
         ability_args = response.content.get("ability_arguments", {})
         ability_action = await self._ability_registry.perform(
-            response.content["next_ability"], **ability_args
+            response.content["next_ability"],
+            **ability_args,
+            context=context.format_numbered(),
         )
-        context.extend(ability_action.knowledge)
+        if ability_action:
+            context.extend(ability_action.knowledge)
         return context
 
     async def determine_exec_ability(
