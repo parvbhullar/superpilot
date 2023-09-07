@@ -32,7 +32,7 @@ import asyncio
 
 
 if __name__ == "__main__":
-    query = "Raj Kumar Goel Institute Of Technology"
+    query = "IIT Delhi"
 
     logger = logging.getLogger("SearchAndSummarizeAbility")
     context = Context()
