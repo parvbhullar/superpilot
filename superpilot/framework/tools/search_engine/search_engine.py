@@ -14,8 +14,8 @@ config: Config = get_config()
 
 
 class SearchEngine:
-    """
-    """
+    """ """
+
     def __init__(self, config, engine=None, run_func=None):
         self.config = config
         self.run_func = run_func
@@ -23,28 +23,34 @@ class SearchEngine:
             engine or SearchEngineType.DIRECT_GOOGLE or self.config.search_engine
         )
 
-    def run_google(self, query, max_results=8):
+    def run_google(self, query, max_results=8, **kwargs):
         # results = ddg(query, max_results=max_results)
-        results = self.google_official_search(query, num_results=max_results)
+        results = self.google_official_search(query, num_results=max_results, **kwargs)
         # logger.info(results)
         return results
 
-    async def run(self, query: str, max_results=8):
+    async def run(self, query: str, max_results=8, **kwargs):
         if self.engine == SearchEngineType.SERPAPI_GOOGLE:
             api = SerpAPIWrapper()
-            rsp = await api.run(query)
+            rsp = await api.run(query, **kwargs)
         elif self.engine == SearchEngineType.DIRECT_GOOGLE:
-            rsp = self.run_google(query, max_results)
+            rsp = self.run_google(query, max_results, **kwargs)
         elif self.engine == SearchEngineType.SERPER_GOOGLE:
             api = SerperWrapper()
-            rsp = await api.run(query)
+            rsp = await api.run(query, **kwargs)
         elif self.engine == SearchEngineType.CUSTOM_ENGINE:
-            rsp = self.run_func(query)
+            rsp = self.run_func(query, **kwargs)
         else:
             raise NotImplementedError
         return rsp
 
-    def google_official_search(self, query: str, num_results: int = 8, focus=['snippet', 'link', 'title']) -> dict | list[dict]:
+    def google_official_search(
+        self,
+        query: str,
+        num_results: int = 8,
+        focus=["snippet", "link", "title"],
+        **kwargs,
+    ) -> dict | list[dict]:
         """Return the results of a Google search using the official Google API
 
         Args:
@@ -63,10 +69,14 @@ class SearchEngine:
             custom_search_engine_id = self.config.google_custom_search_engine_id
             print(self.config)
             with build("customsearch", "v1", developerKey=api_key) as service:
-
                 result = (
                     service.cse()
-                    .list(q=query, cx=custom_search_engine_id, num=num_results)
+                    .list(
+                        q=query,
+                        cx=custom_search_engine_id,
+                        num=num_results,
+                        **kwargs,
+                    )
                     .execute()
                 )
                 # logger.info(result)
@@ -74,7 +84,10 @@ class SearchEngine:
             search_results = result.get("items", [])
 
             # Create a list of only the URLs from the search results
-            search_results_details = [{i: j for i, j in item_dict.items() if i in focus} for item_dict in search_results]
+            search_results_details = [
+                {i: j for i, j in item_dict.items() if i in focus}
+                for item_dict in search_results
+            ]
 
         except HttpError as e:
             # Handle errors in the API call

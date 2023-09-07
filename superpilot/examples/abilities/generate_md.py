@@ -1,8 +1,8 @@
 import logging
+import os
 from superpilot.core.ability.base import Ability, AbilityConfiguration
+from superpilot.core.context.schema import Context, FileContentItem
 from superpilot.core.environment import Environment
-
-# from superpilot.core.context.schema import Content, ContentType, Context
 from superpilot.core.planning.simple import LanguageModelConfiguration
 from superpilot.core.planning.strategies.markdown import MarkdownGeneratorStrategy
 from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
@@ -38,6 +38,7 @@ class GenerateMarkdownContent(Ability):
             configuration.language_model_required.provider_name
         )
         self._prompt_strategy = MarkdownGeneratorStrategy()
+        self._workspace = environment.get("workspace")
 
     @classmethod
     def description(cls) -> str:
@@ -62,8 +63,13 @@ class GenerateMarkdownContent(Ability):
             model_name=self._configuration.language_model_required.model_name,
         )
         text_summary = model_response.content["content"]
-        print(text_summary)
-        return None
+        work_space_media = f"{self._workspace.root}/media"
+        os.makedirs(work_space_media, exist_ok=True)
+        file_path = f"{work_space_media}/summary.md"
+        with open(f"{work_space_media}/summary.md", "w") as f:
+            f.write(text_summary)
+        content = FileContentItem(file_path=file_path)
+        return Context(items=[content])
 
     @staticmethod
     def _parse_response(response_content: dict) -> dict:

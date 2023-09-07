@@ -8,9 +8,10 @@ from superpilot.core.resource.model_providers import (
     ModelProviderName,
     OpenAIModelName,
 )
+from superpilot.framework.llm.base import ChatSequence
+from superpilot.framework.llm.utils import create_chat_completion
 from superpilot.framework.tools.search_engine import SearchEngine, SearchEngineType
 from superpilot.framework.tools.web_browser import WebBrowserEngine
-from superpilot.framework.tools.summarizer import Summarizer
 from superpilot.core.configuration import Config
 from superpilot.core.planning.strategies import SummarizerStrategy
 import asyncio
@@ -98,7 +99,9 @@ class SearchCollegeOverview(Ability):
             return None
 
         self._logger.debug(query)
-        rsp = await self._search_engine.run(query, max_results=4)
+        rsp = await self._search_engine.run(
+            query, max_results=2, gl="in", siteSearch="https://www.careers360.com"
+        )
         if not rsp:
             self._logger.error("empty rsp...")
             return Content.add_content_item("Empty Response", ContentType.TEXT)
@@ -112,7 +115,7 @@ class SearchCollegeOverview(Ability):
         text_responses = await asyncio.gather(*tasks, return_exceptions=True)
 
         tasks = [
-            Summarizer().run(response, query, new_search_urls[i])
+            self.summarize_content(response, config=self._env_config)
             for i, response in enumerate(text_responses)
         ]
         responses = await asyncio.gather(*tasks, return_exceptions=True)
@@ -129,3 +132,30 @@ class SearchCollegeOverview(Ability):
     @staticmethod
     def _parse_response(response_content: dict) -> dict:
         return {"content": response_content["content"]}
+
+    async def summarize_content(self, content, **kwargs):
+        promt = """
+        Use Below content, and generate an understandable summary of the content accordingly and segregate the info along with heading as per content.
+        content :\n{content}
+        Also remove all the unnecessary information from the content and provide the summary of the content.
+        """
+        system_message = """
+                    You are a college content summarizer,
+                    You can use the provided the college overview information from the internet using search engines based on Playwright or Selenium Browser and then convert into the readable summary along with the respective heading as per the content.
+                    """
+        config: Config = kwargs.get("config")
+        summarization_prompt = ChatSequence.for_model(
+            kwargs.get("model", config.fast_llm_model)
+        )
+        summarization_prompt.add("system", system_message)
+        summarization_prompt.add("user", promt.format(content=content))
+        try:
+            response = create_chat_completion(
+                prompt=summarization_prompt,
+                temperature=0.9,
+                **kwargs,
+            )
+            return response.content
+        except Exception as e:
+            print(f"Error summarizing content: {str(e)}")
+            return None
