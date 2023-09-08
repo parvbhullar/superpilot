@@ -64,20 +64,7 @@ class SearchCollegeOverview(Ability):
             "query": {
                 "type": "string",
                 "description": "Name of the College Name for which need the overview",
-            },
-            "context": {
-                "type": "array",
-                "items": {
-                    "type": "string",
-                    "description": "Additional context to refine overview details.",
-                },
-                "description": "Contextual information to guide the summarization.",
-            },
-            "system_text": {
-                "type": "string",
-                "description": "System text to define the requirements and format of the search and summarization.",
-                "default": "SEARCH_AND_SUMMARIZE_SYSTEM",
-            },
+            }
         }
 
     async def __call__(self, query: str, **kwargs) -> Context:
@@ -100,7 +87,7 @@ class SearchCollegeOverview(Ability):
 
         self._logger.debug(query)
         rsp = await self._search_engine.run(
-            query, max_results=2, gl="in", siteSearch="https://www.careers360.com"
+            query, max_results=6, gl="in", siteSearch="https://www.careers360.com"
         )
         if not rsp:
             self._logger.error("empty rsp...")

@@ -67,7 +67,7 @@ class FileContentItem(ContentItem):
 
     @property
     def content(self) -> str:
-        return self.file_path.read_text()
+        return open(self.file_path).read()
 
     @property
     def description(self) -> str:
