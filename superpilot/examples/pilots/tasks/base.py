@@ -95,6 +95,7 @@ class BaseCollegeTaskPilot(TaskPilot):
             response.content["next_ability"],
             **ability_args,
             context=context.format_numbered(),
+            task=task,
         )
         if ability_action:
             context.extend(ability_action.knowledge)

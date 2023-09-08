@@ -1,5 +1,7 @@
 import logging
 import os
+import time
+import inflection
 from superpilot.core.ability.base import Ability, AbilityConfiguration
 from superpilot.core.context.schema import Context, FileContentItem
 from superpilot.core.environment import Environment
@@ -65,8 +67,13 @@ class GenerateMarkdownContent(Ability):
         text_summary = model_response.content["content"]
         work_space_media = f"{self._workspace.root}/media"
         os.makedirs(work_space_media, exist_ok=True)
-        file_path = f"{work_space_media}/summary.md"
-        with open(f"{work_space_media}/summary.md", "w") as f:
+        task = kwargs.get("task")
+        if task:
+            objective = task.objective
+            file_path = f"{work_space_media}/{inflection.underscore(objective).replace(' ','-')}.md"
+        else:
+            file_path = f"{work_space_media}/summary{int(time.time())}.md"
+        with open(file_path, "w") as f:
             f.write(text_summary)
         content = FileContentItem(file_path=file_path)
         return Context(items=[content])
