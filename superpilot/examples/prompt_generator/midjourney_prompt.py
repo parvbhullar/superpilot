@@ -20,8 +20,10 @@ from typing import List, Optional, Union, Dict
 
 class BasePromptModel(SchemaModel):
     """
-    Class representing a question and its answer as a list of facts each one should have a soruce.
-    each sentence contains a body and a list of sources."""
+    This class serves as a data model for Midjourney Prompts used in AI art generation.
+    It includes various fields that describe the properties and attributes of the art piece to be generated.
+    Each field is self-explanatory and maps directly to a specific aspect of the art piece.
+    """
 
     content: str = Field(..., description="Full body of response content from the llm model")
     prompts: List[str] = Field(
