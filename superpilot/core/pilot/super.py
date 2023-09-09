@@ -5,6 +5,7 @@ from typing import Any
 
 from superpilot.core.ability import (
     AbilityAction,
+    AbilityRegistry,
     SimpleAbilityRegistry,
 )
 from superpilot.core.pilot.base import Pilot
@@ -54,7 +55,7 @@ class SuperPilot(Pilot, Configurable):
     def __init__(
         self,
         settings: PilotSystemSettings,
-        ability_registry: SimpleAbilityRegistry,
+        ability_registry: AbilityRegistry,
         planning: SimplePlanner,
         environment: SimpleEnv,
     ):

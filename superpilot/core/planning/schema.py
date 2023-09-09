@@ -83,13 +83,15 @@ class Task(BaseModel):
     context: TaskContext = Field(default_factory=TaskContext)
 
     @classmethod
-    def factory(cls,
-                objective: str,
-                type: str = TaskType.RESEARCH,
-                priority: int = 1,
-                ready_criteria: List[str] = None,
-                acceptance_criteria: List[str] = None,
-                context: TaskContext = None):
+    def factory(
+        cls,
+        objective: str,
+        type: str = TaskType.RESEARCH,
+        priority: int = 1,
+        ready_criteria: List[str] = None,
+        acceptance_criteria: List[str] = None,
+        context: TaskContext = None,
+    ):
         if ready_criteria is None:
             ready_criteria = [""]
         if acceptance_criteria is None:
@@ -97,15 +99,19 @@ class Task(BaseModel):
         if context is None:
             context = TaskContext()
 
-        return cls(objective=objective,
-                   type=type,
-                   priority=priority,
-                   ready_criteria=ready_criteria,
-                   acceptance_criteria=acceptance_criteria,
-                   context=context)
+        return cls(
+            objective=objective,
+            type=type,
+            priority=priority,
+            ready_criteria=ready_criteria,
+            acceptance_criteria=acceptance_criteria,
+            context=context,
+        )
 
     def generate_kwargs(self) -> dict[str, str]:
-        action_history = "\n".join([str(action) for action in self.context.prior_actions])
+        action_history = "\n".join(
+            [str(action) for action in self.context.prior_actions]
+        )
         additional_info = "\n".join(self.context.supplementary_info)
         user_input = "\n".join(self.context.user_input)
         acceptance_criteria = "\n".join(self.acceptance_criteria)
@@ -116,7 +122,7 @@ class Task(BaseModel):
             "action_history": action_history,
             "additional_info": additional_info,
             "user_input": user_input,
-            "acceptance_criteria": acceptance_criteria
+            "acceptance_criteria": acceptance_criteria,
         }
 
 

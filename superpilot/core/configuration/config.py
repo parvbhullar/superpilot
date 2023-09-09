@@ -1,13 +1,10 @@
 from __future__ import annotations
-
-import contextlib
 import os
-import re
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Optional, List
 from superpilot.core.configuration import SystemSettings, Configurable
-import yaml
 from functools import lru_cache
+
 
 class Config(SystemSettings, arbitrary_types_allowed=True):
     name: str = "Superpilot configuration"
@@ -28,6 +25,12 @@ class Config(SystemSettings, arbitrary_types_allowed=True):
     sd_webui_auth: Optional[str] = None
     # SerpAPI
     serp_api_key: Optional[str] = None
+
+    fast_llm_model: Optional[str] = None
+
+    smart_llm_model: Optional[str] = None
+
+    plugins: Optional[List] = []
 
 
 class ConfigBuilder(Configurable[Config]):
@@ -60,6 +63,8 @@ class ConfigBuilder(Configurable[Config]):
             "serp_api_key": os.getenv("SERP_API_KEY"),
             "openai_api_key": os.getenv("OPENAI_API_KEY"),
             "google_custom_search_engine_id": os.getenv("CUSTOM_SEARCH_ENGINE_ID"),
+            "fast_llm_model": os.getenv("FAST_LLM_MODEL"),
+            "smart_llm_model": os.getenv("SMART_LLM_MODEL"),
         }
 
         config_dict_without_none_values = {

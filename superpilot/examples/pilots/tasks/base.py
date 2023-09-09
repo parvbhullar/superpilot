@@ -1,6 +1,4 @@
-import asyncio
 import logging
-import platform
 import time
 from typing import List, Dict
 
@@ -10,9 +8,7 @@ from superpilot.core.ability.base import AbilityRegistry
 from superpilot.core.plugin.simple import (
     PluginLocation,
     PluginStorageFormat,
-    SimplePluginService,
 )
-import distro
 from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning import strategies
 from superpilot.core.planning.schema import (
@@ -23,21 +19,20 @@ from superpilot.core.planning.schema import (
 from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
     LanguageModelClassification,
-    PromptStrategiesConfiguration,
 )
 from superpilot.core.resource.model_providers import (
     LanguageModelProvider,
     ModelProviderName,
     OpenAIModelName,
 )
+from superpilot.framework.helpers.system import get_os_info
 
 
-class SuperTaskPilot(TaskPilot):
-
+class BaseCollegeTaskPilot(TaskPilot):
     default_configuration = TaskPilotConfiguration(
         location=PluginLocation(
             storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
-            storage_route="superpilot.core.flow.simple.SuperTaskPilot",
+            storage_route=f"{__name__}.BaseCollegeTaskPilot",
         ),
         execution_nature=ExecutionNature.SEQUENTIAL,
         prompt_strategy=strategies.NextAbility.default_configuration,
@@ -72,29 +67,16 @@ class SuperTaskPilot(TaskPilot):
             self._providers[model] = model_providers[model_config.provider_name]
 
         self._prompt_strategy = strategies.NextAbility(
-                **self._configuration.prompt_strategy.dict()
-            )
+            **self._configuration.prompt_strategy.dict()
+        )
 
-    async def execute(self, task: Task, context_res: Context, *args, **kwargs) -> Context:
-        if self._execution_nature == ExecutionNature.PARALLEL:
-            tasks = [
-                self.perform_ability(task, [ability.dump()], context_res, **kwargs)
-                for ability in self._ability_registry.abilities()
-            ]
-            res_list = await asyncio.gather(*tasks)
-            for response in res_list:
-                context_res.extend(response)
-        elif self._execution_nature == ExecutionNature.AUTO:
-            context_res = self.perform_ability(
-                task, self._ability_registry.dump_abilities(), context_res, **kwargs
+    async def execute(
+        self, task: Task, context_res: Context, *args, **kwargs
+    ) -> Context:
+        for ability in self._ability_registry.abilities():
+            context_res = await self.perform_ability(
+                task, [ability.dump()], context_res, **kwargs
             )
-        else:
-            # Execute for Sequential nature
-            for ability in self._ability_registry.abilities():
-                # print(res.content)
-                context_res = await self.perform_ability(
-                    task, [ability.dump()], context_res, **kwargs
-                )
         return context_res
 
     async def perform_ability(
@@ -110,9 +92,13 @@ class SuperTaskPilot(TaskPilot):
             )
         ability_args = response.content.get("ability_arguments", {})
         ability_action = await self._ability_registry.perform(
-            response.content["next_ability"], **ability_args
+            response.content["next_ability"],
+            **ability_args,
+            context=context.format_numbered(),
+            task=task,
         )
-        context.extend(ability_action.knowledge)
+        if ability_action:
+            context.extend(ability_action.knowledge)
         return context
 
     async def determine_exec_ability(
@@ -169,14 +155,4 @@ class SuperTaskPilot(TaskPilot):
         return template_kwargs
 
     def __repr__(self):
-        return f"SuperTaskPilot({self._configuration})"
-
-
-def get_os_info() -> str:
-    os_name = platform.system()
-    os_info = (
-        platform.platform(terse=True)
-        if os_name != "Linux"
-        else distro.name(pretty=True)
-    )
-    return os_info
+        return f"{self.__class__.__name__}()"

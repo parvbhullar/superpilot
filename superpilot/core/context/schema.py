@@ -8,6 +8,7 @@ from pathlib import Path
 
 class ContentType(str, enum.Enum):
     # TBD what these actually are.
+    MARKDOWN = "markdown"
     TEXT = "text"
     CODE = "code"
     IMAGE = "image"
@@ -58,7 +59,6 @@ class ContentItem(ABC):
 @dataclass
 class FileContentItem(ContentItem):
     file_path: Path
-    description: str
     type = ContentType.FILE
 
     @property
@@ -67,7 +67,11 @@ class FileContentItem(ContentItem):
 
     @property
     def content(self) -> str:
-        return self.file_path.read_text()
+        return open(self.file_path).read()
+
+    @property
+    def description(self) -> str:
+        return f"The contents of the file '{self.file_path}' in the workspace"
 
 
 @dataclass
