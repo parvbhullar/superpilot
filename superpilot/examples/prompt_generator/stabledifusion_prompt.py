@@ -16,7 +16,56 @@ from superpilot.core.resource.model_providers import (
 from superpilot.core.planning.settings import PromptStrategyConfiguration
 from pydantic import Field
 from typing import List, Optional, Union, Dict
+from pydantic import BaseModel, Field, conint, confloat
+from typing import List, Optional
+from enum import Enum
 
+
+class TextPrompt(BaseModel):
+    text: str = Field(..., max_length=2000, description="The prompt itself")
+    weight: float = Field(..., description="Weight of the prompt (use negative numbers for negative prompts)")
+
+
+class ClipGuidancePreset(str, Enum):
+    FAST_BLUE = "FAST_BLUE"
+    FAST_GREEN = "FAST_GREEN"
+    NONE = "NONE"
+    SIMPLE = "SIMPLE"
+    SLOW = "SLOW"
+    SLOWER = "SLOWER"
+    SLOWEST = "SLOWEST"
+
+
+class Sampler(str, Enum):
+    DDIM = "DDIM"
+    DDPM = "DDPM"
+    K_DPMPP_2M = "K_DPMPP_2M"
+    K_DPMPP_2S_ANCESTRAL = "K_DPMPP_2S_ANCESTRAL"
+    K_DPM_2 = "K_DPM_2"
+    K_DPM_2_ANCESTRAL = "K_DPM_2_ANCESTRAL"
+    K_EULER = "K_EULER"
+    K_EULER_ANCESTRAL = "K_EULER_ANCESTRAL"
+    K_HEUN = "K_HEUN"
+    K_LMS = "K_LMS"
+
+class StylePreset(str, Enum):
+    _3D_MODEL = "3d-model"
+    ANALOG_FILM = "analog-film"
+    ANIME = "anime"
+    CINEMATIC = "cinematic"
+    COMIC_BOOK = "comic-book"
+    DIGITAL_ART = "digital-art"
+    ENHANCE = "enhance"
+    FANTASY_ART = "fantasy-art"
+    ISOMETRIC = "isometric"
+    LINE_ART = "line-art"
+    LOW_POLY = "low-poly"
+    MODELING_COMPOUND = "modeling-compound"
+    NEON_PUNK = "neon-punk"
+    ORIGAMI = "origami"
+    PHOTOGRAPHIC = "photographic"
+    PIXEL_ART = "pixel-art"
+    TILE_TEXTURE = "tile-texture"
 
 class StableDiffusionPromptModel(SchemaModel):
     """
@@ -24,21 +73,34 @@ class StableDiffusionPromptModel(SchemaModel):
     It includes various fields that describe the properties and attributes of the art piece to be generated.
     Each field is self-explanatory and maps directly to a specific aspect of the art piece.
     """
-    subject: str = Field(..., description="The main subject of the art piece.")
-    action: str = Field(..., description="What the subject is doing.")
-    context: str = Field(..., description="Background and surroundings.")
-    environment: str = Field(..., description="General setting.")
-    lighting: str = Field(..., description="Type of lighting in the scene.")
-    artist: str = Field(..., description="Artist whose style is to be mimicked.")
-    art_style: str = Field(..., alias="style", description="Artistic style.")
-    medium: str = Field(..., description="Medium used for the art.")
-    type: str = Field(..., description="Type of art e.g., illustration, painting.")
-    color_scheme: str = Field(..., description="Color scheme to be followed.")
-    computer_graphics: str = Field(..., description="Computer graphics tech used.")
-    quality: str = Field(..., description="Resolution quality.")
-    etc: List[str] = Field(..., description="Additional specifications.")
-    positive_prompt: str = Field(..., description="Positive prompt.")
-    negative_prompt: str = Field(..., description="Negative prompt.")
+    height: conint(multiple_of=64, ge=128) = Field(512, description="Height of the image in pixels. Must be in increments of 64.")
+    width: conint(multiple_of=64, ge=128) = Field(512, description="Width of the image in pixels. Must be in increments of 64.")
+    text_prompts: List[TextPrompt] = Field(..., description="An array of text prompts to use for generation.")
+    cfg_scale: conint(ge=0, le=35) = Field(7, description="How strictly the diffusion process adheres to the prompt text")
+    clip_guidance_preset: ClipGuidancePreset = Field(ClipGuidancePreset.NONE, description="Which clip guidance preset to use")
+    sampler: Optional[Sampler] = Field(None, description="Which sampler to use for the diffusion process.")
+    samples: conint(ge=1, le=10) = Field(1, description="Number of images to generate")
+    seed: conint(ge=0, le=4294967295) = Field(0, description="Random noise seed")
+    steps: conint(ge=10, le=150) = Field(50, description="Number of diffusion steps to run")
+    style_preset: Optional[StylePreset] = Field(None, description="Pass in a style preset to guide the image model towards a particular style.")
+    extras: Optional[dict] = Field(None, description="Extra parameters passed to the engine for experimental features.")
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "height": 512,
+                "width": 512,
+                "text_prompts": [{"text": "A lighthouse on a cliff", "weight": 0.5}],
+                "cfg_scale": 7,
+                "clip_guidance_preset": "NONE",
+                "sampler": "DDIM",
+                "samples": 1,
+                "seed": 0,
+                "steps": 50,
+                "style_preset": "3d-model",
+                "extras": {}
+            }
+        }
 
 
 class StableDiffusionPrompt(SimplePrompt):
@@ -58,23 +120,7 @@ class StableDiffusionPrompt(SimplePrompt):
         Stable Diffusion is an AI art generation model similar to DALLE-2. 
         It can be used to create impressive artwork by using positive and negative prompts. Positive prompts describe what should be included in the image. 
         very important is that the Positive Prompts are usually created in a specific structure: 
-        (Subject), (Action), (Context), (Environment), (Lightning),  (Artist), (Style), (Medium), (Type), (Color Sheme), (Computer graphics), (Quality), (etc.)
-        Subject: Person, animal, landscape
-        Action: dancing, sitting, surveil
-        Verb: What the subject is doing, such as standing, sitting, eating, dancing, surveil
-        Adjectives: Beautiful, realistic, big, colourful
-        Context: Alien planet's pond, lots of details
-        Environment/Context: Outdoor, underwater, in the sky, at night
-        Lighting: Soft, ambient, neon, foggy, Misty
-        Emotions: Cosy, energetic, romantic, grim, loneliness, fear
-        Artist: Pablo Picasso, Van Gogh, Da Vinci, Hokusai 
-        Art medium: Oil on canvas, watercolour, sketch, photography
-        style: Polaroid, long exposure, monochrome, GoPro, fisheye, bokeh, Photo, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3
-        Art style: Manga, fantasy, minimalism, abstract, graffiti
-        Material: Fabric, wood, clay, Realistic, illustration, drawing, digital painting, photoshop, 3D
-        Colour scheme: Pastel, vibrant, dynamic lighting, Green, orange, red
-        Computer graphics: 3D, octane, cycles
-        Illustrations: Isometric, pixar, scientific, comic
+        Negative Prompts describe what should not be included in the image.
         Quality: High definition, 4K, 8K, 64K
         use this Negative Prompts and add some words what you think that match to Prompt: 2 heads, 2 faces, cropped image, out of frame, draft, deformed hands, signatures, twisted fingers, double image, long neck, malformed hands, nwltiple heads, extra limb, ugty, poorty drawn hands, missing limb, disfigured, cut-off, ugty, grain, Iow-res, Deforrned, blurry, bad anaWny, disfigured, poorty drawn face, mutation, mutated, floating limbs, disconnected limbs, long body, disgusting, poorty drawn, mutilated, mangled, surreal, extra fingers, duplicate artifacts, morbid, gross proportions, missing arms, mutated hands, mutilated hands, cloned face, malformed,ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, bad anatomy, watermark, signature, cut off, low contrast, underexposed, overexposed, bad art, beginner, amateur, distorted face, blurry, draft, grainy, etc 
         very important: use an artist matching to the art style , or dont write any artist if it is realistic style or some of that.
