@@ -1,5 +1,4 @@
-import logging
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 from superpilot.core.ability.base import Ability, AbilityConfiguration, AbilityRegistry
 from superpilot.core.ability.builtins import BUILTIN_ABILITIES
@@ -9,13 +8,7 @@ from superpilot.core.configuration import (
     SystemConfiguration,
     SystemSettings,
 )
-from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
 from superpilot.core.plugin.simple import SimplePluginService
-from superpilot.core.resource.model_providers import (
-    LanguageModelProvider,
-    ModelProviderName,
-)
-from superpilot.core.workspace.base import Workspace
 from superpilot.core.environment import Environment
 
 
@@ -46,7 +39,6 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
         settings: AbilityRegistrySettings,
         environment: Environment,
     ):
-
         self._configuration = settings.configuration
         self._environment = environment
         self._logger = environment.get("logger")
@@ -73,11 +65,11 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
             pass
         system_parameters = ability_class.__init__.__annotations__
         for parameter_name in system_parameters:
-            if parameter_name not in ability_args and parameter_name != 'environment':
+            if parameter_name not in ability_args and parameter_name != "environment":
                 ability_args[parameter_name] = self._environment.get(parameter_name)
-        if 'environment' in system_parameters:
-            ability_args['environment'] = self._environment
-        ability = ability_class(**ability_args) 
+        if "environment" in system_parameters:
+            ability_args["environment"] = self._environment
+        ability = ability_class(**ability_args)
         self._abilities.append(ability)
 
     def list_abilities(self) -> List[str]:
@@ -111,9 +103,7 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
 
     @classmethod
     def factory(
-            cls,
-            environment: Environment,
-            allowed_abilities: Optional[Dict] = None
+        cls, environment: Environment, allowed_abilities: Optional[Dict] = None
     ) -> "SuperAbilityRegistry":
         # Generate default settings
         ability_settings = SuperAbilityRegistry.default_settings
@@ -125,9 +115,9 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
         # Optionally override abilities
         if allowed_abilities:
             ability_settings.configuration.abilities = {
-                ability_name: ability for ability_name, ability in allowed_abilities.items()
+                ability_name: ability
+                for ability_name, ability in allowed_abilities.items()
             }
 
         # Instantiate and return SuperAbilityRegistry
         return cls(ability_settings, environment)
-

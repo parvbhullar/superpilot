@@ -18,41 +18,61 @@ from pydantic import Field
 from typing import List, Optional, Union, Dict
 
 
-class BaseContent(SchemaModel):
+class BasePromptModel(SchemaModel):
     """
     Class representing a question and its answer as a list of facts each one should have a soruce.
     each sentence contains a body and a list of sources."""
 
     content: str = Field(..., description="Full body of response content from the llm model")
-    highlights: List[str] = Field(
+    prompts: List[str] = Field(
         ...,
-        description="Body of the answer, each fact should be its separate object with a body and a list of sources",
+        description="Detailed list of all the prompts that the llm model generated",
     )
 
 
-class SimplePrompt(PromptStrategy):
+class MidjourneyPrompt(PromptStrategy):
     DEFAULT_SYSTEM_PROMPT = (
-        "Your job is to respond to a user-defined query by answering the question, "
-        "Or completing the task it could be passing the format and generating the "
-        "requested response in given function call model."
+        """
+        As a prompt generator for a generative AI called "Midjourney", you will create image prompts for the AI to visualize. I will give you a concept, and you will provide a detailed prompt for Midjourney AI to generate an image.
+        Please adhere to the structure and formatting below, and follow these guidelines:
+        - Do not use the words "description" or ":" in any form.
+        - Do not place a comma between [ar] and [v].
+        - Write each prompt in one line without using return.
+        """
     )
 
     DEFAULT_USER_PROMPT_TEMPLATE = (
-        "Your current task is '{task_objective}'.\n"
-        "You have taken {cycle_count} actions on this task already. "
-        "Here is the actions you have taken and their results:\n"
-        "{action_history}\n\n"
-        "Here is additional information that may be useful to you:\n"
-        "{additional_info}\n\n"
-        "Additionally, you should consider the following:\n"
-        "{user_input}\n\n"
-        "Your task of '{task_objective}' is complete when the following acceptance criteria have been met:\n"
-        "{acceptance_criteria}\n\n"
-        "Please choose one of the provided functions to accomplish this task. \n"
-        "Use the provided information to make your decision. if information is not provided use your knowledge.\n"
+        """
+        Structure:
+        [1] = {task_objective}
+        [2] = a detailed description of [1] with specific imagery details.
+        [3] = a detailed description of the scene's environment.
+        [4] = a detailed description of the scene's mood, feelings, and atmosphere.
+        [5] = A style (e.g. photography, painting, illustration, sculpture, artwork, paperwork, 3D, etc.) for [1].
+        [6] = A description of how [5] will be executed (e.g. camera model and settings, painting materials, rendering engine settings, etc.)
+        [ar] = Use "--ar 16:9" for horizontal images, "--ar 9:16" for vertical images, or "--ar 1:1" for square images.
+        [v] = Use "--niji" for Japanese art style, or "--v 5" for other styles.
+
+        Formatting: 
+        Follow this prompt structure: "/imagine prompt: [1], [2], [3], [4], [5], [6], [ar] [v]".
+
+        Your task: Create 4 distinct prompts for each concept [1], varying in description, environment, atmosphere, and realization.
+
+        - Write your prompts in English.
+        - Do not describe unreal concepts as "real" or "photographic".
+        - Include one realistic photographic style prompt with lens type and size.
+        - Separate different prompts with two new lines.
+
+        Example Prompts:
+        Prompt 1:
+        /imagine prompt: A stunning Halo Reach landscape with a Spartan on a hilltop, lush green forests surround them, clear sky, distant city view, focusing on the Spartan's majestic pose, intricate armor, and weapons, Artwork, oil painting on canvas, --ar 16:9 --v 5
+
+        Prompt 2:
+        /imagine prompt: A captivating Halo Reach landscape with a Spartan amidst a battlefield, fallen enemies around, smoke and fire in the background, emphasizing the Spartan's determination and bravery, detailed environment blending chaos and beauty, Illustration, digital art, --ar 16:9 --v 5
+        """
     )
 
-    DEFAULT_PARSER_SCHEMA = BaseContent.function_schema()
+    DEFAULT_PARSER_SCHEMA = BasePromptModel.function_schema()
 
     default_configuration = PromptStrategyConfiguration(
         model_classification=LanguageModelClassification.SMART_MODEL,
@@ -147,7 +167,7 @@ class SimplePrompt(PromptStrategy):
 
     @classmethod
     def factory(cls, system_prompt=None, user_prompt_template=None, parser=None, model_classification=None)\
-            -> "SimplePrompt":
+            -> "MidjourneyPrompt":
         config = cls.default_configuration.dict()
         if model_classification:
             config['model_classification'] = model_classification

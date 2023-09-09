@@ -272,32 +272,47 @@ class OpenAIProvider(
 
     @classmethod
     def factory(
-            cls,
-            api_key: Optional[str],
-            retries_per_request: int = 10,
-            total_budget: float = float("inf"),
-            graceful_shutdown_threshold: float = 0.005,
-            warning_threshold: float = 0.01,
-            logger: Optional[logging.Logger] = None
+        cls,
+        api_key: Optional[str] = None,
+        retries_per_request: int = 10,
+        total_budget: float = float("inf"),
+        graceful_shutdown_threshold: float = 0.005,
+        warning_threshold: float = 0.01,
+        logger: Optional[logging.Logger] = None,
     ) -> "OpenAIProvider":
         # Configure logger
         if logger is None:
             logger = logging.getLogger(__name__)
 
-        # Initialize settings
-        settings = cls.default_settings
-        settings.configuration.retries_per_request = retries_per_request
-        settings.credentials.api_key = api_key
-        settings.budget.total_budget = total_budget
-        settings.budget.graceful_shutdown_threshold = graceful_shutdown_threshold
-        settings.budget.warning_threshold = warning_threshold
-
-        settings = cls.build_configuration(
-            settings.dict()
+        settings = cls.init_settings(
+            api_key,
+            retries_per_request,
+            total_budget,
+            graceful_shutdown_threshold,
+            warning_threshold,
         )
 
         # Instantiate and return OpenAIProvider
         return OpenAIProvider(settings=settings, logger=logger)
+
+    @classmethod
+    def init_settings(
+        cls,
+        api_key: Optional[str] = None,
+        retries_per_request: int = 10,
+        total_budget: float = float("inf"),
+        graceful_shutdown_threshold: float = 0.005,
+        warning_threshold: float = 0.01,
+    ):
+        # Initialize settings
+        settings = cls.default_settings
+        settings.configuration.retries_per_request = retries_per_request
+        settings.credentials.api_key = api_key or settings.credentials.api_key
+        settings.budget.total_budget = total_budget
+        settings.budget.graceful_shutdown_threshold = graceful_shutdown_threshold
+        settings.budget.warning_threshold = warning_threshold
+        settings = cls.build_configuration(settings.dict())
+        return settings
 
 
 async def _create_embedding(text: str, *_, **kwargs) -> openai.Embedding:
