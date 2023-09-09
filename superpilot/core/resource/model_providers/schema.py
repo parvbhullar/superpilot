@@ -22,6 +22,8 @@ class ModelProviderService(str, enum.Enum):
     EMBEDDING: str = "embedding"
     LANGUAGE: str = "language"
     TEXT: str = "text"
+    IMAGE: str = "text"
+    VIDEO: str = "text"
 
 
 class ModelProviderName(str, enum.Enum):
@@ -223,6 +225,36 @@ class LanguageModelProvider(ModelProvider):
         completion_parser: Callable[[dict], dict],
         **kwargs,
     ) -> LanguageModelProviderModelResponse:
+        ...
+
+
+###################
+# Media Models #
+###################
+
+
+class MediaModelProviderModelInfo(ModelProviderModelInfo):
+    """Struct for language model information."""
+
+    model_service = ModelProviderService.IMAGE
+    max_tokens: int
+
+
+class MediaModelProviderModelResponse(ModelProviderModelResponse):
+    """Standard response struct for a response from a language model."""
+
+    content: dict = None
+
+
+class MediaModelProvider(ModelProvider):
+    @abc.abstractmethod
+    async def generate(
+        self,
+        model_prompt: dict,
+        model_name: str,
+        completion_parser: Callable[[dict], dict],
+        **kwargs,
+    ) -> MediaModelProviderModelResponse:
         ...
 
 
