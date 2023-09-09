@@ -16,6 +16,9 @@ ALLOWED_ABILITY = {
     TextSummarizeAbility.name(): TextSummarizeAbility.default_configuration,
 }
 from superpilot.examples.prompt_generator.midjourney_prompt import MidjourneyPrompt
+from superpilot.examples.prompt_generator.stabledifusion_prompt import (
+    StableDiffusionPrompt,
+)
 
 # Flow executor -> Context
 #
@@ -37,13 +40,14 @@ async def test_pilot():
 
     model_providers = ModelProviderFactory.load_providers()
     super_prompt = MidjourneyPrompt.factory()
+    super_prompt = StableDiffusionPrompt.factory()
 
-    midjourney_pilot = SimpleTaskPilot.factory(
+    prompt_pilot = SimpleTaskPilot.factory(
         prompt_strategy=super_prompt.get_config(), model_providers=model_providers
     )
 
     print("***************** Executing SimplePilot ******************************\n")
-    response = await midjourney_pilot.execute(query)
+    response = await prompt_pilot.execute(query)
     print(response)
 
 
