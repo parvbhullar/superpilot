@@ -3,7 +3,7 @@ import logging
 import platform
 import time
 from abc import ABC
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
 from superpilot.core.context.schema import Context
@@ -24,12 +24,13 @@ from superpilot.core.planning.schema import (
 from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
     LanguageModelClassification,
-    PromptStrategiesConfiguration,
+    PromptStrategyConfiguration,
 )
 from superpilot.core.resource.model_providers import (
     LanguageModelProvider,
     ModelProviderName,
     OpenAIModelName,
+    OpenAIProvider,
 )
 
 
@@ -128,6 +129,45 @@ class SimpleTaskPilot(TaskPilot, ABC):
 
     def __repr__(self):
         return f"{self.__class__.__name__}()"
+
+    @classmethod
+    def factory(
+            cls,
+            prompt_strategy: PromptStrategyConfiguration = None,
+            model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
+            execution_nature: ExecutionNature = None,
+            models: Dict[LanguageModelClassification, LanguageModelConfiguration] = None,
+            location: PluginLocation = None,
+            logger: logging.Logger = None
+    ) -> "SimpleTaskPilot":
+
+        # Initialize settings
+        config = cls.default_configuration
+        if location is not None:
+            config.location = location
+        if execution_nature is not None:
+            config.execution_nature = execution_nature
+        if prompt_strategy is not None:
+            config.prompt_strategy = prompt_strategy
+        if models is not None:
+            config.models = models
+
+        # Use default logger if not provided
+        if logger is None:
+            logger = logging.getLogger(__name__)
+
+        # Use empty dictionary for model_providers if not provided
+        if model_providers is None:
+            # Load Model Providers
+            open_ai_provider = OpenAIProvider.factory()
+            model_providers = {ModelProviderName.OPENAI: open_ai_provider}
+
+        # Create and return SimpleTaskPilot instance
+        return cls(
+            configuration=config,
+            model_providers=model_providers,
+            logger=logger
+        )
 
 
 def get_os_info() -> str:
