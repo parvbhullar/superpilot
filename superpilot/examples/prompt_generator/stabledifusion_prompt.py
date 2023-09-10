@@ -1,3 +1,4 @@
+# flake8: noqa
 from superpilot.core.planning.strategies.simple import SimplePrompt
 from superpilot.core.planning.schema import LanguageModelClassification
 from superpilot.core.resource.model_providers import SchemaModel
@@ -7,6 +8,11 @@ from typing import List, Optional, Dict
 from pydantic import BaseModel, Field, conint
 from typing import List, Optional
 from enum import Enum
+from transformers import pipeline, set_seed
+import random
+import re
+
+text_pipe = pipeline("text-generation", model="succinctly/text2image-prompt-generator")
 
 
 class TextPrompt(BaseModel):
@@ -182,3 +188,31 @@ class StableDiffusionPrompt(SimplePrompt):
         if parser:
             config["parser_schema"] = parser
         return cls(**config)
+
+    @classmethod
+    def text_generate(cls, input):
+        seed = random.randint(100, 1000000)
+        set_seed(seed)
+
+        for count in range(3):
+            sequences = text_pipe(
+                input, max_length=random.randint(60, 90), num_return_sequences=8
+            )
+            list = []
+            for sequence in sequences:
+                line = sequence["generated_text"].strip()
+                if (
+                    line != input
+                    and len(line) > (len(input) + 4)
+                    and line.endswith((":", "-", "—")) is False
+                ):
+                    list.append(line)
+
+            result = "\n".join(list)
+            result = re.sub("[^ ]+\.[^ ]+", "", result)
+            result = result.replace("<", "").replace(">", "")
+            if result != "":
+                return result
+            if count == 5:
+                return result
+        return result
