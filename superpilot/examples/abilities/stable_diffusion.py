@@ -74,19 +74,27 @@ class StableDiffusionGenerator(Ability):
         }
 
     def generate_body(
-        self, text_prompts: List[TextPrompts], style_preset: ArtStylePreset, **kwargs
+        self,
+        text_prompts: List[TextPrompts],
+        style_preset: ArtStylePreset = ArtStylePreset.FANTASY_ART,
+        **kwargs,
     ) -> dict:
         default_request_body = self.DEFAULT_BODY
         default_request_body["text_prompts"] = text_prompts
         default_request_body["style_preset"] = style_preset
+        if style_preset == "none":
+            default_request_body["style_preset"] = ArtStylePreset.FANTASY_ART.value
         kwargs.pop("height", None)
         kwargs.pop("width", None)
         kwargs.pop("cfg_scale", None)
         kwargs.pop("clip_guidance_preset", None)
+        kwargs.pop("sampler", None)
         default_request_body.update(kwargs)
         return default_request_body
 
     async def __call__(self, query, **kwargs):
+        query = self._prompt_strategy.text_generate(query)
+        print(query)
         prompt = self._prompt_strategy.build_prompt(query)
         model_response = await self._language_model_provider.create_language_completion(
             model_prompt=prompt.messages,
@@ -108,7 +116,7 @@ class StableDiffusionGenerator(Ability):
         for i, image in enumerate(response["artifacts"]):
             if task:
                 objective = task.objective
-                file_path = f"{work_space_media}/{inflection.underscore(objective).replace(' ','-')}_{i}.jpg"
+                file_path = f"{work_space_media}/{inflection.underscore(objective).replace(' ','-')}_{i}_{int(time.time())}.jpg"
             else:
                 file_path = f"{work_space_media}/image_{i}_{int(time.time())}.jpg"
             with open(file_path, "wb") as f:
