@@ -28,11 +28,11 @@ from superpilot.core.resource.model_providers import (
 from superpilot.framework.helpers.system import get_os_info
 
 
-class BaseCollegeTaskPilot(TaskPilot):
+class BaseTaskPilot(TaskPilot):
     default_configuration = TaskPilotConfiguration(
         location=PluginLocation(
             storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
-            storage_route=f"{__name__}.BaseCollegeTaskPilot",
+            storage_route=f"{__name__}.BaseTaskPilot",
         ),
         execution_nature=ExecutionNature.SEQUENTIAL,
         prompt_strategy=strategies.NextAbility.default_configuration,
