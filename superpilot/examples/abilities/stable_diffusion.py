@@ -5,7 +5,7 @@ import time
 from typing import List
 import inflection
 from superpilot.core.ability.base import Ability, AbilityConfiguration
-from superpilot.core.context.schema import Context, FileContentItem
+from superpilot.core.context.schema import Context, ImageContentItem
 from superpilot.core.environment import Environment
 from superpilot.core.planning.simple import LanguageModelConfiguration
 from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
@@ -19,6 +19,9 @@ from superpilot.examples.abilities.schema.stable_diffusion import (
     TextPrompts,
 )
 from superpilot.examples.abilities.utlis.stable_diffusion import generate_image_with_sd
+from superpilot.examples.prompt_generator.stabledifusion_prompt import (
+    StableDiffusionPrompt,
+)
 
 
 class StableDiffusionGenerator(Ability):
@@ -52,22 +55,22 @@ class StableDiffusionGenerator(Ability):
         self._configuration = configuration
         self._env_config: Config = environment.get("env_config")
         self._workspace = environment.get("workspace")
+        self._language_model_provider = environment.get("model_providers").get(
+            configuration.language_model_required.provider_name
+        )
+        self._prompt_strategy = StableDiffusionPrompt.factory()
 
     @classmethod
     def description(cls) -> str:
-        return "Generate Image from the Provide Text Prompts & sytle"
+        return "Generate Image from the Provide query"
 
     @classmethod
     def arguments(cls) -> dict:
         return {
-            "text_prompts": {
-                "type": "list",
-                "description": "List of Text Prompts",
-            },
-            "style_preset": {
+            "query": {
                 "type": "string",
-                "description": "Style Preset",
-            },
+                "description": "Query for which we need to generate the image",
+            }
         }
 
     def generate_body(
@@ -75,14 +78,25 @@ class StableDiffusionGenerator(Ability):
     ) -> dict:
         default_request_body = self.DEFAULT_BODY
         default_request_body["text_prompts"] = text_prompts
-        default_request_body["style_preset"] = style_preset.value
+        default_request_body["style_preset"] = style_preset
+        kwargs.pop("height", None)
+        kwargs.pop("width", None)
+        kwargs.pop("cfg_scale", None)
+        kwargs.pop("clip_guidance_preset", None)
         default_request_body.update(kwargs)
         return default_request_body
 
-    async def __call__(
-        self, text_prompts: List[TextPrompts], style_preset: ArtStylePreset, **kwargs
-    ):
-        request_body = self.generate_body(text_prompts, style_preset, **kwargs)
+    async def __call__(self, query, **kwargs):
+        prompt = self._prompt_strategy.build_prompt(query)
+        model_response = await self._language_model_provider.create_language_completion(
+            model_prompt=prompt.messages,
+            functions=prompt.functions,
+            completion_parser=self._prompt_strategy.parse_response_content,
+            model_name=self._configuration.language_model_required.model_name,
+        )
+        sd_prompt = model_response.content
+        request_body = self.generate_body(**sd_prompt)
+        print(request_body)
         headers = {"Authorization": f"Bearer {self._env_config.stability_api_key}"}
         response, status = generate_image_with_sd(request_body, headers)
         if not status:
@@ -99,7 +113,7 @@ class StableDiffusionGenerator(Ability):
                 file_path = f"{work_space_media}/image_{i}_{int(time.time())}.jpg"
             with open(file_path, "wb") as f:
                 f.write(base64.b64decode(image["base64"]))
-            content = FileContentItem(file_path=file_path)
+            content = ImageContentItem(file_path=file_path)
             items.append(content)
         return Context(items=items)
 

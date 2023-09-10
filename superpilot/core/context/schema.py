@@ -75,6 +75,24 @@ class FileContentItem(ContentItem):
 
 
 @dataclass
+class ImageContentItem(ContentItem):
+    file_path: Path
+    type = ContentType.IMAGE
+
+    @property
+    def source(self) -> str:
+        return f"local file '{self.file_path}'"
+
+    @property
+    def content(self) -> str:
+        return "Image content"
+
+    @property
+    def description(self) -> str:
+        return f"The contents of the file '{self.file_path}' in the workspace"
+
+
+@dataclass
 class FolderContentItem(ContentItem):
     path: Path
     type = ContentType.FOLDER

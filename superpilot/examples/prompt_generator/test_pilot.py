@@ -36,7 +36,7 @@ async def test_pilot():
     # Return the images to the user.
 
     # query = "How to file the GSTR1"
-    query = "Logo for UNPOD an ai startup"
+    query = "A cat Playing with mouse"
 
     model_providers = ModelProviderFactory.load_providers()
     super_prompt = MidjourneyPrompt.factory()
