@@ -32,6 +32,8 @@ class Config(SystemSettings, arbitrary_types_allowed=True):
 
     plugins: Optional[List] = []
 
+    stability_api_key: Optional[str] = None
+
 
 class ConfigBuilder(Configurable[Config]):
     default_settings = Config()
@@ -65,6 +67,7 @@ class ConfigBuilder(Configurable[Config]):
             "google_custom_search_engine_id": os.getenv("CUSTOM_SEARCH_ENGINE_ID"),
             "fast_llm_model": os.getenv("FAST_LLM_MODEL"),
             "smart_llm_model": os.getenv("SMART_LLM_MODEL"),
+            "stability_api_key": os.getenv("STABILITY_API_KEY"),
         }
 
         config_dict_without_none_values = {
