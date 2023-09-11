@@ -14,7 +14,7 @@ with open(path.join(here, "requirements.txt"), encoding="utf-8") as f:
 
 setup(
     name="superpilot",
-    version="0.5",
+    version="0.4",
     description="The Multi-Role Superpilot Programming Framework",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -23,7 +23,7 @@ setup(
     author_email="parvinder@recalll.co",
     license="MIT",
     keywords="superpilot multi-role multi-agent programming gpt llm",
-    packages=find_packages(include=["superpilot", "superpilot.*"]),
+    packages=find_packages(exclude=["contrib", "docs"]),
     python_requires=">=3.10",
     install_requires=[
         *requirements,
