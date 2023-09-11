@@ -1,6 +1,3 @@
-import json
-
-from superpilot.core.configuration import SystemConfiguration, UserConfigurable
 from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
@@ -15,15 +12,19 @@ from superpilot.core.resource.model_providers import (
 )
 from superpilot.core.planning.settings import PromptStrategyConfiguration
 from pydantic import Field
-from typing import List, Optional, Union, Dict
+from typing import List, Dict
 
 
 class BasePromptModel(SchemaModel):
     """
-    Class representing a question and its answer as a list of facts each one should have a soruce.
-    each sentence contains a body and a list of sources."""
+    This class serves as a data model for Midjourney Prompts used in AI art generation.
+    It includes various fields that describe the properties and attributes of the art piece to be generated.
+    Each field is self-explanatory and maps directly to a specific aspect of the art piece.
+    """
 
-    content: str = Field(..., description="Full body of response content from the llm model")
+    content: str = Field(
+        ..., description="Full body of response content from the llm model"
+    )
     prompts: List[str] = Field(
         ...,
         description="Detailed list of all the prompts that the llm model generated",
@@ -31,18 +32,15 @@ class BasePromptModel(SchemaModel):
 
 
 class MidjourneyPrompt(PromptStrategy):
-    DEFAULT_SYSTEM_PROMPT = (
-        """
+    DEFAULT_SYSTEM_PROMPT = """
         As a prompt generator for a generative AI called "Midjourney", you will create image prompts for the AI to visualize. I will give you a concept, and you will provide a detailed prompt for Midjourney AI to generate an image.
         Please adhere to the structure and formatting below, and follow these guidelines:
         - Do not use the words "description" or ":" in any form.
         - Do not place a comma between [ar] and [v].
         - Write each prompt in one line without using return.
         """
-    )
 
-    DEFAULT_USER_PROMPT_TEMPLATE = (
-        """
+    DEFAULT_USER_PROMPT_TEMPLATE = """
         Structure:
         [1] = {task_objective}
         [2] = a detailed description of [1] with specific imagery details.
@@ -53,7 +51,7 @@ class MidjourneyPrompt(PromptStrategy):
         [ar] = Use "--ar 16:9" for horizontal images, "--ar 9:16" for vertical images, or "--ar 1:1" for square images.
         [v] = Use "--niji" for Japanese art style, or "--v 5" for other styles.
 
-        Formatting: 
+        Formatting:
         Follow this prompt structure: "/imagine prompt: [1], [2], [3], [4], [5], [6], [ar] [v]".
 
         Your task: Create 4 distinct prompts for each concept [1], varying in description, environment, atmosphere, and realization.
@@ -70,7 +68,6 @@ class MidjourneyPrompt(PromptStrategy):
         Prompt 2:
         /imagine prompt: A captivating Halo Reach landscape with a Spartan amidst a battlefield, fallen enemies around, smoke and fire in the background, emphasizing the Spartan's determination and bravery, detailed environment blending chaos and beauty, Illustration, digital art, --ar 16:9 --v 5
         """
-    )
 
     DEFAULT_PARSER_SCHEMA = BasePromptModel.function_schema()
 
@@ -82,11 +79,11 @@ class MidjourneyPrompt(PromptStrategy):
     )
 
     def __init__(
-            self,
-            model_classification: LanguageModelClassification = default_configuration.model_classification,
-            system_prompt: str = default_configuration.system_prompt,
-            user_prompt_template: str = default_configuration.user_prompt_template,
-            parser_schema: Dict = None,
+        self,
+        model_classification: LanguageModelClassification = default_configuration.model_classification,
+        system_prompt: str = default_configuration.system_prompt,
+        user_prompt_template: str = default_configuration.user_prompt_template,
+        parser_schema: Dict = None,
     ):
         self._model_classification = model_classification
         self._system_prompt_message = system_prompt
@@ -106,9 +103,7 @@ class MidjourneyPrompt(PromptStrategy):
         )
         user_message = LanguageModelMessage(
             role=MessageRole.USER,
-            content=self._user_prompt_template.format(
-                **template_kwargs
-            ),
+            content=self._user_prompt_template.format(**template_kwargs),
         )
         functions = []
         if self._parser_schema is not None:
@@ -139,8 +134,8 @@ class MidjourneyPrompt(PromptStrategy):
         return template_kwargs
 
     def parse_response_content(
-            self,
-            response_content: dict,
+        self,
+        response_content: dict,
     ) -> dict:
         """Parse the actual text response from the objective model.
 
@@ -166,15 +161,20 @@ class MidjourneyPrompt(PromptStrategy):
         )
 
     @classmethod
-    def factory(cls, system_prompt=None, user_prompt_template=None, parser=None, model_classification=None)\
-            -> "MidjourneyPrompt":
+    def factory(
+        cls,
+        system_prompt=None,
+        user_prompt_template=None,
+        parser=None,
+        model_classification=None,
+    ) -> "MidjourneyPrompt":
         config = cls.default_configuration.dict()
         if model_classification:
-            config['model_classification'] = model_classification
+            config["model_classification"] = model_classification
         if system_prompt:
-            config['system_prompt'] = system_prompt
+            config["system_prompt"] = system_prompt
         if user_prompt_template:
-            config['user_prompt_template'] = user_prompt_template
+            config["user_prompt_template"] = user_prompt_template
         if parser:
-            config['parser_schema'] = parser
+            config["parser_schema"] = parser
         return cls(**config)

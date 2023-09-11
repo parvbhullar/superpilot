@@ -18,11 +18,11 @@ from superpilot.core.resource.model_providers import (
 from superpilot.examples.pilots.tasks.base import BaseTaskPilot
 
 
-class CollegeOverViewTaskPilot(BaseTaskPilot):
+class SuperTaskPilot(BaseTaskPilot):
     default_configuration = TaskPilotConfiguration(
         location=PluginLocation(
             storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
-            storage_route=f"{__name__}.CollegeOverViewTaskPilot",
+            storage_route=f"{__name__}.SuperTaskPilot",
         ),
         execution_nature=ExecutionNature.SEQUENTIAL,
         prompt_strategy=strategies.StepExecution.default_configuration,
