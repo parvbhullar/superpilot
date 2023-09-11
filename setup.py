@@ -23,7 +23,7 @@ setup(
     author_email="parvinder@recalll.co",
     license="MIT",
     keywords="superpilot multi-role multi-agent programming gpt llm",
-    packages=find_packages(exclude=["contrib", "docs", "examples"]),
+    packages=find_packages(exclude=["contrib", "docs"]),
     python_requires=">=3.10",
     install_requires=[
         *requirements,
