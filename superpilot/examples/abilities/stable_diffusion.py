@@ -93,8 +93,8 @@ class StableDiffusionGenerator(Ability):
         return default_request_body
 
     async def __call__(self, query, **kwargs):
-        query = self._prompt_strategy.text_generate(query)
-        print(query)
+        # query = self._prompt_strategy.text_generate(query)
+        # print(query)
         prompt = self._prompt_strategy.build_prompt(query)
         model_response = await self._language_model_provider.create_language_completion(
             model_prompt=prompt.messages,
@@ -116,6 +116,7 @@ class StableDiffusionGenerator(Ability):
         for i, image in enumerate(response["artifacts"]):
             if task:
                 objective = task.objective
+                objective = " ".join(objective.split(" ")[:10])[:30]
                 file_path = f"{work_space_media}/{inflection.underscore(objective).replace(' ','-')}_{i}_{int(time.time())}.jpg"
             else:
                 file_path = f"{work_space_media}/image_{i}_{int(time.time())}.jpg"

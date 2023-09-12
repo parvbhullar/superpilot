@@ -22,6 +22,6 @@ class StableDiffusionPromptExecutor(BaseExecutor):
         )
 
     async def run(self, query):
-        query = self.super_prompt.text_generate(query)
+        # query = self.super_prompt.text_generate(query)
         response = await self.pilot.execute(query)
         return response
