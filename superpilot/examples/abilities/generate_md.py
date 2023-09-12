@@ -70,6 +70,7 @@ class GenerateMarkdownContent(Ability):
         task = kwargs.get("task")
         if task:
             objective = task.objective
+            objective = " ".join(objective.split(" ")[:10])[:30]
             file_path = f"{work_space_media}/{inflection.underscore(objective).replace(' ','-')}.md"
         else:
             file_path = f"{work_space_media}/summary{int(time.time())}.md"
