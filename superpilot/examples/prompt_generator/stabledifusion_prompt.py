@@ -12,8 +12,6 @@ from transformers import pipeline, set_seed
 import random
 import re
 
-text_pipe = pipeline("text-generation", model="succinctly/text2image-prompt-generator")
-
 
 class TextPrompt(BaseModel):
     text: str = Field(..., max_length=2000, description="The prompt itself")
@@ -191,6 +189,9 @@ class StableDiffusionPrompt(SimplePrompt):
 
     @classmethod
     def text_generate(cls, input):
+        text_pipe = pipeline(
+            "text-generation", model="succinctly/text2image-prompt-generator"
+        )
         seed = random.randint(100, 1000000)
         set_seed(seed)
 
