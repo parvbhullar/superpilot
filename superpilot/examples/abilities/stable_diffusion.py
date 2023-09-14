@@ -106,7 +106,9 @@ class StableDiffusionGenerator(Ability):
         request_body = self.generate_body(**sd_prompt)
         print(request_body)
         headers = {"Authorization": f"Bearer {self._env_config.stability_api_key}"}
-        response, status = generate_image_with_sd(request_body, headers)
+        response, status = generate_image_with_sd(
+            request_body, headers, engine_id=self._env_config.stability_engine_id
+        )
         if not status:
             raise Exception(response)
         work_space_media = f"{self._workspace.root}/media"

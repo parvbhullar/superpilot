@@ -34,6 +34,8 @@ class Config(SystemSettings, arbitrary_types_allowed=True):
 
     stability_api_key: Optional[str] = None
 
+    stability_engine_id: Optional[str] = None
+
 
 class ConfigBuilder(Configurable[Config]):
     default_settings = Config()
@@ -68,6 +70,7 @@ class ConfigBuilder(Configurable[Config]):
             "fast_llm_model": os.getenv("FAST_LLM_MODEL"),
             "smart_llm_model": os.getenv("SMART_LLM_MODEL"),
             "stability_api_key": os.getenv("STABILITY_API_KEY"),
+            "stability_engine_id": os.getenv("STABILITY_ENGINE_ID"),
         }
 
         config_dict_without_none_values = {
