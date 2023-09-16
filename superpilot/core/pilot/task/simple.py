@@ -1,18 +1,11 @@
-import asyncio
 import logging
 import platform
 import time
 from abc import ABC
-from typing import List, Dict, Optional
+from typing import Dict
 
 from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
-from superpilot.core.context.schema import Context
-from superpilot.core.ability.base import AbilityRegistry
-from superpilot.core.plugin.simple import (
-    PluginLocation,
-    PluginStorageFormat,
-    SimplePluginService,
-)
+from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
 import distro
 from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.strategies.simple import SimplePrompt
@@ -59,10 +52,10 @@ class SimpleTaskPilot(TaskPilot, ABC):
     )
 
     def __init__(
-            self,
-            configuration: TaskPilotConfiguration = default_configuration,
-            model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
-            logger: logging.Logger = logging.getLogger(__name__),
+        self,
+        configuration: TaskPilotConfiguration = default_configuration,
+        model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
+        logger: logging.Logger = logging.getLogger(__name__),
     ) -> None:
         self._logger = logger
         self._configuration = configuration
@@ -83,9 +76,7 @@ class SimpleTaskPilot(TaskPilot, ABC):
         context_res = await self.exec_task(task, **kwargs)
         return context_res
 
-    async def exec_task(
-            self, task: Task, **kwargs
-    ) -> LanguageModelResponse:
+    async def exec_task(self, task: Task, **kwargs) -> LanguageModelResponse:
         template_kwargs = task.generate_kwargs()
         template_kwargs.update(kwargs)
         return await self.chat_with_model(
@@ -94,9 +85,9 @@ class SimpleTaskPilot(TaskPilot, ABC):
         )
 
     async def chat_with_model(
-            self,
-            prompt_strategy: PromptStrategy,
-            **kwargs,
+        self,
+        prompt_strategy: PromptStrategy,
+        **kwargs,
     ) -> LanguageModelResponse:
         model_classification = prompt_strategy.model_classification
         model_configuration = self._configuration.models[model_classification].dict()
@@ -132,15 +123,14 @@ class SimpleTaskPilot(TaskPilot, ABC):
 
     @classmethod
     def factory(
-            cls,
-            prompt_strategy: PromptStrategyConfiguration = None,
-            model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
-            execution_nature: ExecutionNature = None,
-            models: Dict[LanguageModelClassification, LanguageModelConfiguration] = None,
-            location: PluginLocation = None,
-            logger: logging.Logger = None
+        cls,
+        prompt_strategy: PromptStrategyConfiguration = None,
+        model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
+        execution_nature: ExecutionNature = None,
+        models: Dict[LanguageModelClassification, LanguageModelConfiguration] = None,
+        location: PluginLocation = None,
+        logger: logging.Logger = None,
     ) -> "SimpleTaskPilot":
-
         # Initialize settings
         config = cls.default_configuration
         if location is not None:
@@ -163,11 +153,7 @@ class SimpleTaskPilot(TaskPilot, ABC):
             model_providers = {ModelProviderName.OPENAI: open_ai_provider}
 
         # Create and return SimpleTaskPilot instance
-        return cls(
-            configuration=config,
-            model_providers=model_providers,
-            logger=logger
-        )
+        return cls(configuration=config, model_providers=model_providers, logger=logger)
 
 
 def get_os_info() -> str:
@@ -178,4 +164,3 @@ def get_os_info() -> str:
         else distro.name(pretty=True)
     )
     return os_info
-
