@@ -136,6 +136,8 @@ class ModelProviderBudget(ProviderBudget):
             model_response.completion_tokens_used * model_info.completion_token_cost
             + model_response.prompt_tokens_used * model_info.prompt_token_cost
         ) / 1000.0
+        print("Usage", self.usage)
+        print("Cost", round(incremental_cost, 4))
         self.total_cost += incremental_cost
         self.remaining_budget -= incremental_cost
 
@@ -341,4 +343,3 @@ class SchemaModel(BaseModel):
         function_call = message["function_call"]
         arguments = json.loads(function_call["arguments"])
         return cls(**arguments)
-
