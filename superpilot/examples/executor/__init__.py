@@ -1,3 +1,4 @@
+from superpilot.examples.executor.clip_drop import ClipDropImageExecutor
 from superpilot.examples.executor.midjourney_prompt import (
     MidjourneyPromptPromptExecutor,
 )
@@ -14,4 +15,5 @@ __all__ = [
     "StableDiffusionPromptExecutor",
     "StableDiffusionImageExecutor",
     "QuestionIdentifierPromptExecutor",
+    "ClipDropImageExecutor",
 ]

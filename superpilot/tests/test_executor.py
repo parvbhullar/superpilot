@@ -10,7 +10,9 @@ from superpilot.examples.executor import (
     MidjourneyPromptPromptExecutor,
     StableDiffusionImageExecutor,
     QuestionIdentifierPromptExecutor,
+    ClipDropImageExecutor,
 )
+
 import pandas as pd
 
 # sd_prompt = StableDiffusionPromptExecutor()
@@ -33,6 +35,15 @@ import pandas as pd
 # for item in context.items:
 #     print(item.description)
 #     Image.open(item.file_path).show()
+
+cd_prompt = ClipDropImageExecutor()
+from PIL import Image
+
+print("\n", "*" * 32, "Running ClipDropImageExecutor", "*" * 32, "\n\n")
+context = asyncio.run(cd_prompt.run("A photo of a cat"))
+for item in context.items:
+    print(item.description)
+    Image.open(item.file_path).show()
 
 
 # data_df = pd.read_excel("/home/dora/Downloads/Cloudbird Done Data.xlsx", sheet_name="9 sep")
