@@ -1,3 +1,4 @@
+from typing import Dict, List
 from superpilot.core.context.schema import Context
 from superpilot.core.pilot.task.simple import SimpleTaskPilot
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory
@@ -24,3 +25,11 @@ class QuestionIdentifierPromptExecutor(BaseExecutor):
     async def run(self, query):
         response = await self.pilot.execute(query)
         return response
+
+    async def run_list(self, query_list: List[Dict]):
+        final_res = []
+        for index, query in enumerate(query_list):
+            response = await self.run(query.get("Original keyword"))
+            final_res.append({**response.content, **query})
+            print(f"Query {index} finished", "\n\n")
+        return final_res
