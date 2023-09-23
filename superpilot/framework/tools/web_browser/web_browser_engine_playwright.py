@@ -7,8 +7,10 @@ import random
 import sys
 from typing import Literal
 from playwright.async_api import async_playwright
-from superpilot.core.configuration.config import Config
+from superpilot.core.configuration.config import Config, get_config
 from superpilot.framework.helpers.logs import logger
+
+config = get_config()
 
 userAgentStrings = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.2227.0 Safari/537.36",
@@ -44,6 +46,8 @@ class PlaywrightWrapper:
         #         launch_kwargs["proxy"] = {"server": Config.global_proxy}
         self.launch_kwargs = launch_kwargs
         context_kwargs = {"user_agent": random.choice(userAgentStrings)}
+        # if config.web_proxy:
+        #     self.launch_kwargs["proxy"] = {"server": random.choice(config.web_proxy)}
         if "ignore_https_errors" in kwargs:
             context_kwargs["ignore_https_errors"] = kwargs["ignore_https_errors"]
         self._context_kwargs = context_kwargs
