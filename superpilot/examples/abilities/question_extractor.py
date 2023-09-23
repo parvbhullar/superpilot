@@ -76,7 +76,7 @@ class QuestionExtractor(Ability):
 
         self._logger.debug(query)
         rsp = await self._search_engine.run(
-            query, max_results=1, siteSearch="https://www.chegg.com"
+            query, max_results=5
         )
         if not rsp:
             return None
@@ -84,9 +84,15 @@ class QuestionExtractor(Ability):
         # self._logger.info(rsp)
 
         new_search_urls = [link["link"] for link in rsp if link]
+        filter_link = None
+        for link in new_search_urls:
+            if 'chegg.com' in link:
+                filter_link = link
+                break
+        if filter_link is None:
+            return None
         data = None
-        if len(new_search_urls):
-            data = await WebBrowserEngine(parse_func=self.get_page_content).run(new_search_urls[0])
+        data = await WebBrowserEngine(parse_func=self.get_page_content).run(filter_link)
         return data
 
     async def get_content_item(self, content: str, query: str, url: str) -> Content:

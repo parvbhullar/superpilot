@@ -31,7 +31,8 @@ class QuestionExtractoreExecutor(BaseExecutor):
     async def run(self, query):
         context = await self.ability(query)
         if not context:
-            return None
+            print("No Data Found")
+            context = query
         latex_convertor = LatexCodeGenExecutor()
         print("\n", "*" * 32, "Running LatexCodeGenExecutor", "*" * 32, "\n\n")
         content =  await latex_convertor.run(str(context))
