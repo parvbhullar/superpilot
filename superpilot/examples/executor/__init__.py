@@ -9,6 +9,7 @@ from superpilot.examples.executor.stable_diffusion import StableDiffusionImageEx
 from superpilot.examples.executor.question_identifier import (
     QuestionIdentifierPromptExecutor,
 )
+from superpilot.examples.executor.latex_code_generator import LatexCodeGenExecutor
 
 __all__ = [
     "MidjourneyPromptPromptExecutor",
@@ -16,4 +17,5 @@ __all__ = [
     "StableDiffusionImageExecutor",
     "QuestionIdentifierPromptExecutor",
     "ClipDropImageExecutor",
+    "LatexCodeGenExecutor",
 ]

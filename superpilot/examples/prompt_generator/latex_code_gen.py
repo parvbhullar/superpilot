@@ -69,6 +69,18 @@ class Question(SchemaModel):
         ...,
         description="Fixed and formatted question from the passed content in the query.",
     )
+    latex_code: str = Field(
+        ...,
+        description="Latex code for the question, generated from the html in content.",
+    )
+    math_ml: str = Field(
+        ...,
+        description="MathML code for the question, generated from the html in content.",
+    )
+    rich_text_format: str = Field(
+        ...,
+        description="Rich text format for the question, generated from the html in content.",
+    )
     comment: str = Field(
         ...,
         description="User comment/reason for the question, in case of spam or cannot be fixed.",
@@ -91,12 +103,13 @@ class Question(SchemaModel):
     )
 
 
-class QuestionIdentifierPrompt(PromptStrategy):
-
+class LatexCodeGenPrompt(PromptStrategy):
+    
     DEFAULT_SYSTEM_PROMPT = """
         You are a world class query correction algorithm capable of fixing questions into its corrected version of 
-        question and its options.
+        question and its options from passed html content. 
         Do not answer the question, simply provide correct question with right set of options, subject and category.
+        make sure to generate latex code for the question from html content.
         
         Instructions :-
         - Do not change the language of the content
@@ -111,6 +124,7 @@ class QuestionIdentifierPrompt(PromptStrategy):
         - Question not making any sense can be marked as can not be fixed as status.
         - Fix Numbers, equation etc in latex, or math format missing.
         - Only mark question incomplete if you are changing any content in the question, even slight change in the content.
+        - Always respond in latex code and mathml format.
         
         Examples :-
         Content: Movie Recommendation systems are an example of: 1. Classification 2. Clustering 3. Reinforcement Learning 4. Regression Options: B. A. 2 Only C. 1 and 2 D. 1 and 3 E. 2 and 3 F. 1, 2 and 3 H. 1, 2, 3 and 4
@@ -125,66 +139,13 @@ class QuestionIdentifierPrompt(PromptStrategy):
         subject -> Mathematics 
         question_type -> MCQ
         
-        Content: the giver's dwelling has may morebooks thn Jonas's	
-        Output: 
-        question -> None
-        options -> None
-        status -> Spam
-        subject -> NotSure
-        question_type -> MCQ
-        
-        Content: Define Medicare. Gray, Ryan. The Premed Playbook Guide to the Medical School Interview: Be Prepared, Perform Well, Get Accepted (p. 71). Morgan James Publishing. Kindle Edition.	
-        Output: 
-        question -> None
-        options -> None
-        status -> Cannot_Be_Fixed
-        subject -> NotSure
-        question_type -> MCQ
-        
-        Content: A customer has $100 to spend on buying a gift. They could make their purchase either at Cabela's or at Bass Pro. What competitive relationship exists between the two retailiers?	
-        Output: 
-        question -> A customer has $100 to spend on buying a gift. They could make their purchase either at Cabela's or at Bass Pro. What competitive relationship exists between the two retailiers?
-        options -> []
-        status -> Complete
-        subject -> business
-        question_type -> ShortAnswer
-        
         """
 
     DEFAULT_USER_PROMPT_TEMPLATE = """
         Content: {task_objective}
         
         -----
-        Please use the above input as the content for the question correction.
-        """
-
-    OTHER_USER_PROMPT_TEMPLATE = """
-     Please use the above input as the content for the content correct analysis.
-        You need to analyze the content & provide the correct content & their respective fields such as status.
-
-        If Status is not Complete, then also provide the reason.
-
-        Below the some Examples.
-        1.
-            Content: This climate diagram depicts ________. a. a tropical biome b. a very dry environment c. a typical boreal forest biome d. a biome with plentiful moisture e. a biome whose plants experience freeze stress for several months of the year
-
-            Output:
-            question - This climate diagram depicts ________.
-            options -
-            (A) a tropical biome
-            (B) a very dry environment
-            (C) a typical boreal forest biome
-            (D) a biome with plentiful moisture
-            (E) a biome whose plants experience freeze stress for several months of the year.
-
-            status -> InComplete
-
-        2.
-            Content: In "Highlander II: The Quickening", we learn that the mysterious Immortals are actually aliens originating from the planet Zeist, a world that is referenced throughout the remainder of the Highlander series, but never actually shown.
-            Output:
-            question - Cannot be Fixed.
-            status -> Cannot be Fixed
-            reason -> Not an educational question.
+        Please use the above input as the content.
         """
 
     DEFAULT_PARSER_SCHEMA = Question.function_schema()
@@ -284,7 +245,7 @@ class QuestionIdentifierPrompt(PromptStrategy):
         user_prompt_template=None,
         parser=None,
         model_classification=None,
-    ) -> "QuestionIdentifierPrompt":
+    ) -> "LatexCodeGenPrompt":
         config = cls.default_configuration.dict()
         if model_classification:
             config["model_classification"] = model_classification

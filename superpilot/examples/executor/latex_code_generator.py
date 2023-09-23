@@ -3,12 +3,12 @@ from superpilot.core.context.schema import Context
 from superpilot.core.pilot.task.simple import SimpleTaskPilot
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory
 from superpilot.examples.executor.base import BaseExecutor
-from superpilot.examples.prompt_generator.question_correct import (
-    QuestionIdentifierPrompt,
+from superpilot.examples.prompt_generator.latex_code_gen import (
+    LatexCodeGenPrompt,
 )
 
 
-class QuestionIdentifierPromptExecutor(BaseExecutor):
+class LatexCodeGenExecutor(BaseExecutor):
     model_providers = ModelProviderFactory.load_providers()
     context = Context()
 
@@ -16,7 +16,7 @@ class QuestionIdentifierPromptExecutor(BaseExecutor):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        self.super_prompt = QuestionIdentifierPrompt.factory()
+        self.super_prompt = LatexCodeGenPrompt.factory()
         self.pilot = SimpleTaskPilot.factory(
             prompt_strategy=self.super_prompt.get_config(),
             model_providers=self.model_providers,

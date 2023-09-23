@@ -10,6 +10,7 @@ from superpilot.examples.executor import (
     MidjourneyPromptPromptExecutor,
     StableDiffusionImageExecutor,
     QuestionIdentifierPromptExecutor,
+    LatexCodeGenExecutor,
     ClipDropImageExecutor,
 )
 
@@ -67,10 +68,15 @@ ques4 = """
 24. End-user data is . a. knowledge about the end users b. raw facts of interest to the end user c. information about a specific subject d. accurate, relevant and timely information
 """
 
+ques5 = """
+<div class="styled__KatexContent-sc-1k7k16x-5 cqEgSP">13. The compression ratio of a diesel engine is 20.0 to 1 ; that is, air in a cylinder is compressed to <span class="katex"><span class="katex-html"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/20.0</span></span></span></span> of its initial volume. (a) if the initial pressure is <span class="katex"><span class="katex-html"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1.01</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">5</span></span></span></span></span></span></span></span></span><span class="mord"><span class="mspace nobreak">&nbsp;</span><span class="mord mathrm">Pa</span></span></span></span></span> and the initial temperature is <span class="katex"><span class="katex-html"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6741em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">∘</span></span></span></span></span></span></span></span></span><span class="mord mathrm">C</span></span></span></span>, find the final pressure and the temperature after adiabatic compression. (b) How much work does the gas do during the compression if the initial volume of the cylinder is <span class="katex"><span class="katex-html"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">1.00</span><span class="mord"><span class="mspace nobreak">&nbsp;</span><span class="mord mathrm">L</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1.00</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span><span class="mord">3</span><span class="mord"><span class="mord"><span class="mspace nobreak">&nbsp;</span><span class="mord mathrm">m</span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span></span></span></span> ? Use the values <span class="katex"><span class="katex-html"><span class="base"><span class="strut" style="height:0.9694em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathrm">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05556em;">γ</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">20.8</span><span class="mord"><span class="mspace nobreak">&nbsp;</span><span class="mord mathrm">J</span></span><span class="mord">/</span><span class="mord"><span class="mord mathrm">mol</span></span><span class="mord mathrm">K</span></span></span></span> and <span class="katex"><span class="katex-html"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1.400</span></span></span></span> for air.</div>"""
+
+
 def fix_question(content):
     t1 = time.time()
-    sd_prompt = QuestionIdentifierPromptExecutor()
-    print("\n", "*" * 32, "Running QuestionIdentifierPromptExecutor", "*" * 32, "\n\n")
+    # sd_prompt = QuestionIdentifierPromptExecutor()
+    sd_prompt = LatexCodeGenExecutor()
+    print("\n", "*" * 32, "Running LatexCodeGenExecutor", "*" * 32, "\n\n")
     res = asyncio.run(sd_prompt.run(content))
     print(res)
     # print(res.content.get("status"))
@@ -78,15 +84,14 @@ def fix_question(content):
     print("Time Taken", round(t2 - t1, 2), "seconds")
 
 
-# fix_question(ques4)
+fix_question(ques5)
 
 
 def run_file():
-    data_df = pd.read_excel(
-        "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/QuestionsData1.xlsx",
-        sheet_name="Sheet1"
+    data_df = pd.read_csv(
+        "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/QuestionsData-Sheet3.csv",
     )
-    smaple_data = data_df[10:50].reindex(columns=["Original keyword"])
+    smaple_data = data_df.reindex(columns=["Original Keyword"])
     print(smaple_data.shape)
     t1 = time.time()
     sd_prompt = QuestionIdentifierPromptExecutor()
@@ -98,5 +103,5 @@ def run_file():
     final_df.to_excel("final_response.xlsx")
 
 
-run_file()
+# run_file()
 
