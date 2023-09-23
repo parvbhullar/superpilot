@@ -1,12 +1,13 @@
-from superpilot.core.ability.super import SuperAbilityRegistry
+# from superpilot.core.ability.super import SuperAbilityRegistry
 from superpilot.core.configuration.config import get_config
 
 from superpilot.core.context.schema import Context
-from superpilot.core.planning.schema import Task
+# from superpilot.core.planning.schema import Task
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory
 from superpilot.examples.abilities.question_extractor import QuestionExtractor
 from superpilot.examples.executor.base import BaseExecutor
-from superpilot.examples.pilots.tasks.super import SuperTaskPilot
+from superpilot.examples.executor.latex_code_generator import LatexCodeGenExecutor
+# from superpilot.examples.pilots.tasks.super import SuperTaskPilot
 from superpilot.tests.test_env_simple import get_env
 
 ALLOWED_ABILITY = {
@@ -29,4 +30,9 @@ class QuestionExtractoreExecutor(BaseExecutor):
 
     async def run(self, query):
         context = await self.ability(query)
-        return context
+        if not context:
+            return None
+        latex_convertor = LatexCodeGenExecutor()
+        print("\n", "*" * 32, "Running LatexCodeGenExecutor", "*" * 32, "\n\n")
+        content =  await latex_convertor.run(str(context))
+        return content

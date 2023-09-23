@@ -76,11 +76,10 @@ class QuestionExtractor(Ability):
 
         self._logger.debug(query)
         rsp = await self._search_engine.run(
-            query, max_results=1, gl="in", siteSearch="https://www.chegg.com"
+            query, max_results=1, siteSearch="https://www.chegg.com"
         )
         if not rsp:
-            self._logger.error("empty rsp...")
-            return Content.add_content_item("Empty Response", ContentType.TEXT)
+            return None
 
         # self._logger.info(rsp)
 
