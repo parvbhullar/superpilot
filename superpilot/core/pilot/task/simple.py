@@ -41,7 +41,7 @@ class SimpleTaskPilot(TaskPilot, ABC):
             LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
                 model_name=OpenAIModelName.GPT3,
                 provider_name=ModelProviderName.OPENAI,
-                temperature=0.9,
+                temperature=1,
             ),
             LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
                 model_name=OpenAIModelName.GPT4,
