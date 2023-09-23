@@ -12,6 +12,7 @@ from superpilot.examples.executor import (
     QuestionIdentifierPromptExecutor,
     LatexCodeGenExecutor,
     ClipDropImageExecutor,
+    QuestionExtractoreExecutor
 )
 
 import pandas as pd
@@ -105,3 +106,19 @@ def run_file():
 
 # run_file()
 
+
+# quest = "The compression ratio of a petrol engine is 20.0 to 1 ; that is, air in a cylinder is compressed adiabatically to \( \frac{1}{20.0} \) of its initial volume. (a) If the initial pressure is \( 1.01"
+quest = """
+For the circuit shown in the figure, determine the magnitude of
+the currents 𝐼2 , 𝐼3 , and 𝐼4 passing through batteries 2, 3, and
+4, respectively. In each case, determine whether the battery
+"""
+def search_question():
+    t1 = time.time()
+    sd_prompt = QuestionExtractoreExecutor()
+    print("\n", "*" * 32, "Running QuestionExtractoreExecutor", "*" * 32, "\n\n")
+    res = asyncio.run(sd_prompt.run(quest))
+    t2 = time.time()
+    print("Time Taken", round(t2 - t1, 2), "seconds")
+
+search_question()

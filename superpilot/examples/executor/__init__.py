@@ -10,6 +10,7 @@ from superpilot.examples.executor.question_identifier import (
     QuestionIdentifierPromptExecutor,
 )
 from superpilot.examples.executor.latex_code_generator import LatexCodeGenExecutor
+from superpilot.examples.executor.question_extractor import QuestionExtractoreExecutor
 
 __all__ = [
     "MidjourneyPromptPromptExecutor",
@@ -18,4 +19,5 @@ __all__ = [
     "QuestionIdentifierPromptExecutor",
     "ClipDropImageExecutor",
     "LatexCodeGenExecutor",
+    "QuestionExtractoreExecutor",
 ]
