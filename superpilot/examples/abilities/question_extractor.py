@@ -1,4 +1,6 @@
 import logging
+
+from bs4 import BeautifulSoup
 from superpilot.core.ability.base import Ability, AbilityConfiguration
 from superpilot.core.environment import Environment
 from superpilot.core.context.schema import Context, Content, ContentType
@@ -8,13 +10,10 @@ from superpilot.core.resource.model_providers import (
     ModelProviderName,
     OpenAIModelName,
 )
-from superpilot.framework.llm.base import ChatSequence
-from superpilot.framework.llm.utils import create_chat_completion
 from superpilot.framework.tools.search_engine import SearchEngine, SearchEngineType
 from superpilot.framework.tools.web_browser import WebBrowserEngine
 from superpilot.core.configuration import Config
 from superpilot.core.planning.strategies import SummarizerStrategy
-import asyncio
 
 
 class QuestionExtractor(Ability):
@@ -59,7 +58,7 @@ class QuestionExtractor(Ability):
             }
         }
 
-    async def __call__(self, query: str, **kwargs) -> Context:
+    async def __call__(self, query: str, **kwargs):
         no_google = (
             not self._env_config.google_api_key
             or "YOUR_API_KEY" == self._env_config.google_api_key
@@ -77,26 +76,28 @@ class QuestionExtractor(Ability):
 
         self._logger.debug(query)
         rsp = await self._search_engine.run(
-            query, max_results=6, gl="in", siteSearch="https://www.chegg.com"
+            query, max_results=1, gl="in", siteSearch="https://www.chegg.com"
         )
         if not rsp:
             self._logger.error("empty rsp...")
             return Content.add_content_item("Empty Response", ContentType.TEXT)
 
-        self._logger.info(rsp)
+        # self._logger.info(rsp)
 
         new_search_urls = [link["link"] for link in rsp if link]
-        # Create a list to hold the coroutine objects
-        tasks = [WebBrowserEngine().run(url) for url in new_search_urls]
-        # Gather the results as they become available
-        text_responses = await asyncio.gather(*tasks, return_exceptions=True)
-        for text in text_responses:
-            if isinstance(text, str):
-                print(text)
-        return {}
+        data = None
+        if len(new_search_urls):
+            data = await WebBrowserEngine(parse_func=self.get_page_content).run(new_search_urls[0])
+        return data
 
     async def get_content_item(self, content: str, query: str, url: str) -> Content:
         return Content.add_content_item(content, ContentType.TEXT, source=url)
+    
+
+    def get_page_content(self, page: str):
+        soup = BeautifulSoup(page, "html.parser")
+        return soup.find("div", {"id": "question-transcript"})
+
 
     @staticmethod
     def _parse_response(response_content: dict) -> dict:
