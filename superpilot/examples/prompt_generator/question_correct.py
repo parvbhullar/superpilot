@@ -12,67 +12,151 @@ from superpilot.core.resource.model_providers import (
 )
 from superpilot.core.planning.settings import PromptStrategyConfiguration
 from typing import Dict
+import enum
+import asyncio
+
+from pydantic import Field
+from typing import List, Optional
 
 
-class BasePromptModel(SchemaModel):
+class QuestionStatus(str, enum.Enum):
+    Complete = "complete"
+    Incomplete = "incomplete"
+    Spam = "spam"
+    Cannot_Be_Fixed = "cannot_be_fixed"
+
+
+class QuestionSubject(str, enum.Enum):
+    NotSure = "not_sure"
+    Business = "business"
+    English = "english"
+    Mathematics = "mathematics"
+    SocialStudies = "social_studies"
+    Health = "health"
+    Geography = "geography"
+    Biology = "biology"
+    Physics = "physics"
+    Chemistry = "chemistry"
+    ComputersAndTechnology = "computers_and_technology"
+    Arts = "arts"
+    WorldLanguages = "world_languages"
+    Spanish = "spanish"
+    French = "french"
+    German = "german"
+    Medicine = "medicine"
+    Law = "law"
+    Engineering = "engineering"
+    Economics = "economics"
+
+
+class QuestionType(str, enum.Enum):
+    MCQ = "mcq"
+    TrueFalse = "true_false"
+    FillInBlank = "fill_in_blank"
+    FillInTheBlanksWithOptions = "fill_in_the_blanks_with_options"
+    MatchTheColumn = "match_the_column"
+    ShortAnswer = "short_answer"
+
+
+class Question(SchemaModel):
     """
-    This class serves as a data model for the response of the Content Analysis system
-
-    Attributes:
-    - content (str): The generated content or response.
-    - status (str): Status of the content (Complete, Cannot be Fixed, Spam).
-    - reason (str, optional): Additional information or reason if needed.
+    Class representing a single question in a question answer subquery.
+    Can be either a single question or a multi question merge.
     """
 
-    content: str
-    status: str
-    reason: str = None
+    question: str = Field(
+        ...,
+        description="Fixed and formatted question from the passed content in the query.",
+    )
+    comment: str = Field(
+        ...,
+        description="User comment/reason for the question, in case of spam or cannot be fixed.",
+    )
+    question_status: QuestionStatus = Field(
+        default=QuestionStatus.Incomplete,
+        description="Status of the question, whether it is complete or incomplete, cannot be fixed or spam.",
+    )
+    subject: QuestionSubject = Field(
+        default=QuestionSubject.NotSure,
+        description="Subject of the question",
+    )
+    question_type: QuestionType = Field(
+        default=QuestionType.MCQ,
+        description="Type of the question, whether it is MCQ, True False, Fill in Blank or not.",
+    )
+    options: List[str] = Field(
+        default_factory=list,
+        description="List of options for the question, e.g if it is MCQ, then list of options.",
+    )
 
 
 class QuestionIdentifierPrompt(PromptStrategy):
     DEFAULT_SYSTEM_PROMPT = """
-        Act as the Content Correct Analysis, who's work is to correct the content based on the provided content.
-        What you need to do :-
-        - Do not change the lanaguage of the content.
+        You are a world class query correction algorithm capable of fixing questions into its corrected version of 
+        question and its options.
+        Do not answer the question, simply provide correct question with right set of options, subject and category.
+        
+        Instructions :-
+        - Do not change the language of the content
+        - Do not generate options if not present in the content.
+        - Fix question format in correct format only if it is must e.g. Line Break missing.
+        - Generate question if content is an answer - generate question is that case.
+        - Correct Spelling, Capital and small letter mistake if any
+        - Correct Punctuation errors
+        - Fix Subscript/Superscript missing or errors in case of Maths, Chemistry, Physics etc.
+        - Incomplete question, options missing - Complete the question
+        - Remove unnecessary words like Exam Name, Website Name, Page No., Question No., Exercise No., Points, Grade, Marks etc posted in question.
+        - Question not making any sense can be marked as can not be fixed as status.
+        - Fix Numbers, equation etc in latex, or math format missing.
+        - Only mark question incomplete if you are changing any content in the question, even slight change in the content.
+        
+        Examples :-
+        Content: Movie Recommendation systems are an example of: 1. Classification 2. Clustering 3. Reinforcement Learning 4. Regression Options: B. A. 2 Only C. 1 and 2 D. 1 and 3 E. 2 and 3 F. 1, 2 and 3 H. 1, 2, 3 and 4
+        Output: 
+        question -> Movie Recommendation systems are an example of: Classification, Clustering, Reinforcement Learning, Regression 
+        options -> ["2 Only", "1 and 2", "1 and 3", "2 and 3", "1, 2 and 3", "1, 2, 3 and 4"]
+        status -> Complete 
+        subject -> Mathematics 
+        question_type -> MCQ
         """
 
     DEFAULT_USER_PROMPT_TEMPLATE = """
-        Input: {task_objective}
+        Content: {task_objective}
+        
+        -----
+        Please use the above input as the content for the question correction.
+        """
 
-        Please use the above input as the content for the content correct analysis.
+    OTHER_USER_PROMPT_TEMPLATE = """
+     Please use the above input as the content for the content correct analysis.
         You need to analyze the content & provide the correct content & their respective fields such as status.
-
-        Status can be ENUM.
-            Complete --> content can be correct.
-            Cannot be Fixed --> content has unnecessary info, and can't be correct.
-            Spam --> Invalid content / Meaningless content
 
         If Status is not Complete, then also provide the reason.
 
         Below the some Examples.
         1.
-            Input: This climate diagram depicts ________. a. a tropical biome b. a very dry environment c. a typical boreal forest biome d. a biome with plentiful moisture e. a biome whose plants experience freeze stress for several months of the year
+            Content: This climate diagram depicts ________. a. a tropical biome b. a very dry environment c. a typical boreal forest biome d. a biome with plentiful moisture e. a biome whose plants experience freeze stress for several months of the year
 
             Output:
-            content - This climate diagram depicts ________.
+            question - This climate diagram depicts ________.
+            options -
             (A) a tropical biome
             (B) a very dry environment
             (C) a typical boreal forest biome
             (D) a biome with plentiful moisture
             (E) a biome whose plants experience freeze stress for several months of the year.
 
-            status -> Complete
+            status -> InComplete
 
         2.
-            Input: In "Highlander II: The Quickening", we learn that the mysterious Immortals are actually aliens originating from the planet Zeist, a world that is referenced throughout the remainder of the Highlander series, but never actually shown.
-
+            Content: In "Highlander II: The Quickening", we learn that the mysterious Immortals are actually aliens originating from the planet Zeist, a world that is referenced throughout the remainder of the Highlander series, but never actually shown.
             Output:
-            content - Cannot be Fixed.
+            question - Cannot be Fixed.
             status -> Cannot be Fixed
             reason -> Not an educational question.
         """
 
-    DEFAULT_PARSER_SCHEMA = BasePromptModel.function_schema()
+    DEFAULT_PARSER_SCHEMA = Question.function_schema()
 
     default_configuration = PromptStrategyConfiguration(
         model_classification=LanguageModelClassification.FAST_MODEL,
