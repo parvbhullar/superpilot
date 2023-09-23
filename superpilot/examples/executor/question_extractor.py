@@ -1,4 +1,5 @@
 # from superpilot.core.ability.super import SuperAbilityRegistry
+from typing import Dict, List
 from superpilot.core.configuration.config import get_config
 
 from superpilot.core.context.schema import Context
@@ -37,3 +38,11 @@ class QuestionExtractoreExecutor(BaseExecutor):
         print("\n", "*" * 32, "Running LatexCodeGenExecutor", "*" * 32, "\n\n")
         content =  await latex_convertor.run(str(context))
         return content
+    
+    async def run_list(self, query_list: List[Dict]):
+        final_res = []
+        for index, query in enumerate(query_list):
+            response = await self.run(query.get("Original Keyword"))
+            final_res.append({**query, **response.content})
+            print(f"Query {index} finished", "\n\n")
+        return final_res
