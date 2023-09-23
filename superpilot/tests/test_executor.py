@@ -75,4 +75,7 @@ res = asyncio.run(sd_prompt.run_list(smaple_data.to_dict("records")))
 t2 = time.time()
 print("Time Taken", round(t2 - t1, 2), "seconds")
 final_df = pd.DataFrame(res)
-final_df.to_excel("final_response.xlsx")
+cols = ["Original keyword", "content", "status", "reason"]
+headers = ["Original keyword", "Completed Version", "status", "reason"]
+final_df = final_df.reindex(columns=cols)
+final_df.to_excel("final_response.xlsx", header=headers, index=False)
