@@ -24,12 +24,18 @@ class QuestionIdentifierPromptExecutor(BaseExecutor):
 
     async def run(self, query):
         response = await self.pilot.execute(query)
+        options = self.format_numbered(response.content["options"])
+        response.content["question"] += f"\n{options}\n"
+        response.content["options"] = options
         return response
+
+    def format_numbered(self, items) -> str:
+        return "\n".join([f"{i}) {c}" for i, c in enumerate(items, 1)])
 
     async def run_list(self, query_list: List[Dict]):
         final_res = []
         for index, query in enumerate(query_list):
             response = await self.run(query.get("Original keyword"))
-            final_res.append({**response.content, **query})
+            final_res.append({**query, **response.content})
             print(f"Query {index} finished", "\n\n")
         return final_res
