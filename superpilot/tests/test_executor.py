@@ -12,9 +12,9 @@ from superpilot.examples.executor import (
     QuestionIdentifierPromptExecutor,
     LatexCodeGenExecutor,
     ClipDropImageExecutor,
-    QuestionExtractoreExecutor
+    QuestionExtractorExecutor
 )
-
+from superpilot.framework.tools.latex import latex_to_text
 import pandas as pd
 
 # sd_prompt = StableDiffusionPromptExecutor()
@@ -85,8 +85,7 @@ def fix_question(content):
     print("Time Taken", round(t2 - t1, 2), "seconds")
 
 
-fix_question(ques5)
-
+# fix_question(ques5)
 
 def run_file():
     data_df = pd.read_csv(
@@ -106,7 +105,6 @@ def run_file():
 
 # run_file()
 
-
 # quest = "The compression ratio of a petrol engine is 20.0 to 1 ; that is, air in a cylinder is compressed adiabatically to \( \frac{1}{20.0} \) of its initial volume. (a) If the initial pressure is \( 1.01"
 quest = """
 For the circuit shown in the figure, determine the magnitude of
@@ -115,10 +113,21 @@ the currents 𝐼2 , 𝐼3 , and 𝐼4 passing through batteries 2, 3, and
 """
 def search_question():
     t1 = time.time()
-    sd_prompt = QuestionExtractoreExecutor()
-    print("\n", "*" * 32, "Running QuestionExtractoreExecutor", "*" * 32, "\n\n")
+    sd_prompt = QuestionExtractorExecutor()
+    print("\n", "*" * 32, "Running QuestionExtractorExecutor", "*" * 32, "\n\n")
     res = asyncio.run(sd_prompt.run(quest))
     t2 = time.time()
     print("Time Taken", round(t2 - t1, 2), "seconds")
 
 search_question()
+
+
+def latex_txt():
+    t1 = time.time()
+    text = '$$\\text{The compression ratio of a diesel engine is 20.0 to 1 ; that is, air in a cylinder is compressed to }\\frac{1}{20.0}\\text{ of its initial volume. If the initial pressure is }1.01 \\text{ Pa and the initial temperature is }20°C, \\text{ find the final pressure and the temperature after adiabatic compression. How much work does the gas do during the compression if the initial volume of the cylinder is }1.00 \\text{ L? Use the values }γ = 20.8 \\text{ J/mol-K and }y = 1.400 \\text{ for air.}$$'
+    print(latex_to_text(text))
+    t2 = time.time()
+    print("Time Taken", round(t2 - t1, 2), "seconds")
+
+# latex_txt()
+
