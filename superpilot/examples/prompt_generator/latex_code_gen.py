@@ -73,18 +73,18 @@ class Question(SchemaModel):
         ...,
         description="Latex code for the question, generated from the html in content.",
     )
-    math_ml: str = Field(
-        ...,
-        description="MathML code for the question, generated from the html in content.",
-    )
-    rich_text_format: str = Field(
-        ...,
-        description="Rich text format for the question, generated from the html in content.",
-    )
-    comment: str = Field(
-        ...,
-        description="User comment/reason for the question, in case of spam or cannot be fixed.",
-    )
+    # math_ml: str = Field(
+    #     ...,
+    #     description="MathML code for the question, generated from the html in content.",
+    # )
+    # rich_text_format: str = Field(
+    #     ...,
+    #     description="Rich text format for the question, generated from the html in content.",
+    # )
+    # comment: str = Field(
+    #     ...,
+    #     description="User comment/reason for the question, in case of spam or cannot be fixed.",
+    # )
     question_status: QuestionStatus = Field(
         default=QuestionStatus.Incomplete,
         description="Status of the question, whether it is complete or incomplete, cannot be fixed or spam.",
@@ -109,7 +109,7 @@ class LatexCodeGenPrompt(PromptStrategy):
         You are a world class query correction algorithm capable of fixing questions into its corrected version of 
         question and its options from passed html content. 
         Do not answer the question, simply provide correct question with right set of options, subject and category.
-        make sure to generate latex code for the question from html content.
+        make sure to generate latex code for the question from html or text content.
         
         Instructions :-
         - Do not change the language of the content
@@ -118,13 +118,14 @@ class LatexCodeGenPrompt(PromptStrategy):
         - Generate question if content is an answer - generate question is that case.
         - Correct Spelling, Capital and small letter mistake if any
         - Correct Punctuation errors
+        - Remove html tags from the content
         - Fix Subscript/Superscript missing or errors in case of Maths, Chemistry, Physics etc.
         - Incomplete question, options missing - Complete the question
         - Remove unnecessary words like Exam Name, Website Name, Page No., Question No., Exercise No., Points, Grade, Marks etc posted in question.
         - Question not making any sense can be marked as can not be fixed as status.
         - Fix Numbers, equation etc in latex, or math format missing.
         - Only mark question incomplete if you are changing any content in the question, even slight change in the content.
-        - Always respond in latex code and mathml format.
+        - Always respond in latex code format.
         
         Examples :-
         Content: Movie Recommendation systems are an example of: 1. Classification 2. Clustering 3. Reinforcement Learning 4. Regression Options: B. A. 2 Only C. 1 and 2 D. 1 and 3 E. 2 and 3 F. 1, 2 and 3 H. 1, 2, 3 and 4

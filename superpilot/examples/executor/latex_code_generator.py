@@ -6,6 +6,7 @@ from superpilot.examples.executor.base import BaseExecutor
 from superpilot.examples.prompt_generator.latex_code_gen import (
     LatexCodeGenPrompt,
 )
+from superpilot.framework.tools.latex import latex_to_text
 
 
 class LatexCodeGenExecutor(BaseExecutor):
@@ -25,6 +26,7 @@ class LatexCodeGenExecutor(BaseExecutor):
     async def run(self, query):
         response = await self.pilot.execute(query)
         options = self.format_numbered(response.content["options"])
+        response.content["question"] = latex_to_text(response.content["latex_code"])
         response.content["question"] += f"\n{options}\n"
         response.content["options"] = options
         return response
