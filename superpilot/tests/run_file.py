@@ -24,17 +24,23 @@ def process_single_file(chunk, index):
     if len(success) > 0:
         success_df = pd.DataFrame(success)
         success_df.to_csv(
-            "latex_response_" + index + run_timestamp + ".csv", mode="a+", index=False
+            "latex_response_" + index + "_" + run_timestamp + ".csv",
+            mode="a+",
+            index=False,
         )
     if len(error) > 0:
         error_df = pd.DataFrame(error)
         error_df.to_csv(
-            "latex_error_" + index + run_timestamp + ".csv", mode="a+", index=False
+            "latex_error_" + index + "_" + run_timestamp + ".csv",
+            mode="a+",
+            index=False,
         )
 
 
 def run_file_with_search():
     file_location = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Parvinder Testing - Test 25 Sep 2050.csv"
+
+    # file_location = "/home/mastersindia/Documents/Personal/Knowledge/chat/superpilot/superpilot/docs/QuestionsData-Sheet3.csv"
     data_df = pd.read_csv(file_location)
     data_df = data_df.reindex(columns=["Original Keyword"])
     os.path.exists("last_index.txt") or open("last_index.txt", "w+").write("")
@@ -45,6 +51,7 @@ def run_file_with_search():
         last_index = int(last_index)
 
     file_size = 20
+
     max_workers = 10
     total_data = len(data_df)
     if total_data <= last_index:
@@ -56,12 +63,17 @@ def run_file_with_search():
             if total_data <= last_index:
                 break
             chunk = data_df[last_index : last_index + file_size]
-            last_index += file_size
+            last_index += len(chunk)
             executor.submit(
                 process_single_file, chunk.to_dict(orient="records"), str(i)
             )
     with open("last_index.txt", "w+") as f:
         f.write(str(last_index))
+    return False
 
 
-run_file_with_search()
+while True:
+    res = run_file_with_search()
+    if res:
+        break
+    time.sleep(5)
