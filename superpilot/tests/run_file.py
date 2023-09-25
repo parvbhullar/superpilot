@@ -24,14 +24,14 @@ def process_single_file(chunk, index):
     if len(success) > 0:
         success_df = pd.DataFrame(success)
         success_df.to_csv(
-            "latex_response_" + index + "_" + run_timestamp + ".csv",
+            "latex_response_" + run_timestamp + ".csv",
             mode="a+",
             index=False,
         )
     if len(error) > 0:
         error_df = pd.DataFrame(error)
         error_df.to_csv(
-            "latex_error_" + index + "_" + run_timestamp + ".csv",
+            "latex_error_" + run_timestamp + ".csv",
             mode="a+",
             index=False,
         )
@@ -73,7 +73,10 @@ def run_file_with_search():
 
 
 while True:
+    cycle_count = 1
     res = run_file_with_search()
     if res:
         break
+    print("Sleeping for 5 seconds", cycle_count)
+    cycle_count += 1
     time.sleep(5)
