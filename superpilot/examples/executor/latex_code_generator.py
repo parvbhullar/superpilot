@@ -10,6 +10,7 @@ from superpilot.framework.tools.latex import latex_to_text
 from superpilot.core.planning.strategies.utils import json_loads
 from superpilot.framework.helpers.json_utils.utilities import extract_json_from_response
 
+
 class LatexCodeGenExecutor(BaseExecutor):
     model_providers = ModelProviderFactory.load_providers()
     context = Context()
@@ -25,7 +26,11 @@ class LatexCodeGenExecutor(BaseExecutor):
         )
 
     async def run(self, query):
-        query = query.replace("\\", "")
+        query = query.replace("\\", " ")
+        try:
+            query = latex_to_text(query)
+        except:
+            pass
         response = await self.pilot.execute(query)
         # response.content = json_loads(response.content.get("content", "{}"))
         response.content = extract_json_from_response(response.content.get("content", "{}"), Question.function_schema())
