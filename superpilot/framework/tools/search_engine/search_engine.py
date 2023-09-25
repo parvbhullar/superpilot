@@ -31,7 +31,7 @@ class SearchEngine:
 
     async def run(self, query: str, max_results=8, **kwargs):
         if self.engine == SearchEngineType.SERPAPI_GOOGLE:
-            api = SerpAPIWrapper()
+            api = SerpAPIWrapper(config.serp_api_key)
             rsp = await api.run(query, **kwargs)
         elif self.engine == SearchEngineType.DIRECT_GOOGLE:
             rsp = self.run_google(query, max_results, **kwargs)
@@ -82,7 +82,7 @@ class SearchEngine:
                 # logger.info(result)
                 # Extract the search result items from the response
             search_results = result.get("items", [])
-
+            # print(search_results)
             # Create a list of only the URLs from the search results
             search_results_details = [
                 {i: j for i, j in item_dict.items() if i in focus}
