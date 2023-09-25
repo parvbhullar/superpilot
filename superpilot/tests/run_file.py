@@ -34,16 +34,17 @@ def process_single_file(chunk, index):
 
 
 def run_file_with_search():
-    file_location = ""
+    file_location = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Parvinder Testing - Test 25 Sep 2050.csv"
     data_df = pd.read_csv(file_location)
     data_df = data_df.reindex(columns=["Original Keyword"])
+    os.path.exists("last_index.txt") or open("last_index.txt", "w+").write("")
     last_index = open("last_index.txt", "r+").read()
     if last_index == "":
         last_index = 0
     else:
         last_index = int(last_index)
 
-    file_size = 100
+    file_size = 20
     max_workers = 10
     total_data = len(data_df)
     if total_data <= last_index:

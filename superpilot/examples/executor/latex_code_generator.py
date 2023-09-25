@@ -25,6 +25,7 @@ class LatexCodeGenExecutor(BaseExecutor):
         )
 
     async def run(self, query):
+        query = query.replace("\\", "")
         response = await self.pilot.execute(query)
         # response.content = json_loads(response.content.get("content", "{}"))
         response.content = extract_json_from_response(response.content.get("content", "{}"), Question.function_schema())
