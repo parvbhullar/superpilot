@@ -1,7 +1,5 @@
 import json
 import logging
-
-from bs4 import BeautifulSoup
 from superpilot.core.ability.base import Ability, AbilityConfiguration
 from superpilot.core.environment import Environment
 from superpilot.core.context.schema import Content, ContentType
@@ -11,11 +9,14 @@ from superpilot.core.resource.model_providers import (
     ModelProviderName,
     OpenAIModelName,
 )
+from superpilot.examples.abilities.utlis.scraperapi import scrape_page
 from superpilot.framework.tools.search_engine import SearchEngine, SearchEngineType
-from superpilot.framework.tools.web_browser import WebBrowserEngine
+# from superpilot.framework.tools.web_browser import WebBrowserEngine
 from superpilot.core.configuration import Config
 from superpilot.core.planning.strategies import SummarizerStrategy
-from superpilot.framework.tools.web_browser.web_browser_engine_type import WebBrowserEngineType
+# from superpilot.framework.tools.web_browser.web_browser_engine_type import (
+#     WebBrowserEngineType,
+# )
 from superpilot.core.planning.strategies.utils import json_loads
 
 
@@ -86,16 +87,21 @@ class QuestionExtractor(Ability):
         # print(new_search_urls)
         filter_link = None
         for link in new_search_urls:
-            if 'chegg.com' in link['link']:
+            if "chegg.com" in link["link"]:
                 print("page", link)
-                filter_link = link['link']
+                filter_link = link["link"]
                 break
         if filter_link is None:
             return None
-        data = None
-        data = await WebBrowserEngine(
-            parse_func=self.get_page_content, engine=WebBrowserEngineType.SELENIUM
-        ).run(filter_link)
+
+        # data = None
+        # data = await WebBrowserEngine(
+        #     parse_func=self.get_page_content, engine=WebBrowserEngineType.SELENIUM
+        # ).run(filter_link)
+        result = scrape_page(filter_link, self._env_config.scraperapi_api_key)
+        if result is None:
+            return None
+        data = self.get_page_content(result)
         return data
 
     async def get_content_item(self, content: str, query: str, url: str) -> Content:
@@ -103,6 +109,7 @@ class QuestionExtractor(Ability):
 
     def get_page_content(self, page: str):
         from bs4 import BeautifulSoup
+
         soup = BeautifulSoup(page, "html.parser")
 
         ele = soup.find("div", {"id": "question-transcript"})
@@ -112,7 +119,10 @@ class QuestionExtractor(Ability):
         print("Not Found in question-transcript")
         # desired_ids = ["question-transcript", "q-body"]
         # return soup.find_all("div", id=lambda x: x in desired_ids)
-        desired_classes = ["styled__QuestionBody-sc-1f9k7g9-2", "question"]  # replace with your class names
+        desired_classes = [
+            "styled__QuestionBody-sc-1f9k7g9-2",
+            "question",
+        ]  # replace with your class names
         divs = soup.find_all("div", class_=lambda x: x in desired_classes)
         return "\n".join(i.text.strip() for i in divs)
 

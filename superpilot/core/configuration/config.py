@@ -42,6 +42,8 @@ class Config(SystemSettings, arbitrary_types_allowed=True):
 
     selenium_browser_type: Optional[str] = None
 
+    scraperapi_api_key: Optional[str] = None
+
 
 class ConfigBuilder(Configurable[Config]):
     default_settings = Config()
@@ -80,6 +82,7 @@ class ConfigBuilder(Configurable[Config]):
             "clipdrop_api_key": os.getenv("CLIPDROP_API_KEY"),
             "web_proxy": os.getenv("WEB_PROXY", "").split(","),
             "selenium_browser_type": os.getenv("SELENIUM_BROWSER_TYPE", "chrome"),
+            "scraperapi_api_key": os.getenv("SCRAPERAPI_API_KEY"),
         }
 
         config_dict_without_none_values = {
