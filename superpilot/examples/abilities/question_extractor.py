@@ -1,3 +1,4 @@
+import json
 import logging
 
 from bs4 import BeautifulSoup
@@ -15,6 +16,7 @@ from superpilot.framework.tools.web_browser import WebBrowserEngine
 from superpilot.core.configuration import Config
 from superpilot.core.planning.strategies import SummarizerStrategy
 from superpilot.framework.tools.web_browser.web_browser_engine_type import WebBrowserEngineType
+from superpilot.core.planning.strategies.utils import json_loads
 
 
 class QuestionExtractor(Ability):
@@ -43,7 +45,7 @@ class QuestionExtractor(Ability):
             configuration.language_model_required.provider_name
         )
         self._search_engine = SearchEngine(
-            config=self._env_config, engine=SearchEngineType.DIRECT_GOOGLE
+            config=self._env_config, engine=SearchEngineType.SERPAPI_GOOGLE
         )
 
     @classmethod
@@ -80,13 +82,13 @@ class QuestionExtractor(Ability):
         if not rsp:
             return None
 
-        # self._logger.info(rsp)
-
-        new_search_urls = [link["link"] for link in rsp if link]
+        new_search_urls = [link for link in json_loads(rsp) if link]
+        # print(new_search_urls)
         filter_link = None
         for link in new_search_urls:
-            if "chegg.com" in link:
-                filter_link = link
+            if 'chegg.com' in link['link']:
+                print("page", link)
+                filter_link = link['link']
                 break
         if filter_link is None:
             return None
@@ -100,8 +102,19 @@ class QuestionExtractor(Ability):
         return Content.add_content_item(content, ContentType.TEXT, source=url)
 
     def get_page_content(self, page: str):
+        from bs4 import BeautifulSoup
         soup = BeautifulSoup(page, "html.parser")
-        return soup.find("div", {"id": "question-transcript"})
+
+        ele = soup.find("div", {"id": "question-transcript"})
+        if ele:
+            print("Found in question-transcript", ele)
+            return ele
+        print("Not Found in question-transcript")
+        # desired_ids = ["question-transcript", "q-body"]
+        # return soup.find_all("div", id=lambda x: x in desired_ids)
+        desired_classes = ["styled__QuestionBody-sc-1f9k7g9-2", "question"]  # replace with your class names
+        divs = soup.find_all("div", class_=lambda x: x in desired_classes)
+        return "\n".join(i.text.strip() for i in divs)
 
     @staticmethod
     def _parse_response(response_content: dict) -> dict:

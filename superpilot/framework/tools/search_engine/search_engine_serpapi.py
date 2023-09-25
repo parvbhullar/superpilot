@@ -33,6 +33,11 @@ class SerpAPIWrapper(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
+    def __init__(self, serp_api_key, **kwargs):
+        super().__init__(**kwargs)
+        self.serpapi_api_key = serp_api_key
+        # print("SERP_KEY", self.serpapi_api_key)
+
     async def run(self, query: str, **kwargs: Any) -> str:
         """Run query through SerpAPI and parse result async."""
         return self._process_response(await self.results(query))
@@ -72,7 +77,7 @@ class SerpAPIWrapper(BaseModel):
     @staticmethod
     def _process_response(res: dict) -> str:
         """Process response from SerpAPI."""
-        # logger.debug(res)
+        # print(res)
         focus = ['title', 'snippet', 'link']
         get_focused = lambda x: {i: j for i, j in x.items() if i in focus}
 
@@ -108,4 +113,5 @@ class SerpAPIWrapper(BaseModel):
         if res.get("organic_results"):
             toret_l += [get_focused(i) for i in res.get("organic_results")]
 
-        return str(toret) + '\n' + str(toret_l)
+        return str(toret_l)
+        # return str(toret) + '\n' + str(toret_l)

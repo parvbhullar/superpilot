@@ -45,6 +45,8 @@ class PlaywrightWrapper:
         #     if not any(str.startswith(i, "--proxy-server=") for i in args):
         #         launch_kwargs["proxy"] = {"server": Config.global_proxy}
         self.launch_kwargs = launch_kwargs
+        # self.launch_kwargs["headless"] = False
+
         context_kwargs = {"user_agent": random.choice(userAgentStrings)}
         # if config.web_proxy:
         #     self.launch_kwargs["proxy"] = {"server": random.choice(config.web_proxy)}
@@ -115,7 +117,7 @@ async def _install_browsers(*browsers, **kwargs) -> None:
 
     await asyncio.gather(
         _log_stream(process.stdout, logger.info),
-        _log_stream(process.stderr, logger.warning),
+        _log_stream(process.stderr, logger.warn),
     )
 
     if await process.wait() == 0:

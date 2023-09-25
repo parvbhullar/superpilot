@@ -42,6 +42,7 @@ class QuestionExtractorExecutor(BaseExecutor):
         final_res = []
         for index, query in enumerate(query_list):
             response = await self.run(query.get("Original Keyword"))
-            final_res.append({**query, **response.content})
+            print("Response", response)
+            final_res.append({**query, **response.content, "total_cost($)": response.total_cost})
             print(f"Query {index} finished", "\n\n")
         return final_res

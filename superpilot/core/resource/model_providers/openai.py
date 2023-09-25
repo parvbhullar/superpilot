@@ -166,6 +166,10 @@ class OpenAIProvider(
         """Get the remaining budget."""
         return self._budget.remaining_budget
 
+    def get_total_cost(self) -> float:
+        """Get the total cost."""
+        return self._budget.total_cost
+
     async def create_language_completion(
         self,
         model_prompt: List[LanguageModelMessage],

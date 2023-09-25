@@ -24,7 +24,9 @@ from superpilot.core.resource.model_providers import (
     ModelProviderName,
     OpenAIModelName,
     OpenAIProvider,
+    OPEN_AI_MODELS,
 )
+from superpilot.core.resource.model_providers.utils.token_counter import count_string_tokens
 
 
 class SimpleTaskPilot(TaskPilot, ABC):
@@ -90,14 +92,18 @@ class SimpleTaskPilot(TaskPilot, ABC):
         **kwargs,
     ) -> LanguageModelResponse:
         model_classification = prompt_strategy.model_classification
-        model_configuration = self._configuration.models[model_classification].dict()
-        self._logger.debug(f"Using model configuration: {model_configuration}")
-        del model_configuration["provider_name"]
-        provider = self._providers[model_classification]
+        model_configuration = self._configuration.models[model_classification]
 
         template_kwargs = self._make_template_kwargs_for_strategy(prompt_strategy)
         template_kwargs.update(kwargs)
         prompt = prompt_strategy.build_prompt(**template_kwargs)
+
+        model_configuration = self.choose_model(model_classification, model_configuration, prompt)
+
+        model_configuration = model_configuration.dict()
+        self._logger.debug(f"Using model configuration: {model_configuration}")
+        del model_configuration["provider_name"]
+        provider = self._providers[model_classification]
 
         self._logger.debug(f"Using prompt:\n{prompt}\n\n")
         response = await provider.create_language_completion(
@@ -107,7 +113,21 @@ class SimpleTaskPilot(TaskPilot, ABC):
             **model_configuration,
             completion_parser=prompt_strategy.parse_response_content,
         )
+
         return LanguageModelResponse.parse_obj(response.dict())
+
+    def choose_model(self, model_classification, model_configuration, prompt):
+        current_tokens = count_string_tokens(str(prompt), model_configuration.model_name)
+        print("Tokens", current_tokens)
+        token_limit = OPEN_AI_MODELS[model_configuration.model_name].max_tokens
+        completion_token_min_length = 1000
+        send_token_limit = token_limit - completion_token_min_length
+        if current_tokens > send_token_limit:
+            if model_classification == LanguageModelClassification.FAST_MODEL:
+                model_configuration.model_name = OpenAIModelName.GPT3_16K
+            elif model_classification == LanguageModelClassification.SMART_MODEL:
+                model_configuration.model_name = OpenAIModelName.GPT4_32K
+        return model_configuration
 
     def _make_template_kwargs_for_strategy(self, strategy: PromptStrategy):
         provider = self._providers[strategy.model_classification]

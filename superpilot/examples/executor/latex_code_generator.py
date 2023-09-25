@@ -25,8 +25,8 @@ class LatexCodeGenExecutor(BaseExecutor):
 
     async def run(self, query):
         response = await self.pilot.execute(query)
-        options = self.format_numbered(response.content["options"])
-        response.content["question"] = latex_to_text(response.content["latex_code"])
+        options = self.format_numbered(response.content.get("options", []))
+        response.content["question"] = latex_to_text(response.content.get("latex_code", ""))
         response.content["question"] += f"\n{options}\n"
         response.content["options"] = options
         return response

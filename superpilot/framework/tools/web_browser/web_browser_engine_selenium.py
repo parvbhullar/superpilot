@@ -38,6 +38,7 @@ class SeleniumWrapper:
     ) -> None:
         if browser_type is None:
             browser_type = config.selenium_browser_type or "chrome"
+
         self.browser_type = browser_type
         launch_kwargs = launch_kwargs or {}
         # if Config.global_proxy and "proxy-server" not in launch_kwargs:
