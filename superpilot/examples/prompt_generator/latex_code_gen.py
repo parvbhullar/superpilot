@@ -116,17 +116,15 @@ class LatexCodeGenPrompt(PromptStrategy):
         - Latex code should be written in editable plain text like 2/3,2*3,80 (signs in superscript).
         - Do not answer the question, simply provide correct question with right set of options, subject and type.
         - If the question is complete, then simply provide the question with its options(if present in text), subject and type.
-        - return response in json format in given keys(question, question_status, subject, question_type, options).
         - Remove unnecessary words like Exam Name, Website Name, Page No., Question No., Exercise No., Points, Grade, Marks etc posted in question.
-
+        - return response in json format in given keys(question, question_status, subject, question_type, options).
         
         Example:
-           '{ "question": "What is the value of 2+3?",
+            "question": "What is the value of 2+3?",
             "question_status": "complete",
             "subject": "mathematics",
             "question_type": "mcq",
             "options": ["5", "6", "7", "8"]
-            }'
         
         """
 

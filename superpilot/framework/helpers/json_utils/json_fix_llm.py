@@ -13,7 +13,6 @@ from superpilot.core.configuration import Config
 from superpilot.framework.helpers.json_utils.json_fix_general import correct_json
 from superpilot.framework.llm import call_ai_function, create_chat_completion
 from superpilot.framework.helpers.logs import logger
-from superpilot.autogpt.speech import say_text
 import openai
 
 JSON_SCHEMA = """
