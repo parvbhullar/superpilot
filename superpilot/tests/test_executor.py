@@ -124,36 +124,59 @@ quest = """
 Question B2: Let \( s(x)=\sin \left(\frac{\pi}{180} x\right) \), defined on the domain \( [-100,400] \). (a) Use the chain rule to evaluate \( s^{\prime}(x) \) and \( s^{\prime \prime}(x) \). (b) Find
 """
 
+quest = """
+Given f(x) = 3x and g(x)=-x+5,what is the value of g(2)+f(4)
+"""
+
+quest = """
+a. Suppose \( f(x) \) is continuous with antiderivative \( F(x) \), i.e. \( F^{\prime}(x)=f(x) \). Fix a point \( x_{0} \) and show that \[ \lim _{x \rightarrow x_{0}} \frac{1}{x-x_{0}} \int_{x_{0}}^{
+"""
+
+quest = """
+Find the exact value of the expression. \[ \cos \left(2 \sin ^{-1} \frac{9}{41}\right) \] \[ \cos \left(2 \sin ^{-1} \frac{9}{41}\right)= \] (Type an integer or a simplified fraction.)
+"""
+
+quest = """
+For each pair of functions, find f(g) 5. f(x)=3x+5;g(x)=x^(2)+1
+"""
+
+quest = """
+11. Derive the reduction formula for \( \int x^{n} e^{2 x} d x \) and use the formula to calculate \( \int x^{3} e^{2 x} d x \)
+"""
 
 def search_question():
     t1 = time.time()
     sd_prompt = QuestionExtractorExecutor()
     print("\n", "*" * 32, "Running QuestionExtractorExecutor", "*" * 32, "\n\n")
-    res = asyncio.run(sd_prompt.run(quest))
+    # print("Before", quest)
+    q = quest.replace("\\", " ")
+    # print("After", q)
+    res = asyncio.run(sd_prompt.run(q))
     print(res)
     t2 = time.time()
     print("Time Taken", round(t2 - t1, 2), "seconds")
 
-search_question()
+# search_question()
 
 
 def run_file_with_search():
     # data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/QuestionsData-Sheet3.csv")
     # data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/QuestionsData - Sheet4.csv")
-    data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Parvinder Testing - Test 25 Sep 2050.csv")
+    # data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Parvinder Testing - Test 25 Sep 2050.csv")
+    data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/QuestionsData - Sheet6.csv")
     smaple_data = data_df[:100].reindex(columns=["Original Keyword"])
     print(smaple_data.shape)
     t1 = time.time()
     sd_prompt = QuestionExtractorExecutor()
     print("\n", "*" * 32, "Running QuestionExtractorExecutor", "*" * 32, "\n\n")
-    res = asyncio.run(sd_prompt.run_list(smaple_data.to_dict("records")))
+    res, _ = asyncio.run(sd_prompt.run_list(smaple_data.to_dict("records")))
     t2 = time.time()
     print("Time Taken", round(t2 - t1, 2), "seconds")
     final_df = pd.DataFrame(res)
     final_df.to_excel("search_latex_response.xlsx")
 
 
-# run_file_with_search()
+run_file_with_search()
 
 def get_page_content(page: str):
     from bs4 import BeautifulSoup

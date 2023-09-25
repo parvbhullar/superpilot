@@ -111,18 +111,20 @@ class LatexCodeGenPrompt(PromptStrategy):
     
         Instructions:
         - In case of incomplete question, complete the question including ? mark.
-        - Write a complete question with symbols, equations, options, tables etc.
+        - Write a complete question without loosing symbols, equations, options, tables etc.
         - Write question and equations in plan text
+        - Convert mathml to plain text or signs.
+        - Convert latex code to plain text or signs.
         - Latex code should be written in editable plain text like 2/3,2*3,80 (signs in superscript).
         - Do not answer the question, simply provide correct question with right set of options, subject and question_type.
         - If the question is complete, then simply provide the question with its options(if present in text), subject and type.
-        - Remove unnecessary words like Exam Name, Website Name, Page No., Question No., Exercise No., Points, Grade, Marks etc posted in question.
+        - Remove unnecessary brackets, words like Exam Name, Website Name, Page No., Question No., Exercise No., Points, Grade, Marks etc posted in question.
         - If some question mention "given in figure", mark it "cannot be fixed" rather than creating a question out of it
-        - return response in json format in given keys only(question, question_status, subject, question_type, options).
+        - return response in JSON format in given keys only(question, question_status, subject, question_type, options).
         
         Example:
             "question": "What is the value of 2+3?",
-            "question_status": "complete",
+            "question_status": "complete" from ['complete', 'incomplete', 'spam', 'cannot_be_fixed'],
             "subject": "not_sure" from ['not_sure', 'business', 'english', 'mathematics', 'social_studies', 'health', 'geography', 'biology', 'physics', 'chemistry', 'computers_and_technology', 'arts', 'world_languages', 'spanish', 'french', 'german', 'medicine', 'law', 'engineering', 'economics'],
             "question_type": "mcq" from ['mcq', 'true_false', 'fill_in_blank', 'fill_in_the_blanks_with_options', 'match_the_column', 'short_answer', 'not_sure']
             "options": ["5", "6", "7", "8"]
