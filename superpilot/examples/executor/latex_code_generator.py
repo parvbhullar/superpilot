@@ -4,11 +4,11 @@ from superpilot.core.pilot.task.simple import SimpleTaskPilot
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory
 from superpilot.examples.executor.base import BaseExecutor
 from superpilot.examples.prompt_generator.latex_code_gen import (
-    LatexCodeGenPrompt,
+    LatexCodeGenPrompt, Question
 )
 from superpilot.framework.tools.latex import latex_to_text
 from superpilot.core.planning.strategies.utils import json_loads
-
+from superpilot.framework.helpers.json_utils.utilities import extract_json_from_response
 
 class LatexCodeGenExecutor(BaseExecutor):
     model_providers = ModelProviderFactory.load_providers()
@@ -26,7 +26,8 @@ class LatexCodeGenExecutor(BaseExecutor):
 
     async def run(self, query):
         response = await self.pilot.execute(query)
-        response.content = json_loads(response.content.get("content", "{}"))
+        # response.content = json_loads(response.content.get("content", "{}"))
+        response.content = extract_json_from_response(response.content.get("content", "{}"), Question.function_schema())
         options = self.format_numbered(response.content.get("options", []))
         response.content["question"] = latex_to_text(response.content.get("question", ""))
         response.content["question"] += f"\n{options}\n"
@@ -34,12 +35,17 @@ class LatexCodeGenExecutor(BaseExecutor):
         return response
 
     def format_numbered(self, items) -> str:
+        if not items:
+            return ""
         return "\n".join([f"{i}) {c}" for i, c in enumerate(items, 1)])
 
     async def run_list(self, query_list: List[Dict]):
         final_res = []
-        for index, query in enumerate(query_list):
-            response = await self.run(query.get("Original Keyword"))
-            final_res.append({**query, **response.content})
-            print(f"Query {index} finished", "\n\n")
+        try:
+            for index, query in enumerate(query_list):
+                response = await self.run(query.get("Original Keyword"))
+                final_res.append({**query, **response.content})
+                print(f"Query {index} finished", "\n\n")
+        except Exception as e:
+            print(e)
         return final_res

@@ -7,12 +7,28 @@ import json
 import re
 from typing import Optional
 
-from superpilot.autogpt.config import Config
-from superpilot.autogpt.json_utils.utilities import extract_char_position
-from superpilot.autogpt.logs import logger
+from superpilot.core.configuration.config import Config
+from superpilot.framework.helpers.logs import logger
 
 CFG = Config()
 
+
+def extract_char_position(error_message: str) -> int:
+    """Extract the character position from the JSONDecodeError message.
+
+    Args:
+        error_message (str): The error message from the JSONDecodeError
+          exception.
+
+    Returns:
+        int: The character position.
+    """
+
+    char_pattern = re.compile(r"\(char (\d+)\)")
+    if match := char_pattern.search(error_message):
+        return int(match[1])
+    else:
+        raise ValueError("Character position not found in the error message.")
 
 def fix_invalid_escape(json_to_load: str, error_message: str) -> str:
     """Fix invalid escape sequences in JSON strings.
