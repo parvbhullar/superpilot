@@ -129,10 +129,6 @@ Given f(x) = 3x and g(x)=-x+5,what is the value of g(2)+f(4)
 """
 
 quest = """
-a. Suppose \( f(x) \) is continuous with antiderivative \( F(x) \), i.e. \( F^{\prime}(x)=f(x) \). Fix a point \( x_{0} \) and show that \[ \lim _{x \rightarrow x_{0}} \frac{1}{x-x_{0}} \int_{x_{0}}^{
-"""
-
-quest = """
 Find the exact value of the expression. \[ \cos \left(2 \sin ^{-1} \frac{9}{41}\right) \] \[ \cos \left(2 \sin ^{-1} \frac{9}{41}\right)= \] (Type an integer or a simplified fraction.)
 """
 
@@ -144,19 +140,32 @@ quest = """
 11. Derive the reduction formula for \( \int x^{n} e^{2 x} d x \) and use the formula to calculate \( \int x^{3} e^{2 x} d x \)
 """
 
+quest = """
+Question B2: Let \( s(x)=\sin \left(\frac{\pi}{180} x\right) \), defined on the domain \( [-100,400] \). (a) Use the chain rule to evaluate \( s^{\prime}(x) \) and \( s^{\prime \prime}(x) \). (b) Find
+"""
+
+quest = """
+a. Suppose \( f(x) \) is continuous with antiderivative \( F(x) \), i.e. \( F^{\prime}(x)=f(x) \). Fix a point \( x_{0} \) and show that \[ \lim _{x \rightarrow x_{0}} \frac{1}{x-x_{0}} \int_{x_{0}}^{
+"""
+
 def search_question():
     t1 = time.time()
     sd_prompt = QuestionExtractorExecutor()
     print("\n", "*" * 32, "Running QuestionExtractorExecutor", "*" * 32, "\n\n")
-    # print("Before", quest)
+    print("Before", quest)
+    # q = latex_to_text(quest)
     q = quest.replace("\\", " ")
-    # print("After", q)
+    try:
+        q = latex_to_text(q)
+    except:
+        pass
+    print("After", q)
     res = asyncio.run(sd_prompt.run(q))
     print(res)
     t2 = time.time()
     print("Time Taken", round(t2 - t1, 2), "seconds")
 
-# search_question()
+search_question()
 
 
 def run_file_with_search():
@@ -176,7 +185,8 @@ def run_file_with_search():
     final_df.to_excel("search_latex_response.xlsx")
 
 
-run_file_with_search()
+# run_file_with_search()
+
 
 def get_page_content(page: str):
     from bs4 import BeautifulSoup
