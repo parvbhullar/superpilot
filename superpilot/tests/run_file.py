@@ -37,7 +37,7 @@ def run_file_with_search():
     file_location = ""
     data_df = pd.read_csv(file_location)
     data_df = data_df.reindex(columns=["Original Keyword"])
-    last_index = open("last_index.txt", "r").read()
+    last_index = open("last_index.txt", "r+").read()
     if last_index == "":
         last_index = 0
     else:
@@ -46,18 +46,21 @@ def run_file_with_search():
     file_size = 100
     max_workers = 10
     total_data = len(data_df)
-    if file_size <= last_index:
+    if total_data <= last_index:
         print("No Processing Done", file_location)
         return True
 
     with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         for i in range(max_workers):
-            if file_size <= last_index:
+            if total_data <= last_index:
                 break
             chunk = data_df[last_index : last_index + file_size]
             last_index += file_size
             executor.submit(
                 process_single_file, chunk.to_dict(orient="records"), str(i)
             )
-    with open("last_index.txt", "w") as f:
+    with open("last_index.txt", "w+") as f:
         f.write(str(last_index))
+
+
+run_file_with_search()
