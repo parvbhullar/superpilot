@@ -23,14 +23,14 @@ def process_single_file(chunk, index):
     print("Time Taken", round(t2 - t1, 2), "seconds")
     if len(success) > 0:
         success_df = pd.DataFrame(success)
-        success_df.to_excel(
+        success_df.to_csv(
             "latex_response_" + index + "_" + run_timestamp + ".csv",
             mode="a+",
             index=False,
         )
     if len(error) > 0:
         error_df = pd.DataFrame(error)
-        error_df.to_excel(
+        error_df.to_csv(
             "latex_error_" + index + "_" + run_timestamp + ".csv",
             mode="a+",
             index=False,
