@@ -65,9 +65,9 @@ class Question(SchemaModel):
     Can be either a single question or a multi question merge.
     """
 
-    question: str = Field(
+    complete_question: str = Field(
         ...,
-        description="Complete question.",
+        description="Complete question from LLM model",
     )
     latex_code: str = Field(
         ...,
@@ -107,15 +107,27 @@ class LatexCodeGenPrompt(PromptStrategy):
     
     DEFAULT_SYSTEM_PROMPT = """
         Your job is rewriting question to its completed version of 
-        question with its options. follow the below instructions to perform the task.
+        question with its options. Follow the below instructions.
     
         Instructions:
-        - In case of incomplete question, complete the question.
+        - In case of incomplete question, complete the question including ? mark.
         - Write a complete question with symbols, equations, options, tables etc.
-        - Write complete latex code for the question.
-        - Latex code should be written in editable plain text like 2/3,2*3,80 degrees (signs in superscript). They should be written in a way so that they can be copied and pased in excel cell directly without using paste value tool.
+        - Write question and equations in plan text
+        - Latex code should be written in editable plain text like 2/3,2*3,80 (signs in superscript).
         - Do not answer the question, simply provide correct question with right set of options, subject and type.
         - If the question is complete, then simply provide the question with its options(if present in text), subject and type.
+        - return response in json format in given keys(question, question_status, subject, question_type, options).
+        - Remove unnecessary words like Exam Name, Website Name, Page No., Question No., Exercise No., Points, Grade, Marks etc posted in question.
+
+        
+        Example:
+           '{ "question": "What is the value of 2+3?",
+            "question_status": "complete",
+            "subject": "mathematics",
+            "question_type": "mcq",
+            "options": ["5", "6", "7", "8"]
+            }'
+        
         """
 
     DEFAULT_USER_PROMPT_TEMPLATE = """
@@ -126,7 +138,7 @@ class LatexCodeGenPrompt(PromptStrategy):
         
         """
 
-    DEFAULT_PARSER_SCHEMA = Question.function_schema()
+    DEFAULT_PARSER_SCHEMA = None #Question.function_schema()
 
     default_configuration = PromptStrategyConfiguration(
         model_classification=LanguageModelClassification.FAST_MODEL,
