@@ -120,6 +120,10 @@ quest = """
 10. Consider a charge of \( +8.0 \mathrm{nC} \) is placed at \( x=-3.0 \mathrm{~m} \). A second charge of \( -24.0 \mathrm{nC} \) is placed at \( y=-6.0 \mathrm{~m} \), as shown to the right. What is
 """
 
+quest = """
+Question B2: Let \( s(x)=\sin \left(\frac{\pi}{180} x\right) \), defined on the domain \( [-100,400] \). (a) Use the chain rule to evaluate \( s^{\prime}(x) \) and \( s^{\prime \prime}(x) \). (b) Find
+"""
+
 
 def search_question():
     t1 = time.time()
@@ -130,7 +134,7 @@ def search_question():
     t2 = time.time()
     print("Time Taken", round(t2 - t1, 2), "seconds")
 
-# search_question()
+search_question()
 
 
 def run_file_with_search():
@@ -149,7 +153,7 @@ def run_file_with_search():
     final_df.to_excel("search_latex_response.xlsx")
 
 
-run_file_with_search()
+# run_file_with_search()
 
 def get_page_content(page: str):
     from bs4 import BeautifulSoup
