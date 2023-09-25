@@ -14,6 +14,7 @@ from superpilot.framework.tools.search_engine import SearchEngine, SearchEngineT
 from superpilot.framework.tools.web_browser import WebBrowserEngine
 from superpilot.core.configuration import Config
 from superpilot.core.planning.strategies import SummarizerStrategy
+from superpilot.framework.tools.web_browser.web_browser_engine_type import WebBrowserEngineType
 
 
 class QuestionExtractor(Ability):
@@ -75,9 +76,7 @@ class QuestionExtractor(Ability):
             return None
 
         self._logger.debug(query)
-        rsp = await self._search_engine.run(
-            query, max_results=5
-        )
+        rsp = await self._search_engine.run(query, max_results=5)
         if not rsp:
             return None
 
@@ -86,23 +85,23 @@ class QuestionExtractor(Ability):
         new_search_urls = [link["link"] for link in rsp if link]
         filter_link = None
         for link in new_search_urls:
-            if 'chegg.com' in link:
+            if "chegg.com" in link:
                 filter_link = link
                 break
         if filter_link is None:
             return None
         data = None
-        data = await WebBrowserEngine(parse_func=self.get_page_content).run(filter_link)
+        data = await WebBrowserEngine(
+            parse_func=self.get_page_content, engine=WebBrowserEngineType.SELENIUM
+        ).run(filter_link)
         return data
 
     async def get_content_item(self, content: str, query: str, url: str) -> Content:
         return Content.add_content_item(content, ContentType.TEXT, source=url)
-    
 
     def get_page_content(self, page: str):
         soup = BeautifulSoup(page, "html.parser")
         return soup.find("div", {"id": "question-transcript"})
-
 
     @staticmethod
     def _parse_response(response_content: dict) -> dict:
