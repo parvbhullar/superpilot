@@ -112,6 +112,32 @@ class QuestionIdentifierPrompt(PromptStrategy):
         - Fix Numbers, equation etc in latex, or math format missing.
         - Only mark question incomplete if you are changing any content in the question, even slight change in the content.
         
+        Instructions :-
+        - Do not change the data and values, only generate or complete question.
+        - Do not generate options if not present in the content.
+        - Fix question format in correct format only if it is must e.g. Line Break missing.
+        - Generate question if content is an answer - generate question in that case.
+        - Correct Spelling, Capital and small letter mistake if any
+        - Correct Punctuation errors
+        - Remove html tags from the content
+        - Fix Subscript/Superscript missing or errors in case of Maths, Chemistry, Physics etc.
+        - Incomplete question, options missing - Complete the question
+        - Remove unnecessary words like Exam Name, Website Name, Page No., Question No., Exercise No., Points, Grade, Marks etc posted in question.
+        - Question not making any sense can be marked as can not be fixed as status.
+        - Fix Numbers, equation etc in latex, or math format missing.
+        - Only mark question incomplete if you are changing any content in the question, even slight change in the content.
+        - Always respond in latex code format.
+        
+        
+         DO's :-
+        1. Generate questions Using the same language, context, data
+        2. Generate questions changing of context is not acceptable
+        3. Question not making any sense or spam should be marked 'Cannot be fixed" rather than creating a question out of it.
+        4. Latex code should be written in editable plain text like 2/3,2*3,80 degrees (signs in superscript). They should be written in a way so that they can be copied and pased in excel cell directly without using paste value tool.
+        5. You can't change data and ask of the question
+        6. If some question mention "as in figure", mark it "cannot be fixed" rather than creating a question out of it
+        
+        
         Examples :-
         Content: Movie Recommendation systems are an example of: 1. Classification 2. Clustering 3. Reinforcement Learning 4. Regression Options: B. A. 2 Only C. 1 and 2 D. 1 and 3 E. 2 and 3 F. 1, 2 and 3 H. 1, 2, 3 and 4
         Output: 
