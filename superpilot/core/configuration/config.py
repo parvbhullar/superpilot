@@ -40,6 +40,8 @@ class Config(SystemSettings, arbitrary_types_allowed=True):
 
     web_proxy: Optional[List] = []
 
+    selenium_browser_type: Optional[str] = None
+
 
 class ConfigBuilder(Configurable[Config]):
     default_settings = Config()
@@ -77,6 +79,7 @@ class ConfigBuilder(Configurable[Config]):
             "stability_engine_id": os.getenv("STABILITY_ENGINE_ID"),
             "clipdrop_api_key": os.getenv("CLIPDROP_API_KEY"),
             "web_proxy": os.getenv("WEB_PROXY", "").split(","),
+            "selenium_browser_type": os.getenv("SELENIUM_BROWSER_TYPE", "chrome"),
         }
 
         config_dict_without_none_values = {
