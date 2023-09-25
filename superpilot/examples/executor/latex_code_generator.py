@@ -35,7 +35,10 @@ class LatexCodeGenExecutor(BaseExecutor):
         # response.content = json_loads(response.content.get("content", "{}"))
         response.content = extract_json_from_response(response.content.get("content", "{}"), Question.function_schema())
         options = self.format_numbered(response.content.get("options", []))
-        response.content["question"] = latex_to_text(response.content.get("question", ""))
+        try:
+            response.content["question"] = latex_to_text(response.content.get("question", ""))
+        except:
+            response.content["question"] = response.content.get("question", "")
         response.content["question"] += f"\n{options}\n"
         response.content["options"] = options
         return response
