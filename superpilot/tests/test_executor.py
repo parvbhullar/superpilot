@@ -126,16 +126,18 @@ def search_question():
     sd_prompt = QuestionExtractorExecutor()
     print("\n", "*" * 32, "Running QuestionExtractorExecutor", "*" * 32, "\n\n")
     res = asyncio.run(sd_prompt.run(quest))
+    print(res)
     t2 = time.time()
     print("Time Taken", round(t2 - t1, 2), "seconds")
 
-search_question()
+# search_question()
 
 
 def run_file_with_search():
     # data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/QuestionsData-Sheet3.csv")
-    data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/QuestionsData - Sheet4.csv")
-    smaple_data = data_df[:10].reindex(columns=["Original Keyword"])
+    # data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/QuestionsData - Sheet4.csv")
+    data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Parvinder Testing - Test 25 Sep 2050.csv")
+    smaple_data = data_df[:100].reindex(columns=["Original Keyword"])
     print(smaple_data.shape)
     t1 = time.time()
     sd_prompt = QuestionExtractorExecutor()
@@ -147,7 +149,7 @@ def run_file_with_search():
     final_df.to_excel("search_latex_response.xlsx")
 
 
-# run_file_with_search()
+run_file_with_search()
 
 def get_page_content(page: str):
     from bs4 import BeautifulSoup
