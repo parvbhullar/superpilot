@@ -113,9 +113,13 @@ the currents 𝐼2 , 𝐼3 , and 𝐼4 passing through batteries 2, 3, and
 """
 
 quest = """
- A temperature of 170 moles of monoatomic ideal gas with a ratio \( \gamma=1.600 \) confined in a cylinder 
- was increased from \( 120^{\circ} \mathrm{C} \) to \( 175^{\circ} \mathrm{C} \) at a unifor
+ Find all real solutions or the equation 2s^(2)=5s+3
 """
+
+quest = """
+10. Consider a charge of \( +8.0 \mathrm{nC} \) is placed at \( x=-3.0 \mathrm{~m} \). A second charge of \( -24.0 \mathrm{nC} \) is placed at \( y=-6.0 \mathrm{~m} \), as shown to the right. What is
+"""
+
 
 def search_question():
     t1 = time.time()
@@ -125,13 +129,13 @@ def search_question():
     t2 = time.time()
     print("Time Taken", round(t2 - t1, 2), "seconds")
 
-# search_question()
+search_question()
 
 
 def run_file_with_search():
     # data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/QuestionsData-Sheet3.csv")
     data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/QuestionsData - Sheet4.csv")
-    smaple_data = data_df.reindex(columns=["Original Keyword"])
+    smaple_data = data_df[:10].reindex(columns=["Original Keyword"])
     print(smaple_data.shape)
     t1 = time.time()
     sd_prompt = QuestionExtractorExecutor()
@@ -150,7 +154,7 @@ def get_page_content(page: str):
     soup = BeautifulSoup(page, "html.parser")
     ele = soup.find("div", {"id": "question-transcript"})
     if ele:
-        print("Found in question-transcript", ele)
+        # print("Found in question-transcript", ele)
         return ele
     print("Not Found in question-transcript")
     # desired_ids = ["question-transcript", "q-body"]
@@ -161,18 +165,22 @@ def get_page_content(page: str):
 
 
 async def try_browser_view():
+    from superpilot.framework.tools.web_browser.web_browser_engine_type import WebBrowserEngineType
     from superpilot.framework.tools.web_browser import WebBrowserEngine
+    from superpilot.examples.abilities.utlis.scraperapi import scrape_page
     # url = "https://www.chegg.com/homework-help/questions-and-answers/free-fall-acceleration-surface-moon-mass-moon-735-x-10-22-kg-radius-moon-1-737-km-q110726410"
     # url = "https://www.chegg.com/homework-help/questions-and-answers/homework-bernoulli-s-equation-unhealthy-valve-please-answer-following-question-s-1-blood-e-q110726353"
     # url = "https://www.chegg.com/homework-help/heart-defibrillator-used-patient-rc-time-constant-100-ms-due-chapter-21-problem-69pe-solution-9781938168000-exc"
     # url = "https://www.chegg.com/homework-help/questions-and-answers/2-figure-battery-potential-difference-v-100-mathrm-~v-five-capacitors-capacitance-200-mu-m-q110567592"
-    # url = "https://www.chegg.com/homework-help/questions-and-answers/5-temperature-170-moles-monoatomic-ideal-gas-ratio-gamma-1600-confined-cylinder-increased--q110725755"
-    url = "https://www.chegg.com/homework-help/questions-and-answers/10-consider-charge-80-mathrm-nc-placed-x-30-mathrm-~m--second-charge-240-mathrm-nc-placed--q110726408"
-    data = await WebBrowserEngine(parse_func=get_page_content).run(url)
+    url = "https://www.chegg.com/homework-help/questions-and-answers/5-temperature-170-moles-monoatomic-ideal-gas-ratio-gamma-1600-confined-cylinder-increased--q110725755"
+    # url = "https://www.chegg.com/homework-help/questions-and-answers/10-consider-charge-80-mathrm-nc-placed-x-30-mathrm-~m--second-charge-240-mathrm-nc-placed--q110726408"
+    # data = await WebBrowserEngine(parse_func=get_page_content).run(url)
+    data = scrape_page(url, "e559ca66333058ac72328e90baed87c2")
+    data = get_page_content(data)
     print(data)
 
 
-asyncio.run(try_browser_view())
+# asyncio.run(try_browser_view())
 
 
 def latex_txt():

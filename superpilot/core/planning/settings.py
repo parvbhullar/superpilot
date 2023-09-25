@@ -21,7 +21,7 @@ class PromptStrategyConfiguration(SystemConfiguration):
     model_classification: LanguageModelClassification = UserConfigurable()
     system_prompt: str = UserConfigurable()
     user_prompt_template: str = UserConfigurable()
-    parser_schema: dict = UserConfigurable()
+    parser_schema: dict = None
 
 
 class PromptStrategiesConfiguration(SystemConfiguration):

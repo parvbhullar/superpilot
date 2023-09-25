@@ -67,11 +67,11 @@ class Question(SchemaModel):
 
     question: str = Field(
         ...,
-        description="Fixed and formatted question from the passed content in the query.",
+        description="Complete question.",
     )
     latex_code: str = Field(
         ...,
-        description="Latex code for the question, generated from the html in content.",
+        description="Latex code for the question, generated from the content.",
     )
     # math_ml: str = Field(
     #     ...,
@@ -106,47 +106,24 @@ class Question(SchemaModel):
 class LatexCodeGenPrompt(PromptStrategy):
     
     DEFAULT_SYSTEM_PROMPT = """
-        You are a world class query correction algorithm capable of fixing questions into its corrected version of 
-        question and its options from passed html content. 
-        Do not answer the question, simply provide correct question with right set of options, subject and category.
-        make sure to generate latex code for the question from html or text content.
-        
-        Instructions :-
-        - Do not change the language of the content
-        - Do not generate options if not present in the content.
-        - Fix question format in correct format only if it is must e.g. Line Break missing.
-        - Generate question if content is an answer - generate question is that case.
-        - Correct Spelling, Capital and small letter mistake if any
-        - Correct Punctuation errors
-        - Remove html tags from the content
-        - Fix Subscript/Superscript missing or errors in case of Maths, Chemistry, Physics etc.
-        - Incomplete question, options missing - Complete the question
-        - Remove unnecessary words like Exam Name, Website Name, Page No., Question No., Exercise No., Points, Grade, Marks etc posted in question.
-        - Question not making any sense can be marked as can not be fixed as status.
-        - Fix Numbers, equation etc in latex, or math format missing.
-        - Only mark question incomplete if you are changing any content in the question, even slight change in the content.
-        - Always respond in latex code format.
-        
-        Examples :-
-        Content: Movie Recommendation systems are an example of: 1. Classification 2. Clustering 3. Reinforcement Learning 4. Regression Options: B. A. 2 Only C. 1 and 2 D. 1 and 3 E. 2 and 3 F. 1, 2 and 3 H. 1, 2, 3 and 4
-        Output: 
-        question -> Movie Recommendation systems are an example of: 
-        Classification 
-        Clustering
-        Reinforcement Learning 
-        Regression 
-        options -> ["2 Only", "1 and 2", "1 and 3", "2 and 3", "1, 2 and 3", "1, 2, 3 and 4"]
-        status -> Complete 
-        subject -> Mathematics 
-        question_type -> MCQ
-        
+        Your job is rewriting question to its completed version of 
+        question with its options. follow the below instructions to perform the task.
+    
+        Instructions:
+        - In case of incomplete question, complete the question.
+        - Write a complete question with symbols, equations, options, tables etc.
+        - Write complete latex code for the question.
+        - Latex code should be written in editable plain text like 2/3,2*3,80 degrees (signs in superscript). They should be written in a way so that they can be copied and pased in excel cell directly without using paste value tool.
+        - Do not answer the question, simply provide correct question with right set of options, subject and type.
+        - If the question is complete, then simply provide the question with its options(if present in text), subject and type.
         """
 
     DEFAULT_USER_PROMPT_TEMPLATE = """
-        Content: {task_objective}
+        Question: {task_objective}
         
         -----
         Please use the above input as the content.
+        
         """
 
     DEFAULT_PARSER_SCHEMA = Question.function_schema()

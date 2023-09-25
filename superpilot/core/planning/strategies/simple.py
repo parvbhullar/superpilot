@@ -131,8 +131,12 @@ class SimplePrompt(PromptStrategy):
             The parsed response.
 
         """
-        print(response_content)
-        parsed_response = json_loads(response_content["function_call"]["arguments"])
+        print("Raw Response", response_content)
+        if "function_call" in response_content:
+            parsed_response = json_loads(response_content["function_call"]["arguments"])
+        else:
+            parsed_response = response_content
+
         # print(response_content)
         # parsed_response = json_loads(response_content["content"])
         # parsed_response = self._parser_schema.from_response(response_content)
