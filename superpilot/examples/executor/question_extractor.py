@@ -42,15 +42,14 @@ class QuestionExtractorExecutor(BaseExecutor):
     async def run_list(self, query_list: List[Dict]):
         final_res = []
         error_res = []
-        try:
-            for index, query in enumerate(query_list):
+        for index, query in enumerate(query_list):
+            try:
                 response = await self.run(query.get("Original Keyword"))
-                print("Response", response)
                 final_res.append(
                     {**query, **response.content, "total_cost($)": response.total_cost}
                 )
                 print(f"Query {index} finished", "\n\n")
-        except Exception as e:
-            print(e)
-            error_res.append(query)
+            except Exception as e:
+                print(e, "Query Failed")
+                error_res.append(query)
         return final_res, error_res
