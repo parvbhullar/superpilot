@@ -3,6 +3,7 @@ import os
 import sys
 import asyncio
 import time
+import traceback
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 from superpilot.examples.executor import QuestionExtractorExecutor
@@ -18,7 +19,11 @@ def process_single_file(chunk, index):
     print(
         "\n", "*" * 32, "Running QuestionExtractorExecutor " + index, "*" * 32, "\n\n"
     )
-    success, error = asyncio.run(sd_prompt.run_list(chunk))
+    try:
+        success, error = asyncio.run(sd_prompt.run_list(chunk))
+    except Exception as Ex:
+        traceback.print_exc()
+        return [], []
     t2 = time.time()
     print("Time Taken", round(t2 - t1, 2), "seconds")
     if len(success) > 0:
@@ -42,8 +47,8 @@ def process_single_file(chunk, index):
 def run_file_with_search():
     # file_location = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Parvinder Testing - Test 25 Sep 2050.csv"
 
-    file_location = "/home/mastersindia/Documents/Personal/Knowledge/chat/superpilot/superpilot/docs/QuestionsData-Sheet3.csv"
-    data_df = pd.read_csv(file_location)
+    file_location = "/home/mastersindia/Documents/Personal/Knowledge/chat/superpilot/superpilot/docs/Copy of AI Answer 5M Scraping 2023-09-19 CB6.xlsx"
+    data_df = pd.read_excel(file_location, sheet_name="WorkingSheet", header=1)
     data_df = data_df.reindex(columns=["Original Keyword"])
     os.path.exists("last_index.txt") or open("last_index.txt", "w+").write("")
     last_index = open("last_index.txt", "r+").read()
@@ -52,7 +57,7 @@ def run_file_with_search():
     else:
         last_index = int(last_index)
 
-    file_size = 100
+    file_size = 50
 
     max_workers = 10
     total_data = len(data_df)
@@ -60,15 +65,19 @@ def run_file_with_search():
         print("No Processing Done", file_location)
         return True
 
+    futures_tasks = []
     with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         for i in range(max_workers):
             if total_data <= last_index:
                 break
             chunk = data_df[last_index : last_index + file_size]
             last_index += len(chunk)
-            executor.submit(
-                process_single_file, chunk.to_dict(orient="records"), str(i)
+            futures_tasks.append(
+                executor.submit(
+                    process_single_file, chunk.to_dict(orient="records"), str(i)
+                )
             )
+    futures.wait(futures_tasks)
     with open("last_index.txt", "w+") as f:
         f.write(str(last_index))
     return False
