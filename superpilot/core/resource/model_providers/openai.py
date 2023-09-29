@@ -242,6 +242,7 @@ class OpenAIProvider(
             "model": model_name,
             **kwargs,
             **self._credentials.unmasked(),
+            "request_timeout": 120,
         }
         if functions:
             completion_kwargs["functions"] = functions
