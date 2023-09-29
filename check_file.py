@@ -13,7 +13,7 @@ def checkMerge(res_file_location, input_location, run_timestamp):
 
     print(data_df.shape)
     print(final_data.shape)
-
+    os.makedirs("Final", exist_ok=True)
     merge_files = pd.merge(data_df, final_data, how="left", on="Original Keyword")
     print(list(merge_files.columns))
     final_name = input_location.split("/")[-1]
