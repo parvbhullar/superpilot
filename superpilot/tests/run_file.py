@@ -7,6 +7,7 @@ import traceback
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 from superpilot.examples.executor import QuestionExtractorExecutor
+from check_file import checkMerge
 
 import pandas as pd
 
@@ -44,10 +45,7 @@ def process_single_file(chunk, index):
         )
 
 
-def run_file_with_search():
-    # file_location = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Parvinder Testing - Test 25 Sep 2050.csv"
-
-    file_location = "/home/mastersindia/Documents/Personal/Knowledge/chat/superpilot/superpilot/docs/Copy of AI Answer 5M Scraping 2023-09-19 CB5.xlsx"
+def run_file_with_search(file_location):
     data_df = pd.read_excel(file_location, sheet_name="WorkingSheet", header=1)
     data_df = data_df.reindex(columns=["Original Keyword"])
     os.path.exists("last_index.txt") or open("last_index.txt", "w+").write("")
@@ -83,11 +81,15 @@ def run_file_with_search():
     return False
 
 
+file_location = "AI Answer 5M scraping semrush 2023-09-27 CB5.xlsx"
+
 while True:
     cycle_count = 1
-    res = run_file_with_search()
+    res = run_file_with_search(file_location)
     if res:
         break
     print("Sleeping for 5 seconds", cycle_count)
     cycle_count += 1
     time.sleep(5)
+
+checkMerge(["latex_response_" + run_timestamp + ".csv"], file_location, run_timestamp)
