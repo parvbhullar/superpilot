@@ -122,7 +122,8 @@ class LatexCodeGenPrompt(PromptStrategy):
         - If some question mention "given in figure", mark it "cannot be fixed" rather than creating a question out of it
         - If question is incomplete where the options needs to be added, please add the options. 
         - If question is with answer then make it fill in blank question, remove the answer from it. 
-        - If question is incomplete statement then make a meaningful question.
+        - If question is incomplete statement then rewrite it to make detailed question.
+        - in case of true false question, make sure to add the options as True and False.
         - return response in JSON format in given keys only(question, question_status, subject, question_type, options).
         
         Example:

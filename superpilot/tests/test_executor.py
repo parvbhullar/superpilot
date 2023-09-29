@@ -149,12 +149,34 @@ a. Suppose \( f(x) \) is continuous with antiderivative \( F(x) \), i.e. \( F^{\
 """
 
 quest = """
-If the partial pressure of a gas produced in a reaction was determined to be 0.35 atm in a 161.0 mL container at a temperature of 25.0°C, how many moles of gas were produced? (Hint: Use the ideal gas law and convert temperature to Kelvin, and volume to Liters.)
-0.0023 mol
-2.3 mol
-27 mol
-0.027 mol
-0.19 mol
+A client diagnosed with breast cancer is receiving chemotherapy. The nurse assesses the client for possible side effects of this therapy. Which side effect would the nurse report immediately to the health care provider?
+
+diarrhea
+nausea
+stomatitis
+bone marrow suppression
+"""
+
+quest = """
+A nurse is teaching a group of young adult women about the different benign breast disorders. When describing fibrocystic breast changes, which characteristics would the nurse include? Select all that apply.
+
+Clear nipple discharge may or may not be present.
+The changes usually involve one breast.
+The pain is cyclic and usually decreases after the onset of menses.
+These changes are most common between the ages of 20 and 50.
+The lesions move freely when the breast is palpated.
+"""
+
+quest = """
+True or false: Channel patterns are constant and seldom undergo changes.
+"""
+
+quest = """
+In foreign countries, adequate market coverage may require
+"""
+
+quest = """
+Choose the correct statement about placebos and pain management:
 """
 
 def search_question():
@@ -174,7 +196,7 @@ def search_question():
     t2 = time.time()
     print("Time Taken", round(t2 - t1, 2), "seconds")
 
-# search_question()
+search_question()
 
 
 def run_file_with_search():
@@ -195,7 +217,7 @@ def run_file_with_search():
     final_df.to_excel("search_latex_response.xlsx")
 
 
-run_file_with_search()
+# run_file_with_search()
 
 
 def get_page_content(page: str):
