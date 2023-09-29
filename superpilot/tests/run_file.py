@@ -81,15 +81,20 @@ def run_file_with_search(file_location):
     return False
 
 
-file_location = "AI Answer 5M scraping semrush 2023-09-27 CB5.xlsx"
+if __name__ == '__main__':
+    import sys
+    if len(sys.argv) < 2:
+        print("Please provide file location")
+        sys.exit(1)
+    file_location = sys.argv[1]
+    # file_location = "AI Answer 5M scraping semrush 2023-09-27 CB5.xlsx"
+    while True:
+        cycle_count = 1
+        res = run_file_with_search(file_location)
+        if res:
+            break
+        print("Sleeping for 5 seconds", cycle_count)
+        cycle_count += 1
+        time.sleep(5)
 
-while True:
-    cycle_count = 1
-    res = run_file_with_search(file_location)
-    if res:
-        break
-    print("Sleeping for 5 seconds", cycle_count)
-    cycle_count += 1
-    time.sleep(5)
-
-checkMerge(["latex_response_" + run_timestamp + ".csv"], file_location, run_timestamp)
+    checkMerge(["latex_response_" + run_timestamp + ".csv"], file_location, run_timestamp)
