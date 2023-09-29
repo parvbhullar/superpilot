@@ -148,6 +148,15 @@ quest = """
 a. Suppose \( f(x) \) is continuous with antiderivative \( F(x) \), i.e. \( F^{\prime}(x)=f(x) \). Fix a point \( x_{0} \) and show that \[ \lim _{x \rightarrow x_{0}} \frac{1}{x-x_{0}} \int_{x_{0}}^{
 """
 
+quest = """
+If the partial pressure of a gas produced in a reaction was determined to be 0.35 atm in a 161.0 mL container at a temperature of 25.0°C, how many moles of gas were produced? (Hint: Use the ideal gas law and convert temperature to Kelvin, and volume to Liters.)
+0.0023 mol
+2.3 mol
+27 mol
+0.027 mol
+0.19 mol
+"""
+
 def search_question():
     t1 = time.time()
     sd_prompt = QuestionExtractorExecutor()
@@ -165,14 +174,15 @@ def search_question():
     t2 = time.time()
     print("Time Taken", round(t2 - t1, 2), "seconds")
 
-search_question()
+# search_question()
 
 
 def run_file_with_search():
     # data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/QuestionsData-Sheet3.csv")
     # data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/QuestionsData - Sheet4.csv")
     # data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Parvinder Testing - Test 25 Sep 2050.csv")
-    data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/QuestionsData - Sheet6.csv")
+    # data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Reworks - 27 Sep Sample.csv")
+    data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Testing - Sheet1.csv")
     smaple_data = data_df[:100].reindex(columns=["Original Keyword"])
     print(smaple_data.shape)
     t1 = time.time()
@@ -185,7 +195,7 @@ def run_file_with_search():
     final_df.to_excel("search_latex_response.xlsx")
 
 
-# run_file_with_search()
+run_file_with_search()
 
 
 def get_page_content(page: str):
