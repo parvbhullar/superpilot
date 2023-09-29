@@ -48,8 +48,12 @@ def process_single_file(chunk, index):
 def run_file_with_search(file_location):
     data_df = pd.read_excel(file_location, sheet_name="WorkingSheet", header=1)
     data_df = data_df.reindex(columns=["Original Keyword"])
-    os.path.exists("last_index.txt") or open("last_index.txt", "w+").write("")
-    last_index = open("last_index.txt", "r+").read()
+    last_index_name = file_location.split("/")[-1]
+    last_index_name = os.path.splitext(last_index_name)[0]
+    last_index_name = last_index_name.replace(" ", "_")
+    last_index_name = f"last_index_{last_index_name}.txt"
+    os.path.exists(last_index_name) or open(last_index_name, "w+").write("")
+    last_index = open(last_index_name, "r+").read()
     if last_index == "":
         last_index = 0
     else:
@@ -76,7 +80,7 @@ def run_file_with_search(file_location):
                 )
             )
     futures.wait(futures_tasks)
-    with open("last_index.txt", "w+") as f:
+    with open(last_index_name, "w+") as f:
         f.write(str(last_index))
     return False
 
