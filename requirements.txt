@@ -32,3 +32,4 @@ tweepy==4.14.0
 typing-extensions==4.5.0
 webdriver-manager==3.8.6
 jsonschema==4.19.1
+pandas==2.1.1
