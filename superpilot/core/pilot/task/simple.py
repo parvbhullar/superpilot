@@ -19,6 +19,7 @@ from superpilot.core.planning.settings import (
     LanguageModelClassification,
     PromptStrategyConfiguration,
 )
+from superpilot.core.plugin.utlis import load_class
 from superpilot.core.resource.model_providers import (
     LanguageModelProvider,
     ModelProviderName,
@@ -26,7 +27,9 @@ from superpilot.core.resource.model_providers import (
     OpenAIProvider,
     OPEN_AI_MODELS,
 )
-from superpilot.core.resource.model_providers.utils.token_counter import count_string_tokens
+from superpilot.core.resource.model_providers.utils.token_counter import (
+    count_string_tokens,
+)
 
 
 class SimpleTaskPilot(TaskPilot, ABC):
@@ -67,9 +70,12 @@ class SimpleTaskPilot(TaskPilot, ABC):
         for model, model_config in self._configuration.models.items():
             self._providers[model] = model_providers[model_config.provider_name]
 
-        self._prompt_strategy = SimplePrompt(
-            **self._configuration.prompt_strategy.dict()
-        )
+        prompt_config = self._configuration.prompt_strategy.dict()
+        location = prompt_config.pop("location", {})
+        if location is not None:
+            self._prompt_strategy = load_class(location, prompt_config)
+        else:
+            self._prompt_strategy = SimplePrompt(**prompt_config)
 
     async def execute(self, objective: str, *args, **kwargs) -> LanguageModelResponse:
         """Execute the task."""
@@ -98,7 +104,9 @@ class SimpleTaskPilot(TaskPilot, ABC):
         template_kwargs.update(kwargs)
         prompt = prompt_strategy.build_prompt(**template_kwargs)
 
-        model_configuration = self.choose_model(model_classification, model_configuration, prompt)
+        model_configuration = self.choose_model(
+            model_classification, model_configuration, prompt
+        )
 
         model_configuration = model_configuration.dict()
         self._logger.debug(f"Using model configuration: {model_configuration}")
@@ -117,7 +125,9 @@ class SimpleTaskPilot(TaskPilot, ABC):
         return LanguageModelResponse.parse_obj(response.dict())
 
     def choose_model(self, model_classification, model_configuration, prompt):
-        current_tokens = count_string_tokens(str(prompt), model_configuration.model_name)
+        current_tokens = count_string_tokens(
+            str(prompt), model_configuration.model_name
+        )
         print("Tokens", current_tokens)
         token_limit = OPEN_AI_MODELS[model_configuration.model_name].max_tokens
         completion_token_min_length = 1000

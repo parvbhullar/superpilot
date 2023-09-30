@@ -177,4 +177,5 @@ class MidjourneyPrompt(PromptStrategy):
             config["user_prompt_template"] = user_prompt_template
         if parser:
             config["parser_schema"] = parser
+        config.pop("location", None)
         return cls(**config)
