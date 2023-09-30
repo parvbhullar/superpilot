@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict
 from superpilot.core.configuration.schema import (
     SystemConfiguration,
     SystemSettings,
@@ -22,6 +22,7 @@ class PromptStrategyConfiguration(SystemConfiguration):
     system_prompt: str = UserConfigurable()
     user_prompt_template: str = UserConfigurable()
     parser_schema: dict = None
+    location: dict = None
 
 
 class PromptStrategiesConfiguration(SystemConfiguration):

@@ -4,6 +4,7 @@ from superpilot.core.planning.schema import (
     LanguageModelPrompt,
 )
 from superpilot.core.planning.strategies.utils import json_loads
+from superpilot.core.plugin.base import PluginLocation, PluginStorageFormat
 from superpilot.core.resource.model_providers import (
     LanguageModelFunction,
     LanguageModelMessage,
@@ -13,10 +14,9 @@ from superpilot.core.resource.model_providers import (
 from superpilot.core.planning.settings import PromptStrategyConfiguration
 from typing import Dict
 import enum
-import asyncio
 
 from pydantic import Field
-from typing import List, Optional
+from typing import List
 
 
 class QuestionStatus(str, enum.Enum):
@@ -65,26 +65,10 @@ class Question(SchemaModel):
     Can be either a single question or a multi question merge.
     """
 
-    complete_question: str = Field(
+    question: str = Field(
         ...,
         description="Complete question from LLM model",
     )
-    latex_code: str = Field(
-        ...,
-        description="Latex code for the question, generated from the content.",
-    )
-    # math_ml: str = Field(
-    #     ...,
-    #     description="MathML code for the question, generated from the html in content.",
-    # )
-    # rich_text_format: str = Field(
-    #     ...,
-    #     description="Rich text format for the question, generated from the html in content.",
-    # )
-    # comment: str = Field(
-    #     ...,
-    #     description="User comment/reason for the question, in case of spam or cannot be fixed.",
-    # )
     question_status: QuestionStatus = Field(
         default=QuestionStatus.Incomplete,
         description="Status of the question, whether it is complete or incomplete, cannot be fixed or spam.",
@@ -104,11 +88,10 @@ class Question(SchemaModel):
 
 
 class LatexCodeGenPrompt(PromptStrategy):
-    
     DEFAULT_SYSTEM_PROMPT = """
-        Your job is to rewriting question to its completed version question with its options. 
+        Your job is to rewriting question to its completed version question with its options.
         make sure to complete the question anyhow. Follow the below instructions.
-    
+
         Instructions:
         - In case of incomplete question, complete the question including ? mark.
         - Write a complete question without loosing symbols, equations, options, tables etc.
@@ -120,30 +103,29 @@ class LatexCodeGenPrompt(PromptStrategy):
         - If the question is complete, then simply provide the question with its options(if present in text), subject and type.
         - Remove unnecessary brackets, words like Exam Name, Website Name, Page No., Question No., Exercise No., Points, Grade, Marks etc posted in question.
         - If some question mention "given in figure", mark it "cannot be fixed" rather than creating a question out of it
-        - If question is incomplete where the options needs to be added, please add the options. 
-        - If question is with answer then make it fill in blank question, remove the answer from it. 
+        - If question is incomplete where the options needs to be added, please add the options.
+        - If question is with answer then make it fill in blank question, remove the answer from it.
         - If question is incomplete statement then rewrite it to make detailed question.
         - in case of true false question, make sure to add the options as True and False.
-        - return response in JSON format in given keys only(question, question_status, subject, question_type, options).
-        
-        Example:
-            "question": "What is the value of 2+3?",
-            "question_status": "complete" from ['complete', 'incomplete', 'spam', 'cannot_be_fixed'],
-            "subject": "not_sure" from ['not_sure', 'business', 'english', 'mathematics', 'social_studies', 'health', 'geography', 'biology', 'physics', 'chemistry', 'computers_and_technology', 'arts', 'world_languages', 'spanish', 'french', 'german', 'medicine', 'law', 'engineering', 'economics'],
-            "question_type": "mcq" from ['mcq', 'true_false', 'fill_in_blank', 'fill_in_the_blanks_with_options', 'match_the_column', 'short_answer', 'not_sure']
-            "options": ["5", "6", "7", "8"]
-        
+        - response should be in JSON format in given keys only(question, question_status, subject, question_type, options).
+
         """
 
     DEFAULT_USER_PROMPT_TEMPLATE = """
         Question: {task_objective}
-        
+
         -----
         Please use the above input as the content.
-        
+
+        And return the Response in below Format.
+
+        {output_schema}
+
         """
 
-    DEFAULT_PARSER_SCHEMA = None #Question.function_schema()
+    OUTPUT_SCHEMA = Question.function_schema()
+
+    DEFAULT_PARSER_SCHEMA = None  # Question.function_schema()
 
     default_configuration = PromptStrategyConfiguration(
         model_classification=LanguageModelClassification.FAST_MODEL,
@@ -176,7 +158,9 @@ class LatexCodeGenPrompt(PromptStrategy):
         )
         user_message = LanguageModelMessage(
             role=MessageRole.USER,
-            content=self._user_prompt_template.format(**template_kwargs),
+            content=self._user_prompt_template.format(
+                **template_kwargs, output_schema=self.OUTPUT_SCHEMA
+            ),
         )
         functions = []
         if self._parser_schema is not None:
@@ -219,7 +203,10 @@ class LatexCodeGenPrompt(PromptStrategy):
             The parsed response.
 
         """
-        parsed_response = json_loads(response_content["function_call"]["arguments"])
+        if "function_call" in response_content:
+            parsed_response = json_loads(response_content["function_call"]["arguments"])
+        else:
+            parsed_response = response_content
         # print(response_content)
         # parsed_response = json_loads(response_content["content"])
         # parsed_response = self._parser_schema.from_response(response_content)
@@ -231,6 +218,10 @@ class LatexCodeGenPrompt(PromptStrategy):
             system_prompt=self._system_prompt_message,
             user_prompt_template=self._user_prompt_template,
             parser_schema=self._parser_schema,
+            location=PluginLocation(
+                storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
+                storage_route=f"{__name__}.{self.__class__.__name__}",
+            ),
         )
 
     @classmethod
@@ -250,4 +241,5 @@ class LatexCodeGenPrompt(PromptStrategy):
             config["user_prompt_template"] = user_prompt_template
         if parser:
             config["parser_schema"] = parser
+        config.pop("location", None)
         return cls(**config)

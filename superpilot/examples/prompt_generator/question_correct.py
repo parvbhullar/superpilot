@@ -13,10 +13,9 @@ from superpilot.core.resource.model_providers import (
 from superpilot.core.planning.settings import PromptStrategyConfiguration
 from typing import Dict
 import enum
-import asyncio
 
 from pydantic import Field
-from typing import List, Optional
+from typing import List
 
 
 class QuestionStatus(str, enum.Enum):
@@ -92,12 +91,11 @@ class Question(SchemaModel):
 
 
 class QuestionIdentifierPrompt(PromptStrategy):
-
     DEFAULT_SYSTEM_PROMPT = """
-        You are a world class query correction algorithm capable of fixing questions into its corrected version of 
+        You are a world class query correction algorithm capable of fixing questions into its corrected version of
         question and its options.
         Do not answer the question, simply provide correct question with right set of options, subject and category.
-        
+
         Instructions :-
         - Do not change the language of the content
         - Do not generate options if not present in the content.
@@ -111,7 +109,7 @@ class QuestionIdentifierPrompt(PromptStrategy):
         - Question not making any sense can be marked as can not be fixed as status.
         - Fix Numbers, equation etc in latex, or math format missing.
         - Only mark question incomplete if you are changing any content in the question, even slight change in the content.
-        
+
         Instructions :-
         - Do not change the data and values, only generate or complete question.
         - Do not generate options if not present in the content.
@@ -127,8 +125,8 @@ class QuestionIdentifierPrompt(PromptStrategy):
         - Fix Numbers, equation etc in latex, or math format missing.
         - Only mark question incomplete if you are changing any content in the question, even slight change in the content.
         - Always respond in latex code format.
-        
-        
+
+
          DO's :-
         1. Generate questions Using the same language, context, data
         2. Generate questions changing of context is not acceptable
@@ -136,50 +134,50 @@ class QuestionIdentifierPrompt(PromptStrategy):
         4. Latex code should be written in editable plain text like 2/3,2*3,80 degrees (signs in superscript). They should be written in a way so that they can be copied and pased in excel cell directly without using paste value tool.
         5. You can't change data and ask of the question
         6. If some question mention "as in figure", mark it "cannot be fixed" rather than creating a question out of it
-        
-        
+
+
         Examples :-
         Content: Movie Recommendation systems are an example of: 1. Classification 2. Clustering 3. Reinforcement Learning 4. Regression Options: B. A. 2 Only C. 1 and 2 D. 1 and 3 E. 2 and 3 F. 1, 2 and 3 H. 1, 2, 3 and 4
-        Output: 
-        question -> Movie Recommendation systems are an example of: 
-        Classification 
+        Output:
+        question -> Movie Recommendation systems are an example of:
+        Classification
         Clustering
-        Reinforcement Learning 
-        Regression 
+        Reinforcement Learning
+        Regression
         options -> ["2 Only", "1 and 2", "1 and 3", "2 and 3", "1, 2 and 3", "1, 2, 3 and 4"]
-        status -> Complete 
-        subject -> Mathematics 
+        status -> Complete
+        subject -> Mathematics
         question_type -> MCQ
-        
-        Content: the giver's dwelling has may morebooks thn Jonas's	
-        Output: 
+
+        Content: the giver's dwelling has may morebooks thn Jonas's
+        Output:
         question -> None
         options -> None
         status -> Spam
         subject -> NotSure
         question_type -> MCQ
-        
-        Content: Define Medicare. Gray, Ryan. The Premed Playbook Guide to the Medical School Interview: Be Prepared, Perform Well, Get Accepted (p. 71). Morgan James Publishing. Kindle Edition.	
-        Output: 
+
+        Content: Define Medicare. Gray, Ryan. The Premed Playbook Guide to the Medical School Interview: Be Prepared, Perform Well, Get Accepted (p. 71). Morgan James Publishing. Kindle Edition.
+        Output:
         question -> None
         options -> None
         status -> Cannot_Be_Fixed
         subject -> NotSure
         question_type -> MCQ
-        
-        Content: A customer has $100 to spend on buying a gift. They could make their purchase either at Cabela's or at Bass Pro. What competitive relationship exists between the two retailiers?	
-        Output: 
+
+        Content: A customer has $100 to spend on buying a gift. They could make their purchase either at Cabela's or at Bass Pro. What competitive relationship exists between the two retailiers?
+        Output:
         question -> A customer has $100 to spend on buying a gift. They could make their purchase either at Cabela's or at Bass Pro. What competitive relationship exists between the two retailiers?
         options -> []
         status -> Complete
         subject -> business
         question_type -> ShortAnswer
-        
+
         """
 
     DEFAULT_USER_PROMPT_TEMPLATE = """
         Content: {task_objective}
-        
+
         -----
         Please use the above input as the content for the question correction.
         """
@@ -320,4 +318,5 @@ class QuestionIdentifierPrompt(PromptStrategy):
             config["user_prompt_template"] = user_prompt_template
         if parser:
             config["parser_schema"] = parser
+        config.pop("location", None)
         return cls(**config)

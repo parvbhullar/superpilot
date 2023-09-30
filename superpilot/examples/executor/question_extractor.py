@@ -50,6 +50,18 @@ class QuestionExtractorExecutor(BaseExecutor):
                 )
                 print(f"Query {index} finished", "\n\n")
             except Exception as e:
-                print(e, "Query Failed")
-                error_res.append(query)
+                try:
+                    print("Trying to run again")
+                    response = await self.run(query.get("Original Keyword"))
+                    final_res.append(
+                        {
+                            **query,
+                            **response.content,
+                            "total_cost($)": response.total_cost,
+                        }
+                    )
+                    print(f"Query {index} finished", "\n\n")
+                except Exception as e:
+                    print(e, "Query Failed")
+                    error_res.append(query)
         return final_res, error_res
