@@ -13,6 +13,16 @@ import pandas as pd
 
 run_timestamp = time.strftime("%Y%m%d-%H%M%S")
 
+columns = [
+    "Original Keyword",
+    "question",
+    "options",
+    "question_status",
+    "subject",
+    "question_type",
+    "total_cost($)",
+]
+
 
 def process_single_file(chunk, index):
     t1 = time.time()
@@ -29,6 +39,7 @@ def process_single_file(chunk, index):
     print("Time Taken", round(t2 - t1, 2), "seconds")
     if len(success) > 0:
         success_df = pd.DataFrame(success)
+        success_df = success_df.reindex(columns=columns)
         success_df.to_csv(
             "latex_response_" + run_timestamp + ".csv",
             mode="a+",
@@ -85,8 +96,9 @@ def run_file_with_search(file_location):
     return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     if len(sys.argv) < 2:
         print("Please provide file location")
         sys.exit(1)
@@ -101,4 +113,6 @@ if __name__ == '__main__':
         cycle_count += 1
         time.sleep(5)
 
-    checkMerge(["latex_response_" + run_timestamp + ".csv"], file_location, run_timestamp)
+    checkMerge(
+        ["latex_response_" + run_timestamp + ".csv"], file_location, run_timestamp
+    )
