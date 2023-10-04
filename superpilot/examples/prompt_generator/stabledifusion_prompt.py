@@ -169,25 +169,6 @@ class StableDiffusionPrompt(SimplePrompt):
         )
 
     @classmethod
-    def factory(
-        cls,
-        system_prompt=None,
-        user_prompt_template=None,
-        parser=None,
-        model_classification=None,
-    ) -> "StableDiffusionPrompt":
-        config = cls.default_configuration.dict()
-        if model_classification:
-            config["model_classification"] = model_classification
-        if system_prompt:
-            config["system_prompt"] = system_prompt
-        if user_prompt_template:
-            config["user_prompt_template"] = user_prompt_template
-        if parser:
-            config["parser_schema"] = parser
-        return cls(**config)
-
-    @classmethod
     def text_generate(cls, input):
         text_pipe = pipeline(
             "text-generation", model="succinctly/text2image-prompt-generator"

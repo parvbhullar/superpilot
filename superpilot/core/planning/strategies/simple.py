@@ -1,6 +1,3 @@
-import json
-
-from superpilot.core.configuration import SystemConfiguration, UserConfigurable
 from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
@@ -15,7 +12,7 @@ from superpilot.core.resource.model_providers import (
 )
 from superpilot.core.planning.settings import PromptStrategyConfiguration
 from pydantic import Field
-from typing import List, Optional, Union, Dict
+from typing import List, Dict
 
 
 class BaseContent(SchemaModel):
@@ -23,7 +20,9 @@ class BaseContent(SchemaModel):
     Class representing a question and its answer as a list of facts each one should have a soruce.
     each sentence contains a body and a list of sources."""
 
-    content: str = Field(..., description="Full body of response content from the llm model")
+    content: str = Field(
+        ..., description="Full body of response content from the llm model"
+    )
     highlights: List[str] = Field(
         ...,
         description="Body of the answer, each fact should be its separate object with a body and a list of sources",
@@ -62,11 +61,11 @@ class SimplePrompt(PromptStrategy):
     )
 
     def __init__(
-            self,
-            model_classification: LanguageModelClassification = default_configuration.model_classification,
-            system_prompt: str = default_configuration.system_prompt,
-            user_prompt_template: str = default_configuration.user_prompt_template,
-            parser_schema: Dict = None,
+        self,
+        model_classification: LanguageModelClassification = default_configuration.model_classification,
+        system_prompt: str = default_configuration.system_prompt,
+        user_prompt_template: str = default_configuration.user_prompt_template,
+        parser_schema: Dict = None,
     ):
         self._model_classification = model_classification
         self._system_prompt_message = system_prompt
@@ -86,9 +85,7 @@ class SimplePrompt(PromptStrategy):
         )
         user_message = LanguageModelMessage(
             role=MessageRole.USER,
-            content=self._user_prompt_template.format(
-                **template_kwargs
-            ),
+            content=self._user_prompt_template.format(**template_kwargs),
         )
         functions = []
         if self._parser_schema is not None:
@@ -119,8 +116,8 @@ class SimplePrompt(PromptStrategy):
         return template_kwargs
 
     def parse_response_content(
-            self,
-            response_content: dict,
+        self,
+        response_content: dict,
     ) -> dict:
         """Parse the actual text response from the objective model.
 
@@ -131,7 +128,12 @@ class SimplePrompt(PromptStrategy):
             The parsed response.
 
         """
-        parsed_response = json_loads(response_content["function_call"]["arguments"])
+        # print("Raw Model Response", response_content)
+        if "function_call" in response_content:
+            parsed_response = json_loads(response_content["function_call"]["arguments"])
+        else:
+            parsed_response = response_content
+
         # print(response_content)
         # parsed_response = json_loads(response_content["content"])
         # parsed_response = self._parser_schema.from_response(response_content)
@@ -146,15 +148,21 @@ class SimplePrompt(PromptStrategy):
         )
 
     @classmethod
-    def factory(cls, system_prompt=None, user_prompt_template=None, parser=None, model_classification=None)\
-            -> "SimplePrompt":
+    def factory(
+        cls,
+        system_prompt=None,
+        user_prompt_template=None,
+        parser=None,
+        model_classification=None,
+    ) -> "SimplePrompt":
         config = cls.default_configuration.dict()
         if model_classification:
-            config['model_classification'] = model_classification
+            config["model_classification"] = model_classification
         if system_prompt:
-            config['system_prompt'] = system_prompt
+            config["system_prompt"] = system_prompt
         if user_prompt_template:
-            config['user_prompt_template'] = user_prompt_template
+            config["user_prompt_template"] = user_prompt_template
         if parser:
-            config['parser_schema'] = parser
+            config["parser_schema"] = parser
+        config.pop("location", None)
         return cls(**config)

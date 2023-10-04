@@ -166,6 +166,10 @@ class OpenAIProvider(
         """Get the remaining budget."""
         return self._budget.remaining_budget
 
+    def get_total_cost(self) -> float:
+        """Get the total cost."""
+        return self._budget.total_cost
+
     async def create_language_completion(
         self,
         model_prompt: List[LanguageModelMessage],
@@ -238,6 +242,7 @@ class OpenAIProvider(
             "model": model_name,
             **kwargs,
             **self._credentials.unmasked(),
+            "request_timeout": 120,
         }
         if functions:
             completion_kwargs["functions"] = functions
@@ -346,6 +351,8 @@ async def _create_completion(
     messages = [message.dict() for message in messages]
     if "functions" in kwargs:
         kwargs["functions"] = [function.json_schema for function in kwargs["functions"]]
+    else:
+        del kwargs["function_call"]
     return await openai.ChatCompletion.acreate(
         messages=messages,
         **kwargs,

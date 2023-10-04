@@ -5,13 +5,15 @@ import asyncio
 from copy import deepcopy
 import importlib
 from typing import Literal
-from superpilot.core.configuration import Config
+from superpilot.core.configuration import get_config
 import asyncio
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from concurrent import futures
+
+config = get_config()
 
 
 class SeleniumWrapper:
@@ -35,7 +37,8 @@ class SeleniumWrapper:
         executor: futures.Executor | None = None,
     ) -> None:
         if browser_type is None:
-            browser_type = "chrome" or Config.selenium_browser_type
+            browser_type = config.selenium_browser_type or "chrome"
+
         self.browser_type = browser_type
         launch_kwargs = launch_kwargs or {}
         # if Config.global_proxy and "proxy-server" not in launch_kwargs:
@@ -51,7 +54,9 @@ class SeleniumWrapper:
     async def run(self, url: str, *urls: str) -> str | list[str]:
         await self._run_precheck()
 
-        _scrape = lambda url: self.loop.run_in_executor(self.executor, self._scrape_website, url)
+        _scrape = lambda url: self.loop.run_in_executor(
+            self.executor, self._scrape_website, url
+        )
 
         if urls:
             return await asyncio.gather(_scrape(url), *(_scrape(i) for i in urls))
@@ -63,14 +68,20 @@ class SeleniumWrapper:
         self.loop = self.loop or asyncio.get_event_loop()
         self._get_driver = await self.loop.run_in_executor(
             self.executor,
-            lambda: _gen_get_driver_func(self.browser_type, *self.launch_args, executable_path=self.executable_path),
+            lambda: _gen_get_driver_func(
+                self.browser_type,
+                *self.launch_args,
+                executable_path=self.executable_path,
+            ),
         )
         self._has_run_precheck = True
 
     def _scrape_website(self, url):
         with self._get_driver() as driver:
             driver.get(url)
-            WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+            WebDriverWait(driver, 30).until(
+                EC.presence_of_element_located((By.TAG_NAME, "body"))
+            )
             return driver.page_source
 
 
@@ -83,9 +94,16 @@ _webdriver_manager_types = {
 
 
 def _gen_get_driver_func(browser_type, *args, executable_path=None):
-    WebDriver = getattr(importlib.import_module(f"selenium.webdriver.{browser_type}.webdriver"), "WebDriver")
-    Service = getattr(importlib.import_module(f"selenium.webdriver.{browser_type}.service"), "Service")
-    Options = getattr(importlib.import_module(f"selenium.webdriver.{browser_type}.options"), "Options")
+    WebDriver = getattr(
+        importlib.import_module(f"selenium.webdriver.{browser_type}.webdriver"),
+        "WebDriver",
+    )
+    Service = getattr(
+        importlib.import_module(f"selenium.webdriver.{browser_type}.service"), "Service"
+    )
+    Options = getattr(
+        importlib.import_module(f"selenium.webdriver.{browser_type}.options"), "Options"
+    )
 
     if not executable_path:
         module_name, type_name = _webdriver_manager_types[browser_type]
@@ -101,7 +119,9 @@ def _gen_get_driver_func(browser_type, *args, executable_path=None):
             options.add_argument("--no-sandbox")
         for i in args:
             options.add_argument(i)
-        return WebDriver(options=deepcopy(options), service=Service(executable_path=executable_path))
+        return WebDriver(
+            options=deepcopy(options), service=Service(executable_path=executable_path)
+        )
 
     return _get_driver
 

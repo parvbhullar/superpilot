@@ -13,7 +13,7 @@ from superpilot.core.configuration import Config
 from superpilot.framework.helpers.json_utils.json_fix_general import correct_json
 from superpilot.framework.llm import call_ai_function, create_chat_completion
 from superpilot.framework.helpers.logs import logger
-from superpilot.autogpt.speech import say_text
+from superpilot.core.resource.model_providers import OPEN_AI_MODELS, OpenAIModelName
 import openai
 
 JSON_SCHEMA = """
@@ -81,12 +81,12 @@ def auto_fix_json(json_string: str, schema: str) -> str:
         },
     ]
     completion = openai.ChatCompletion.create(
-        model=CFG.fast_llm_model,
+        model=OpenAIModelName.GPT4,
         temperature=0,
         functions=[schema],
         function_call={"name": schema["name"]},
         messages=messages,
-        max_tokens=CFG.fast_token_limit,
+        max_tokens=OPEN_AI_MODELS[OpenAIModelName.GPT4].max_tokens,
     )
     message = completion.choices[0].message
     try:

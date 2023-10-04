@@ -1,18 +1,11 @@
-import asyncio
 import logging
 import platform
 import time
 from abc import ABC
-from typing import List, Dict, Optional
+from typing import Dict
 
 from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
-from superpilot.core.context.schema import Context
-from superpilot.core.ability.base import AbilityRegistry
-from superpilot.core.plugin.simple import (
-    PluginLocation,
-    PluginStorageFormat,
-    SimplePluginService,
-)
+from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
 import distro
 from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.strategies.simple import SimplePrompt
@@ -26,11 +19,16 @@ from superpilot.core.planning.settings import (
     LanguageModelClassification,
     PromptStrategyConfiguration,
 )
+from superpilot.core.plugin.utlis import load_class
 from superpilot.core.resource.model_providers import (
     LanguageModelProvider,
     ModelProviderName,
     OpenAIModelName,
     OpenAIProvider,
+    OPEN_AI_MODELS,
+)
+from superpilot.core.resource.model_providers.utils.token_counter import (
+    count_string_tokens,
 )
 
 
@@ -48,7 +46,7 @@ class SimpleTaskPilot(TaskPilot, ABC):
             LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
                 model_name=OpenAIModelName.GPT3,
                 provider_name=ModelProviderName.OPENAI,
-                temperature=0.9,
+                temperature=1,
             ),
             LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
                 model_name=OpenAIModelName.GPT4,
@@ -59,10 +57,10 @@ class SimpleTaskPilot(TaskPilot, ABC):
     )
 
     def __init__(
-            self,
-            configuration: TaskPilotConfiguration = default_configuration,
-            model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
-            logger: logging.Logger = logging.getLogger(__name__),
+        self,
+        configuration: TaskPilotConfiguration = default_configuration,
+        model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
+        logger: logging.Logger = logging.getLogger(__name__),
     ) -> None:
         self._logger = logger
         self._configuration = configuration
@@ -72,9 +70,12 @@ class SimpleTaskPilot(TaskPilot, ABC):
         for model, model_config in self._configuration.models.items():
             self._providers[model] = model_providers[model_config.provider_name]
 
-        self._prompt_strategy = SimplePrompt(
-            **self._configuration.prompt_strategy.dict()
-        )
+        prompt_config = self._configuration.prompt_strategy.dict()
+        location = prompt_config.pop("location", {})
+        if location is not None:
+            self._prompt_strategy = load_class(location, prompt_config)
+        else:
+            self._prompt_strategy = SimplePrompt(**prompt_config)
 
     async def execute(self, objective: str, *args, **kwargs) -> LanguageModelResponse:
         """Execute the task."""
@@ -83,9 +84,7 @@ class SimpleTaskPilot(TaskPilot, ABC):
         context_res = await self.exec_task(task, **kwargs)
         return context_res
 
-    async def exec_task(
-            self, task: Task, **kwargs
-    ) -> LanguageModelResponse:
+    async def exec_task(self, task: Task, **kwargs) -> LanguageModelResponse:
         template_kwargs = task.generate_kwargs()
         template_kwargs.update(kwargs)
         return await self.chat_with_model(
@@ -94,19 +93,25 @@ class SimpleTaskPilot(TaskPilot, ABC):
         )
 
     async def chat_with_model(
-            self,
-            prompt_strategy: PromptStrategy,
-            **kwargs,
+        self,
+        prompt_strategy: PromptStrategy,
+        **kwargs,
     ) -> LanguageModelResponse:
         model_classification = prompt_strategy.model_classification
-        model_configuration = self._configuration.models[model_classification].dict()
-        self._logger.debug(f"Using model configuration: {model_configuration}")
-        del model_configuration["provider_name"]
-        provider = self._providers[model_classification]
+        model_configuration = self._configuration.models[model_classification]
 
         template_kwargs = self._make_template_kwargs_for_strategy(prompt_strategy)
         template_kwargs.update(kwargs)
         prompt = prompt_strategy.build_prompt(**template_kwargs)
+
+        model_configuration = self.choose_model(
+            model_classification, model_configuration, prompt
+        )
+
+        model_configuration = model_configuration.dict()
+        self._logger.debug(f"Using model configuration: {model_configuration}")
+        del model_configuration["provider_name"]
+        provider = self._providers[model_classification]
 
         self._logger.debug(f"Using prompt:\n{prompt}\n\n")
         response = await provider.create_language_completion(
@@ -116,7 +121,23 @@ class SimpleTaskPilot(TaskPilot, ABC):
             **model_configuration,
             completion_parser=prompt_strategy.parse_response_content,
         )
+
         return LanguageModelResponse.parse_obj(response.dict())
+
+    def choose_model(self, model_classification, model_configuration, prompt):
+        current_tokens = count_string_tokens(
+            str(prompt), model_configuration.model_name
+        )
+        print("Tokens", current_tokens)
+        token_limit = OPEN_AI_MODELS[model_configuration.model_name].max_tokens
+        completion_token_min_length = 1000
+        send_token_limit = token_limit - completion_token_min_length
+        if current_tokens > send_token_limit:
+            if model_classification == LanguageModelClassification.FAST_MODEL:
+                model_configuration.model_name = OpenAIModelName.GPT3_16K
+            elif model_classification == LanguageModelClassification.SMART_MODEL:
+                model_configuration.model_name = OpenAIModelName.GPT4_32K
+        return model_configuration
 
     def _make_template_kwargs_for_strategy(self, strategy: PromptStrategy):
         provider = self._providers[strategy.model_classification]
@@ -132,15 +153,14 @@ class SimpleTaskPilot(TaskPilot, ABC):
 
     @classmethod
     def factory(
-            cls,
-            prompt_strategy: PromptStrategyConfiguration = None,
-            model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
-            execution_nature: ExecutionNature = None,
-            models: Dict[LanguageModelClassification, LanguageModelConfiguration] = None,
-            location: PluginLocation = None,
-            logger: logging.Logger = None
+        cls,
+        prompt_strategy: PromptStrategyConfiguration = None,
+        model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
+        execution_nature: ExecutionNature = None,
+        models: Dict[LanguageModelClassification, LanguageModelConfiguration] = None,
+        location: PluginLocation = None,
+        logger: logging.Logger = None,
     ) -> "SimpleTaskPilot":
-
         # Initialize settings
         config = cls.default_configuration
         if location is not None:
@@ -163,11 +183,7 @@ class SimpleTaskPilot(TaskPilot, ABC):
             model_providers = {ModelProviderName.OPENAI: open_ai_provider}
 
         # Create and return SimpleTaskPilot instance
-        return cls(
-            configuration=config,
-            model_providers=model_providers,
-            logger=logger
-        )
+        return cls(configuration=config, model_providers=model_providers, logger=logger)
 
 
 def get_os_info() -> str:
@@ -178,4 +194,3 @@ def get_os_info() -> str:
         else distro.name(pretty=True)
     )
     return os_info
-
