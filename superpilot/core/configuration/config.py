@@ -36,6 +36,14 @@ class Config(SystemSettings, arbitrary_types_allowed=True):
 
     stability_engine_id: Optional[str] = None
 
+    clipdrop_api_key: Optional[str] = None
+
+    web_proxy: Optional[List] = []
+
+    selenium_browser_type: Optional[str] = None
+
+    scraperapi_api_key: Optional[str] = None
+
 
 class ConfigBuilder(Configurable[Config]):
     default_settings = Config()
@@ -71,6 +79,10 @@ class ConfigBuilder(Configurable[Config]):
             "smart_llm_model": os.getenv("SMART_LLM_MODEL"),
             "stability_api_key": os.getenv("STABILITY_API_KEY"),
             "stability_engine_id": os.getenv("STABILITY_ENGINE_ID"),
+            "clipdrop_api_key": os.getenv("CLIPDROP_API_KEY"),
+            "web_proxy": os.getenv("WEB_PROXY", "").split(","),
+            "selenium_browser_type": os.getenv("SELENIUM_BROWSER_TYPE", "chrome"),
+            "scraperapi_api_key": os.getenv("SCRAPERAPI_API_KEY"),
         }
 
         config_dict_without_none_values = {

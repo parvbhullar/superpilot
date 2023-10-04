@@ -36,6 +36,8 @@ class LanguageModelPrompt(BaseModel):
         return [f.to_dict() for f in self.functions]
 
     def get_function_call(self):
+        if self.function_call is None:
+            return None
         return self.function_call.json_schema or "auto"
 
     def __str__(self):

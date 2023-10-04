@@ -3,11 +3,21 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
+import random
 import sys
 from typing import Literal
 from playwright.async_api import async_playwright
-from superpilot.core.configuration.config import Config
+from superpilot.core.configuration.config import Config, get_config
 from superpilot.framework.helpers.logs import logger
+
+config = get_config()
+
+userAgentStrings = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.2227.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.3497.92 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+]
 
 
 class PlaywrightWrapper:
@@ -35,7 +45,11 @@ class PlaywrightWrapper:
         #     if not any(str.startswith(i, "--proxy-server=") for i in args):
         #         launch_kwargs["proxy"] = {"server": Config.global_proxy}
         self.launch_kwargs = launch_kwargs
-        context_kwargs = {}
+        # self.launch_kwargs["headless"] = False
+
+        context_kwargs = {"user_agent": random.choice(userAgentStrings)}
+        # if config.web_proxy:
+        #     self.launch_kwargs["proxy"] = {"server": random.choice(config.web_proxy)}
         if "ignore_https_errors" in kwargs:
             context_kwargs["ignore_https_errors"] = kwargs["ignore_https_errors"]
         self._context_kwargs = context_kwargs
@@ -53,7 +67,9 @@ class PlaywrightWrapper:
                 async with page:
                     try:
                         await page.goto(url)
-                        await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                        await page.evaluate(
+                            "window.scrollTo(0, document.body.scrollHeight)"
+                        )
                         content = await page.content()
                         return content
                     except Exception as e:
@@ -99,7 +115,10 @@ async def _install_browsers(*browsers, **kwargs) -> None:
         **kwargs,
     )
 
-    await asyncio.gather(_log_stream(process.stdout, logger.info), _log_stream(process.stderr, logger.warning))
+    await asyncio.gather(
+        _log_stream(process.stdout, logger.info),
+        _log_stream(process.stderr, logger.warn),
+    )
 
     if await process.wait() == 0:
         logger.info(f"Install browser for playwright successfully.")

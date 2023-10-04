@@ -71,6 +71,7 @@ class ModelProviderModelResponse(BaseModel):
 
     prompt_tokens_used: int
     completion_tokens_used: int
+    total_cost: float = 0.0
     model_info: ModelProviderModelInfo
 
 
@@ -128,7 +129,7 @@ class ModelProviderBudget(ProviderBudget):
     def update_usage_and_cost(
         self,
         model_response: ModelProviderModelResponse,
-    ) -> None:
+    ) -> Any:
         """Update the usage and cost of the provider."""
         model_info = model_response.model_info
         self.usage.update_usage(model_response)
@@ -136,8 +137,14 @@ class ModelProviderBudget(ProviderBudget):
             model_response.completion_tokens_used * model_info.completion_token_cost
             + model_response.prompt_tokens_used * model_info.prompt_token_cost
         ) / 1000.0
-        self.total_cost += incremental_cost
-        self.remaining_budget -= incremental_cost
+        arb = 0.0065  # TODO: Fit this or get this from the provider
+        cost = incremental_cost + arb
+        print("Usage", self.usage)
+        print("Cost", round(cost, 4))
+        self.total_cost += cost
+        self.remaining_budget -= cost
+        model_response.total_cost = cost
+        return self
 
 
 class ModelProviderSettings(ProviderSettings):
@@ -157,6 +164,10 @@ class ModelProvider(abc.ABC):
 
     @abc.abstractmethod
     def get_remaining_budget(self) -> float:
+        ...
+
+    @abc.abstractmethod
+    def get_total_cost(self) -> float:
         ...
 
 
@@ -341,4 +352,3 @@ class SchemaModel(BaseModel):
         function_call = message["function_call"]
         arguments = json.loads(function_call["arguments"])
         return cls(**arguments)
-

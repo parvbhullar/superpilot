@@ -2,6 +2,7 @@
 import ast
 import json
 import os.path
+import re
 from typing import Any, Dict
 
 from jsonschema import Draft7Validator
