@@ -137,7 +137,7 @@ class ModelProviderBudget(ProviderBudget):
             model_response.completion_tokens_used * model_info.completion_token_cost
             + model_response.prompt_tokens_used * model_info.prompt_token_cost
         ) / 1000.0
-        arb = 0.0065  # TODO: Fit this or get this from the provider
+        arb = 0.0055  # TODO: Fit this or get this from the provider
         cost = incremental_cost + arb
         print("Usage", self.usage)
         print("Cost", round(cost, 4))
