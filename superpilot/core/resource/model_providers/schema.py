@@ -28,6 +28,9 @@ class ModelProviderService(str, enum.Enum):
 
 class ModelProviderName(str, enum.Enum):
     OPENAI: str = "openai"
+    ANTHROPIC: str = "anthropic"
+    HUGGINGFACE: str = "huggingface"
+    OLLAMA: str = "ollama"
 
 
 class MessageRole(str, enum.Enum):

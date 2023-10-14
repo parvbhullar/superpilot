@@ -11,7 +11,9 @@ from superpilot.framework.abilities import (
 from superpilot.core.resource.model_providers import (
     ModelProviderName,
     OpenAIProvider,
-    OpenAIModelName
+    OpenAIModelName,
+    AnthropicProvider,
+    AnthropicModelName
 )
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.super import SuperAbilityRegistry
@@ -29,6 +31,11 @@ from superpilot.core.configuration import get_config
 from superpilot.core.resource.model_providers.schema import ModelProviderCredentials
 from superpilot.core.planning.base import PromptStrategy 
 from superpilot.core.planning.strategies.simple import SimplePrompt
+from superpilot.core.planning.settings import (
+    LanguageModelConfiguration,
+    LanguageModelClassification,
+    PromptStrategyConfiguration,
+)
 
 # Flow executor -> Context
 #
@@ -50,15 +57,31 @@ async def test_pilot():
     print(config.openai_api_key)
     # Load Model Providers
     open_ai_provider = OpenAIProvider.factory(config.openai_api_key)
+    anthropic_provider = AnthropicProvider.factory(config.anthropic_api_key)
     model_providers = {ModelProviderName.OPENAI: open_ai_provider}
+    model_providers = {ModelProviderName.ANTHROPIC: anthropic_provider}
 
-    # task_pilot = SimpleTaskPilot(model_providers=model_providers)
+    # Load Prompt Strategy
+    SimpleTaskPilot.default_configuration.models = {
+        LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+            model_name=AnthropicModelName.CLAUD_2_INSTANT,
+            provider_name=ModelProviderName.ANTHROPIC,
+            temperature=1,
+        ),
+        LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+            model_name=AnthropicModelName.CLAUD_2,
+            provider_name=ModelProviderName.ANTHROPIC,
+            temperature=0.9,
+        ),
+    }
+
+    task_pilot = SimpleTaskPilot( model_providers=model_providers)
     #
     # print("***************** Executing SimplePilot ******************************\n")
-    # response = await task_pilot.execute(query, context)
-    # print(response)
+    response = await task_pilot.execute(query, context)
+    print(response)
     # print("***************** Executing SimplePilot Completed ******************************\n")
-    # exit(0)
+    exit(0)
     # # Load Prompt Strategy
     # super_prompt = SimplePrompt.factory()
     # # Load Abilities

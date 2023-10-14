@@ -125,6 +125,8 @@ class SimpleTaskPilot(TaskPilot, ABC):
         return LanguageModelResponse.parse_obj(response.dict())
 
     def choose_model(self, model_classification, model_configuration, prompt):
+        if model_configuration.model_name not in [OpenAIModelName.GPT3, OpenAIModelName.GPT4]:
+            return model_configuration
         current_tokens = count_string_tokens(
             str(prompt), model_configuration.model_name
         )

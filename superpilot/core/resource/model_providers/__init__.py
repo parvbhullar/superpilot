@@ -4,6 +4,12 @@ from superpilot.core.resource.model_providers.openai import (
     OpenAIProvider,
     OpenAISettings,
 )
+from superpilot.core.resource.model_providers.anthropic_api import (
+    ANTHROPIC_MODELS,
+    AnthropicModelName,
+    AnthropicProvider,
+    AnthropicSettings,
+)
 from superpilot.core.resource.model_providers.schema import (
     Embedding,
     EmbeddingModelProvider,
