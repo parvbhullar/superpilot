@@ -12,7 +12,7 @@ from superpilot.core.resource.model_providers import (
     ModelProviderName,
     OpenAIProvider,
     OpenAIModelName,
-    AnthropicProvider,
+    AnthropicApiProvider,
     AnthropicModelName
 )
 from superpilot.core.context.schema import Context
@@ -57,7 +57,7 @@ async def test_pilot():
     print(config.openai_api_key)
     # Load Model Providers
     open_ai_provider = OpenAIProvider.factory(config.openai_api_key)
-    anthropic_provider = AnthropicProvider.factory(config.anthropic_api_key)
+    anthropic_provider = AnthropicApiProvider.factory(config.anthropic_api_key)
     model_providers = {ModelProviderName.OPENAI: open_ai_provider}
     model_providers = {ModelProviderName.ANTHROPIC: anthropic_provider}
 

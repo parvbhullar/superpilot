@@ -32,6 +32,13 @@ class ModelProviderFactory:
                     storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
                     storage_route="superpilot.core.resource.model_providers.OpenAIProvider",
                 ),
+            ),
+            ModelProviderName.ANTHROPIC: ModelProviderConfiguration(
+                user_configuration={},
+                location=PluginLocation(
+                    storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
+                    storage_route="superpilot.core.resource.model_providers.AnthropicApiProvider",
+                ),
             )
         }
     )

@@ -114,7 +114,7 @@ class AnthropicSettings(ModelProviderSettings):
     budget: AnthropicModelProviderBudget
 
 
-class AnthropicProvider(
+class AnthropicApiProvider(
     Configurable,
     LanguageModelProvider,
     EmbeddingModelProvider,
@@ -155,6 +155,7 @@ class AnthropicProvider(
             logger=self._logger,
             num_retries=self._configuration.retries_per_request,
         )
+        self._client = Anthropic(api_key=self._credentials.api_key)
 
         self._create_completion = retry_handler(_create_completion)
         # self._create_embedding = retry_handler(_create_embedding) ## TODO: Enable embedding as well.
@@ -183,6 +184,7 @@ class AnthropicProvider(
         completion_kwargs = self._get_completion_kwargs(model_name, functions, **kwargs)
         response = await self._create_completion(
             messages=model_prompt,
+            client=self._client,
             **completion_kwargs,
         )
         print(response)
@@ -243,8 +245,8 @@ class AnthropicProvider(
         completion_kwargs = {
             "model": model_name,
             **kwargs,
-            **self._credentials.unmasked(),
-            "request_timeout": 120,
+            # **self._credentials.unmasked(),
+            # "request_timeout": 120,
         }
         if functions:
             completion_kwargs["functions"] = functions
@@ -269,7 +271,7 @@ class AnthropicProvider(
         embedding_kwargs = {
             "model": model_name,
             **kwargs,
-            **self._credentials.unmasked(),
+            # **self._credentials.unmasked(),
         }
 
         return embedding_kwargs
@@ -301,7 +303,7 @@ class AnthropicProvider(
         graceful_shutdown_threshold: float = 0.005,
         warning_threshold: float = 0.01,
         logger: Optional[logging.Logger] = None,
-    ) -> "AnthropicProvider":
+    ) -> "AnthropicApiProvider":
         # Configure logger
         if logger is None:
             logger = logging.getLogger(__name__)
@@ -315,7 +317,7 @@ class AnthropicProvider(
         )
 
         # Instantiate and return AnthropicProvider
-        return AnthropicProvider(settings=settings, logger=logger)
+        return AnthropicApiProvider(settings=settings, logger=logger)
 
     @classmethod
     def init_settings(
@@ -354,7 +356,7 @@ async def _create_embedding(text: str, *_, **kwargs):
 
 
 async def _create_completion(
-    messages: List[LanguageModelMessage], *_, **kwargs
+    messages: List[LanguageModelMessage], client: Anthropic, *_, **kwargs
 ) -> anthropic.types.Completion:
     """Create a chat completion using the Anthropic API.
 
@@ -370,15 +372,16 @@ async def _create_completion(
         kwargs["functions"] = [function.json_schema for function in kwargs["functions"]]
     else:
         del kwargs["function_call"]
-    del kwargs["function_call"]
-    del kwargs["functions"]
-    del kwargs["api_type"]
-    del kwargs["api_base"]
-    del kwargs["api_version"]
-    del kwargs["deployment_id"]
-    del kwargs["request_timeout"]
-    anthropic_api_key = kwargs.pop("api_key")
-    client = Anthropic(api_key=anthropic_api_key)
+    if "function_call" in kwargs:
+        del kwargs["function_call"]
+    if "functions" in kwargs:
+        del kwargs["functions"]
+    # del kwargs["api_type"]
+    # del kwargs["api_base"]
+    # del kwargs["api_version"]
+    # del kwargs["deployment_id"]
+    # del kwargs["request_timeout"]
+    # anthropic_api_key = kwargs.pop("api_key")
 
     res = client.completions.create(
         prompt=f"{anthropic.HUMAN_PROMPT} {prompt} {anthropic.AI_PROMPT}",

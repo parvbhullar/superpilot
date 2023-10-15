@@ -8,6 +8,15 @@ from superpilot.examples.ed_tech.question_solver import (
 )
 from superpilot.framework.tools.latex import latex_to_text
 from superpilot.framework.helpers.json_utils.utilities import extract_json_from_response
+from superpilot.core.resource.model_providers import (
+    ModelProviderName,
+    AnthropicApiProvider,
+    AnthropicModelName
+)
+from superpilot.core.planning.settings import (
+    LanguageModelConfiguration,
+    LanguageModelClassification,
+)
 
 
 class QuestionExecutor(BaseExecutor):
@@ -22,6 +31,18 @@ class QuestionExecutor(BaseExecutor):
         self.pilot = SimpleTaskPilot.factory(
             prompt_strategy=self.super_prompt.get_config(),
             model_providers=self.model_providers,
+            models={
+                    LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+                        model_name=AnthropicModelName.CLAUD_2_INSTANT,
+                        provider_name=ModelProviderName.ANTHROPIC,
+                        temperature=1,
+                    ),
+                    LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+                        model_name=AnthropicModelName.CLAUD_2,
+                        provider_name=ModelProviderName.ANTHROPIC,
+                        temperature=0.9,
+                    ),
+                }
         )
 
     async def run(self, image_path):

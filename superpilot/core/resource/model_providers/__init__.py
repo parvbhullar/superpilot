@@ -7,7 +7,7 @@ from superpilot.core.resource.model_providers.openai import (
 from superpilot.core.resource.model_providers.anthropic_api import (
     ANTHROPIC_MODELS,
     AnthropicModelName,
-    AnthropicProvider,
+    AnthropicApiProvider,
     AnthropicSettings,
 )
 from superpilot.core.resource.model_providers.schema import (
