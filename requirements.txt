@@ -34,3 +34,7 @@ webdriver-manager==3.8.6
 jsonschema==4.19.1
 pandas==2.1.1
 openpyxl==3.1.2
+pytesseract==0.3.10
+anthropic==0.4.1
+
+# sudo apt-get install libleptonica-dev tesseract-ocr  libtesseract-dev python3-pil tesseract-ocr-eng tesseract-ocr-script-latn

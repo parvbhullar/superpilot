@@ -3,15 +3,12 @@ from superpilot.core.context.schema import Context
 from superpilot.core.pilot.task.simple import SimpleTaskPilot
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory
 from superpilot.examples.executor.base import BaseExecutor
-from superpilot.examples.ed_tech.question_solver import (
-    QuestionSolverPrompt, Question
-)
+from superpilot.examples.ed_tech.question_solver import QuestionSolverPrompt, Question
 from superpilot.framework.tools.latex import latex_to_text
 from superpilot.framework.helpers.json_utils.utilities import extract_json_from_response
 from superpilot.core.resource.model_providers import (
     ModelProviderName,
-    AnthropicApiProvider,
-    AnthropicModelName
+    AnthropicModelName,
 )
 from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
@@ -32,17 +29,17 @@ class QuestionExecutor(BaseExecutor):
             prompt_strategy=self.super_prompt.get_config(),
             model_providers=self.model_providers,
             models={
-                    LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-                        model_name=AnthropicModelName.CLAUD_2_INSTANT,
-                        provider_name=ModelProviderName.ANTHROPIC,
-                        temperature=1,
-                    ),
-                    LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-                        model_name=AnthropicModelName.CLAUD_2,
-                        provider_name=ModelProviderName.ANTHROPIC,
-                        temperature=0.9,
-                    ),
-                }
+                LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+                    model_name=AnthropicModelName.CLAUD_2_INSTANT,
+                    provider_name=ModelProviderName.ANTHROPIC,
+                    temperature=1,
+                ),
+                LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+                    model_name=AnthropicModelName.CLAUD_2,
+                    provider_name=ModelProviderName.ANTHROPIC,
+                    temperature=0.9,
+                ),
+            },
         )
 
     async def run(self, image_path):
@@ -55,10 +52,14 @@ class QuestionExecutor(BaseExecutor):
             pass
         response = await self.pilot.execute(query)
         # response.content = json_loads(response.content.get("content", "{}"))
-        response.content = extract_json_from_response(response.content.get("content", "{}"), Question.function_schema())
+        response.content = extract_json_from_response(
+            response.content.get("content", "{}"), Question.function_schema()
+        )
         options = self.format_numbered(response.content.get("options", []))
         try:
-            response.content["question"] = latex_to_text(response.content.get("question", ""))
+            response.content["question"] = latex_to_text(
+                response.content.get("question", "")
+            )
         except:
             response.content["question"] = response.content.get("question", "")
         response.content["question"] += f"\n{options}\n"
