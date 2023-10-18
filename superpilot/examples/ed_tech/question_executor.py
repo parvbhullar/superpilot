@@ -46,7 +46,8 @@ class QuestionExecutor(BaseExecutor):
         )
 
     async def run(self, image_path):
-        query = self.image_to_text(image_path)
+        # query = self.image_to_text(image_path)
+        query = self.extract_text_from_image(image_path)
         query = query.replace("\\", " ")
         print(query)
         try:
@@ -75,6 +76,29 @@ class QuestionExecutor(BaseExecutor):
         # Use Tesseract to do OCR on the image
         text = pytesseract.image_to_string(img)
         return text
+
+    def extract_text_from_image(self, path):
+        ACCESS_KEY = 'AKIA5UPPEATFLZART5OB'
+        SECRET_KEY = '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'
+        import boto3
+        client = boto3.client('textract', region_name='ap-south-1', aws_access_key_id=ACCESS_KEY,
+                              aws_secret_access_key=SECRET_KEY)
+
+        with open(path, 'rb') as document:
+            img_test = document.read()
+            image_bytes = bytearray(img_test)
+        # response = client.analyze_document(Document={'Bytes': bytes_test}, FeatureTypes=['TABLES'])
+        # Call Amazon Textract
+        response = client.detect_document_text(Document={'Bytes': image_bytes})
+
+        # Parse the results
+        detected_text = []
+        for item in response["Blocks"]:
+            if item["BlockType"] == "LINE":
+                detected_text.append(item["Text"])
+        detected_text = "\n".join(detected_text)
+        print(detected_text)
+        return detected_text
 
     def format_numbered(self, items) -> str:
         if not items:

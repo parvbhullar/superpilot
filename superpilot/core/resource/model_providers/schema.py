@@ -46,12 +46,18 @@ class LanguageModelMessage(BaseModel):
     def to_dict(self):
         return self.dict()
 
+    def __str__(self):
+        return self.content + "\n" + self.role.value
+
 
 class LanguageModelFunction(BaseModel):
     json_schema: dict
 
     def to_dict(self):
         return self.json_schema
+
+    def __str__(self):
+        return json.dumps(self.json_schema, indent=2)
 
 
 class ModelProviderModelInfo(BaseModel):

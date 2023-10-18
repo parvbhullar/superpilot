@@ -187,11 +187,10 @@ class AnthropicApiProvider(
             client=self._client,
             **completion_kwargs,
         )
-        print(response)
         response_args = {
             "model_info": ANTHROPIC_LANGUAGE_MODELS[model_name],
-            "prompt_tokens_used": 2000,
-            "completion_tokens_used": 4000,
+            "prompt_tokens_used": self._client.count_tokens(self.combine_text_from_objects(model_prompt, functions)),
+            "completion_tokens_used": self._client.count_tokens(response.completion),
         }
 
         parsed_response = completion_parser(
@@ -202,6 +201,19 @@ class AnthropicApiProvider(
         )
         self._budget.update_usage_and_cost(response)
         return response
+
+    def combine_text_from_objects(self, model_prompt, functions):
+        combined_text = ""
+
+        # Assuming each object in model_prompt has a 'text' attribute
+        for message in model_prompt:
+            combined_text += str(message) + "\n"
+
+        # Assuming each object in functions has a 'text' attribute
+        for function in functions:
+            combined_text += str(function) + "\n"
+
+        return combined_text
 
     async def create_embedding(
         self,
