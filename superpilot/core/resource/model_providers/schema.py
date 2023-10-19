@@ -28,6 +28,9 @@ class ModelProviderService(str, enum.Enum):
 
 class ModelProviderName(str, enum.Enum):
     OPENAI: str = "openai"
+    ANTHROPIC: str = "anthropic"
+    HUGGINGFACE: str = "huggingface"
+    OLLAMA: str = "ollama"
 
 
 class MessageRole(str, enum.Enum):
@@ -43,12 +46,18 @@ class LanguageModelMessage(BaseModel):
     def to_dict(self):
         return self.dict()
 
+    def __str__(self):
+        return self.content + "\n" + self.role.value
+
 
 class LanguageModelFunction(BaseModel):
     json_schema: dict
 
     def to_dict(self):
         return self.json_schema
+
+    def __str__(self):
+        return json.dumps(self.json_schema, indent=2)
 
 
 class ModelProviderModelInfo(BaseModel):
@@ -137,7 +146,7 @@ class ModelProviderBudget(ProviderBudget):
             model_response.completion_tokens_used * model_info.completion_token_cost
             + model_response.prompt_tokens_used * model_info.prompt_token_cost
         ) / 1000.0
-        arb = 0.0065  # TODO: Fit this or get this from the provider
+        arb = 0.0055  # TODO: Fit this or get this from the provider
         cost = incremental_cost + arb
         print("Usage", self.usage)
         print("Cost", round(cost, 4))
