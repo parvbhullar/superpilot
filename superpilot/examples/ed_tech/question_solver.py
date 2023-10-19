@@ -100,7 +100,6 @@ class QuestionSolverPrompt(PromptStrategy):
         - Remove unnecessary brackets, words like Exam Name, Website Name, Page No., Question No., Exercise No., Points, Grade, Marks etc posted in question.
         - Response should be in JSON format in given keys only, Follow the below format
         
-        Brief:
         Step1:
             Latex 
             Explanation
@@ -109,6 +108,43 @@ class QuestionSolverPrompt(PromptStrategy):
             Explanation:
         
         Final solution:
+        
+        Example:
+        Determine the pH of a. 9. 461 M C6H5COOH   M solution if the Kb of
+        C6H5COOH is 6.5 x 10°.
+        A. 11.74
+        B. 9.48
+        C. 5.48
+        D.4.52
+        E.2.26
+        
+        Step 1: 
+        The question pertains to the determination of the pH of a solution containing benzoic acid, C6H5COOH  Benzoic acid is a weak acid that partially dissociates in aqueous solution.
+        The objective of this question is to evaluate the relationship between the concentration of a weak acid, its dissociation constant (Ka), and the resulting pH of the solution.
+        Explanation:
+        pH, which stands for "potential of hydrogen," is a measure of the acidity or alkalinity of a solution. It quantifies the concentration of hydrogen ions (H+) in a solution. The pH scale is a logarithmic scale that typically ranges from 0 to 14, with 7 being considered neutral:
+        
+        Step 2: 
+        To determine the pH of a solution of C6H5COOH (benzoic acid), we can use the formula for calculating the pH of a weak acid solution:
+        pH = pKa + log([A-]/[HA])
+        Where:
+        - pKa is the negative logarithm (base 10) of the acid dissociation constant (Ka) of the acid.
+        - [A-] is the concentration of the conjugate base (C6H5COO -) formed when the acid donates a proton.
+        - [HA] is the concentration of the undissociated acid (C6H5COOH).
+        It is given that the Ka (acid dissociation constant) of C6H5COOH is 6.5 x 10 -5. Therefore, we can find the pKa as follows:
+        pKa = -log(6.5 x 10 -5) 
+        = 4.187
+        Now, plug in the values into the pH equation and calculate the pH
+        pH = 4.187 + log([C6H5COO -]/(C6H5COOH])
+        The concentration of C6H5COOH as 9.461 M. Since C6H5COOH is a weak acid, it dissociates very little, so [A -] will be negligible compared to [HA]. 
+        pH ≈ 4.187 + log(0)
+        The closest option to a pH of 7 from the provided choices is 9.48. 
+        Explanation: 
+        The logarithm of zero is undefined, it means that in this solution, there is virtually no dissociation of C6H5COOH, and the concentration of H+ ions is very low. Consequently, the solution will be close to neutral, and the pH will be close to 7.
+        
+        Final answer:
+        The pH of a. 9. 461 M C6H5COOH   M solution if the Ka of C6H5COOH is 6.5 x 10° will be 9.48
+        So, option (b) is correct. 
         """
 
     DEFAULT_USER_PROMPT_TEMPLATE = """

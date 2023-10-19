@@ -31,8 +31,8 @@ def extract_latex_from_image(path):
     print(model(img))
 
 def extract_text_from_image(path):
-    ACCESS_KEY = 'AKIA5UPPEATFLZART5OB'
-    SECRET_KEY = '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'
+    ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY")
+    SECRET_KEY = os.environ.get("AWS_SECRET_KEY")
     import boto3
     client = boto3.client('textract', region_name='ap-south-1', aws_access_key_id=ACCESS_KEY,
                           aws_secret_access_key=SECRET_KEY)
@@ -54,6 +54,30 @@ def extract_text_from_image(path):
     return detected_text
 
 
+def math_pics_ocr(path):
+    # !/usr/bin/env python
+    import requests
+    import json
+
+    # !/usr/bin/env python
+    import requests
+    import json
+
+    r = requests.post("https://api.mathpix.com/v3/text",
+                      files={"file": open(path, "rb")},
+                      data={
+                          "options_json": json.dumps({
+                              "math_inline_delimiters": ["$", "$"],
+                              "rm_spaces": True
+                          })
+                      },
+                      headers={
+                          "app_id": os.environ.get("MATHPIX_APP_ID"),
+                          "app_key": os.environ.get("MATHPIX_APP_KEY"),
+                      }
+                      )
+    print(json.dumps(r.json(), indent=4, sort_keys=True))
+
 def process_directory_images(dir_path):
     """Iterate over all images in the directory and extract text using OCR."""
 
@@ -61,26 +85,26 @@ def process_directory_images(dir_path):
     image_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff']
 
     # Iterate over files in directory
+    path_list = []
     for root, dirs, files in os.walk(dir_path):
         for file in files:
             if any(file.lower().endswith(ext) for ext in image_extensions):
                 full_path = os.path.join(root, file)
                 print(f"Processing: {full_path}")
+                path_list.append(full_path)
 
-                # Extract text using OCR
-                text = extract_text_from_image(full_path)
-
-                # Print or save the extracted text as needed
-                print(text)
-                print('-' * 40)
-
+    executor = QuestionExecutor()
+    res = asyncio.run(executor.run_list(path_list))
+    final_df = pd.DataFrame(res)
+    final_df.to_excel("solved_questions.xlsx")
 
 
 if __name__ == "__main__":
     path = '/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/WhatsApp Image 2023-10-03 at 8.31.50 PM.jpeg'
     path = '/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Ques20.png'
-    solve_question(path)
+    # math_pics_ocr(path)
+    # solve_question(path)
     # extract_text_from_image(path)
 
     path = '/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/'
-    # process_directory_images(path)
+    process_directory_images(path)

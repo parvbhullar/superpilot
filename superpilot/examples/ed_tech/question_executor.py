@@ -52,20 +52,8 @@ class QuestionExecutor(BaseExecutor):
         except:
             pass
         response = await self.pilot.execute(query)
-        # response.content = json_loads(response.content.get("content", "{}"))
-        response.content = extract_json_from_response(
-            response.content.get("content", "{}"), Question.function_schema()
-        )
-        options = self.format_numbered(response.content.get("options", []))
-        try:
-            response.content["question"] = latex_to_text(
-                response.content.get("question", "")
-            )
-        except:
-            response.content["question"] = response.content.get("question", "")
-        response.content["question"] += f"\n{options}\n"
-        response.content["options"] = options
-        return response
+        result = {"question": query, "solution": response.content.get("completion", "")}
+        return result
 
     def image_to_text(self, image_path):
         from PIL import Image
@@ -79,39 +67,39 @@ class QuestionExecutor(BaseExecutor):
         return text
 
     def extract_text_from_image(self, path):
-        ACCESS_KEY = 'AKIA5UPPEATFLZART5OB'
-        SECRET_KEY = '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'
-        import boto3
-        client = boto3.client('textract', region_name='ap-south-1', aws_access_key_id=ACCESS_KEY,
-                              aws_secret_access_key=SECRET_KEY)
+            # !/usr/bin/env python
+            import requests
+            import json
+            import os
 
-        with open(path, 'rb') as document:
-            img_test = document.read()
-            image_bytes = bytearray(img_test)
-        # response = client.analyze_document(Document={'Bytes': bytes_test}, FeatureTypes=['TABLES'])
-        # Call Amazon Textract
-        response = client.detect_document_text(Document={'Bytes': image_bytes})
-
-        # Parse the results
-        detected_text = []
-        for item in response["Blocks"]:
-            if item["BlockType"] == "LINE":
-                detected_text.append(item["Text"])
-        detected_text = "\n".join(detected_text)
-        print(detected_text)
-        return detected_text
+            r = requests.post("https://api.mathpix.com/v3/text",
+                              files={"file": open(path, "rb")},
+                              data={
+                                  "options_json": json.dumps({
+                                      "math_inline_delimiters": ["$", "$"],
+                                      "rm_spaces": True
+                                  })
+                              },
+                              headers={
+                                  "app_id": os.environ.get("MATHPIX_APP_ID"),
+                                  "app_key": os.environ.get("MATHPIX_APP_KEY"),
+                              }
+                              )
+            return r.json().get("text", "")
 
     def format_numbered(self, items) -> str:
         if not items:
             return ""
         return "\n".join([f"{i}) {c}" for i, c in enumerate(items, 1)])
 
-    async def run_list(self, query_list: List[Dict]):
+    async def run_list(self, path_list: List[str]):
         final_res = []
         try:
-            for index, query in enumerate(query_list):
-                response = await self.run(query.get("Original Keyword"))
-                final_res.append({**query, **response.content})
+            for index, path in enumerate(path_list):
+                response = await self.run(path)
+                final_res.append({"path": path, **response})
+                print(f"Query {response.get('question')}", "\n\n")
+                print(f"Solution {response.get('solution')}", "\n\n")
                 print(f"Query {index} finished", "\n\n")
         except Exception as e:
             print(e)
