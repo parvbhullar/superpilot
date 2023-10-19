@@ -8,3 +8,7 @@ search_latex_response.xlsx
 *.txt
 *.xlsx
 *.zip
+superpilot/docs
+original/*
+Final/*
+final/*

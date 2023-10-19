@@ -12,7 +12,7 @@ from superpilot.examples.executor import (
     QuestionIdentifierPromptExecutor,
     LatexCodeGenExecutor,
     ClipDropImageExecutor,
-    QuestionExtractorExecutor
+    QuestionExtractorExecutor,
 )
 from superpilot.framework.tools.latex import latex_to_text
 import pandas as pd
@@ -86,6 +86,7 @@ def fix_question(content):
 
 
 # fix_question(ques5)
+
 
 def run_file():
     data_df = pd.read_csv(
@@ -176,8 +177,17 @@ In foreign countries, adequate market coverage may require
 """
 
 quest = """
-Choose the correct statement about placebos and pain management:
+A company predicts that this year's sales will be equivalent to 144% of last year's sales. Which value represents 144%?<br /><br /><br /><br />
+A.14.4<br /><br /><br />
+      1<br />
+B.1---<br />
+      25<br /><br /><br /><br />
+C.1.56<br /><br /><br />
+        4<br />
+D.14---<br />
+        5
 """
+
 
 def search_question():
     t1 = time.time()
@@ -190,13 +200,14 @@ def search_question():
         q = latex_to_text(q)
     except:
         pass
-    print("After", q)
+    # print("After", q)
     res = asyncio.run(sd_prompt.run(q))
     print(res)
     t2 = time.time()
     print("Time Taken", round(t2 - t1, 2), "seconds")
 
-search_question()
+
+# search_question()
 
 
 def run_file_with_search():
@@ -204,7 +215,9 @@ def run_file_with_search():
     # data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/QuestionsData - Sheet4.csv")
     # data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Parvinder Testing - Test 25 Sep 2050.csv")
     # data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Reworks - 27 Sep Sample.csv")
-    data_df = pd.read_csv("/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Testing - Sheet1.csv")
+    data_df = pd.read_csv(
+        "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Testing - 30 sep.csv"
+    )
     smaple_data = data_df[:100].reindex(columns=["Original Keyword"])
     print(smaple_data.shape)
     t1 = time.time()
@@ -217,11 +230,12 @@ def run_file_with_search():
     final_df.to_excel("search_latex_response.xlsx")
 
 
-# run_file_with_search()
+run_file_with_search()
 
 
 def get_page_content(page: str):
     from bs4 import BeautifulSoup
+
     soup = BeautifulSoup(page, "html.parser")
     ele = soup.find("div", {"id": "question-transcript"})
     if ele:
@@ -230,15 +244,21 @@ def get_page_content(page: str):
     print("Not Found in question-transcript")
     # desired_ids = ["question-transcript", "q-body"]
     # return soup.find_all("div", id=lambda x: x in desired_ids)
-    desired_classes = ["styled__QuestionBody-sc-1f9k7g9-2", "question"]  # replace with your class names
+    desired_classes = [
+        "styled__QuestionBody-sc-1f9k7g9-2",
+        "question",
+    ]  # replace with your class names
     divs = soup.find_all("div", class_=lambda x: x in desired_classes)
     return "\n".join(i.text.strip() for i in divs)
 
 
 async def try_browser_view():
-    from superpilot.framework.tools.web_browser.web_browser_engine_type import WebBrowserEngineType
+    from superpilot.framework.tools.web_browser.web_browser_engine_type import (
+        WebBrowserEngineType,
+    )
     from superpilot.framework.tools.web_browser import WebBrowserEngine
     from superpilot.examples.abilities.utlis.scraperapi import scrape_page
+
     # url = "https://www.chegg.com/homework-help/questions-and-answers/free-fall-acceleration-surface-moon-mass-moon-735-x-10-22-kg-radius-moon-1-737-km-q110726410"
     # url = "https://www.chegg.com/homework-help/questions-and-answers/homework-bernoulli-s-equation-unhealthy-valve-please-answer-following-question-s-1-blood-e-q110726353"
     # url = "https://www.chegg.com/homework-help/heart-defibrillator-used-patient-rc-time-constant-100-ms-due-chapter-21-problem-69pe-solution-9781938168000-exc"
@@ -256,10 +276,10 @@ async def try_browser_view():
 
 def latex_txt():
     t1 = time.time()
-    text = '$$\\text{The compression ratio of a diesel engine is 20.0 to 1 ; that is, air in a cylinder is compressed to }\\frac{1}{20.0}\\text{ of its initial volume. If the initial pressure is }1.01 \\text{ Pa and the initial temperature is }20°C, \\text{ find the final pressure and the temperature after adiabatic compression. How much work does the gas do during the compression if the initial volume of the cylinder is }1.00 \\text{ L? Use the values }γ = 20.8 \\text{ J/mol-K and }y = 1.400 \\text{ for air.}$$'
+    text = "$$\\text{The compression ratio of a diesel engine is 20.0 to 1 ; that is, air in a cylinder is compressed to }\\frac{1}{20.0}\\text{ of its initial volume. If the initial pressure is }1.01 \\text{ Pa and the initial temperature is }20°C, \\text{ find the final pressure and the temperature after adiabatic compression. How much work does the gas do during the compression if the initial volume of the cylinder is }1.00 \\text{ L? Use the values }γ = 20.8 \\text{ J/mol-K and }y = 1.400 \\text{ for air.}$$"
     print(latex_to_text(text))
     t2 = time.time()
     print("Time Taken", round(t2 - t1, 2), "seconds")
 
-# latex_txt()
 
+# latex_txt()
