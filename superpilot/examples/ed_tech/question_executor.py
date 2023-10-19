@@ -4,6 +4,7 @@ from superpilot.core.pilot.task.simple import SimpleTaskPilot
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory
 from superpilot.examples.executor.base import BaseExecutor
 from superpilot.examples.ed_tech.question_solver import QuestionSolverPrompt, Question
+from superpilot.examples.ed_tech.solution_validator import SolutionValidatorPrompt
 from superpilot.framework.tools.latex import latex_to_text
 from superpilot.framework.helpers.json_utils.utilities import extract_json_from_response
 from superpilot.core.resource.model_providers import (
@@ -20,27 +21,49 @@ class QuestionExecutor(BaseExecutor):
     model_providers = ModelProviderFactory.load_providers()
     context = Context()
 
+
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
         self.super_prompt = QuestionSolverPrompt.factory()
-        self.pilot = SimpleTaskPilot.factory(
-            prompt_strategy=self.super_prompt.get_config(),
-            model_providers=self.model_providers,
-            models={
-                LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-                    model_name=AnthropicModelName.CLAUD_2_INSTANT,
-                    provider_name=ModelProviderName.ANTHROPIC,
-                    temperature=1,
-                ),
-                LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-                    model_name=AnthropicModelName.CLAUD_2,
-                    provider_name=ModelProviderName.ANTHROPIC,
-                    temperature=0.9,
-                ),
-            },
-        )
+        self.pilots = [SimpleTaskPilot.factory(
+                            prompt_strategy=QuestionSolverPrompt.factory().get_config(),
+                            model_providers=self.model_providers,
+                            models={
+                                LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+                                    model_name=AnthropicModelName.CLAUD_2_INSTANT,
+                                    provider_name=ModelProviderName.ANTHROPIC,
+                                    temperature=1,
+                                ),
+                                LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+                                    model_name=AnthropicModelName.CLAUD_2,
+                                    provider_name=ModelProviderName.ANTHROPIC,
+                                    temperature=0.9,
+                                ),
+                            },
+                        ), SimpleTaskPilot.factory(
+                            prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
+                            model_providers=self.model_providers,
+                        )]
+
+    PROMPT_TEMPLATE = """
+            -------------
+            Question: {question}
+            -------------
+            Solution: {solution}
+            """
+
+    async def execute(self, task: str):
+        # Execute for Sequential nature
+        response = {}
+        for pilot in self.pilots:
+            # print(res.content)
+            response.update(await pilot.execute(task))
+            if "completion" in response.get("content", {}):
+                response = {"question": task, "solution": response.get("content", {}).get("completion", "")}
+                task = self.PROMPT_TEMPLATE.format(**response)
+        return response
 
     async def run(self, image_path):
         # query = self.image_to_text(image_path)
@@ -51,9 +74,10 @@ class QuestionExecutor(BaseExecutor):
             query = latex_to_text(query)
         except:
             pass
-        response = await self.pilot.execute(query)
-        result = {"question": query, "solution": response.content.get("completion", "")}
-        return result
+        response = await self.execute(query)
+        response["solution"] = response.get("solution", "").replace("&", " ")
+        # print(response)
+        return response
 
     def image_to_text(self, image_path):
         from PIL import Image
