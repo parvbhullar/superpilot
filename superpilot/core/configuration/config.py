@@ -15,6 +15,7 @@ class Config(SystemSettings, arbitrary_types_allowed=True):
     debug_mode: bool = False
     # OpenAI
     openai_api_key: Optional[str] = None
+    anthropic_api_key: Optional[str] = None
 
     # Google
     google_api_key: Optional[str] = None
@@ -83,6 +84,7 @@ class ConfigBuilder(Configurable[Config]):
             "web_proxy": os.getenv("WEB_PROXY", "").split(","),
             "selenium_browser_type": os.getenv("SELENIUM_BROWSER_TYPE", "chrome"),
             "scraperapi_api_key": os.getenv("SCRAPERAPI_API_KEY"),
+            "anthropic_api_key": os.getenv("ANTHROPIC_API_KEY"),
         }
 
         config_dict_without_none_values = {
