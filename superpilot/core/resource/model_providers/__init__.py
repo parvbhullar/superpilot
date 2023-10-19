@@ -4,6 +4,11 @@ from superpilot.core.resource.model_providers.openai import (
     OpenAIProvider,
     OpenAISettings,
 )
+from superpilot.core.resource.model_providers.anthropic_api import (
+    AnthropicModelName,
+    AnthropicApiProvider,
+    AnthropicSettings,
+)
 from superpilot.core.resource.model_providers.schema import (
     Embedding,
     EmbeddingModelProvider,
@@ -25,7 +30,6 @@ from superpilot.core.resource.model_providers.schema import (
     ModelProviderSettings,
     ModelProviderUsage,
     SchemaModel,
-    schema_function,
 )
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory
 
@@ -51,4 +55,13 @@ __all__ = [
     "ModelProviderService",
     "ModelProviderUsage",
     "ModelProviderFactory",
+    "AnthropicModelName",
+    "AnthropicApiProvider",
+    "AnthropicSettings",
+    "SchemaModel",
+    "Embedding",
+    "EmbeddingModelProviderModelInfo",
+    "EmbeddingModelProvider",
+    "LanguageModelProviderModelInfo",
+    "LanguageModelProvider",
 ]
