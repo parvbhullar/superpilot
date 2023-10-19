@@ -1,11 +1,12 @@
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 # from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
 #
 # anth = Anthropic(
 #     # defaults to os.environ.get("ANTHROPIC_API_KEY")
-#     api_key="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",
+#     api_key=os.environ.get("ANTHROPIC_API_KEY")
 # )
 #
 # completion = anth.completions.create(
