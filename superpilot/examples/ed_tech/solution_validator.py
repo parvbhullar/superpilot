@@ -1,3 +1,4 @@
+import typing
 from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
@@ -9,116 +10,43 @@ from superpilot.core.resource.model_providers import (
     LanguageModelFunction,
     LanguageModelMessage,
     MessageRole,
-    SchemaModel,
 )
 from superpilot.core.planning.settings import PromptStrategyConfiguration
 from typing import Dict
-import enum
 
-from pydantic import Field
-from typing import List
-
-
-class QuestionStatus(str, enum.Enum):
-    Complete = "complete"
-    Incomplete = "incomplete"
-    Spam = "spam"
-    Cannot_Be_Fixed = "cannot_be_fixed"
+if typing.TYPE_CHECKING:
+    from superpilot.examples.ed_tech.question_solver import QuestionSolverPrompt
 
 
-class QuestionSubject(str, enum.Enum):
-    NotSure = "not_sure"
-    Business = "business"
-    English = "english"
-    Mathematics = "mathematics"
-    SocialStudies = "social_studies"
-    Health = "health"
-    Geography = "geography"
-    Biology = "biology"
-    Physics = "physics"
-    Chemistry = "chemistry"
-    ComputersAndTechnology = "computers_and_technology"
-    Arts = "arts"
-    WorldLanguages = "world_languages"
-    Spanish = "spanish"
-    French = "french"
-    German = "german"
-    Medicine = "medicine"
-    Law = "law"
-    Engineering = "engineering"
-    Economics = "economics"
-
-
-class QuestionType(str, enum.Enum):
-    MCQ = "mcq"
-    TrueFalse = "true_false"
-    FillInBlank = "fill_in_blank"
-    FillInTheBlanksWithOptions = "fill_in_the_blanks_with_options"
-    MatchTheColumn = "match_the_column"
-    ShortAnswer = "short_answer"
-    NotSure = "not_sure"
-
-
-class Question(SchemaModel):
-    """
-    Class representing a single question in a question answer subquery.
-    Can be either a single question or a multi question merge.
-    """
-
-    question: str = Field(
-        ...,
-        description="Complete question from LLM model",
-    )
-    question_status: QuestionStatus = Field(
-        default=QuestionStatus.Incomplete,
-        description="Status of the question, whether it is complete or incomplete, cannot be fixed or spam.",
-    )
-    subject: QuestionSubject = Field(
-        default=QuestionSubject.NotSure,
-        description="Subject of the question",
-    )
-    question_type: QuestionType = Field(
-        default=QuestionType.MCQ,
-        description="Type of the question, whether it is MCQ, True False, Fill in Blank or not.",
-    )
-    options: List[str] = Field(
-        default_factory=list,
-        description="List of options for the question, e.g if it is MCQ, then list of options.",
-    )
-
-
-class QuestionSolverPrompt(PromptStrategy):
+class SolutionValidatorPrompt(PromptStrategy):
     DEFAULT_SYSTEM_PROMPT = """
-        Your job is to solving question with full solution in given steps.
+        Your job is to reformat the below Solution for given Question, also fix the inaccuracies in solution, format of response should be below:
         Solve the question in three steps, brief about question, step by step solution(use latex) and explanation of each step.
         make sure to answer the question anyhow. Follow the below instructions.
 
         Instructions:
         - Write a complete answer without loosing symbols, equations, options, tables etc.
-        - Write answer and equations in latex
+        - Write answer and equations in latex format.
         - Remove unnecessary brackets, words like Exam Name, Website Name, Page No., Question No., Exercise No., Points, Grade, Marks etc posted in question.
-        - Response should be in JSON format in given keys only, Follow the below format
+        - Response should be in text format in given format only, Follow the below format
+        - Please restrict the steps to less than 4 steps.
+        - Don't respond in json format, only text format is allowed.
 
         Step1:
-            Brief:
-            Latex:
-            Explanation:
+            Brief
+            Latex
+            Explanation
         Step2:
-            Brief:
-            Latex:
-            Explanation:
+            Brief
+            Latex
+            Explanation
 
         Final solution:
 
         Example:
-        Determine the pH of a. 9. 461 M C6H5COOH   M solution if the Kb of
-        C6H5COOH is 6.5 x 10°.
-        A. 11.74
-        B. 9.48
-        C. 5.48
-        D.4.52
-        E.2.26
+        Q: Question text
 
+        A:
         Step 1:
         The question pertains to the determination of the pH of a solution containing benzoic acid, C6H5COOH  Benzoic acid is a weak acid that partially dissociates in aqueous solution.
         The objective of this question is to evaluate the relationship between the concentration of a weak acid, its dissociation constant (Ka), and the resulting pH of the solution.
@@ -130,7 +58,6 @@ class QuestionSolverPrompt(PromptStrategy):
         pH = pKa + log([A-]/[HA])
         Where:
         - pKa is the negative logarithm (base 10) of the acid dissociation constant (Ka) of the acid.
-        - [A-] is the concentration of the conjugate base (C6H5COO -) formed when the acid donates a proton.
         - [HA] is the concentration of the undissociated acid (C6H5COOH).
         It is given that the Ka (acid dissociation constant) of C6H5COOH is 6.5 x 10 -5. Therefore, we can find the pKa as follows:
         pKa = -log(6.5 x 10 -5)
@@ -146,17 +73,12 @@ class QuestionSolverPrompt(PromptStrategy):
         Final answer:
         The pH of a. 9. 461 M C6H5COOH   M solution if the Ka of C6H5COOH is 6.5 x 10° will be 9.48
         So, option (b) is correct.
+
         """
 
     DEFAULT_USER_PROMPT_TEMPLATE = """
-        Question: {task_objective}
-
-        -----
-        Please use the above input as the content.
-
+        {task_objective}
         """
-
-    OUTPUT_SCHEMA = Question.function_schema()
 
     DEFAULT_PARSER_SCHEMA = None  # Question.function_schema()
 
@@ -191,9 +113,7 @@ class QuestionSolverPrompt(PromptStrategy):
         )
         user_message = LanguageModelMessage(
             role=MessageRole.USER,
-            content=self._user_prompt_template.format(
-                **template_kwargs, output_schema=self.OUTPUT_SCHEMA
-            ),
+            content=self._user_prompt_template.format(**template_kwargs),
         )
         functions = []
         if self._parser_schema is not None:
