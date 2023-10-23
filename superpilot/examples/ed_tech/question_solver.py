@@ -98,6 +98,7 @@ class QuestionSolverPrompt(PromptStrategy):
         - Write answer and equations in latex
         - Remove unnecessary brackets, words like Exam Name, Website Name, Page No., Question No., Exercise No., Points, Grade, Marks etc posted in question.
         - Response should be in JSON format in given keys only, Follow the below format
+        - Please don't include extra example and message interaction. Just provide the solution in below provided example.
 
         Step1:
             Brief:
