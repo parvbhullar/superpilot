@@ -101,11 +101,12 @@ def process_directory_images(dir_path):
 
 if __name__ == "__main__":
     path = '/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/WhatsApp Image 2023-10-03 at 8.31.50 PM.jpeg'
-    path = '/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Ques20.png'
-    path = '/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Ques6.png'
+    path = '/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/Ques20.png'
+    path = '/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/Ques6.png'
+    path = '/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/Ques14.jpg'
     # math_pics_ocr(path)
-    # solve_question(path)
+    solve_question(path)
     # extract_text_from_image(path)
 
     path = '/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/'
-    process_directory_images(path)
+    # process_directory_images(path)

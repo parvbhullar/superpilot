@@ -21,7 +21,7 @@ from typing import List
 
 class SolutionValidatorPrompt(PromptStrategy):
     DEFAULT_SYSTEM_PROMPT = """
-        Your job is to reformat the below Solution for given Question, also fix the inaccuracies in solution, format of response should be below:
+        Your job is to format the below Solution for given Question, also fix the inaccuracies in solution, format of response should be below:
         Solve the question in three steps, brief about question, step by step solution(use latex) and explanation of each step.
         make sure to answer the question anyhow. Follow the below instructions.
 
@@ -30,7 +30,9 @@ class SolutionValidatorPrompt(PromptStrategy):
         - Write answer and equations in latex format.
         - Remove unnecessary brackets, words like Exam Name, Website Name, Page No., Question No., Exercise No., Points, Grade, Marks etc posted in question.
         - Response should be in text format in given format only, Follow the below format
+        - Do not engage in user conversation or ask any question. focus on only solving the question.
         - Please restrict the steps to less than 4 steps.
+        - Please do not mention here is the formatted solution or here is the formatted answer.
         - Don't respond in json format, only text format is allowed.
         
         Step1:
