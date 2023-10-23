@@ -73,7 +73,10 @@ class QuestionExecutor(BaseExecutor):
         # query = self.image_to_text(image_path)
         query = self.extract_text_from_image(image_path)
         query = query.replace("\\", " ")
-        print(query)
+        if not query:
+            query = self.image_to_text(image_path)
+        if not query:
+            return {"solution": "We are unable to process this image"}
         try:
             query = latex_to_text(query)
         except Exception as ex:
