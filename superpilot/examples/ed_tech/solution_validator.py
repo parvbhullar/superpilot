@@ -31,6 +31,7 @@ class SolutionValidatorPrompt(PromptStrategy):
         - Response should be in text format in given format only, Follow the below format
         - Please restrict the steps to less than 4 steps.
         - Don't respond in json format, only text format is allowed.
+        - Please don't include extra example and message interaction. Just provide the solution in below provided example.
 
         Step1:
             Brief
