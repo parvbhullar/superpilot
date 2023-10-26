@@ -6,9 +6,7 @@ import time
 import re
 from typing import Callable, List, TypeVar, Optional, Any
 
-import anthropic
-from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
-from anthropic import APIError, RateLimitError, APIConnectionError, APIStatusError
+from requests.exceptions import ConnectionError, HTTPError, RetryError
 
 from superpilot.core.configuration import (
     Configurable,
@@ -32,23 +30,51 @@ from superpilot.core.resource.model_providers.schema import (
     ModelProviderSettings,
     ModelProviderUsage,
 )
+from superpilot.core.resource.model_providers.utils.api_client import (
+    APIClient,
+)
 
-AnthropicEmbeddingParser = Callable[[Embedding], Embedding]
-AnthropicChatParser = Callable[[str], dict]
-
-
-class AnthropicModelName(str, enum.Enum):
-    CLAUD_2 = "claude-2"
-    CLAUD_2_FULL = "claude-2.0"
-    CLAUD_2_INSTANT = "claude-instant-1"
-    CLAUD_2_INSTANT_FULL = "claude-instant-1.2"
+OllamaEmbeddingParser = Callable[[Embedding], Embedding]
+OllamaChatParser = Callable[[str], dict]
 
 
-ANTHROPIC_EMBEDDING_MODELS = {
-    AnthropicModelName.CLAUD_2: EmbeddingModelProviderModelInfo(
-        name=AnthropicModelName.CLAUD_2,
+class OllamaModelName(str, enum.Enum):
+    MISTRAL_7B = "mistral-7b"
+    LLAMA2 = "llama2"
+    CODELLAMA = "codellama"
+    VICUNA = "vicuna"
+    ORCA_MINI = "orca-mini"
+    LLAMA2_UNCENSORED = "llama2-uncensored"
+    WIZARD_VICUNA_UNCENSORED = "wizard-vicuna-uncensored"
+    NOUS_HERMES = "nous-hermes"
+    PHIND_CODELLAMA = "phind-codellama"
+    MISTRAL_OPENORCA = "mistral-openorca"
+    WIZARDCODER = "wizardcoder"
+    WIZARD_MATH = "wizard-math"
+    LLAMA2_CHINESE = "llama2-chinese"
+    STABLE_BELUGA = "stable-beluga"
+    CODEUP = "codeup"
+    EVERYTHINGLM = "everythinglm"
+    WIZARDLM_UNCENSORED = "wizardlm-uncensored"
+    MEDLLAMA2 = "medllama2"
+    FALCON = "falcon"
+    WIZARD_VICUNA = "wizard-vicuna"
+    OPEN_ORCA_PLATYPUS2 = "open-orca-platypus2"
+    ZEPHYR = "zephyr"
+    STARCODER = "starcoder"
+    SAMANTHA_MISTRAL = "samantha-mistral"
+    WIZARDLM = "wizardlm"
+    OPENHERMES2_MISTRAL = "openhermes2-mistral"
+    SQLCODER = "sqlcoder"
+    NEXUSRAVEN = "nexusraven"
+    DOLPHIN2_1_MISTRAL = "dolphin2.1-mistral"
+
+
+OLLAMA_EMBEDDING_MODELS = {
+    OllamaModelName.MISTRAL_7B: EmbeddingModelProviderModelInfo(
+        name=OllamaModelName.MISTRAL_7B,
         service=ModelProviderService.EMBEDDING,
-        provider_name=ModelProviderName.ANTHROPIC,
+        provider_name=ModelProviderName.OLLAMA,
         prompt_token_cost=0.0004,
         completion_token_cost=0.0,
         max_tokens=100000,
@@ -56,77 +82,67 @@ ANTHROPIC_EMBEDDING_MODELS = {
     ),
 }
 
-
-ANTHROPIC_LANGUAGE_MODELS = {
-    AnthropicModelName.CLAUD_2: LanguageModelProviderModelInfo(
-        name=AnthropicModelName.CLAUD_2,
+OLLAMA_LANGUAGE_MODELS = {
+    OllamaModelName.MISTRAL_7B: LanguageModelProviderModelInfo(
+        name=OllamaModelName.MISTRAL_7B,
         service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.ANTHROPIC,
-        prompt_token_cost=0.0015,
-        completion_token_cost=0.002,
-        max_tokens=100000,
+        provider_name=ModelProviderName.OLLAMA,
+        prompt_token_cost=0.0015,  # Placeholder
+        completion_token_cost=0.002,  # Placeholder
+        max_tokens=100000,  # Placeholder
     ),
-    AnthropicModelName.CLAUD_2_FULL: LanguageModelProviderModelInfo(
-        name=AnthropicModelName.CLAUD_2_FULL,
+    OllamaModelName.LLAMA2: LanguageModelProviderModelInfo(
+        name=OllamaModelName.LLAMA2,
         service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.ANTHROPIC,
-        prompt_token_cost=0.003,
-        completion_token_cost=0.002,
-        max_tokens=100000,
+        provider_name=ModelProviderName.OLLAMA,
+        prompt_token_cost=0.0015,  # Placeholder
+        completion_token_cost=0.002,  # Placeholder
+        max_tokens=100000,  # Placeholder
     ),
-    AnthropicModelName.CLAUD_2_INSTANT: LanguageModelProviderModelInfo(
-        name=AnthropicModelName.CLAUD_2_INSTANT,
-        service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.ANTHROPIC,
-        prompt_token_cost=0.03,
-        completion_token_cost=0.06,
-        max_tokens=100000,
-    ),
-    AnthropicModelName.CLAUD_2_INSTANT_FULL: LanguageModelProviderModelInfo(
-        name=AnthropicModelName.CLAUD_2_INSTANT_FULL,
-        service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.ANTHROPIC,
-        prompt_token_cost=0.06,
-        completion_token_cost=0.12,
-        max_tokens=100000,
+    OllamaModelName.WIZARD_MATH: LanguageModelProviderModelInfo(
+            name=OllamaModelName.WIZARD_MATH,
+            service=ModelProviderService.LANGUAGE,
+            provider_name=ModelProviderName.OLLAMA,
+            prompt_token_cost=0.0015,  # Placeholder
+            completion_token_cost=0.002,  # Placeholder
+            max_tokens=100000,  # Placeholder
     ),
 }
 
-
-ANTHROPIC_MODELS = {
-    **ANTHROPIC_LANGUAGE_MODELS,
-    **ANTHROPIC_EMBEDDING_MODELS,
+OLLAMA_MODELS = {
+    **OLLAMA_LANGUAGE_MODELS,
+    **OLLAMA_EMBEDDING_MODELS,
 }
 
 
-class AnthropicConfiguration(SystemConfiguration):
+class OllamaConfiguration(SystemConfiguration):
     retries_per_request: int = UserConfigurable()
 
 
-class AnthropicModelProviderBudget(ModelProviderBudget):
+class OllamaModelProviderBudget(ModelProviderBudget):
     graceful_shutdown_threshold: float = UserConfigurable()
     warning_threshold: float = UserConfigurable()
 
 
-class AnthropicSettings(ModelProviderSettings):
-    configuration: AnthropicConfiguration
+class OllamaSettings(ModelProviderSettings):
+    configuration: OllamaConfiguration
     credentials: ModelProviderCredentials()
-    budget: AnthropicModelProviderBudget
+    budget: OllamaModelProviderBudget
 
 
-class AnthropicApiProvider(
+class OllamaApiProvider(
     Configurable,
     LanguageModelProvider,
     EmbeddingModelProvider,
 ):
-    default_settings = AnthropicSettings(
-        name="anthropic_provider",
-        description="Provides access to Anthropic's API.",
-        configuration=AnthropicConfiguration(
+    default_settings = OllamaSettings(
+        name="ollama_provider",
+        description="Provides access to Ollama's API.",
+        configuration=OllamaConfiguration(
             retries_per_request=10,
         ),
         credentials=ModelProviderCredentials(),
-        budget=AnthropicModelProviderBudget(
+        budget=OllamaModelProviderBudget(
             total_budget=math.inf,
             total_cost=0.0,
             remaining_budget=math.inf,
@@ -142,7 +158,7 @@ class AnthropicApiProvider(
 
     def __init__(
         self,
-        settings: AnthropicSettings = default_settings,
+        settings: OllamaSettings = default_settings,
         logger: logging.Logger = logging.getLogger(__name__),
     ):
         self._configuration = settings.configuration
@@ -151,18 +167,18 @@ class AnthropicApiProvider(
 
         self._logger = logger
 
-        retry_handler = _AnthropicRetryHandler(
+        retry_handler = _OllamaRetryHandler(
             logger=self._logger,
             num_retries=self._configuration.retries_per_request,
         )
-        self._client = Anthropic(api_key=self._credentials.api_key)
+        self._client = APIClient(base_url="http://super-ollama.com")
 
         self._create_completion = retry_handler(_create_completion)
         # self._create_embedding = retry_handler(_create_embedding) ## TODO: Enable embedding as well.
 
     def get_token_limit(self, model_name: str) -> int:
         """Get the token limit for a given model."""
-        return ANTHROPIC_MODELS[model_name].max_tokens
+        return OLLAMA_MODELS[model_name].max_tokens
 
     def get_remaining_budget(self) -> float:
         """Get the remaining budget."""
@@ -176,11 +192,11 @@ class AnthropicApiProvider(
         self,
         model_prompt: List[LanguageModelMessage],
         functions: List[LanguageModelFunction],
-        model_name: AnthropicModelName,
+        model_name: OllamaModelName,
         completion_parser: Callable[[dict], dict],
         **kwargs,
     ) -> LanguageModelProviderModelResponse:
-        """Create a completion using the Anthropic API."""
+        """Create a completion using the Ollama API."""
         completion_kwargs = self._get_completion_kwargs(model_name, functions, **kwargs)
         response = await self._create_completion(
             messages=model_prompt,
@@ -188,9 +204,9 @@ class AnthropicApiProvider(
             **completion_kwargs,
         )
         response_args = {
-            "model_info": ANTHROPIC_LANGUAGE_MODELS[model_name],
-            "prompt_tokens_used": self._client.count_tokens(self.combine_text_from_objects(model_prompt, functions)),
-            "completion_tokens_used": self._client.count_tokens(response.completion),
+            "model_info": OLLAMA_LANGUAGE_MODELS[model_name],
+            "prompt_tokens_used": self._client.count_tokens(self.combine_text_from_objects(model_prompt, functions), model_name),
+            "completion_tokens_used": self._client.count_tokens(response.completion, model_name),
         }
 
         parsed_response = completion_parser(
@@ -218,16 +234,16 @@ class AnthropicApiProvider(
     async def create_embedding(
         self,
         text: str,
-        model_name: AnthropicModelName,
+        model_name: OllamaModelName,
         embedding_parser: Callable[[Embedding], Embedding],
         **kwargs,
     ) -> EmbeddingModelProviderModelResponse:
-        """Create an embedding using the Anthropic API."""
+        """Create an embedding using the Ollama API."""
         embedding_kwargs = self._get_embedding_kwargs(model_name, **kwargs)
         response = await self._create_embedding(text=text, **embedding_kwargs)
 
         response_args = {
-            "model_info": ANTHROPIC_EMBEDDING_MODELS[model_name],
+            "model_info": OLLAMA_EMBEDDING_MODELS[model_name],
             "prompt_tokens_used": response.usage.prompt_tokens,
             "completion_tokens_used": response.usage.completion_tokens,
         }
@@ -240,7 +256,7 @@ class AnthropicApiProvider(
 
     def _get_completion_kwargs(
         self,
-        model_name: AnthropicModelName,
+        model_name: OllamaModelName,
         functions: List[LanguageModelFunction],
         **kwargs,
     ) -> dict:
@@ -267,7 +283,7 @@ class AnthropicApiProvider(
 
     def _get_embedding_kwargs(
         self,
-        model_name: AnthropicModelName,
+        model_name: OllamaModelName,
         **kwargs,
     ) -> dict:
         """Get kwargs for embedding API call.
@@ -289,22 +305,11 @@ class AnthropicApiProvider(
         return embedding_kwargs
 
     def _wrap_prompt(self, prompt: str, **kwargs: Any) -> str:
-        if not HUMAN_PROMPT or not AI_PROMPT:
-            raise NameError("Please ensure the anthropic package is loaded")
-
-        if prompt.startswith(HUMAN_PROMPT):
-            return prompt  # Already wrapped.
-
-        # Guard against common errors in specifying wrong number of newlines.
-        corrected_prompt, n_subs = re.subn(r"^\n*Human:", HUMAN_PROMPT, prompt)
-        if n_subs == 1:
-            return corrected_prompt
-
         # As a last resort, wrap the prompt ourselves to emulate instruct-style.
-        return f"{HUMAN_PROMPT} {prompt}{AI_PROMPT} Sure, here you go:\n"
+        return f"{prompt}\n"
 
     def __repr__(self):
-        return "AnthropicProvider()"
+        return "OllamaProvider()"
 
     @classmethod
     def factory(
@@ -315,7 +320,7 @@ class AnthropicApiProvider(
         graceful_shutdown_threshold: float = 0.005,
         warning_threshold: float = 0.01,
         logger: Optional[logging.Logger] = None,
-    ) -> "AnthropicApiProvider":
+    ) -> "OllamaApiProvider":
         # Configure logger
         if logger is None:
             logger = logging.getLogger(__name__)
@@ -328,8 +333,8 @@ class AnthropicApiProvider(
             warning_threshold,
         )
 
-        # Instantiate and return AnthropicProvider
-        return AnthropicApiProvider(settings=settings, logger=logger)
+        # Instantiate and return OllamaProvider
+        return OllamaApiProvider(settings=settings, logger=logger)
 
     @classmethod
     def init_settings(
@@ -352,7 +357,7 @@ class AnthropicApiProvider(
 
 
 async def _create_embedding(text: str, *_, **kwargs):
-    """Embed text using the Anthropic API.
+    """Embed text using the Ollama API.
 
     Args:
         text str: The text to embed.
@@ -361,16 +366,16 @@ async def _create_embedding(text: str, *_, **kwargs):
     Returns:
         str: The embedding.
     """
-    return await anthropic.Embedding.acreate(
+    return await ollama.Embedding.acreate(
         input=[text],
         **kwargs,
     )
 
 
 async def _create_completion(
-    messages: List[LanguageModelMessage], client: Anthropic, *_, **kwargs
-) -> anthropic.types.Completion:
-    """Create a chat completion using the Anthropic API.
+    messages: List[LanguageModelMessage], client: APIClient, *_, **kwargs
+) -> str:
+    """Create a chat completion using the Ollama API.
 
     Args:
         messages: The prompt to use.
@@ -393,11 +398,13 @@ async def _create_completion(
     # del kwargs["api_version"]
     # del kwargs["deployment_id"]
     # del kwargs["request_timeout"]
-    # anthropic_api_key = kwargs.pop("api_key")
-
-    res = client.completions.create(
-        prompt=f"{anthropic.HUMAN_PROMPT} {prompt} {anthropic.AI_PROMPT}",
-        max_tokens_to_sample=1000,
+    # ollama_api_key = kwargs.pop("api_key")
+    params = {
+        "model": kwargs.pop("model"),
+        "prompt": prompt,
+    }
+    res = client.completion(
+        params,
         **kwargs,
     )
     return res
@@ -407,8 +414,8 @@ _T = TypeVar("_T")
 # _P = TypeVar("_P")
 
 
-class _AnthropicRetryHandler:
-    """Retry Handler for Anthropic API call.
+class _OllamaRetryHandler:
+    """Retry Handler for Ollama API call.
 
     Args:
         num_retries int: Number of retries. Defaults to 10.
@@ -418,7 +425,7 @@ class _AnthropicRetryHandler:
 
     _retry_limit_msg = "Error: Reached rate limit, passing..."
     _api_key_error_msg = (
-        "Please double check that you have setup a PAID Anthropic API Account. You can "
+        "Please double check that you have setup a PAID Ollama API Account. You can "
         "read more here: https://docs.agpt.co/setup/#getting-an-api-key"
     )
     _backoff_msg = "Error: API Bad gateway. Waiting {backoff} seconds..."
@@ -454,13 +461,13 @@ class _AnthropicRetryHandler:
                 try:
                     return await func(*args, **kwargs)
 
-                except RateLimitError:
+                except RetryError:
                     if attempt == num_attempts:
                         raise
                     self._log_rate_limit_error()
 
-                except APIStatusError as e:
-                    if (e.status_code != 502) or (attempt == num_attempts):
+                except HTTPError as e:
+                    if (e.response.status_code != 502) or (attempt == num_attempts):
                         raise
 
                 self._backoff(attempt)

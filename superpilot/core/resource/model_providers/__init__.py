@@ -10,6 +10,12 @@ from superpilot.core.resource.model_providers.anthropic_api import (
     AnthropicApiProvider,
     AnthropicSettings,
 )
+from superpilot.core.resource.model_providers.ollama_api import (
+    OLLAMA_MODELS,
+    OllamaModelName,
+    OllamaApiProvider,
+    OllamaSettings,
+)
 from superpilot.core.resource.model_providers.schema import (
     Embedding,
     EmbeddingModelProvider,
