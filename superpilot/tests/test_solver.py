@@ -105,9 +105,10 @@ if __name__ == "__main__":
     path = '/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/Ques20.png'
     path = '/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/Ques6.png'
     path = '/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/Ques14.jpg'
+    path = '/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/question-one.jpeg'
     # math_pics_ocr(path)
-    solve_question(path)
+    # solve_question(path)
     # extract_text_from_image(path)
 
-    path = '/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/'
-    # process_directory_images(path)
+    path = '/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/process/'
+    process_directory_images(path)
