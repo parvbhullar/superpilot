@@ -9,17 +9,22 @@ from superpilot.core.resource.model_providers.schema import LanguageModelMessage
 
 
 @overload
-def count_message_tokens(messages: LanguageModelMessage, model: str = "gpt-3.5-turbo") -> int:
+def count_message_tokens(
+    messages: LanguageModelMessage, model: str = "gpt-3.5-turbo"
+) -> int:
     ...
 
 
 @overload
-def count_message_tokens(messages: List[LanguageModelMessage], model: str = "gpt-3.5-turbo") -> int:
+def count_message_tokens(
+    messages: List[LanguageModelMessage], model: str = "gpt-3.5-turbo"
+) -> int:
     ...
 
 
 def count_message_tokens(
-    messages: LanguageModelMessage | List[LanguageModelMessage], model: str = "gpt-3.5-turbo"
+    messages: LanguageModelMessage | List[LanguageModelMessage],
+    model: str = "gpt-3.5-turbo",
 ) -> int:
     """
     Returns the number of tokens used by a list of messages.

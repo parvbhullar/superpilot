@@ -3,8 +3,6 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
-
-import logging
 from superpilot.framework.abilities import (
     TextSummarizeAbility,
 )
@@ -13,11 +11,11 @@ from superpilot.core.resource.model_providers import (
     OpenAIProvider,
     OpenAIModelName,
     AnthropicApiProvider,
-    AnthropicModelName
+    AnthropicApiProvider,
+    AnthropicModelName,
 )
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.super import SuperAbilityRegistry
-from superpilot.core.pilot.task.super import SuperTaskPilot
 from superpilot.core.pilot.task.simple import SimpleTaskPilot
 
 
@@ -76,6 +74,7 @@ async def test_pilot():
     }
 
     task_pilot = SimpleTaskPilot( model_providers=model_providers)
+
     #
     # print("***************** Executing SimplePilot ******************************\n")
     response = await task_pilot.execute(query, context)
@@ -94,10 +93,6 @@ async def test_pilot():
     #
     # search_step = SuperTaskPilot(super_ability_registry, model_providers)
 
-
-
-
-
     planner = env.get("planning")
     ability_registry = env.get("ability_registry")
 
@@ -112,11 +107,17 @@ async def test_pilot():
     pilot_settings = SuperPilot.default_settings
     pilot = SuperPilot(pilot_settings, super_ability_registry, planner, env)
     print(await pilot.initialize(user_objectives))
-    print("***************** Pilot Initiated - Planing Started ******************************\n")
+    print(
+        "***************** Pilot Initiated - Planing Started ******************************\n"
+    )
     print(await pilot.plan())
-    print("***************** Pilot Initiated - Planing Completed ******************************\n")
+    print(
+        "***************** Pilot Initiated - Planing Completed ******************************\n"
+    )
     while True:
-        print("***************** Pilot Started - Exec Started ******************************\n")
+        print(
+            "***************** Pilot Started - Exec Started ******************************\n"
+        )
         # current_task, next_ability = await pilot.determine_next_ability(plan)
         # print(parse_next_ability(current_task, next_ability))
         # user_input = click.prompt(

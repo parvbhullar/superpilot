@@ -1,3 +1,4 @@
+anthropic==0.4.1
 auto-gpt-plugin-template==0.0.3
 beautifulsoup4>=4.12.2
 bert-extractive-summarizer==0.10.1
@@ -12,18 +13,22 @@ gTTS==2.3.1
 httpx==0.23.3
 inflection==0.5.1
 joblib==1.2.0
+jsonschema==4.19.1
 langchain==0.0.202
 md2pdf==1.0.1
 newspaper3k==0.2.8
 openai==0.27.2
 openapi-python-client==0.13.4
+openpyxl==3.1.2
 orjson==3.8.10
+pandas==2.1.1
 playsound==1.2.2
 playwright==1.36.0
 postgrest==0.10.6
 pre-commit==2.21.0
 prompt_toolkit==3.0.39
 pymupdf
+pytesseract==0.3.10
 selenium==4.1.4
 supabase==1.0.2
 supafunc==0.2.2
@@ -31,6 +36,7 @@ tiktoken==0.3.3
 tweepy==4.14.0
 typing-extensions==4.5.0
 webdriver-manager==3.8.6
+
 jsonschema==4.19.1
 pandas==2.1.1
 openpyxl==3.1.2
@@ -38,3 +44,4 @@ pytesseract==0.3.10
 anthropic==0.4.1
 
 # sudo apt-get install libleptonica-dev tesseract-ocr  libtesseract-dev python3-pil tesseract-ocr-eng tesseract-ocr-script-latn
+

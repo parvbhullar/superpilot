@@ -78,6 +78,7 @@ def math_pics_ocr(path):
                       )
     print(json.dumps(r.json(), indent=4, sort_keys=True))
 
+
 def process_directory_images(dir_path):
     """Iterate over all images in the directory and extract text using OCR."""
 
