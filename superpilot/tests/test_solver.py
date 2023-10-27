@@ -16,7 +16,7 @@ def solve_question(image_path):
     executor = QuestionExecutor()
     print("\n", "*" * 32, "Running QuestionExecutor", "*" * 32, "\n\n")
     res = asyncio.run(executor.run(image_path))
-    print(res)
+    print(res.get("solution"))
     # print(res.content.get("status"))
     t2 = time.time()
     print("Time Taken", round(t2 - t1, 2), "seconds")
@@ -108,10 +108,17 @@ def process_directory_images(dir_path):
 
 if __name__ == "__main__":
     path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/WhatsApp Image 2023-10-03 at 8.31.50 PM.jpeg"
-    path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/Ques20.png"
+    path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/Ques20.png"
+    path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/Ques6.png"
+    path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/Ques14.jpg"
+    path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/question-one.jpeg"
     # math_pics_ocr(path)
+    # path = "original/Chegg Ques/Screenshot_2023-10-21_103505.png"
+    path = "original/Chegg Ques/Screenshot 2023-10-21 102000.png"
+    solve_question(path)
+    # for i in range(1, 5):
     # solve_question(path)
     # extract_text_from_image(path)
 
-    path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/"
-    process_directory_images(path)
+    # path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/"
+    # process_directory_images(path)
