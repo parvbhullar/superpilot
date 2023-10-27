@@ -6,7 +6,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 #
 # anth = Anthropic(
 #     # defaults to os.environ.get("ANTHROPIC_API_KEY")
-#     api_key=os.environ.get("ANTHROPIC_API_KEY")
 # )
 #
 # completion = anth.completions.create(
