@@ -11,6 +11,8 @@ from superpilot.core.resource.model_providers import (
     OpenAIProvider,
     AnthropicApiProvider,
     AnthropicModelName,
+    OllamaModelName,
+    OllamaApiProvider,
 )
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.super import SuperAbilityRegistry
@@ -50,8 +52,10 @@ async def test_pilot():
     # Load Model Providers
     open_ai_provider = OpenAIProvider.factory(config.openai_api_key)
     anthropic_provider = AnthropicApiProvider.factory(config.anthropic_api_key)
+    ollama_provider = OllamaApiProvider.factory(config.anthropic_api_key)
     model_providers = {ModelProviderName.OPENAI: open_ai_provider}
     model_providers = {ModelProviderName.ANTHROPIC: anthropic_provider}
+    model_providers = {ModelProviderName.OLLAMA: ollama_provider}
 
     # Load Prompt Strategy
     SimpleTaskPilot.default_configuration.models = {
@@ -66,8 +70,21 @@ async def test_pilot():
             temperature=0.9,
         ),
     }
+    SimpleTaskPilot.default_configuration.models = {
+        LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+            model_name=OllamaModelName.LLAMA2,
+            provider_name=ModelProviderName.OLLAMA,
+            temperature=1,
+        ),
+        LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+            model_name=OllamaModelName.WIZARD_MATH,
+            provider_name=ModelProviderName.OLLAMA,
+            temperature=0.9,
+        ),
+    }
 
     task_pilot = SimpleTaskPilot(model_providers=model_providers)
+
     #
     # print("***************** Executing SimplePilot ******************************\n")
     response = await task_pilot.execute(query, context)
