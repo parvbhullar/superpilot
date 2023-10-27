@@ -48,7 +48,7 @@ ANTHROPIC_EMBEDDING_MODELS = {
     AnthropicModelName.CLAUD_2: EmbeddingModelProviderModelInfo(
         name=AnthropicModelName.CLAUD_2,
         service=ModelProviderService.EMBEDDING,
-        provider_name=ModelProviderName.OPENAI,
+        provider_name=ModelProviderName.ANTHROPIC,
         prompt_token_cost=0.0004,
         completion_token_cost=0.0,
         max_tokens=100000,
@@ -61,7 +61,7 @@ ANTHROPIC_LANGUAGE_MODELS = {
     AnthropicModelName.CLAUD_2: LanguageModelProviderModelInfo(
         name=AnthropicModelName.CLAUD_2,
         service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.OPENAI,
+        provider_name=ModelProviderName.ANTHROPIC,
         prompt_token_cost=0.0015,
         completion_token_cost=0.002,
         max_tokens=100000,
@@ -69,7 +69,7 @@ ANTHROPIC_LANGUAGE_MODELS = {
     AnthropicModelName.CLAUD_2_FULL: LanguageModelProviderModelInfo(
         name=AnthropicModelName.CLAUD_2_FULL,
         service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.OPENAI,
+        provider_name=ModelProviderName.ANTHROPIC,
         prompt_token_cost=0.003,
         completion_token_cost=0.002,
         max_tokens=100000,
@@ -77,7 +77,7 @@ ANTHROPIC_LANGUAGE_MODELS = {
     AnthropicModelName.CLAUD_2_INSTANT: LanguageModelProviderModelInfo(
         name=AnthropicModelName.CLAUD_2_INSTANT,
         service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.OPENAI,
+        provider_name=ModelProviderName.ANTHROPIC,
         prompt_token_cost=0.03,
         completion_token_cost=0.06,
         max_tokens=100000,
@@ -85,7 +85,7 @@ ANTHROPIC_LANGUAGE_MODELS = {
     AnthropicModelName.CLAUD_2_INSTANT_FULL: LanguageModelProviderModelInfo(
         name=AnthropicModelName.CLAUD_2_INSTANT_FULL,
         service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.OPENAI,
+        provider_name=ModelProviderName.ANTHROPIC,
         prompt_token_cost=0.06,
         completion_token_cost=0.12,
         max_tokens=100000,
