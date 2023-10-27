@@ -4,16 +4,16 @@ from superpilot.core.pilot.task.simple import SimpleTaskPilot
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory
 from superpilot.examples.executor.base import BaseExecutor
 from superpilot.examples.ed_tech.question_solver import QuestionSolverPrompt
-from superpilot.examples.ed_tech.solution_validator import SolutionValidatorPrompt
 from superpilot.framework.tools.latex import latex_to_text
-from superpilot.core.resource.model_providers import (
-    ModelProviderName,
-    AnthropicModelName,
-)
-from superpilot.core.planning.settings import (
-    LanguageModelConfiguration,
-    LanguageModelClassification,
-)
+
+# from superpilot.core.resource.model_providers import (
+#     ModelProviderName,
+#     AnthropicModelName,
+# )
+# from superpilot.core.planning.settings import (
+#     LanguageModelConfiguration,
+#     LanguageModelClassification,
+# )
 
 
 class QuestionExecutor(BaseExecutor):
@@ -29,23 +29,23 @@ class QuestionExecutor(BaseExecutor):
             SimpleTaskPilot.factory(
                 prompt_strategy=QuestionSolverPrompt.factory().get_config(),
                 model_providers=self.model_providers,
-                models={
-                    LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-                        model_name=AnthropicModelName.CLAUD_2_INSTANT,
-                        provider_name=ModelProviderName.ANTHROPIC,
-                        temperature=1,
-                    ),
-                    LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-                        model_name=AnthropicModelName.CLAUD_2,
-                        provider_name=ModelProviderName.ANTHROPIC,
-                        temperature=0.9,
-                    ),
-                },
+                # models={
+                #     LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+                #         model_name=AnthropicModelName.CLAUD_2_INSTANT,
+                #         provider_name=ModelProviderName.ANTHROPIC,
+                #         temperature=1,
+                #     ),
+                #     LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+                #         model_name=AnthropicModelName.CLAUD_2,
+                #         provider_name=ModelProviderName.ANTHROPIC,
+                #         temperature=0.9,
+                #     ),
+                # },
             ),
-            SimpleTaskPilot.factory(
-                prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
-                model_providers=self.model_providers,
-            ),
+            # SimpleTaskPilot.factory(
+            #     prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
+            #     model_providers=self.model_providers,
+            # )
         ]
 
     PROMPT_TEMPLATE = """
@@ -59,14 +59,20 @@ class QuestionExecutor(BaseExecutor):
         # Execute for Sequential nature
         response = {}
         for pilot in self.pilots:
-            # print(res.content)
             response.update(await pilot.execute(task))
+            # print("--" * 32)
+            # print(response)
             if "completion" in response.get("content", {}):
                 response = {
                     "question": task,
                     "solution": response.get("content", {}).get("completion", ""),
                 }
                 task = self.PROMPT_TEMPLATE.format(**response)
+            else:
+                response = {
+                    "question": task,
+                    "solution": response.get("content", {}).get("content", ""),
+                }
         return response
 
     async def run(self, image_path):

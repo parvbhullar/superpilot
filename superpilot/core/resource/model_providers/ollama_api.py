@@ -4,9 +4,10 @@ import logging
 import math
 import time
 import re
+
 from typing import Callable, List, TypeVar, Optional, Any
 
-from requests.exceptions import ConnectionError, HTTPError, RetryError
+from requests.exceptions import HTTPError, RetryError
 
 from superpilot.core.configuration import (
     Configurable,
@@ -171,8 +172,8 @@ class OllamaApiProvider(
             logger=self._logger,
             num_retries=self._configuration.retries_per_request,
         )
-        self._client = APIClient(base_url="http://super-ollama.co")
 
+        self._client = APIClient(base_url="http://super-ollama.co")
         self._create_completion = retry_handler(_create_completion)
         # self._create_embedding = retry_handler(_create_embedding) ## TODO: Enable embedding as well.
 
@@ -358,6 +359,7 @@ class OllamaApiProvider(
 
 
 async def _create_embedding(text: str, *_, **kwargs):
+    import ollama
     """Embed text using the Ollama API.
 
     Args:

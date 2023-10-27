@@ -85,7 +85,7 @@ def count_string_tokens(string: str, model_name: str) -> int:
     Returns:
         int: The number of tokens in the text string.
     """
-    print("model_name", model_name, tiktoken.model.MODEL_TO_ENCODING)
+    # print("model_name", model_name, tiktoken.model.MODEL_TO_ENCODING)
     if model_name not in tiktoken.model.MODEL_TO_ENCODING:
         # tiktoken.model.MODEL_TO_ENCODING["gpt-3.5-turbo"] = model_name
         model_name = "gpt-3.5-turbo"

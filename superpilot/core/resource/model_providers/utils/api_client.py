@@ -21,7 +21,10 @@ class BaseAPIClient(ABC):
             elif isinstance(auth, dict) and 'token' in auth:
                 self.session.headers.update({"Authorization": f"Bearer {auth['token']}"})
 
-    def _request(self, method, endpoint, params=None, data=None, json=None, headers=None):
+
+    def _request(
+        self, method, endpoint, params=None, data=None, json=None, headers=None
+    ):
         """
         Make a request to the API.
 
@@ -50,7 +53,6 @@ class BaseAPIClient(ABC):
 
 
 class APIClient(BaseAPIClient, ABC):
-
     def __init__(self, base_url="super-ollama.co", auth=None):
         """
         Initialize the APIClient.
@@ -68,3 +70,4 @@ class APIClient(BaseAPIClient, ABC):
 
     def count_tokens(self, string, model_name):
         return count_string_tokens(string, model_name)
+
