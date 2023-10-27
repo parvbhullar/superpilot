@@ -95,10 +95,12 @@ class QuestionSolverPrompt(PromptStrategy):
 
         Instructions:
         - Write a complete answer without loosing symbols, equations, options, tables etc.
+        - Write solution in simple words and language to explain.
         - Write answer and equations in latex
         - Remove unnecessary brackets, words like Exam Name, Website Name, Page No., Question No., Exercise No., Points, Grade, Marks etc posted in question.
-        - Response should be in JSON format in given keys only, Follow the below format
-        - Please don't include extra example and message interaction. Just provide the solution in below provided example.
+        - Do not engage in user conversation or ask any question. focus on only solving the question.
+        - Please restrict the steps to less than 4 steps.
+        - Response should be in plain text in given format, Follow the below format
 
         Step1:
             Brief:

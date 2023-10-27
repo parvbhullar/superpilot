@@ -5,9 +5,16 @@ from superpilot.core.resource.model_providers.openai import (
     OpenAISettings,
 )
 from superpilot.core.resource.model_providers.anthropic_api import (
+    ANTHROPIC_MODELS,
     AnthropicModelName,
     AnthropicApiProvider,
     AnthropicSettings,
+)
+from superpilot.core.resource.model_providers.ollama_api import (
+    OLLAMA_MODELS,
+    OllamaModelName,
+    OllamaApiProvider,
+    OllamaSettings,
 )
 from superpilot.core.resource.model_providers.schema import (
     Embedding,
@@ -30,6 +37,7 @@ from superpilot.core.resource.model_providers.schema import (
     ModelProviderSettings,
     ModelProviderUsage,
     SchemaModel,
+    schema_function,
 )
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory
 
@@ -56,12 +64,16 @@ __all__ = [
     "ModelProviderUsage",
     "ModelProviderFactory",
     "AnthropicModelName",
+    "ANTHROPIC_MODELS",
     "AnthropicApiProvider",
     "AnthropicSettings",
+    "OLLAMA_MODELS",
+    "OllamaModelName",
+    "OllamaApiProvider",
+    "OllamaSettings",
+    "schema_function",
     "SchemaModel",
     "Embedding",
     "EmbeddingModelProviderModelInfo",
-    "EmbeddingModelProvider",
     "LanguageModelProviderModelInfo",
-    "LanguageModelProvider",
 ]
