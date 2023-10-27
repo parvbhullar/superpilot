@@ -1,53 +1,52 @@
-from typing import Dict, List
+from typing import List
 from superpilot.core.context.schema import Context
 from superpilot.core.pilot.task.simple import SimpleTaskPilot
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory
 from superpilot.examples.executor.base import BaseExecutor
-from superpilot.examples.ed_tech.question_solver import QuestionSolverPrompt, Question
-from superpilot.examples.ed_tech.solution_validator import SolutionValidatorPrompt
+from superpilot.examples.ed_tech.question_solver import QuestionSolverPrompt
 from superpilot.framework.tools.latex import latex_to_text
-from superpilot.framework.helpers.json_utils.utilities import extract_json_from_response
-from superpilot.core.resource.model_providers import (
-    ModelProviderName,
-    AnthropicModelName,
-)
-from superpilot.core.planning.settings import (
-    LanguageModelConfiguration,
-    LanguageModelClassification,
-)
+
+# from superpilot.core.resource.model_providers import (
+#     ModelProviderName,
+#     AnthropicModelName,
+# )
+# from superpilot.core.planning.settings import (
+#     LanguageModelConfiguration,
+#     LanguageModelClassification,
+# )
 
 
 class QuestionExecutor(BaseExecutor):
     model_providers = ModelProviderFactory.load_providers()
     context = Context()
 
-
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
         self.super_prompt = QuestionSolverPrompt.factory()
-        self.pilots = [SimpleTaskPilot.factory(
-                            prompt_strategy=QuestionSolverPrompt.factory().get_config(),
-                            model_providers=self.model_providers,
-                            # models={
-                            #     LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-                            #         model_name=AnthropicModelName.CLAUD_2_INSTANT,
-                            #         provider_name=ModelProviderName.ANTHROPIC,
-                            #         temperature=1,
-                            #     ),
-                            #     LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-                            #         model_name=AnthropicModelName.CLAUD_2,
-                            #         provider_name=ModelProviderName.ANTHROPIC,
-                            #         temperature=0.9,
-                            #     ),
-                            # },
-                        ),
-                        # SimpleTaskPilot.factory(
-                        #     prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
-                        #     model_providers=self.model_providers,
-                        # )
-            ]
+        self.pilots = [
+            SimpleTaskPilot.factory(
+                prompt_strategy=QuestionSolverPrompt.factory().get_config(),
+                model_providers=self.model_providers,
+                # models={
+                #     LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+                #         model_name=AnthropicModelName.CLAUD_2_INSTANT,
+                #         provider_name=ModelProviderName.ANTHROPIC,
+                #         temperature=1,
+                #     ),
+                #     LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+                #         model_name=AnthropicModelName.CLAUD_2,
+                #         provider_name=ModelProviderName.ANTHROPIC,
+                #         temperature=0.9,
+                #     ),
+                # },
+            ),
+            # SimpleTaskPilot.factory(
+            #     prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
+            #     model_providers=self.model_providers,
+            # )
+        ]
 
     PROMPT_TEMPLATE = """
             -------------
@@ -61,23 +60,32 @@ class QuestionExecutor(BaseExecutor):
         response = {}
         for pilot in self.pilots:
             response.update(await pilot.execute(task))
-            print("--" * 32)
-            print(response)
+            # print("--" * 32)
+            # print(response)
             if "completion" in response.get("content", {}):
-                response = {"question": task, "solution": response.get("content", {}).get("completion", "")}
+                response = {
+                    "question": task,
+                    "solution": response.get("content", {}).get("completion", ""),
+                }
                 task = self.PROMPT_TEMPLATE.format(**response)
             else:
-                response = {"question": task, "solution": response.get("content", {}).get("content", "")}
+                response = {
+                    "question": task,
+                    "solution": response.get("content", {}).get("content", ""),
+                }
         return response
 
     async def run(self, image_path):
         # query = self.image_to_text(image_path)
         query = self.extract_text_from_image(image_path)
         query = query.replace("\\", " ")
-        print(query)
+        if not query:
+            query = self.image_to_text(image_path)
+        if not query:
+            return {"solution": "We are unable to process this image"}
         try:
             query = latex_to_text(query)
-        except:
+        except Exception as ex:
             pass
         response = await self.execute(query)
         response["solution"] = response.get("solution", "").replace("&", " ")
@@ -96,25 +104,25 @@ class QuestionExecutor(BaseExecutor):
         return text
 
     def extract_text_from_image(self, path):
-            # !/usr/bin/env python
-            import requests
-            import json
-            import os
+        # !/usr/bin/env python
+        import requests
+        import json
+        import os
 
-            r = requests.post("https://api.mathpix.com/v3/text",
-                              files={"file": open(path, "rb")},
-                              data={
-                                  "options_json": json.dumps({
-                                      "math_inline_delimiters": ["$", "$"],
-                                      "rm_spaces": True
-                                  })
-                              },
-                              headers={
-                                  "app_id": os.environ.get("MATHPIX_APP_ID"),
-                                  "app_key": os.environ.get("MATHPIX_APP_KEY"),
-                              }
-                              )
-            return r.json().get("text", "")
+        r = requests.post(
+            "https://api.mathpix.com/v3/text",
+            files={"file": open(path, "rb")},
+            data={
+                "options_json": json.dumps(
+                    {"math_inline_delimiters": ["$", "$"], "rm_spaces": True}
+                )
+            },
+            headers={
+                "app_id": os.environ.get("MATHPIX_APP_ID"),
+                "app_key": os.environ.get("MATHPIX_APP_KEY"),
+            },
+        )
+        return r.json().get("text", "")
 
     def format_numbered(self, items) -> str:
         if not items:
