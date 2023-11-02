@@ -14,13 +14,13 @@ class BaseAPIClient(ABC):
         """
         self.base_url = base_url
         self.session = requests.Session()
+        self.stream = False
 
         if auth:
             if isinstance(auth, tuple):
                 self.session.auth = auth
             elif isinstance(auth, dict) and 'token' in auth:
                 self.session.headers.update({"Authorization": f"Bearer {auth['token']}"})
-
 
     def _request(
         self, method, endpoint, params=None, data=None, json=None, headers=None

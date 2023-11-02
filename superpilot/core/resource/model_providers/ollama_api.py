@@ -410,6 +410,18 @@ async def _create_completion(
         params,
         **kwargs,
     )
+    # Use a list to store chunks
+    chunks = []
+
+    # Iterate over the stream in chunks
+    for chunk in res.iter_content(chunk_size=8192):  # 8K chunks
+        chunks.append(chunk)
+        print(chunk, "*"*32)
+
+    # Combine chunks to form the full content
+    res._content = b''.join(chunks)
+
+    print(res)
     return res
 
 
