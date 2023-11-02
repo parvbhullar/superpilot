@@ -4,48 +4,74 @@ from superpilot.core.pilot.task.simple import SimpleTaskPilot
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory
 from superpilot.examples.executor.base import BaseExecutor
 from superpilot.examples.ed_tech.question_solver import QuestionSolverPrompt
+from superpilot.examples.ed_tech.solution_validator import SolutionValidatorPrompt
 from superpilot.framework.tools.latex import latex_to_text
-
-# from superpilot.core.resource.model_providers import (
-#     ModelProviderName,
-#     AnthropicModelName,
-# )
-# from superpilot.core.planning.settings import (
-#     LanguageModelConfiguration,
-#     LanguageModelClassification,
-# )
+from superpilot.tests.test_env_simple import get_env
+from superpilot.core.configuration.config import get_config
+from superpilot.core.ability.super import SuperAbilityRegistry
+from superpilot.examples.ed_tech.ag_question_solver_ability import AGQuestionSolverAbility
+from superpilot.examples.pilots.tasks.super import SuperTaskPilot
+from superpilot.core.resource.model_providers import (
+    ModelProviderName,
+    AnthropicModelName,
+)
+from superpilot.core.planning.settings import (
+    LanguageModelConfiguration,
+    LanguageModelClassification,
+)
 
 
 class QuestionExecutor(BaseExecutor):
     model_providers = ModelProviderFactory.load_providers()
     context = Context()
+    config = get_config()
+    env = get_env({})
+    ALLOWED_ABILITY = {
+        # SearchAndSummarizeAbility.name(): SearchAndSummarizeAbility.default_configuration,
+        # TextSummarizeAbility.name(): TextSummarizeAbility.default_configuration,
+        AGQuestionSolverAbility.name(): AGQuestionSolverAbility.default_configuration,
+    }
 
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+        super_ability_registry = SuperAbilityRegistry.factory(self.env, self.ALLOWED_ABILITY)
         self.super_prompt = QuestionSolverPrompt.factory()
         self.pilots = [
-            SimpleTaskPilot.factory(
-                prompt_strategy=QuestionSolverPrompt.factory().get_config(),
-                model_providers=self.model_providers,
-                # models={
-                #     LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-                #         model_name=AnthropicModelName.CLAUD_2_INSTANT,
-                #         provider_name=ModelProviderName.ANTHROPIC,
-                #         temperature=1,
-                #     ),
-                #     LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-                #         model_name=AnthropicModelName.CLAUD_2,
-                #         provider_name=ModelProviderName.ANTHROPIC,
-                #         temperature=0.9,
-                #     ),
-                # },
-            ),
             # SimpleTaskPilot.factory(
-            #     prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
+            #     prompt_strategy=QuestionSolverPrompt.factory().get_config(),
             #     model_providers=self.model_providers,
-            # )
+            #     # models={
+            #     #     LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+            #     #         model_name=AnthropicModelName.CLAUD_2_INSTANT,
+            #     #         provider_name=ModelProviderName.ANTHROPIC,
+            #     #         temperature=1,
+            #     #     ),
+            #     #     LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+            #     #         model_name=AnthropicModelName.CLAUD_2,
+            #     #         provider_name=ModelProviderName.ANTHROPIC,
+            #     #         temperature=0.9,
+            #     #     ),
+            #     # },
+            # ),
+            SuperTaskPilot(super_ability_registry, self.model_providers),
+            SimpleTaskPilot.factory(
+                prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
+                model_providers=self.model_providers,
+                models={
+                        LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+                            model_name=AnthropicModelName.CLAUD_2_INSTANT,
+                            provider_name=ModelProviderName.ANTHROPIC,
+                            temperature=1,
+                        ),
+                        LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+                            model_name=AnthropicModelName.CLAUD_2,
+                            provider_name=ModelProviderName.ANTHROPIC,
+                            temperature=0.9,
+                        ),
+                    },
+            )
         ]
 
     PROMPT_TEMPLATE = """
@@ -59,7 +85,12 @@ class QuestionExecutor(BaseExecutor):
         # Execute for Sequential nature
         response = {}
         for pilot in self.pilots:
-            response.update(await pilot.execute(task))
+            r = await pilot.execute(task, self.context)
+            if isinstance(r, Context):
+                self.context.extend(r)
+                response.update(r.dict())
+            else:
+                response.update(r)
             # print("--" * 32)
             # print(response)
             if "completion" in response.get("content", {}):
@@ -68,10 +99,15 @@ class QuestionExecutor(BaseExecutor):
                     "solution": response.get("content", {}).get("completion", ""),
                 }
                 task = self.PROMPT_TEMPLATE.format(**response)
-            else:
+            elif "content" in response.get("content", {}):
                 response = {
                     "question": task,
                     "solution": response.get("content", {}).get("content", ""),
+                }
+            else:
+                response = {
+                    "question": task,
+                    "solution": response.get("content", {}),
                 }
         return response
 
@@ -87,6 +123,7 @@ class QuestionExecutor(BaseExecutor):
             query = latex_to_text(query)
         except Exception as ex:
             pass
+        print(query)
         response = await self.execute(query)
         response["solution"] = response.get("solution", "").replace("&", " ")
         # print(response)
