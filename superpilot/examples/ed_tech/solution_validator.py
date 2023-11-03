@@ -23,52 +23,49 @@ class SolutionValidatorPrompt(PromptStrategy):
         make sure to answer the question on given conversation. Follow the below instructions.
 
         Instructions:
-        - Write a complete answer without loosing symbols, equations, options, tables etc.
-        - Write answer and equations in correct latex format.
-        - Remove unnecessary brackets, words like Exam Name, Website Name, Page No., Question No., Exercise No., Points, Grade, Marks etc posted in question.
-        - Do not engage in user conversation or ask any question. focus on only solving the question.
-        - Please restrict the steps to less than 4 steps.
-        - Do not include user and assistant conversation in the answer at all.
+        - Solve the problem step by step (do not over-divide the steps).
+        - Solve each and every equation in the solution.
+        - Write a complete solution without loosing symbols, equations, options, tables etc.
+        - Write solution and equations in correct latex format.
+        - Avoid use of personal and user conversation, we, they, you, I in the solution at all.
         - Please do not mention here is the formatted solution or here is the formatted answer, format answer as teacher answer a question.
         - Don't respond in json format, only text format is allowed as described below
 
         Step1:
-            Brief
-            Latex
+            Brief with latex code
             Explanation
         Step2:
-            Brief
-            Latex
+            Brief with latex code
             Explanation
 
         Final solution:
 
         Example:
-        Step 1:
-        The objective of this question is to evaluate the relationship between the concentration of a weak acid, its dissociation constant (Ka), and the resulting pH of the solution.
+        Step1:
+        Marked price is known as the original price of the product which is decided by the manufacturer on the basis of the cost incurred to produce the product.
+        It is given that the saving is of $180 on a laptop by getting 10% discount
+        To find the original cost of the laptop.
+        
         Explanation:
-        pH, which stands for "potential of hydrogen," is a measure of the acidity or alkalinity of a solution. It quantifies the concentration of hydrogen ions (H+) in a solution. The pH scale is a logarithmic scale that typically ranges from 0 to 14, with 7 being considered neutral:
-
-        Step 2:
-        To determine the pH of a solution of C6H5COOH (benzoic acid), we can use the formula for calculating the pH of a weak acid solution:
-        pH = pKa + log([A-]/[HA])
-        Where:
-        - pKa is the negative logarithm (base 10) of the acid dissociation constant (Ka) of the acid.
-        - [HA] is the concentration of the undissociated acid (C6H5COOH).
-        It is given that the Ka (acid dissociation constant) of C6H5COOH is 6.5 x 10 -5. Therefore, we can find the pKa as follows:
-        pKa = -log(6.5 x 10 -5)
-        = 4.187
-        Now, plug in the values into the pH equation and calculate the pH
-        pH = 4.187 + log([C6H5COO -]/(C6H5COOH])
-        The concentration of C6H5COOH as 9.461 M. Since C6H5COOH is a weak acid, it dissociates very little, so [A -] will be negligible compared to [HA].
-        pH ≈ 4.187 + log(0)
-        The closest option to a pH of 7 from the provided choices is 9.48.
+        Discount is the price equal to the difference between the original price and the amount paid by the customer.
+        
+        Step2:
+        Discount is offered by the shopkeeper to the customers to increase the sales in lean seasons.
+        Consider the original cost of the laptop be x
+        Discount percentage = 10%
+        Discount amount = 180
+        Relation between percentage, amount and original value:
+        Percentage * Original value = Discount amount
+        Substituting the values:
+        10% of x = 180
+        0.1x = 180
+        x = 180/0.1 = $1800
+        
         Explanation:
-        The logarithm of zero is undefined, it means that in this solution, there is virtually no dissociation of C6H5COOH, and the concentration of H+ ions is very low. Consequently, the solution will be close to neutral, and the pH will be close to 7.
-
+        To find the original cost of the laptop, multiply the discount percentage by original price and equate it to the discounted price. 
+        
         Final answer:
-        The pH of a. 9. 461 M C6H5COOH   M solution if the Ka of C6H5COOH is 6.5 x 10° will be 9.48
-        So, option (b) is correct.
+        The original cost of the laptop was $boxed $1800$.
 
         """
 
