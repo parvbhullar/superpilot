@@ -9,12 +9,14 @@ from superpilot.framework.tools.latex import latex_to_text
 from superpilot.tests.test_env_simple import get_env
 from superpilot.core.configuration.config import get_config
 from superpilot.core.ability.super import SuperAbilityRegistry
-from superpilot.examples.ed_tech.ag_question_solver_ability import AGQuestionSolverAbility
+from superpilot.examples.ed_tech.ag_question_solver_ability import (
+    AGQuestionSolverAbility,
+)
 from superpilot.examples.pilots.tasks.super import SuperTaskPilot
 from superpilot.core.resource.model_providers import (
     ModelProviderName,
     AnthropicModelName,
-    OpenAIModelName,
+    # OpenAIModelName,
 )
 from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
@@ -37,7 +39,9 @@ class QuestionExecutor(BaseExecutor):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        super_ability_registry = SuperAbilityRegistry.factory(self.env, self.ALLOWED_ABILITY)
+        super_ability_registry = SuperAbilityRegistry.factory(
+            self.env, self.ALLOWED_ABILITY
+        )
         self.super_prompt = QuestionSolverPrompt.factory()
         self.pilots = [
             # SimpleTaskPilot.factory(
@@ -78,14 +82,14 @@ class QuestionExecutor(BaseExecutor):
                 model_providers=self.model_providers,
                 models={
                     LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-                        model_name=OpenAIModelName.GPT3,
-                        provider_name=ModelProviderName.OPENAI,
+                        model_name=AnthropicModelName.CLAUD_2_INSTANT,
+                        provider_name=ModelProviderName.ANTHROPIC,
                         temperature=1,
                     ),
                     LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-                        model_name=OpenAIModelName.GPT4,
-                        provider_name=ModelProviderName.OPENAI,
-                        temperature=1,
+                        model_name=AnthropicModelName.CLAUD_2,
+                        provider_name=ModelProviderName.ANTHROPIC,
+                        temperature=0.9,
                     ),
                 },
             ),
