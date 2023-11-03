@@ -3,7 +3,6 @@ import functools
 import logging
 import math
 import time
-import re
 
 from typing import Callable, List, TypeVar, Optional, Any
 
@@ -101,12 +100,12 @@ OLLAMA_LANGUAGE_MODELS = {
         max_tokens=100000,  # Placeholder
     ),
     OllamaModelName.WIZARD_MATH: LanguageModelProviderModelInfo(
-            name=OllamaModelName.WIZARD_MATH,
-            service=ModelProviderService.LANGUAGE,
-            provider_name=ModelProviderName.OLLAMA,
-            prompt_token_cost=0.0015,  # Placeholder
-            completion_token_cost=0.002,  # Placeholder
-            max_tokens=100000,  # Placeholder
+        name=OllamaModelName.WIZARD_MATH,
+        service=ModelProviderService.LANGUAGE,
+        provider_name=ModelProviderName.OLLAMA,
+        prompt_token_cost=0.0015,  # Placeholder
+        completion_token_cost=0.002,  # Placeholder
+        max_tokens=100000,  # Placeholder
     ),
 }
 
@@ -207,13 +206,15 @@ class OllamaApiProvider(
         print(response.text)
         response_args = {
             "model_info": OLLAMA_LANGUAGE_MODELS[model_name],
-            "prompt_tokens_used": self._client.count_tokens(self.combine_text_from_objects(model_prompt, functions), model_name),
-            "completion_tokens_used": self._client.count_tokens(response.completion, model_name),
+            "prompt_tokens_used": self._client.count_tokens(
+                self.combine_text_from_objects(model_prompt, functions), model_name
+            ),
+            "completion_tokens_used": self._client.count_tokens(
+                response.completion, model_name
+            ),
         }
 
-        parsed_response = completion_parser(
-            response.dict()
-        )
+        parsed_response = completion_parser(response.dict())
         response = LanguageModelProviderModelResponse(
             content=parsed_response, **response_args
         )
@@ -358,23 +359,6 @@ class OllamaApiProvider(
         return settings
 
 
-async def _create_embedding(text: str, *_, **kwargs):
-    import ollama
-    """Embed text using the Ollama API.
-
-    Args:
-        text str: The text to embed.
-        model_name str: The name of the model to use.
-
-    Returns:
-        str: The embedding.
-    """
-    return await ollama.Embedding.acreate(
-        input=[text],
-        **kwargs,
-    )
-
-
 async def _create_completion(
     messages: List[LanguageModelMessage], client: APIClient, *_, **kwargs
 ) -> str:
@@ -416,10 +400,10 @@ async def _create_completion(
     # Iterate over the stream in chunks
     for chunk in res.iter_content(chunk_size=8192):  # 8K chunks
         chunks.append(chunk)
-        print(chunk, "*"*32)
+        # print(chunk, "*"*32)
 
     # Combine chunks to form the full content
-    res._content = b''.join(chunks)
+    res._content = b"".join(chunks)
 
     print(res)
     return res
