@@ -81,6 +81,8 @@ class SimpleTaskPilot(TaskPilot, ABC):
         """Execute the task."""
         self._logger.debug(f"Executing task: {objective}")
         task = Task.factory(objective, **kwargs)
+        if len(args) > 0:
+            kwargs['context'] = args[0]
         context_res = await self.exec_task(task, **kwargs)
         return context_res
 

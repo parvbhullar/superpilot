@@ -71,8 +71,10 @@ class BaseTaskPilot(TaskPilot):
         )
 
     async def execute(
-        self, task: Task, context_res: Context, *args, **kwargs
+        self, task: Task | str, context_res: Context, *args, **kwargs
     ) -> Context:
+        if isinstance(task, str):
+            task = Task.factory(task, **kwargs)
         for ability in self._ability_registry.abilities():
             context_res = await self.perform_ability(
                 task, [ability.dump()], context_res, **kwargs

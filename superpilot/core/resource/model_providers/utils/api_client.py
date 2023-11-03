@@ -14,14 +14,13 @@ class BaseAPIClient(ABC):
         """
         self.base_url = base_url
         self.session = requests.Session()
+        self.stream = False
 
         if auth:
             if isinstance(auth, tuple):
                 self.session.auth = auth
-            elif isinstance(auth, dict) and "token" in auth:
-                self.session.headers.update(
-                    {"Authorization": f"Bearer {auth['token']}"}
-                )
+            elif isinstance(auth, dict) and 'token' in auth:
+                self.session.headers.update({"Authorization": f"Bearer {auth['token']}"})
 
     def _request(
         self, method, endpoint, params=None, data=None, json=None, headers=None
@@ -39,9 +38,7 @@ class BaseAPIClient(ABC):
         :return: Response object.
         """
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
-        response = self.session.request(
-            method, url, params=params, data=data, json=json, headers=headers
-        )
+        response = self.session.request(method, url, params=params, data=data, json=json, headers=headers)
         response.raise_for_status()  # Raises an exception for HTTP errors.
 
         # # Check for rate limiting (many APIs use headers like 'X-RateLimit-Remaining' to indicate this)
@@ -56,7 +53,7 @@ class BaseAPIClient(ABC):
 
 
 class APIClient(BaseAPIClient, ABC):
-    def __init__(self, base_url="super-ollama.com", auth=None):
+    def __init__(self, base_url="super-ollama.co", auth=None):
         """
         Initialize the APIClient.
 
@@ -66,10 +63,11 @@ class APIClient(BaseAPIClient, ABC):
         """
         super().__init__(base_url, auth)
 
-    def completion(self, params, headers=None, endpoint="api/generate/", **kwargs):
+    def completion(self, json=None, params=None, headers=None, endpoint="api/generate/", **kwargs):
         if headers is None:
             headers = {}
-        return self._request("GET", endpoint, params=params, headers=headers)
+        return self._request("POST", endpoint, json=json, params=params, headers=headers)
 
     def count_tokens(self, string, model_name):
         return count_string_tokens(string, model_name)
+

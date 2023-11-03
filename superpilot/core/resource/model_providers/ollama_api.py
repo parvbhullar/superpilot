@@ -3,6 +3,7 @@ import functools
 import logging
 import math
 import time
+
 from typing import Callable, List, TypeVar, Optional, Any
 
 from requests.exceptions import HTTPError, RetryError
@@ -170,8 +171,8 @@ class OllamaApiProvider(
             logger=self._logger,
             num_retries=self._configuration.retries_per_request,
         )
-        self._client = APIClient(base_url="http://super-ollama.com")
 
+        self._client = APIClient(base_url="http://super-ollama.co")
         self._create_completion = retry_handler(_create_completion)
         # self._create_embedding = retry_handler(_create_embedding) ## TODO: Enable embedding as well.
 
@@ -202,6 +203,7 @@ class OllamaApiProvider(
             client=self._client,
             **completion_kwargs,
         )
+        print(response.text)
         response_args = {
             "model_info": OLLAMA_LANGUAGE_MODELS[model_name],
             "prompt_tokens_used": self._client.count_tokens(
@@ -357,24 +359,6 @@ class OllamaApiProvider(
         return settings
 
 
-async def _create_embedding(text: str, *_, **kwargs):
-    import ollama
-
-    """Embed text using the Ollama API.
-
-    Args:
-        text str: The text to embed.
-        model_name str: The name of the model to use.
-
-    Returns:
-        str: The embedding.
-    """
-    return await ollama.Embedding.acreate(
-        input=[text],
-        **kwargs,
-    )
-
-
 async def _create_completion(
     messages: List[LanguageModelMessage], client: APIClient, *_, **kwargs
 ) -> str:
@@ -410,6 +394,18 @@ async def _create_completion(
         params,
         **kwargs,
     )
+    # Use a list to store chunks
+    chunks = []
+
+    # Iterate over the stream in chunks
+    for chunk in res.iter_content(chunk_size=8192):  # 8K chunks
+        chunks.append(chunk)
+        # print(chunk, "*"*32)
+
+    # Combine chunks to form the full content
+    res._content = b"".join(chunks)
+
+    print(res)
     return res
 
 

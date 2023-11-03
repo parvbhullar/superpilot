@@ -201,6 +201,9 @@ class Context:
     def __str__(self) -> str:
         return "\n\n".join([f"{c}" for i, c in enumerate(self.items, 1)])
 
+    def dict(self):
+        return {"content": self.__str__()}
+
     def to_file(self, file_location: str) -> None:
         with open(file_location, "w") as f:
             f.write(str(self.format_numbered()))
