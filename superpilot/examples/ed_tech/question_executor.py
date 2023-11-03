@@ -44,21 +44,21 @@ class QuestionExecutor(BaseExecutor):
         )
         self.super_prompt = QuestionSolverPrompt.factory()
         anthropic_pilot = SimpleTaskPilot.factory(
-                prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
-                model_providers=self.model_providers,
-                models={
-                        LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-                            model_name=AnthropicModelName.CLAUD_2_INSTANT,
-                            provider_name=ModelProviderName.ANTHROPIC,
-                            temperature=1,
-                        ),
-                        LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-                            model_name=AnthropicModelName.CLAUD_2,
-                            provider_name=ModelProviderName.ANTHROPIC,
-                            temperature=1,
-                        ),
-                    },
-            )
+            prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
+            model_providers=self.model_providers,
+            models={
+                LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+                    model_name=AnthropicModelName.CLAUD_2_INSTANT,
+                    provider_name=ModelProviderName.ANTHROPIC,
+                    temperature=1,
+                ),
+                LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+                    model_name=AnthropicModelName.CLAUD_2,
+                    provider_name=ModelProviderName.ANTHROPIC,
+                    temperature=1,
+                ),
+            },
+        )
         self.pilots = [
             # SimpleTaskPilot.factory(
             #     prompt_strategy=QuestionSolverPrompt.factory().get_config(),
