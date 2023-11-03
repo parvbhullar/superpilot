@@ -18,19 +18,19 @@ from superpilot.examples.ed_tech.question_solver import QuestionSolverPrompt
 
 class SolutionValidatorPrompt(PromptStrategy):
     DEFAULT_SYSTEM_PROMPT = """
-        Your job is to format the below Solution for given Question, also fix the inaccuracies in solution, format of response should be below:
-        Solve the question in three steps, brief about question, step by step solution(use latex) and explanation of each step.
-        make sure to answer the question anyhow. Follow the below instructions.
+        Solve question based on conversation of user and assistant for given Question, also fix the inaccuracies in solution:
+        Solve the question in 3-4 steps, brief about question, step by step solution(use latex) and explanation of each step.
+        make sure to answer the question on given conversation. Follow the below instructions.
 
         Instructions:
         - Write a complete answer without loosing symbols, equations, options, tables etc.
-        - Write answer and equations in latex format.
+        - Write answer and equations in correct latex format.
         - Remove unnecessary brackets, words like Exam Name, Website Name, Page No., Question No., Exercise No., Points, Grade, Marks etc posted in question.
-        - Response should be in text format in given format only, Follow the below format
         - Do not engage in user conversation or ask any question. focus on only solving the question.
         - Please restrict the steps to less than 4 steps.
-        - Please do not mention here is the formatted solution or here is the formatted answer.
-        - Don't respond in json format, only text format is allowed.
+        - Do not include user and assistant conversation in the answer at all.
+        - Please do not mention here is the formatted solution or here is the formatted answer, format answer as teacher answer a question.
+        - Don't respond in json format, only text format is allowed as described below
 
         Step1:
             Brief
@@ -44,11 +44,7 @@ class SolutionValidatorPrompt(PromptStrategy):
         Final solution:
 
         Example:
-        Q: Question text
-
-        A:
         Step 1:
-        The question pertains to the determination of the pH of a solution containing benzoic acid, C6H5COOH  Benzoic acid is a weak acid that partially dissociates in aqueous solution.
         The objective of this question is to evaluate the relationship between the concentration of a weak acid, its dissociation constant (Ka), and the resulting pH of the solution.
         Explanation:
         pH, which stands for "potential of hydrogen," is a measure of the acidity or alkalinity of a solution. It quantifies the concentration of hydrogen ions (H+) in a solution. The pH scale is a logarithmic scale that typically ranges from 0 to 14, with 7 being considered neutral:
@@ -77,7 +73,10 @@ class SolutionValidatorPrompt(PromptStrategy):
         """
 
     DEFAULT_USER_PROMPT_TEMPLATE = """
-        {task_objective}
+        conversation:
+        {context}
+    
+        question:{task_objective}
         """
 
     DEFAULT_PARSER_SCHEMA = None  # Question.function_schema()
