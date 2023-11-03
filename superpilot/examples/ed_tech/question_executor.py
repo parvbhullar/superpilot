@@ -16,7 +16,7 @@ from superpilot.examples.pilots.tasks.super import SuperTaskPilot
 from superpilot.core.resource.model_providers import (
     ModelProviderName,
     AnthropicModelName,
-    # OpenAIModelName,
+    OpenAIModelName,
 )
 from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
@@ -43,6 +43,22 @@ class QuestionExecutor(BaseExecutor):
             self.env, self.ALLOWED_ABILITY
         )
         self.super_prompt = QuestionSolverPrompt.factory()
+        anthropic_pilot = SimpleTaskPilot.factory(
+                prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
+                model_providers=self.model_providers,
+                models={
+                        LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+                            model_name=AnthropicModelName.CLAUD_2_INSTANT,
+                            provider_name=ModelProviderName.ANTHROPIC,
+                            temperature=1,
+                        ),
+                        LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+                            model_name=AnthropicModelName.CLAUD_2,
+                            provider_name=ModelProviderName.ANTHROPIC,
+                            temperature=1,
+                        ),
+                    },
+            )
         self.pilots = [
             # SimpleTaskPilot.factory(
             #     prompt_strategy=QuestionSolverPrompt.factory().get_config(),
@@ -61,35 +77,20 @@ class QuestionExecutor(BaseExecutor):
             #     # },
             # ),
             SuperTaskPilot(super_ability_registry, self.model_providers),
-            # SimpleTaskPilot.factory(
-            #     prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
-            #     model_providers=self.model_providers,
-            #     models={
-            #             LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-            #                 model_name=AnthropicModelName.CLAUD_2_INSTANT,
-            #                 provider_name=ModelProviderName.ANTHROPIC,
-            #                 temperature=1,
-            #             ),
-            #             LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-            #                 model_name=AnthropicModelName.CLAUD_2,
-            #                 provider_name=ModelProviderName.ANTHROPIC,
-            #                 temperature=1,
-            #             ),
-            #         },
-            # ),
+            anthropic_pilot,
             SimpleTaskPilot.factory(
                 prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
                 model_providers=self.model_providers,
                 models={
                     LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-                        model_name=AnthropicModelName.CLAUD_2_INSTANT,
-                        provider_name=ModelProviderName.ANTHROPIC,
+                        model_name=OpenAIModelName.GPT3,
+                        provider_name=ModelProviderName.OPENAI,
                         temperature=1,
                     ),
                     LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-                        model_name=AnthropicModelName.CLAUD_2,
-                        provider_name=ModelProviderName.ANTHROPIC,
-                        temperature=0.9,
+                        model_name=OpenAIModelName.GPT4,
+                        provider_name=ModelProviderName.OPENAI,
+                        temperature=1,
                     ),
                 },
             ),
