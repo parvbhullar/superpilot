@@ -113,6 +113,7 @@ if __name__ == "__main__":
     path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/Ques14.jpg"
     path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/question-one.jpeg"
     path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/question-two.jpeg"
+    path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/process/Picture1.png"
     # math_pics_ocr(path)
     # path = "original/Chegg Ques/Screenshot_2023-10-21_103505.png"
     # path = "original/Chegg Ques/Screenshot 2023-10-21 102000.png"

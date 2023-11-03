@@ -14,6 +14,7 @@ from superpilot.examples.pilots.tasks.super import SuperTaskPilot
 from superpilot.core.resource.model_providers import (
     ModelProviderName,
     AnthropicModelName,
+    OpenAIModelName,
 )
 from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
@@ -56,22 +57,38 @@ class QuestionExecutor(BaseExecutor):
             #     # },
             # ),
             SuperTaskPilot(super_ability_registry, self.model_providers),
+            # SimpleTaskPilot.factory(
+            #     prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
+            #     model_providers=self.model_providers,
+            #     models={
+            #             LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+            #                 model_name=AnthropicModelName.CLAUD_2_INSTANT,
+            #                 provider_name=ModelProviderName.ANTHROPIC,
+            #                 temperature=1,
+            #             ),
+            #             LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+            #                 model_name=AnthropicModelName.CLAUD_2,
+            #                 provider_name=ModelProviderName.ANTHROPIC,
+            #                 temperature=1,
+            #             ),
+            #         },
+            # ),
             SimpleTaskPilot.factory(
                 prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
                 model_providers=self.model_providers,
                 models={
-                        LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-                            model_name=AnthropicModelName.CLAUD_2_INSTANT,
-                            provider_name=ModelProviderName.ANTHROPIC,
-                            temperature=1,
-                        ),
-                        LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-                            model_name=AnthropicModelName.CLAUD_2,
-                            provider_name=ModelProviderName.ANTHROPIC,
-                            temperature=0.9,
-                        ),
-                    },
-            )
+                    LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+                        model_name=OpenAIModelName.GPT3,
+                        provider_name=ModelProviderName.OPENAI,
+                        temperature=1,
+                    ),
+                    LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+                        model_name=OpenAIModelName.GPT4,
+                        provider_name=ModelProviderName.OPENAI,
+                        temperature=1,
+                    ),
+                },
+            ),
         ]
 
     PROMPT_TEMPLATE = """
