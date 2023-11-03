@@ -27,6 +27,7 @@ playwright==1.36.0
 postgrest==0.10.6
 pre-commit==2.21.0
 prompt_toolkit==3.0.39
+pyautogen==0.1.14
 pymupdf
 pytesseract==0.3.10
 selenium==4.1.4
