@@ -50,12 +50,12 @@ class QuestionExecutor(BaseExecutor):
                         LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
                             model_name=AnthropicModelName.CLAUD_2_INSTANT,
                             provider_name=ModelProviderName.ANTHROPIC,
-                            temperature=1,
+                            temperature=0.2,
                         ),
                         LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
                             model_name=AnthropicModelName.CLAUD_2,
                             provider_name=ModelProviderName.ANTHROPIC,
-                            temperature=1,
+                            temperature=0.2,
                         ),
                     },
             )
@@ -85,12 +85,12 @@ class QuestionExecutor(BaseExecutor):
                     LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
                         model_name=OpenAIModelName.GPT3,
                         provider_name=ModelProviderName.OPENAI,
-                        temperature=1,
+                        temperature=0.2,
                     ),
                     LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
                         model_name=OpenAIModelName.GPT4,
                         provider_name=ModelProviderName.OPENAI,
-                        temperature=1,
+                        temperature=0.2,
                     ),
                 },
             ),
