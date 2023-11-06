@@ -82,7 +82,7 @@ class SimpleTaskPilot(TaskPilot, ABC):
         self._logger.debug(f"Executing task: {objective}")
         task = Task.factory(objective, **kwargs)
         if len(args) > 0:
-            kwargs['context'] = args[0]
+            kwargs["context"] = args[0]
         context_res = await self.exec_task(task, **kwargs)
         return context_res
 
@@ -169,7 +169,7 @@ class SimpleTaskPilot(TaskPilot, ABC):
         logger: logging.Logger = None,
     ) -> "SimpleTaskPilot":
         # Initialize settings
-        config = cls.default_configuration
+        config = cls.default_configuration.copy()
         if location is not None:
             config.location = location
         if execution_nature is not None:
