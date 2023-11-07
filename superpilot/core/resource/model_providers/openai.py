@@ -100,6 +100,14 @@ OPEN_AI_LANGUAGE_MODELS = {
         completion_token_cost=0.12,
         max_tokens=120000,
     ),
+    OpenAIModelName.GPT4_VISION: LanguageModelProviderModelInfo(
+        name=OpenAIModelName.GPT4_VISION,
+        service=ModelProviderService.LANGUAGE,
+        provider_name=ModelProviderName.OPENAI,
+        prompt_token_cost=0.06,
+        completion_token_cost=0.12,
+        max_tokens=8000,
+    ),
 }
 
 
