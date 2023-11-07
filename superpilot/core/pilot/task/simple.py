@@ -143,7 +143,7 @@ class SimpleTaskPilot(TaskPilot, ABC):
             if model_classification == LanguageModelClassification.FAST_MODEL:
                 model_configuration.model_name = OpenAIModelName.GPT3_16K
             elif model_classification == LanguageModelClassification.SMART_MODEL:
-                model_configuration.model_name = OpenAIModelName.GPT4_32K
+                model_configuration.model_name = OpenAIModelName.GPT4_TURBO
         return model_configuration
 
     def _make_template_kwargs_for_strategy(self, strategy: PromptStrategy):

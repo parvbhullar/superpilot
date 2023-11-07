@@ -76,7 +76,7 @@ class QuestionExecutor(BaseExecutor):
             #     #     ),
             #     # },
             # ),
-            SuperTaskPilot(super_ability_registry, self.model_providers),
+            # SuperTaskPilot(super_ability_registry, self.model_providers),
             anthropic_pilot,
             SimpleTaskPilot.factory(
                 prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
@@ -107,30 +107,36 @@ class QuestionExecutor(BaseExecutor):
         # Execute for Sequential nature
         response = {}
         for pilot in self.pilots:
-            r = await pilot.execute(task, self.context)
-            if isinstance(r, Context):
-                self.context.extend(r)
-                response.update(r.dict())
-            else:
-                response.update(r)
-            # print("--" * 32)
-            # print(response)
-            if "completion" in response.get("content", {}):
-                response = {
-                    "question": task,
-                    "solution": response.get("content", {}).get("completion", ""),
-                }
-                task = self.PROMPT_TEMPLATE.format(**response)
-            elif "content" in response.get("content", {}):
-                response = {
-                    "question": task,
-                    "solution": response.get("content", {}).get("content", ""),
-                }
-            else:
-                response = {
-                    "question": task,
-                    "solution": response.get("content", {}),
-                }
+            try:
+                r = await pilot.execute(task, self.context)
+                if isinstance(r, Context):
+                    self.context.extend(r)
+                    response.update(r.dict())
+                else:
+                    response.update(r)
+                print("--" * 62)
+                print("--" * 62)
+                print(response)
+                if "completion" in response.get("content", {}):
+                    response = {
+                        "question": task,
+                        "solution": response.get("content", {}).get("completion", ""),
+                    }
+                    task = self.PROMPT_TEMPLATE.format(**response)
+                elif "content" in response.get("content", {}):
+                    response = {
+                        "question": task,
+                        "solution": response.get("content", {}).get("content", ""),
+                    }
+                else:
+                    response = {
+                        "question": task,
+                        "solution": response.get("content", {}),
+                    }
+            except Exception as e:
+                print(e)
+                continue
+
         return response
 
     async def run(self, image_path):
@@ -181,6 +187,7 @@ class QuestionExecutor(BaseExecutor):
                 "app_key": os.environ.get("MATHPIX_APP_KEY"),
             },
         )
+        # print(r.text, "Mathpix response")
         return r.json().get("text", "")
 
     def format_numbered(self, items) -> str:
