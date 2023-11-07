@@ -3,6 +3,7 @@ import functools
 import logging
 import math
 import time
+import json
 
 from typing import Callable, List, TypeVar, Optional, Any
 
@@ -380,6 +381,8 @@ async def _create_completion(
         del kwargs["function_call"]
     if "functions" in kwargs:
         del kwargs["functions"]
+
+    callback = kwargs.pop("callback", None)
     # del kwargs["api_type"]
     # del kwargs["api_base"]
     # del kwargs["api_version"]
@@ -394,16 +397,38 @@ async def _create_completion(
         params,
         **kwargs,
     )
-    # Use a list to store chunks
-    chunks = []
+    # # Use a list to store chunks
+    # chunks = []
+    #
+    # # Iterate over the stream in chunks
+    # for chunk in res.iter_content(chunk_size=8192):  # 8K chunks
+    #     chunks.append(chunk)
+    #     # print(chunk, "*"*32)
 
-    # Iterate over the stream in chunks
-    for chunk in res.iter_content(chunk_size=8192):  # 8K chunks
-        chunks.append(chunk)
-        # print(chunk, "*"*32)
+    full_response = ""
+    # Iterating over the response line by line and displaying the details
+    for line in res.iter_lines():
+        if line:
+            # Parsing each line (JSON chunk) and extracting the details
+            chunk = json.loads(line)
+
+            # If a callback function is provided, call it with the chunk
+            if callback:
+                callback(chunk)
+            else:
+                # If this is not the last chunk, add the "response" field value to full_response and print it
+                if not chunk.get("done"):
+                    response_piece = chunk.get("response", "")
+                    full_response += response_piece
+                    print(response_piece, end="", flush=True)
+
+            # Check if it's the last chunk (done is true)
+            if chunk.get("done"):
+                final_context = chunk.get("context")
 
     # Combine chunks to form the full content
-    res._content = b"".join(chunks)
+    # res._content = b"".join(chunks)
+    res._content = full_response
 
     print(res)
     return res
