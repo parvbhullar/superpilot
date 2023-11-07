@@ -21,7 +21,7 @@ class AGQuestionSolverAbility(Ability):
         language_model_required=LanguageModelConfiguration(
             model_name=OpenAIModelName.GPT4,
             provider_name=ModelProviderName.OPENAI,
-            temperature=0.1,
+            temperature=0.5,
         ),
     )
 
@@ -62,8 +62,8 @@ class AGQuestionSolverAbility(Ability):
 
         openai_key = self._env_config.openai_api_key
         config_list = [
-            {"model": "gpt-4", "api_key": openai_key},
-            {"model": "gpt-4-32k", "api_key": openai_key},
+            {"model": OpenAIModelName.GPT3, "api_key": openai_key},
+            {"model": OpenAIModelName.GPT3_16K, "api_key": openai_key},
         ]
 
         from autogen.agentchat.contrib.math_user_proxy_agent import MathUserProxyAgent
@@ -84,7 +84,7 @@ class AGQuestionSolverAbility(Ability):
         # 2. create the MathUserProxyAgent instance named "mathproxyagent"
         # By default, the human_input_mode is "NEVER", which means the agent will not ask for human input.
         mathproxyagent = MathUserProxyAgent(
-            name="mathproxyagent",
+            name="MathsTutor",
             human_input_mode="NEVER",
             code_execution_config={"use_docker": False},
         )
