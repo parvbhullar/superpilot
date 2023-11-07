@@ -40,7 +40,10 @@ class OpenAIModelName(str, enum.Enum):
     GPT3 = "gpt-3.5-turbo-0613"
     GPT3_16K = "gpt-3.5-turbo-16k-0613"
     GPT4 = "gpt-4-0613"
-    GPT4_32K = "gpt-4-32k-0613"
+    GPT4_32K = "gpt-4-32k-0314"
+    GPT4_TURBO = "gpt-4-1106-preview"
+    GPT4_VISION = "gpt-4-vision-preview"
+    GPT4_32K_NEW = "gpt-4-32k-0613"
 
 
 OPEN_AI_EMBEDDING_MODELS = {
@@ -88,6 +91,14 @@ OPEN_AI_LANGUAGE_MODELS = {
         prompt_token_cost=0.06,
         completion_token_cost=0.12,
         max_tokens=32768,
+    ),
+    OpenAIModelName.GPT4_TURBO: LanguageModelProviderModelInfo(
+        name=OpenAIModelName.GPT4_TURBO,
+        service=ModelProviderService.LANGUAGE,
+        provider_name=ModelProviderName.OPENAI,
+        prompt_token_cost=0.06,
+        completion_token_cost=0.12,
+        max_tokens=120000,
     ),
 }
 
