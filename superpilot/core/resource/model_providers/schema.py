@@ -62,13 +62,24 @@ class MessageContent(BaseModel):
 
 class LanguageModelMessage(BaseModel):
     role: MessageRole
-    content: str | List[MessageContent] = Field(default_factory=list)
+    content: Union[str, List[MessageContent], None] = None
+
     # content_list: List[MessageContent] = Field(default_factory=list)
 
     def add_text(self, text: str):
+        # Ensure that content is a list before appending
+        if self.content is None or isinstance(self.content, str):
+            self.content = []  # Reset content to be a list
+        # Append a new MessageContent instance
+        print("Adding TEXT", text)
         self.content.append(MessageContent(type=MessageContentType.TEXT, text=text))
 
     def add_image(self, url: str, alt_text: str):
+        # Ensure that content is a list before appending
+        if self.content is None or isinstance(self.content, str):
+            self.content = []  # Reset content to be a list
+
+        print("Adding url", url)
         message = MessageContent(type=MessageContentType.IMAGE, text=alt_text)
         message.add_image(url, alt_text)
         self.content.append(message)
