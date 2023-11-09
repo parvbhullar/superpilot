@@ -76,8 +76,9 @@ class SimplePrompt(PromptStrategy):
     def model_classification(self) -> LanguageModelClassification:
         return self._model_classification
 
-    def build_prompt(self, task_objective: str = "", **kwargs) -> LanguageModelPrompt:
-        template_kwargs = self.get_template_kwargs(task_objective, kwargs)
+    def build_prompt(self, **kwargs) -> LanguageModelPrompt:
+        # print("kwargs", kwargs)
+        template_kwargs = self.get_template_kwargs(kwargs)
 
         system_message = LanguageModelMessage(
             role=MessageRole.SYSTEM,
@@ -111,9 +112,9 @@ class SimplePrompt(PromptStrategy):
         )
         return prompt
 
-    def get_template_kwargs(self, task_objective, kwargs):
+    def get_template_kwargs(self, kwargs):
         template_kwargs = {
-            "task_objective": task_objective,
+            "task_objective": "",
             "cycle_count": 0,
             "action_history": "",
             "additional_info": "",

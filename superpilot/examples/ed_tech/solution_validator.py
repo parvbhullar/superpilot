@@ -1,4 +1,5 @@
 from superpilot.core.planning.base import PromptStrategy
+from superpilot.core.planning.strategies.simple import SimplePrompt
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
     LanguageModelPrompt,
@@ -16,7 +17,7 @@ from typing import Dict
 from superpilot.examples.ed_tech.question_solver import QuestionSolverPrompt
 
 
-class SolutionValidatorPrompt(PromptStrategy):
+class SolutionValidatorPrompt(SimplePrompt):
     DEFAULT_SYSTEM_PROMPT = """
         Solve question based on conversation of user and assistant for given Question, also fix the inaccuracies in solution:
         Solve the question in 3-4 steps, brief about question, step by step solution(use latex) and explanation of each step.
@@ -101,44 +102,6 @@ class SolutionValidatorPrompt(PromptStrategy):
     def model_classification(self) -> LanguageModelClassification:
         return self._model_classification
 
-    def build_prompt(self, task_objective: str, **kwargs) -> LanguageModelPrompt:
-        template_kwargs = self.get_template_kwargs(task_objective, kwargs)
-        system_message = LanguageModelMessage(
-            role=MessageRole.SYSTEM,
-            content=self._system_prompt_message.format(**template_kwargs),
-        )
-        user_message = LanguageModelMessage(
-            role=MessageRole.USER,
-            content=self._user_prompt_template.format(**template_kwargs),
-        )
-        functions = []
-        if self._parser_schema is not None:
-            parser_function = LanguageModelFunction(
-                json_schema=self._parser_schema,
-            )
-            functions.append(parser_function)
-        prompt = LanguageModelPrompt(
-            messages=[system_message, user_message],
-            functions=functions,
-            function_call=None if not functions else functions[0],
-            # TODO
-            tokens_used=0,
-        )
-        return prompt
-
-    def get_template_kwargs(self, task_objective, kwargs):
-        template_kwargs = {
-            "task_objective": task_objective,
-            "cycle_count": 0,
-            "action_history": "",
-            "additional_info": "",
-            "user_input": "",
-            "acceptance_criteria": "",
-        }
-        # Update default kwargs with any provided kwargs
-        template_kwargs.update(kwargs)
-        return template_kwargs
-
     def parse_response_content(
         self,
         response_content: dict,
@@ -173,22 +136,22 @@ class SolutionValidatorPrompt(PromptStrategy):
             ),
         )
 
-    @classmethod
-    def factory(
-        cls,
-        system_prompt=None,
-        user_prompt_template=None,
-        parser=None,
-        model_classification=None,
-    ) -> "QuestionSolverPrompt":
-        config = cls.default_configuration.dict()
-        if model_classification:
-            config["model_classification"] = model_classification
-        if system_prompt:
-            config["system_prompt"] = system_prompt
-        if user_prompt_template:
-            config["user_prompt_template"] = user_prompt_template
-        if parser:
-            config["parser_schema"] = parser
-        config.pop("location", None)
-        return cls(**config)
+    # @classmethod
+    # def factory(
+    #     cls,
+    #     system_prompt=None,
+    #     user_prompt_template=None,
+    #     parser=None,
+    #     model_classification=None,
+    # ) -> "QuestionSolverPrompt":
+    #     config = cls.default_configuration.dict()
+    #     if model_classification:
+    #         config["model_classification"] = model_classification
+    #     if system_prompt:
+    #         config["system_prompt"] = system_prompt
+    #     if user_prompt_template:
+    #         config["user_prompt_template"] = user_prompt_template
+    #     if parser:
+    #         config["parser_schema"] = parser
+    #     config.pop("location", None)
+    #     return cls(**config)
