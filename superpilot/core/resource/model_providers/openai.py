@@ -98,7 +98,7 @@ OPEN_AI_LANGUAGE_MODELS = {
         provider_name=ModelProviderName.OPENAI,
         prompt_token_cost=0.06,
         completion_token_cost=0.12,
-        max_tokens=120000,
+        max_tokens=128000,
     ),
     OpenAIModelName.GPT4_VISION: LanguageModelProviderModelInfo(
         name=OpenAIModelName.GPT4_VISION,
@@ -106,7 +106,7 @@ OPEN_AI_LANGUAGE_MODELS = {
         provider_name=ModelProviderName.OPENAI,
         prompt_token_cost=0.06,
         completion_token_cost=0.12,
-        max_tokens=8000,
+        max_tokens=128000,
     ),
 }
 
@@ -190,6 +190,35 @@ class OpenAIProvider(
         return self._budget.total_cost
 
     async def create_language_completion(
+        self,
+        model_prompt: List[LanguageModelMessage],
+        functions: List[LanguageModelFunction],
+        model_name: OpenAIModelName,
+        completion_parser: Callable[[dict], dict],
+        **kwargs,
+    ) -> LanguageModelProviderModelResponse:
+        """Create a completion using the OpenAI API."""
+        completion_kwargs = self._get_completion_kwargs(model_name, functions, **kwargs)
+        response = await self._create_completion(
+            messages=model_prompt,
+            **completion_kwargs,
+        )
+        response_args = {
+            "model_info": OPEN_AI_LANGUAGE_MODELS[model_name],
+            "prompt_tokens_used": response.usage.prompt_tokens,
+            "completion_tokens_used": response.usage.completion_tokens,
+        }
+
+        parsed_response = completion_parser(
+            response.choices[0].message.to_dict_recursive()
+        )
+        response = LanguageModelProviderModelResponse(
+            content=parsed_response, **response_args
+        )
+        self._budget.update_usage_and_cost(response)
+        return response
+
+    async def create_image(
         self,
         model_prompt: List[LanguageModelMessage],
         functions: List[LanguageModelFunction],
@@ -372,6 +401,7 @@ async def _create_completion(
         kwargs["functions"] = [function.json_schema for function in kwargs["functions"]]
     else:
         del kwargs["function_call"]
+    print(messages)
     return await openai.ChatCompletion.acreate(
         messages=messages,
         **kwargs,
