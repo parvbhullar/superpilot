@@ -92,8 +92,8 @@ class SimplePrompt(PromptStrategy):
         else:
             user_message = LanguageModelMessage(
                 role=MessageRole.USER,
-                content=[]
             )
+            print("ININT", user_message)
             user_message = self._generate_content_list(user_message, template_kwargs)
             print(user_message)
 
