@@ -103,8 +103,8 @@ class SimpleTaskPilot(TaskPilot, ABC):
         model_configuration = self._configuration.models[model_classification]
 
         template_kwargs = self._make_template_kwargs_for_strategy(prompt_strategy)
-        template_kwargs.update(kwargs)
-        prompt = prompt_strategy.build_prompt(**template_kwargs)
+        kwargs.update(template_kwargs)
+        prompt = prompt_strategy.build_prompt(**kwargs)
 
         model_configuration = self.choose_model(
             model_classification, model_configuration, prompt
