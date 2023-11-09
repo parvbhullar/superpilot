@@ -83,10 +83,19 @@ class SimplePrompt(PromptStrategy):
             role=MessageRole.SYSTEM,
             content=self._system_prompt_message.format(**template_kwargs),
         )
-        user_message = LanguageModelMessage(
-            role=MessageRole.USER,
-            content=self._user_prompt_template.format(**template_kwargs),
-        )
+        if "images" not in template_kwargs:
+            user_message = LanguageModelMessage(
+                role=MessageRole.USER,
+                content=self._user_prompt_template.format(**template_kwargs)
+            )
+        else:
+            user_message = LanguageModelMessage(
+                role=MessageRole.USER,
+                content=[]
+            )
+            user_message = self._generate_content_list(user_message, template_kwargs)
+            print(user_message)
+
         functions = []
         if self._parser_schema is not None:
             parser_function = LanguageModelFunction(
@@ -114,6 +123,14 @@ class SimplePrompt(PromptStrategy):
         # Update default kwargs with any provided kwargs
         template_kwargs.update(kwargs)
         return template_kwargs
+
+    def _generate_content_list(self, message: LanguageModelMessage, template_kwargs):
+        message.add_text(template_kwargs.get("task_objective", ""))
+
+        image_list = template_kwargs.pop("images", [])
+        for image in image_list:
+            message.add_image(image, "")
+        return message
 
     def parse_response_content(
         self,
@@ -166,3 +183,4 @@ class SimplePrompt(PromptStrategy):
             config["parser_schema"] = parser
         config.pop("location", None)
         return cls(**config)
+

@@ -77,7 +77,7 @@ class QuestionExecutor(BaseExecutor):
             #     # },
             # ),
             # SuperTaskPilot(super_ability_registry, self.model_providers),
-            anthropic_pilot,
+            # anthropic_pilot,
             SimpleTaskPilot.factory(
                 prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
                 model_providers=self.model_providers,
@@ -88,7 +88,7 @@ class QuestionExecutor(BaseExecutor):
                         temperature=0.2,
                     ),
                     LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-                        model_name=OpenAIModelName.GPT4,
+                        model_name=OpenAIModelName.GPT4_VISION,
                         provider_name=ModelProviderName.OPENAI,
                         temperature=0.2,
                     ),
@@ -103,12 +103,12 @@ class QuestionExecutor(BaseExecutor):
             Solution: {solution}
             """
 
-    async def execute(self, task: str):
+    async def execute(self, task: str, **kwargs):
         # Execute for Sequential nature
         response = {}
         for pilot in self.pilots:
             try:
-                r = await pilot.execute(task, self.context)
+                r = await pilot.execute(task, self.context, **kwargs)
                 if isinstance(r, Context):
                     self.context.extend(r)
                     response.update(r.dict())
@@ -152,10 +152,38 @@ class QuestionExecutor(BaseExecutor):
         except Exception as ex:
             pass
         print(query)
-        response = await self.execute(query)
+        base64_string = self.image_to_base64(image_path)
+        images = [base64_string]
+        # print(images)
+        response = await self.execute(query, images=images)
         response["solution"] = response.get("solution", "").replace("&", " ")
         # print(response)
         return response
+
+    # Function to get base64 string from image file
+    def image_to_base64(self, image_path):
+        import base64
+        # Infer the image type from the file extension
+        image_type = image_path.split('.')[-1].lower()
+        # Determine the correct MIME type
+        if image_type == 'png':
+            mime_type = 'image/png'
+        elif image_type in ['jpg', 'jpeg']:
+            mime_type = 'image/jpeg'
+        elif image_type == 'gif':
+            mime_type = 'image/gif'
+        else:
+            raise ValueError("Unsupported image type")
+
+        # Open the image file in binary read mode
+        with open(image_path, 'rb') as image_file:
+            # Read the image file
+            image_data = image_file.read()
+            # Encode the image data using base64
+            base64_encoded_data = base64.b64encode(image_data)
+            # Format with the prefix for data URI scheme
+            base64_image = f"data:{mime_type};base64,{base64_encoded_data.decode('utf-8')}"
+            return base64_image
 
     def image_to_text(self, image_path):
         from PIL import Image

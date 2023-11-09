@@ -39,9 +39,39 @@ class MessageRole(str, enum.Enum):
     ASSISTANT = "assistant"
 
 
+class MessageContentType(str, enum.Enum):
+    TEXT = "text"
+    IMAGE = "image"
+    VIDEO = "video"
+    AUDIO = "audio"
+
+
+class MessageImage(BaseModel):
+    url: str
+    alt_text: str
+
+
+class MessageContent(BaseModel):
+    type: MessageContentType
+    text: str = None
+    image_url: MessageImage = None
+
+    def add_image(self, url: str, alt_text: str = ""):
+        self.image_url = MessageImage(url=url, alt_text=alt_text)
+
+
 class LanguageModelMessage(BaseModel):
     role: MessageRole
-    content: str
+    content: str | List[MessageContent] = Field(default_factory=list)
+    # content_list: List[MessageContent] = Field(default_factory=list)
+
+    def add_text(self, text: str):
+        self.content.append(MessageContent(type=MessageContentType.TEXT, text=text))
+
+    def add_image(self, url: str, alt_text: str):
+        message = MessageContent(type=MessageContentType.IMAGE, text=alt_text)
+        message.add_image(url, alt_text)
+        self.content.append(message)
 
     def to_dict(self):
         return self.dict()
