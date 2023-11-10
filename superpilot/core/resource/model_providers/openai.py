@@ -98,7 +98,7 @@ OPEN_AI_LANGUAGE_MODELS = {
         provider_name=ModelProviderName.OPENAI,
         prompt_token_cost=0.06,
         completion_token_cost=0.12,
-        max_tokens=128000,
+        max_tokens=4096,
     ),
     OpenAIModelName.GPT4_VISION: LanguageModelProviderModelInfo(
         name=OpenAIModelName.GPT4_VISION,
@@ -106,7 +106,7 @@ OPEN_AI_LANGUAGE_MODELS = {
         provider_name=ModelProviderName.OPENAI,
         prompt_token_cost=0.06,
         completion_token_cost=0.12,
-        max_tokens=128000,
+        max_tokens=4096,
     ),
 }
 
@@ -291,6 +291,7 @@ class OpenAIProvider(
             **kwargs,
             **self._credentials.unmasked(),
             "request_timeout": 120,
+            "max_tokens": self.get_token_limit(model_name),
         }
         if functions:
             completion_kwargs["functions"] = functions
@@ -401,7 +402,7 @@ async def _create_completion(
         kwargs["functions"] = [function.json_schema for function in kwargs["functions"]]
     else:
         del kwargs["function_call"]
-    print(messages)
+    # print(messages)
     return await openai.ChatCompletion.acreate(
         messages=messages,
         **kwargs,
