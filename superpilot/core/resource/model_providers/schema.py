@@ -44,6 +44,7 @@ class MessageContentType(str, enum.Enum):
     IMAGE = "image"
     VIDEO = "video"
     AUDIO = "audio"
+    IMAGE_URL = "image_url"
 
 
 class MessageImage(BaseModel):
@@ -58,6 +59,14 @@ class MessageContent(BaseModel):
 
     def add_image(self, url: str, alt_text: str = ""):
         self.image_url = MessageImage(url=url, alt_text=alt_text)
+
+    def dict(self, *args, **kwargs):
+        d = super().dict(*args, **kwargs)
+        final_data = {}
+        for key in d.keys():
+            if d[key] is not None and d[key]:
+                final_data[key] = d[key]
+        return final_data
 
 
 class LanguageModelMessage(BaseModel):
@@ -80,7 +89,7 @@ class LanguageModelMessage(BaseModel):
             self.content = []  # Reset content to be a list
 
         print("Adding url", url)
-        message = MessageContent(type=MessageContentType.IMAGE, text=alt_text)
+        message = MessageContent(type=MessageContentType.IMAGE_URL, text=alt_text)
         message.add_image(url, alt_text)
         self.content.append(message)
 
@@ -88,7 +97,12 @@ class LanguageModelMessage(BaseModel):
         return self.dict()
 
     def __str__(self):
-        return self.content + "\n" + self.role.value
+        if self.content is None:
+            return "No Content \n" + self.role.value
+        if isinstance(self.content, str):
+            return (self.content or "") + "\n" + self.role.value
+        content = "\n".join([str(c.type) for c in self.content])
+        return content + "\n" + self.role.value
 
 
 class LanguageModelFunction(BaseModel):
