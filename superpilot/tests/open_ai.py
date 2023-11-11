@@ -15,6 +15,8 @@ def encode_image(image_path):
 
 # Path to your image
 image_path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ImagebasedQs/Q2.png"
+image_path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ImagebasedQs/Q2.png"
+image_path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ImagebasedQs/Q1.jpeg"
 
 # Getting the base64 string
 base64_image = encode_image(image_path)
@@ -32,7 +34,8 @@ payload = {
         "content": [
           {
             "type": "text",
-            "text": "Solve the give question in the image"
+            "text": "Extract the question with latex given in the image also explaining given figures or diagrams but do not answer the question."
+                    "Q:"
           },
           {
             "type": "image_url",

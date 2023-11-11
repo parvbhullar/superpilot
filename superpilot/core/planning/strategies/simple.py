@@ -13,7 +13,7 @@ from superpilot.core.resource.model_providers import (
 from superpilot.core.planning.settings import PromptStrategyConfiguration
 from pydantic import Field
 from typing import List, Dict
-
+from superpilot.core.resource.model_providers import OpenAIModelName
 
 class BaseContent(SchemaModel):
     """
@@ -77,25 +77,27 @@ class SimplePrompt(PromptStrategy):
         return self._model_classification
 
     def build_prompt(self, **kwargs) -> LanguageModelPrompt:
-        # print("kwargs", kwargs)
+        # print("kwargs",  v)
+        model_name = kwargs.pop("model_name", OpenAIModelName.GPT3)
         template_kwargs = self.get_template_kwargs(kwargs)
 
         system_message = LanguageModelMessage(
             role=MessageRole.SYSTEM,
             content=self._system_prompt_message.format(**template_kwargs),
         )
-        if "images" not in template_kwargs:
+
+        if model_name == OpenAIModelName.GPT4_VISION and "images" in template_kwargs:
+            user_message = LanguageModelMessage(
+                role=MessageRole.USER,
+            )
+            # print("VISION prompt", user_message)
+            user_message = self._generate_content_list(user_message, template_kwargs)
+            print(user_message)
+        else:
             user_message = LanguageModelMessage(
                 role=MessageRole.USER,
                 content=self._user_prompt_template.format(**template_kwargs)
             )
-        else:
-            user_message = LanguageModelMessage(
-                role=MessageRole.USER,
-            )
-            print("ININT", user_message)
-            user_message = self._generate_content_list(user_message, template_kwargs)
-            print(user_message)
 
         functions = []
         if self._parser_schema is not None:
@@ -126,7 +128,7 @@ class SimplePrompt(PromptStrategy):
         return template_kwargs
 
     def _generate_content_list(self, message: LanguageModelMessage, template_kwargs):
-        message.add_text(template_kwargs.get("task_objective", ""))
+        message.add_text(self._user_prompt_template.format(**template_kwargs))
 
         image_list = template_kwargs.pop("images", [])
         for image in image_list:
