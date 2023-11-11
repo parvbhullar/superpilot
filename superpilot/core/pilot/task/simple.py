@@ -30,6 +30,7 @@ from superpilot.core.resource.model_providers import (
 from superpilot.core.resource.model_providers.utils.token_counter import (
     count_string_tokens,
 )
+from superpilot.core.resource.model_providers.factory import ModelProviderFactory, ModelConfigFactory
 
 
 class SimpleTaskPilot(TaskPilot, ABC):
@@ -46,21 +47,21 @@ class SimpleTaskPilot(TaskPilot, ABC):
             LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
                 model_name=OpenAIModelName.GPT3,
                 provider_name=ModelProviderName.OPENAI,
-                temperature=1,
+                temperature=0.2,
             ),
             LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
                 model_name=OpenAIModelName.GPT4,
                 provider_name=ModelProviderName.OPENAI,
-                temperature=0.9,
+                temperature=0.2,
             ),
         },
     )
 
     def __init__(
-        self,
-        configuration: TaskPilotConfiguration = default_configuration,
-        model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
-        logger: logging.Logger = logging.getLogger(__name__),
+            self,
+            configuration: TaskPilotConfiguration = default_configuration,
+            model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
+            logger: logging.Logger = logging.getLogger(__name__),
     ) -> None:
         self._logger = logger
         self._configuration = configuration
@@ -95,17 +96,17 @@ class SimpleTaskPilot(TaskPilot, ABC):
         )
 
     async def chat_with_model(
-        self,
-        prompt_strategy: PromptStrategy,
-        **kwargs,
+            self,
+            prompt_strategy: PromptStrategy,
+            **kwargs,
     ) -> LanguageModelResponse:
         model_classification = prompt_strategy.model_classification
         model_configuration = self._configuration.models[model_classification]
 
         template_kwargs = self._make_template_kwargs_for_strategy(prompt_strategy)
         kwargs.update(template_kwargs)
-        prompt = prompt_strategy.build_prompt(**kwargs)
-
+        prompt = prompt_strategy.build_prompt(model_name=model_configuration.model_name, **kwargs)
+        # print("Prompt", prompt)
         model_configuration = self.choose_model(
             model_classification, model_configuration, prompt
         )
@@ -158,15 +159,18 @@ class SimpleTaskPilot(TaskPilot, ABC):
     def __repr__(self):
         return f"{self.__class__.__name__}()"
 
+    def __str__(self):
+        return self._configuration.__str__()
+
     @classmethod
     def factory(
-        cls,
-        prompt_strategy: PromptStrategyConfiguration = None,
-        model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
-        execution_nature: ExecutionNature = None,
-        models: Dict[LanguageModelClassification, LanguageModelConfiguration] = None,
-        location: PluginLocation = None,
-        logger: logging.Logger = None,
+            cls,
+            prompt_strategy: PromptStrategyConfiguration = None,
+            model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
+            execution_nature: ExecutionNature = None,
+            models: Dict[LanguageModelClassification, LanguageModelConfiguration] = None,
+            location: PluginLocation = None,
+            logger: logging.Logger = None,
     ) -> "SimpleTaskPilot":
         # Initialize settings
         config = cls.default_configuration.copy()
@@ -191,6 +195,31 @@ class SimpleTaskPilot(TaskPilot, ABC):
 
         # Create and return SimpleTaskPilot instance
         return cls(configuration=config, model_providers=model_providers, logger=logger)
+
+    @classmethod
+    def create(cls,
+               prompt_config,
+               smart_model_name=OpenAIModelName.GPT4,
+               fast_model_name=OpenAIModelName.GPT3,
+               smart_model_temp=0.2,
+               fast_model_temp=0.2,
+               model_providers=None):
+
+        models_config = ModelConfigFactory.get_models_config(
+            smart_model_name=smart_model_name,
+            fast_model_name=fast_model_name,
+            smart_model_temp=smart_model_temp,
+            fast_model_temp=fast_model_temp,
+        )
+        if model_providers is None:
+            model_providers = ModelProviderFactory.load_providers()
+
+        pilot = cls.factory(
+            prompt_strategy=prompt_config,
+            model_providers=model_providers,
+            models=models_config,
+        )
+        return pilot
 
 
 def get_os_info() -> str:

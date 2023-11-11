@@ -80,7 +80,7 @@ class LanguageModelMessage(BaseModel):
         if self.content is None or isinstance(self.content, str):
             self.content = []  # Reset content to be a list
         # Append a new MessageContent instance
-        print("Adding TEXT", text)
+        # print("Adding TEXT", text)
         self.content.append(MessageContent(type=MessageContentType.TEXT, text=text))
 
     def add_image(self, url: str, alt_text: str):
@@ -88,7 +88,7 @@ class LanguageModelMessage(BaseModel):
         if self.content is None or isinstance(self.content, str):
             self.content = []  # Reset content to be a list
 
-        print("Adding url", url)
+        # print("Adding url", url)
         message = MessageContent(type=MessageContentType.IMAGE_URL, text=alt_text)
         message.add_image(url, alt_text)
         self.content.append(message)
@@ -288,6 +288,11 @@ class LanguageModelProviderModelResponse(ModelProviderModelResponse):
     """Standard response struct for a response from a language model."""
 
     content: dict = None
+
+    def get(self, key, default=None):
+        if self.content is None:
+            return default
+        return self.content.get(key, default)
 
 
 class LanguageModelProvider(ModelProvider):
