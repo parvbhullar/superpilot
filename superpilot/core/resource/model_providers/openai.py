@@ -291,8 +291,10 @@ class OpenAIProvider(
             **kwargs,
             **self._credentials.unmasked(),
             "request_timeout": 120,
-            "max_tokens": self.get_token_limit(model_name),
+            # "max_tokens": self.get_token_limit(model_name),
         }
+        if model_name in ["gpt-4-vision-preview"]:
+            completion_kwargs["max_tokens"] = self.get_token_limit(model_name)
         if functions:
             completion_kwargs["functions"] = functions
 
