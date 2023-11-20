@@ -30,6 +30,10 @@ from superpilot.core.resource.model_providers import (
     ModelProviderName,
     OpenAIModelName,
 )
+from superpilot.core.pilot.settings import (
+    PilotConfiguration,
+    ExecutionAlgo
+)
 
 
 class SuperTaskPilot(TaskPilot):
@@ -38,6 +42,19 @@ class SuperTaskPilot(TaskPilot):
         location=PluginLocation(
             storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
             storage_route="superpilot.core.flow.simple.SuperTaskPilot",
+        ),
+        pilot=PilotConfiguration(
+            name="super_task_pilot",
+            role=(
+                "An AI Pilot designed to complete simple tasks with "
+            ),
+            goals=[
+                "Complete simple tasks",
+            ],
+            cycle_count=0,
+            max_task_cycle_count=3,
+            creation_time="",
+            execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
         ),
         execution_nature=ExecutionNature.SEQUENTIAL,
         prompt_strategy=strategies.NextAbility.default_configuration,
