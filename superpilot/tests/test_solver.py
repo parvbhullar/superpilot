@@ -7,13 +7,15 @@ import time
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from superpilot.examples.ed_tech.question_executor import QuestionExecutor
+from superpilot.examples.ed_tech.figure_question_executor import FigureQuestionExecutor
 from superpilot.framework.tools.latex import latex_to_text
 import pandas as pd
 
 
 def solve_question(image_path):
     t1 = time.time()
-    executor = QuestionExecutor()
+    # executor = QuestionExecutor()
+    executor = FigureQuestionExecutor()
     print("\n", "*" * 32, "Running QuestionExecutor", "*" * 32, "\n\n")
     res = asyncio.run(executor.run(image_path))
     print(res.get("solution"))
@@ -115,6 +117,7 @@ if __name__ == "__main__":
     path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/process/Picture1.png"
     path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/Ques14.jpg"
     path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/Ques6.png"
+    path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ImagebasedQs/Q2.png"
     # math_pics_ocr(path)
     # path = "original/Chegg Ques/Screenshot_2023-10-21_103505.png"
     # path = "original/Chegg Ques/Screenshot 2023-10-21 102000.png"

@@ -98,7 +98,15 @@ OPEN_AI_LANGUAGE_MODELS = {
         provider_name=ModelProviderName.OPENAI,
         prompt_token_cost=0.06,
         completion_token_cost=0.12,
-        max_tokens=120000,
+        max_tokens=4096,
+    ),
+    OpenAIModelName.GPT4_VISION: LanguageModelProviderModelInfo(
+        name=OpenAIModelName.GPT4_VISION,
+        service=ModelProviderService.LANGUAGE,
+        provider_name=ModelProviderName.OPENAI,
+        prompt_token_cost=0.06,
+        completion_token_cost=0.12,
+        max_tokens=4096,
     ),
 }
 
@@ -210,6 +218,35 @@ class OpenAIProvider(
         self._budget.update_usage_and_cost(response)
         return response
 
+    async def create_image(
+        self,
+        model_prompt: List[LanguageModelMessage],
+        functions: List[LanguageModelFunction],
+        model_name: OpenAIModelName,
+        completion_parser: Callable[[dict], dict],
+        **kwargs,
+    ) -> LanguageModelProviderModelResponse:
+        """Create a completion using the OpenAI API."""
+        completion_kwargs = self._get_completion_kwargs(model_name, functions, **kwargs)
+        response = await self._create_completion(
+            messages=model_prompt,
+            **completion_kwargs,
+        )
+        response_args = {
+            "model_info": OPEN_AI_LANGUAGE_MODELS[model_name],
+            "prompt_tokens_used": response.usage.prompt_tokens,
+            "completion_tokens_used": response.usage.completion_tokens,
+        }
+
+        parsed_response = completion_parser(
+            response.choices[0].message.to_dict_recursive()
+        )
+        response = LanguageModelProviderModelResponse(
+            content=parsed_response, **response_args
+        )
+        self._budget.update_usage_and_cost(response)
+        return response
+
     async def create_embedding(
         self,
         text: str,
@@ -254,7 +291,10 @@ class OpenAIProvider(
             **kwargs,
             **self._credentials.unmasked(),
             "request_timeout": 120,
+            # "max_tokens": self.get_token_limit(model_name),
         }
+        if model_name in ["gpt-4-vision-preview"]:
+            completion_kwargs["max_tokens"] = self.get_token_limit(model_name)
         if functions:
             completion_kwargs["functions"] = functions
 
@@ -364,6 +404,7 @@ async def _create_completion(
         kwargs["functions"] = [function.json_schema for function in kwargs["functions"]]
     else:
         del kwargs["function_call"]
+    # print(messages)
     return await openai.ChatCompletion.acreate(
         messages=messages,
         **kwargs,

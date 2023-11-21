@@ -13,7 +13,7 @@ from superpilot.core.resource.model_providers import (
 from superpilot.core.planning.settings import PromptStrategyConfiguration
 from pydantic import Field
 from typing import List, Dict
-
+from superpilot.core.resource.model_providers import OpenAIModelName
 
 class BaseContent(SchemaModel):
     """
@@ -76,17 +76,29 @@ class SimplePrompt(PromptStrategy):
     def model_classification(self) -> LanguageModelClassification:
         return self._model_classification
 
-    def build_prompt(self, task_objective: str = "", **kwargs) -> LanguageModelPrompt:
-        template_kwargs = self.get_template_kwargs(task_objective, kwargs)
+    def build_prompt(self, **kwargs) -> LanguageModelPrompt:
+        # print("kwargs",  v)
+        model_name = kwargs.pop("model_name", OpenAIModelName.GPT3)
+        template_kwargs = self.get_template_kwargs(kwargs)
 
         system_message = LanguageModelMessage(
             role=MessageRole.SYSTEM,
             content=self._system_prompt_message.format(**template_kwargs),
         )
-        user_message = LanguageModelMessage(
-            role=MessageRole.USER,
-            content=self._user_prompt_template.format(**template_kwargs),
-        )
+
+        if model_name == OpenAIModelName.GPT4_VISION and "images" in template_kwargs:
+            user_message = LanguageModelMessage(
+                role=MessageRole.USER,
+            )
+            # print("VISION prompt", user_message)
+            user_message = self._generate_content_list(user_message, template_kwargs)
+            print(user_message)
+        else:
+            user_message = LanguageModelMessage(
+                role=MessageRole.USER,
+                content=self._user_prompt_template.format(**template_kwargs)
+            )
+
         functions = []
         if self._parser_schema is not None:
             parser_function = LanguageModelFunction(
@@ -102,9 +114,9 @@ class SimplePrompt(PromptStrategy):
         )
         return prompt
 
-    def get_template_kwargs(self, task_objective, kwargs):
+    def get_template_kwargs(self, kwargs):
         template_kwargs = {
-            "task_objective": task_objective,
+            "task_objective": "",
             "cycle_count": 0,
             "action_history": "",
             "additional_info": "",
@@ -114,6 +126,14 @@ class SimplePrompt(PromptStrategy):
         # Update default kwargs with any provided kwargs
         template_kwargs.update(kwargs)
         return template_kwargs
+
+    def _generate_content_list(self, message: LanguageModelMessage, template_kwargs):
+        message.add_text(self._user_prompt_template.format(**template_kwargs))
+
+        image_list = template_kwargs.pop("images", [])
+        for image in image_list:
+            message.add_image(image, "")
+        return message
 
     def parse_response_content(
         self,
@@ -166,3 +186,4 @@ class SimplePrompt(PromptStrategy):
             config["parser_schema"] = parser
         config.pop("location", None)
         return cls(**config)
+
