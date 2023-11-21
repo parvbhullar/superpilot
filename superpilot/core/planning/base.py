@@ -1,6 +1,8 @@
 import abc
+import typing
 
 from superpilot.core.configuration import SystemConfiguration, UserConfigurable
+# Cyclic import
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
     LanguageModelMessage,

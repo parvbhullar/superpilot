@@ -93,6 +93,7 @@ class Task(BaseModel):
         ready_criteria: List[str] = None,
         acceptance_criteria: List[str] = None,
         context: TaskContext = None,
+        **kwargs,
     ):
         if ready_criteria is None:
             ready_criteria = [""]

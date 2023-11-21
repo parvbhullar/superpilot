@@ -17,64 +17,31 @@ from typing import Dict
 from superpilot.examples.ed_tech.question_solver import QuestionSolverPrompt
 
 
-class SolutionValidatorPrompt(SimplePrompt):
+class DescribeQFigurePrompt(SimplePrompt):
     DEFAULT_SYSTEM_PROMPT = """
-        Solve question based on conversation of user and assistant for given Question, also fix the inaccuracies in solution:
-        Solve the question in 3-4 steps, brief about question, step by step solution(use latex) and explanation of each step.
-        make sure to answer the question on given conversation. Follow the below instructions.
+        You are a question extractor that Extract the question with latex given in the image also explaining 
+        given figures or diagrams but do not answer the question.
 
         Instructions:
-        - Solve the problem step by step (do not over-divide the steps).
-        - Solve each and every equation in the solution.
-        - Write a complete solution without loosing symbols, equations, options, tables etc.
-        - Write solution and equations in correct latex format.
-        - Avoid use of personal and user conversation, we, they, you, I in the solution at all.
-        - Please do not mention here is the formatted solution or here is the formatted answer, format answer as teacher answer a question.
+        - Only return the question with latex code.
         - Don't respond in json format, only text format is allowed as described below
 
-        Step1:
-            Brief with latex code
-            Explanation
-        Step2:
-            Brief with latex code
-            Explanation
-
-        Final solution:
-
-        Example:
-        Step1:
-        Marked price is known as the original price of the product which is decided by the manufacturer on the basis of the cost incurred to produce the product.
-        It is given that the saving is of $180 on a laptop by getting 10% discount
-        To find the original cost of the laptop.
-        
-        Explanation:
-        Discount is the price equal to the difference between the original price and the amount paid by the customer.
-        
-        Step2:
-        Discount is offered by the shopkeeper to the customers to increase the sales in lean seasons.
-        Consider the original cost of the laptop be x
-        Discount percentage = 10%
-        Discount amount = 180
-        Relation between percentage, amount and original value:
-        Percentage * Original value = Discount amount
-        Substituting the values:
-        10% of x = 180
-        0.1x = 180
-        x = 180/0.1 = $1800
-        
-        Explanation:
-        To find the original cost of the laptop, multiply the discount percentage by original price and equate it to the discounted price. 
-        
-        Final answer:
-        The original cost of the laptop was $boxed $1800$.
-
+       Example:
+        What is the theoretical yield of compound ( C ), in grams, when ( 67.5 g ) of compound ( A ) 
+        are allowed to react with ( 39.1 g ) of compound ( B ) in the presence of a catalytic amount of sulfuric acid?
+        Shown in Figure: The image shows chemical structures of three compounds labeled A, B, and C. There's an arrow from A and B leading to C implying 
+            a chemical reaction. Above the arrow, "H2SO4" is written along with "(cat amt)," indicating that sulfuric acid is used 
+            as a catalyst in this reaction. Compound A is a benzene ring with an attached formyl group (–CHO), more specifically, 
+            it is benzaldehyde. Compound B is a straight-chain hydrocarbon with an alcohol group (–OH) at the end of the chain, this is 1-pentanol. 
+            Compound C, the product of the reaction, is an ester formed by the reaction between A and B under catalytic conditions, more specifically, 
+            it is pentyl benzoate.
+    
         """
 
     DEFAULT_USER_PROMPT_TEMPLATE = """
         conversation:
         {context}
-    
-        question:{task_objective}
+        Extract the question from image with figure explanation. 
         """
 
     DEFAULT_PARSER_SCHEMA = None  # Question.function_schema()
