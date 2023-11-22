@@ -161,6 +161,7 @@ class SimpleTaskPilot(TaskPilot, ABC):
             if model_classification == LanguageModelClassification.FAST_MODEL:
                 model_configuration.model_name = OpenAIModelName.GPT3_16K
             elif model_classification == LanguageModelClassification.SMART_MODEL:
+                print("Using GPT4_TURBO")
                 model_configuration.model_name = OpenAIModelName.GPT4_TURBO
         return model_configuration
 

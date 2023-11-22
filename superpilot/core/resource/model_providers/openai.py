@@ -290,7 +290,7 @@ class OpenAIProvider(
             "model": model_name,
             **kwargs,
             **self._credentials.unmasked(),
-            "request_timeout": 120,
+            "request_timeout": 300,
             # "max_tokens": self.get_token_limit(model_name),
         }
         if model_name in ["gpt-4-vision-preview"]:

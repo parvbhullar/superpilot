@@ -28,7 +28,7 @@ def main(query, files: list = None, **kwargs):
     env = get_env({})
     # context = Context()
     config = get_config()
-    superpilot = SuperPilot(app_plugins, environment=env, config)
+    # superpilot = SuperPilot(app_plugins, environment=env, config)
 
     # list of pilots - loaded pilots(BrowseInternet, SearchDB, SearchJira, Dalle3)
     # it will try to pick right for the query based on the query type
