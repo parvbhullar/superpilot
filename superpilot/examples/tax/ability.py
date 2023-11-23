@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import List
 
@@ -16,7 +17,7 @@ from superpilot.core.resource.model_providers import (
 from superpilot.framework.tools.search_engine import SearchEngine, SearchEngineType
 
 # from services.taxgptservice.api.config import settings
-ARAP_BASE_URL = "https://qa-arapback.mastersindia.co/"
+ARAP_BASE_URL = "https://qa-arapback.mastersindia.co"
 
 
 class Gstr1DataTransformAbility(Ability):
@@ -42,10 +43,10 @@ class SalesDataImportAbility(Ability):
     )
 
     def __init__(
-            self,
-            environment: Environment,
-            configuration: AbilityConfiguration = default_configuration,
-            prompt_strategy: SummarizerStrategy = None,
+        self,
+        environment: Environment,
+        configuration: AbilityConfiguration = default_configuration,
+        prompt_strategy: SummarizerStrategy = None,
     ):
         self._logger: logging.Logger = environment.get("logger")
         self._configuration = configuration
@@ -63,34 +64,28 @@ class SalesDataImportAbility(Ability):
                 "properties": {
                     "gstin": {
                         "type": "string",
-                        "description": "GSTIN (Goods and Services Tax Identification Number)."
+                        "description": "GSTIN (Goods and Services Tax Identification Number).",
                     },
-                    "month": {
-                        "type": "string",
-                        "description": "Month in MM format."
-                    },
+                    "month": {"type": "string", "description": "Month in MM format."},
                     "year": {
                         "type": "string",
-                        "description": "Year or year range in YYYY-YY format."
+                        "description": "Year or year range in YYYY-YY format.",
                     },
                     "invoice": {
                         "type": "string",
-                        "description": "Indicator for invoice ('Y' or 'N')."
+                        "description": "Indicator for invoice ('Y' or 'N').",
                     },
                     "summary": {
                         "type": "string",
-                        "description": "Indicator for summary ('Y' or 'N')."
+                        "description": "Indicator for summary ('Y' or 'N').",
                     },
                     "MiplApiKey": {
                         "type": "string",
-                        "description": "API Key for MIPL (Mandatory Invoice Parameters List)."
+                        "description": "API Key for MIPL (Mandatory Invoice Parameters List).",
                     },
-                    "Content-Type": {
-                        "type": "string",
-                        "description": "Content type."
-                    }
+                    "Content-Type": {"type": "string", "description": "Content type."},
                 },
-                "description": "Details for GST invoice and related information."
+                "description": "Details for GST invoice and related information.",
             },
             "json_data": {
                 "type": "array",
@@ -99,119 +94,113 @@ class SalesDataImportAbility(Ability):
                     "properties": {
                         "document_number": {
                             "type": "string",
-                            "description": "The document number."
+                            "description": "The document number.",
                         },
                         "document_date": {
                             "type": "string",
-                            "description": "The date of the document in DD-MM-YYYY format."
+                            "description": "The date of the document in DD-MM-YYYY format.",
                         },
                         "original_document_number": {
                             "type": "string",
-                            "description": "The original document number."
+                            "description": "The original document number.",
                         },
                         "original_document_date": {
                             "type": "string",
-                            "description": "The original document date in DD-MM-YYYY format."
+                            "description": "The original document date in DD-MM-YYYY format.",
                         },
                         "ref_document_number": {
                             "type": "string",
-                            "description": "The reference document number."
+                            "description": "The reference document number.",
                         },
                         "ref_document_date": {
                             "type": "string",
-                            "description": "The reference document date in DD-MM-YYYY format."
+                            "description": "The reference document date in DD-MM-YYYY format.",
                         },
                         "supply_type": {
                             "type": "string",
-                            "description": "Type of supply."
+                            "description": "Type of supply.",
                         },
                         "invoice_status": {
                             "type": "string",
-                            "description": "Status of the invoice."
+                            "description": "Status of the invoice.",
                         },
                         "invoice_category": {
                             "type": "string",
-                            "description": "Category of the invoice."
+                            "description": "Category of the invoice.",
                         },
                         "invoice_type": {
                             "type": "string",
-                            "description": "Type of the invoice."
+                            "description": "Type of the invoice.",
                         },
                         "total_invoice_value": {
                             "type": "number",
-                            "description": "Total value of the invoice."
+                            "description": "Total value of the invoice.",
                         },
                         "total_taxable_value": {
                             "type": "number",
-                            "description": "Total taxable value."
+                            "description": "Total taxable value.",
                         },
                         "txpd_taxtable_value": {
                             "type": "number",
-                            "description": "Taxable value."
+                            "description": "Taxable value.",
                         },
                         "shipping_bill_number": {
                             "type": "string",
-                            "description": "Shipping bill number."
+                            "description": "Shipping bill number.",
                         },
                         "shipping_bill_date": {
                             "type": "string",
-                            "description": "Shipping bill date in DD-MM-YYYY format."
+                            "description": "Shipping bill date in DD-MM-YYYY format.",
                         },
                         "reason": {
                             "type": "string",
-                            "description": "Reason for the transaction."
+                            "description": "Reason for the transaction.",
                         },
-                        "port_code": {
-                            "type": "string",
-                            "description": "Port code."
-                        },
-                        "location": {
-                            "type": "string",
-                            "description": "Location."
-                        },
+                        "port_code": {"type": "string", "description": "Port code."},
+                        "location": {"type": "string", "description": "Location."},
                         "gstr1_return_period": {
                             "type": "string",
-                            "description": "Return period for GSTR-1."
+                            "description": "Return period for GSTR-1.",
                         },
                         "gstr3b_return_period": {
                             "type": "string",
-                            "description": "Return period for GSTR-3B."
+                            "description": "Return period for GSTR-3B.",
                         },
                         "reverse_charge": {
                             "type": "string",
-                            "description": "Reverse charge information."
+                            "description": "Reverse charge information.",
                         },
                         "isamended": {
                             "type": "string",
-                            "description": "Information about whether the invoice is amended."
+                            "description": "Information about whether the invoice is amended.",
                         },
                         "amended_pos": {
                             "type": "string",
-                            "description": "Amended place of supply."
+                            "description": "Amended place of supply.",
                         },
                         "amended_period": {
                             "type": "string",
-                            "description": "Period for which the invoice is amended."
+                            "description": "Period for which the invoice is amended.",
                         },
                         "place_of_supply": {
                             "type": "string",
-                            "description": "Place of supply."
+                            "description": "Place of supply.",
                         },
                         "supplier_gstin": {
                             "type": "string",
-                            "description": "GSTIN of the supplier."
+                            "description": "GSTIN of the supplier.",
                         },
                         "buyer_gstin": {
                             "type": "string",
-                            "description": "GSTIN of the buyer."
+                            "description": "GSTIN of the buyer.",
                         },
                         "customer_name": {
                             "type": "string",
-                            "description": "Name of the customer."
+                            "description": "Name of the customer.",
                         },
                         "amortised_cost": {
                             "type": "string",
-                            "description": "Information about amortised cost."
+                            "description": "Information about amortised cost.",
                         },
                         "itemList": {
                             "type": "array",
@@ -220,82 +209,94 @@ class SalesDataImportAbility(Ability):
                                 "properties": {
                                     "hsn_code": {
                                         "type": "string",
-                                        "description": "HSN code."
+                                        "description": "HSN code.",
                                     },
                                     "quantity": {
                                         "type": "number",
-                                        "description": "Quantity of the item."
+                                        "description": "Quantity of the item.",
                                     },
                                     "unit_of_product": {
                                         "type": "string",
-                                        "description": "Unit of the product."
+                                        "description": "Unit of the product.",
                                     },
                                     "gst_rate": {
                                         "type": "number",
-                                        "description": "GST rate."
+                                        "description": "GST rate.",
                                     },
                                     "cess_amount": {
                                         "type": "number",
-                                        "description": "CESS amount."
+                                        "description": "CESS amount.",
                                     },
                                     "taxable_value": {
                                         "type": "number",
-                                        "description": "Taxable value of the item."
+                                        "description": "Taxable value of the item.",
                                     },
                                     "cgst_amount": {
                                         "type": "number",
-                                        "description": "CGST amount."
+                                        "description": "CGST amount.",
                                     },
                                     "sgst_amount": {
                                         "type": "number",
-                                        "description": "SGST amount."
+                                        "description": "SGST amount.",
                                     },
                                     "igst_amount": {
                                         "type": "number",
-                                        "description": "IGST amount."
+                                        "description": "IGST amount.",
                                     },
                                     "item_description": {
                                         "type": "string",
-                                        "description": "Description of the item."
+                                        "description": "Description of the item.",
                                     },
                                     "product_name": {
                                         "type": "string",
-                                        "description": "Name of the product."
+                                        "description": "Name of the product.",
                                     },
                                     "invoice_value": {
                                         "type": "number",
-                                        "description": "Value of the invoice for the item."
-                                    }
-                                }
+                                        "description": "Value of the invoice for the item.",
+                                    },
+                                },
                             },
-                            "description": "List of items in the invoice."
+                            "description": "List of items in the invoice.",
                         },
                         "error": {
                             "type": "object",
                             "properties": {
                                 "GEAEIN": {
                                     "type": "string",
-                                    "description": "Error message - GEAEIN."
+                                    "description": "Error message - GEAEIN.",
                                 }
                             },
-                            "description": "Error information."
-                        }
-                    }
+                            "description": "Error information.",
+                        },
+                    },
                 },
-                "description": "A list of invoices."
-            }
+                "description": "A list of invoices.",
+            },
         }
 
-    async def __call__(self, header: dict, json_data: List[dict], **kwargs) -> Context:
+    async def __call__(
+        self, header: dict, json_data: List[dict] = [{}], **kwargs
+    ) -> Context:
         url = f"{ARAP_BASE_URL}/api/v1/saas-apis/sales/"
         print(self.name(), header, json_data)
+        if not isinstance(json_data, str):
+            json_data = json.dumps(json_data)
         response = requests.request("POST", url, headers=header, data=json_data)
         print(response.text)
-        return Context([await self.get_content_item(response.text, header, json_data, None)])
+        return Context(
+            [await self.get_content_item(response.text, header, json_data, None)]
+        )
 
-    async def get_content_item(self, content: str, header: dict, json_data: List[dict], url: str) -> Content:
-        return Content.add_content_item(content, ContentType.DICT, source=url,
-                                        content_metadata={'header': header, 'json_data': json_data})
+    async def get_content_item(
+        self, content: str, header: dict, json_data: List[dict], url: str
+    ) -> Content:
+        return Content.add_content_item(
+            content,
+            ContentType.DICT,
+            source=url,
+            content_metadata={"header": header, "json_data": json_data},
+        )
 
 
 class GSRT1DataUploadAbility(Ability):
@@ -307,10 +308,10 @@ class GSRT1DataUploadAbility(Ability):
     )
 
     def __init__(
-            self,
-            environment: Environment,
-            configuration: AbilityConfiguration = default_configuration,
-            prompt_strategy: SummarizerStrategy = None,
+        self,
+        environment: Environment,
+        configuration: AbilityConfiguration = default_configuration,
+        prompt_strategy: SummarizerStrategy = None,
     ):
         self._logger: logging.Logger = environment.get("logger")
         self._configuration = configuration
@@ -342,34 +343,28 @@ class GSRT1DataUploadAbility(Ability):
                 "properties": {
                     "gstin": {
                         "type": "string",
-                        "description": "GSTIN (Goods and Services Tax Identification Number)."
+                        "description": "GSTIN (Goods and Services Tax Identification Number).",
                     },
-                    "month": {
-                        "type": "string",
-                        "description": "Month in MM format."
-                    },
+                    "month": {"type": "string", "description": "Month in MM format."},
                     "year": {
                         "type": "string",
-                        "description": "Year or year range in YYYY-YY format."
+                        "description": "Year or year range in YYYY-YY format.",
                     },
                     "invoice": {
                         "type": "string",
-                        "description": "Indicator for invoice ('Y' or 'N')."
+                        "description": "Indicator for invoice ('Y' or 'N').",
                     },
                     "summary": {
                         "type": "string",
-                        "description": "Indicator for summary ('Y' or 'N')."
+                        "description": "Indicator for summary ('Y' or 'N').",
                     },
                     "MiplApiKey": {
                         "type": "string",
-                        "description": "API Key for MIPL (Mandatory Invoice Parameters List)."
+                        "description": "API Key for MIPL (Mandatory Invoice Parameters List).",
                     },
-                    "Content-Type": {
-                        "type": "string",
-                        "description": "Content type."
-                    }
+                    "Content-Type": {"type": "string", "description": "Content type."},
                 },
-                "description": "Details for GST invoice and related information."
+                "description": "Details for GST invoice and related information.",
             }
         }
 
@@ -381,5 +376,5 @@ class GSRT1DataUploadAbility(Ability):
 
     async def get_content_item(self, content: str, header: dict, url: None) -> Content:
         return Content.add_content_item(
-            content, ContentType.DICT, source=url, content_metadata={'header': header}
+            content, ContentType.DICT, source=url, content_metadata={"header": header}
         )
