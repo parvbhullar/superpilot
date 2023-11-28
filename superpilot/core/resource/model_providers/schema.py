@@ -395,18 +395,38 @@ class schema_function:
 
 class SchemaModel(BaseModel):
     @classmethod
-    def function_schema(cls) -> dict:
+    def function_schema(cls, arguments_format=False) -> dict:
         schema = cls.schema()
         parameters = {
             k: v for k, v in schema.items() if k not in ("title", "description")
         }
         parameters["required"] = sorted(parameters["properties"])
         _remove_a_key(parameters, "title")
+        if arguments_format:
+            name = schema["title"]
+            parameters.pop("required", None)
+            parameters.pop("definitions", None)
+            multiple_args = cls.multiple_args()
+            if multiple_args:
+                return parameters
+            return {
+                cls.name(): parameters,
+                # "description": schema["description"],
+            }
         return {
             "name": schema["title"],
             "description": schema["description"],
             "parameters": parameters,
         }
+
+    @classmethod
+    def name(cls) -> str:
+        schema = cls.schema()
+        return schema["title"]
+
+    @classmethod
+    def multiple_args(cls) -> bool:
+        return False
 
     @classmethod
     def from_response(cls, completion, throw_error=True):

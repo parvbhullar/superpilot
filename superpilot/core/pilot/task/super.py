@@ -30,6 +30,11 @@ from superpilot.core.resource.model_providers import (
     ModelProviderName,
     OpenAIModelName,
 )
+from superpilot.core.pilot.settings import (
+    PilotConfiguration,
+    ExecutionAlgo
+)
+from superpilot.core.resource.model_providers.factory import ModelProviderFactory, ModelConfigFactory
 
 
 class SuperTaskPilot(TaskPilot):
@@ -38,6 +43,19 @@ class SuperTaskPilot(TaskPilot):
         location=PluginLocation(
             storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
             storage_route="superpilot.core.flow.simple.SuperTaskPilot",
+        ),
+        pilot=PilotConfiguration(
+            name="super_task_pilot",
+            role=(
+                "An AI Pilot designed to complete simple tasks with "
+            ),
+            goals=[
+                "Complete simple tasks",
+            ],
+            cycle_count=0,
+            max_task_cycle_count=3,
+            creation_time="",
+            execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
         ),
         execution_nature=ExecutionNature.SEQUENTIAL,
         prompt_strategy=strategies.NextAbility.default_configuration,
@@ -48,7 +66,7 @@ class SuperTaskPilot(TaskPilot):
                 temperature=0.9,
             ),
             LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-                model_name=OpenAIModelName.GPT4,
+                model_name=OpenAIModelName.GPT4_TURBO,
                 provider_name=ModelProviderName.OPENAI,
                 temperature=0.9,
             ),
@@ -75,7 +93,18 @@ class SuperTaskPilot(TaskPilot):
                 **self._configuration.prompt_strategy.dict()
             )
 
-    async def execute(self, task: Task, context_res: Context, *args, **kwargs) -> Context:
+    async def execute(self, objective: str, *args, **kwargs) -> Context:
+        """Execute the task."""
+        self._logger.debug(f"Executing task: {objective}")
+        task = Task.factory(objective, **kwargs)
+        if len(args) > 0:
+            kwargs["context"] = args[0]
+        context_res = await self.exec_task(task, **kwargs)
+
+        return context_res
+
+    async def exec_task(self, task: Task, **kwargs) -> Context:
+        context_res = kwargs.pop("context", Context())
         if self._execution_nature == ExecutionNature.PARALLEL:
             tasks = [
                 self.perform_ability(task, [ability.dump()], context_res, **kwargs)
@@ -95,6 +124,8 @@ class SuperTaskPilot(TaskPilot):
                 context_res = await self.perform_ability(
                     task, [ability.dump()], context_res, **kwargs
                 )
+                # TODO add context to task prior actions as ability action.
+                # task.
         return context_res
 
     async def perform_ability(
@@ -102,11 +133,11 @@ class SuperTaskPilot(TaskPilot):
     ) -> Context:
         if self._execution_nature == ExecutionNature.AUTO:
             response = await self.determine_next_ability(
-                task, ability_schema, context=context.format_numbered(), **kwargs
+                task, ability_schema, context=context, **kwargs
             )
         else:
             response = await self.determine_exec_ability(
-                task, ability_schema, context=context.format_numbered(), **kwargs
+                task, ability_schema, context=context, **kwargs
             )
         ability_args = response.content.get("ability_arguments", {})
         ability_action = await self._ability_registry.perform(
@@ -143,6 +174,7 @@ class SuperTaskPilot(TaskPilot):
         model_classification = prompt_strategy.model_classification
         model_configuration = self._configuration.models[model_classification].dict()
         self._logger.debug(f"Using model configuration: {model_configuration}")
+        print(f"Using model configuration: {model_configuration}")
         del model_configuration["provider_name"]
         provider = self._providers[model_classification]
 
@@ -151,6 +183,7 @@ class SuperTaskPilot(TaskPilot):
         prompt = prompt_strategy.build_prompt(**template_kwargs)
 
         self._logger.debug(f"Using prompt:\n{prompt}\n\n")
+        print(f"Using prompt:\n{prompt}\n\n")
         response = await provider.create_language_completion(
             model_prompt=prompt.messages,
             functions=prompt.functions,
@@ -170,6 +203,31 @@ class SuperTaskPilot(TaskPilot):
 
     def __repr__(self):
         return f"SuperTaskPilot({self._configuration})"
+
+    @classmethod
+    def create(cls,
+               prompt_config,
+               smart_model_name=OpenAIModelName.GPT4,
+               fast_model_name=OpenAIModelName.GPT3,
+               smart_model_temp=0.9,
+               fast_model_temp=0.9,
+               model_providers=None):
+
+        models_config = ModelConfigFactory.get_models_config(
+            smart_model_name=smart_model_name,
+            fast_model_name=fast_model_name,
+            smart_model_temp=smart_model_temp,
+            fast_model_temp=fast_model_temp,
+        )
+        if model_providers is None:
+            model_providers = ModelProviderFactory.load_providers()
+
+        pilot = cls.factory(
+            prompt_strategy=prompt_config,
+            model_providers=model_providers,
+            models=models_config,
+        )
+        return pilot
 
 
 def get_os_info() -> str:

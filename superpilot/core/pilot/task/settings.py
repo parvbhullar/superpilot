@@ -6,9 +6,11 @@ from superpilot.core.planning.schema import ExecutionNature
 from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
     PromptStrategyConfiguration,
-    LanguageModelClassification,
+    LanguageModelClassification
 )
-from superpilot.core.planning import strategies
+from superpilot.core.pilot.settings import (
+    PilotConfiguration,
+)
 
 
 class TaskPilotConfiguration(SystemConfiguration):
@@ -17,6 +19,7 @@ class TaskPilotConfiguration(SystemConfiguration):
     from superpilot.core.plugin.base import PluginLocation
     location: PluginLocation
     models: Dict[LanguageModelClassification, LanguageModelConfiguration]
+    pilot: PilotConfiguration = None
     execution_nature: ExecutionNature = ExecutionNature.SIMPLE
     prompt_strategy: SystemConfiguration = None
     memory_provider_required: bool = False

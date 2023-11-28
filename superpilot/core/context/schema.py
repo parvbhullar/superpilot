@@ -55,6 +55,9 @@ class ContentItem(ABC):
             "```"
         )
 
+    def summary(self) -> str:
+        return self.__str__()
+
 
 @dataclass
 class FileContentItem(ContentItem):
@@ -194,6 +197,9 @@ class Context:
 
     def clear(self) -> None:
         self.items.clear()
+
+    def count(self) -> int:
+        return len(self.items)
 
     def format_numbered(self) -> str:
         return "\n\n".join([f"{i}. {c}" for i, c in enumerate(self.items, 1)])
