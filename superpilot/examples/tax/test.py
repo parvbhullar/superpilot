@@ -29,7 +29,10 @@ q="""
 
 def run_executor():
     from superpilot.examples.tax.executor import Gstr1FillingExecutor
+    from superpilot.examples.tax.ability import ApiResponseSchema
     # from s
+    # ap = ApiResponseSchema.function_schema(open_format=True)
+    # print(ap)
     executor = Gstr1FillingExecutor()
     asyncio.run(executor.run(query))
 

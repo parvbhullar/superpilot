@@ -19,7 +19,7 @@ class AbilityAction(BaseModel):
         arbitrary_types_allowed = True
 
     def add_knowledge(self, knowledge: Context):
-        print("Ability Knowledge", knowledge)
+        # print("Ability Knowledge", knowledge)
         self.knowledge = knowledge
 
     def summary(self):

@@ -14,7 +14,7 @@ import pandas as pd
 
 def solve_question(image_path):
     t1 = time.time()
-    # executor = QuestionExecutor()
+    executor = QuestionExecutor()
     executor = FigureQuestionExecutor()
     print("\n", "*" * 32, "Running QuestionExecutor", "*" * 32, "\n\n")
     res = asyncio.run(executor.run(image_path))
