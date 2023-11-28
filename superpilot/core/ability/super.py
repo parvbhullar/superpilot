@@ -88,7 +88,7 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
 
     async def perform(self, ability_name: str, **kwargs) -> AbilityAction:
         ability = self.get_ability(ability_name)
-        print("Perform Ability: ", ability_name, kwargs)
+        # print("Perform Ability: ", ability_name, kwargs)
         response = await ability(**kwargs)
 
         ability_action = AbilityAction()

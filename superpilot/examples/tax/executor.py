@@ -3,7 +3,7 @@ import os
 
 from superpilot.core.pilot.chain.simple import SimpleChain
 from superpilot.examples.executor.base import BaseExecutor
-from superpilot.core.context.schema import Context
+from superpilot.core.context.schema import Context, Content, ContentType
 
 from superpilot.core.pilot.task.simple import SimpleTaskPilot
 from superpilot.core.pilot.task.super import SuperTaskPilot
@@ -11,7 +11,7 @@ from superpilot.core.resource.model_providers.factory import ModelProviderFactor
 from superpilot.tests.test_env_simple import get_env
 from superpilot.core.configuration.config import get_config
 from superpilot.core.ability.super import SuperAbilityRegistry
-from superpilot.examples.tax.ability import Gstr1DataTransformAbility, SalesDataImportAbility
+from superpilot.examples.tax.ability import Gstr1DataTransformAbility, SalesDataImportAbility, ApiResponseObserverAbility
 from superpilot.examples.tax.gstr1_data_transformer_prompt import GSTR1DataTransformerPrompt
 from superpilot.core.resource.model_providers import (
     OpenAIModelName,
@@ -30,6 +30,7 @@ class Gstr1FillingExecutor(BaseExecutor):
     ALLOWED_ABILITY = {
         # Gstr1DataTransformAbility.name(): Gstr1DataTransformAbility.default_configuration,
         SalesDataImportAbility.name(): SalesDataImportAbility.default_configuration,
+        ApiResponseObserverAbility.name(): ApiResponseObserverAbility.default_configuration,
     }
 
     def __init__(self, **kwargs):
@@ -64,7 +65,7 @@ class Gstr1FillingExecutor(BaseExecutor):
         #     fast_model_name=OpenAIModelName.GPT3,
         # )
 
-        self.chain.add_handler(transformer_pilot, self.data_transformer)
+        # self.chain.add_handler(transformer_pilot, self.data_transformer)
         # self.chain.add_handler(self.sample_chain_function, self.sample_chain_function)
         self.chain.add_handler(self.api_pilot, self.format_transformer)
 
@@ -72,9 +73,19 @@ class Gstr1FillingExecutor(BaseExecutor):
         print("Sample chain Task: ", data)
 
     def data_transformer(self, data, response, context):
-        # print("data transformer", response)
-        # task = json.dumps(response.content)
-        task = self.PROMPT_TEMPLATE.format(**response.content)
+        print("data transformer", response)
+        # task = json.dumps(response.contesnt)
+        data = response.content
+        data.update({'header':{
+                        'gstin': os.environ.get('GSTIN'),
+                        'month': '04',
+                        'year': '2023-24',
+                        'invoice': 'Y',
+                        'summary': 'N',
+                        'MiplApiKey': os.environ.get('MIPL_API_KEY'),
+                        "Content-Type": "application/json"
+                    }})
+        task = self.PROMPT_TEMPLATE.format(**data)
         # print(task)
         return task, context
 
@@ -87,8 +98,9 @@ class Gstr1FillingExecutor(BaseExecutor):
     #     return task, context
 
     def format_transformer(self, data, response, context):
-        print("format_transformer", response)
-        task = response.get("documents", "")
+        # print("format_transformer", response)
+        task = response.dict()
+        context = response
         # print(task)
         return task, context
 
@@ -110,14 +122,18 @@ class Gstr1FillingExecutor(BaseExecutor):
                         "Content-Type": "application/json"
                     }
                 }
-        task = self.PROMPT_TEMPLATE.format(**task)
-        task = Task.factory(task, **kwargs)
-        response = await self.api_pilot.execute(task, self.context, **kwargs)
-        # response, context = await self.chain.execute(task, self.context, **kwargs)
+        self.context.add(Content.add_content_item(
+            self.PROMPT_TEMPLATE.format(**task), ContentType.DICT
+        ))
+        task = "Use given data to fill GSTR1 return then observe the response given from api."
+
+        # task = Task.factory(task, **kwargs)
+        # response = await self.api_pilot.execute(task, self.context, **kwargs)
+        response, context = await self.chain.execute(task, self.context, **kwargs)
         print(response)
         return response
 
     async def run(self, context):
         response = await self.execute(context)
-        print(response)
+        # print(response)
         return response
