@@ -13,6 +13,7 @@ from superpilot.examples.ed_tech.ag_question_solver_ability import (
     AGQuestionSolverAbility,
 )
 from superpilot.examples.pilots.tasks.super import SuperTaskPilot
+from superpilot.core.pilot.chain.simple import SimpleChain
 from superpilot.core.resource.model_providers import (
     ModelProviderName,
     AnthropicModelName,
@@ -28,6 +29,7 @@ class QuestionExecutor(BaseExecutor):
     model_providers = ModelProviderFactory.load_providers()
     context = Context()
     config = get_config()
+    chain = SimpleChain()
     env = get_env({})
     ALLOWED_ABILITY = {
         # SearchAndSummarizeAbility.name(): SearchAndSummarizeAbility.default_configuration,
@@ -43,58 +45,88 @@ class QuestionExecutor(BaseExecutor):
             self.env, self.ALLOWED_ABILITY
         )
         self.super_prompt = QuestionSolverPrompt.factory()
-        anthropic_pilot = SimpleTaskPilot.factory(
-                prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
-                model_providers=self.model_providers,
-                models={
-                        LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-                            model_name=AnthropicModelName.CLAUD_2_INSTANT,
-                            provider_name=ModelProviderName.ANTHROPIC,
-                            temperature=0.2,
-                        ),
-                        LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-                            model_name=AnthropicModelName.CLAUD_2,
-                            provider_name=ModelProviderName.ANTHROPIC,
-                            temperature=0.2,
-                        ),
-                    },
-            )
-        self.pilots = [
-            # SimpleTaskPilot.factory(
-            #     prompt_strategy=QuestionSolverPrompt.factory().get_config(),
-            #     model_providers=self.model_providers,
-            #     # models={
-            #     #     LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-            #     #         model_name=AnthropicModelName.CLAUD_2_INSTANT,
-            #     #         provider_name=ModelProviderName.ANTHROPIC,
-            #     #         temperature=1,
-            #     #     ),
-            #     #     LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-            #     #         model_name=AnthropicModelName.CLAUD_2,
-            #     #         provider_name=ModelProviderName.ANTHROPIC,
-            #     #         temperature=0.9,
-            #     #     ),
-            #     # },
-            # ),
-            # SuperTaskPilot(super_ability_registry, self.model_providers),
-            anthropic_pilot,
-            SimpleTaskPilot.factory(
-                prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
-                model_providers=self.model_providers,
-                models={
-                    LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-                        model_name=OpenAIModelName.GPT3,
-                        provider_name=ModelProviderName.OPENAI,
-                        temperature=0.2,
-                    ),
-                    LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-                        model_name=OpenAIModelName.GPT4,
-                        provider_name=ModelProviderName.OPENAI,
-                        temperature=0.2,
-                    ),
-                },
-            ),
-        ]
+
+        # vision_pilot = SimpleTaskPilot.create(
+        #     DescribeQFigurePrompt.default_configuration,
+        #     model_providers=self.model_providers,
+        #     smart_model_name=OpenAIModelName.GPT4_VISION,
+        #     fast_model_name=OpenAIModelName.GPT3,
+        # )
+        solver_pilot = SimpleTaskPilot.create(
+            SolutionValidatorPrompt.default_configuration,
+            model_providers=self.model_providers,
+            smart_model_name=AnthropicModelName.CLAUD_2_1,
+            fast_model_name=AnthropicModelName.CLAUD_2_1,
+        )
+        format_pilot = SimpleTaskPilot.create(
+            SolutionValidatorPrompt.default_configuration,
+            model_providers=self.model_providers,
+            smart_model_name=OpenAIModelName.GPT4_TURBO,
+            fast_model_name=OpenAIModelName.GPT3,
+        )
+        # auto_solver_pilot = SuperTaskPilot(super_ability_registry, self.model_providers)
+        # print("VISION", vision_pilot)
+
+        # Initialize and add pilots to the chain here, for example:
+        # self.chain.add_handler(auto_solver_pilot, self.vision_transformer)
+        # self.chain.add_handler(vision_pilot, self.vision_transformer)
+        self.chain.add_handler(solver_pilot, self.solver_transformer)
+        self.chain.add_handler(format_pilot, self.format_transformer)
+
+        #
+        # self.super_prompt = QuestionSolverPrompt.factory()
+        # anthropic_pilot = SimpleTaskPilot.factory(
+        #         prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
+        #         model_providers=self.model_providers,
+        #         models={
+        #                 LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+        #                     model_name=AnthropicModelName.CLAUD_2_INSTANT,
+        #                     provider_name=ModelProviderName.ANTHROPIC,
+        #                     temperature=0.5,
+        #                 ),
+        #                 LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+        #                     model_name=AnthropicModelName.CLAUD_2,
+        #                     provider_name=ModelProviderName.ANTHROPIC,
+        #                     temperature=0.5,
+        #                 ),
+        #             },
+        #     )
+        # self.pilots = [
+        #     # SimpleTaskPilot.factory(
+        #     #     prompt_strategy=QuestionSolverPrompt.factory().get_config(),
+        #     #     model_providers=self.model_providers,
+        #     #     # models={
+        #     #     #     LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+        #     #     #         model_name=AnthropicModelName.CLAUD_2_INSTANT,
+        #     #     #         provider_name=ModelProviderName.ANTHROPIC,
+        #     #     #         temperature=1,
+        #     #     #     ),
+        #     #     #     LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+        #     #     #         model_name=AnthropicModelName.CLAUD_2,
+        #     #     #         provider_name=ModelProviderName.ANTHROPIC,
+        #     #     #         temperature=0.9,
+        #     #     #     ),
+        #     #     # },
+        #     # ),
+        #     # SuperTaskPilot(super_ability_registry, self.model_providers),
+        #     anthropic_pilot,
+        #     SimpleTaskPilot.factory(
+        #         prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
+        #         model_providers=self.model_providers,
+        #         models={
+        #             LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+        #                 model_name=OpenAIModelName.GPT3,
+        #                 provider_name=ModelProviderName.OPENAI,
+        #                 temperature=0.2,
+        #             ),
+        #             LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+        #                 model_name=OpenAIModelName.GPT4,
+        #                 provider_name=ModelProviderName.OPENAI,
+        #                 temperature=0.2,
+        #             ),
+        #         },
+        #     ),
+        # ]
 
     PROMPT_TEMPLATE = """
             -------------
@@ -103,7 +135,36 @@ class QuestionExecutor(BaseExecutor):
             Solution: {solution}
             """
 
+    def vision_transformer(self, data, response, context):
+        response = {
+            "question": response.get("content", data),
+            "solution": "",
+        }
+        task = self.PROMPT_TEMPLATE.format(**response)
+        return task, context
+
+    def solver_transformer(self, data, response, context):
+        response = {
+            "question": data,
+            "solution": response.get("completion", ""),
+        }
+        task = self.PROMPT_TEMPLATE.format(**response)
+        return task, context
+
+    def format_transformer(self, data, response, context):
+        # print("Task: ", data)
+        # print("Response: ", response)
+        # print("Context: ", context)
+        response = {
+            "question": data,
+            "solution": response.get("content", ""),
+        }
+        # task = self.PROMPT_TEMPLATE.format(**response)
+        return response, context
+
     async def execute(self, task: str, **kwargs):
+        response, context = await self.chain.execute(task, self.context, **kwargs)
+        return response
         # Execute for Sequential nature
         response = {}
         for pilot in self.pilots:

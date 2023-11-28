@@ -34,7 +34,8 @@ class BaseChain(ABC):
                 else:
                     data = response
             except Exception as e:
-                self.logger.error(f"Error in handler {handler.name()}: {e}")
+                import traceback
+                self.logger.error(f"Error in handler {handler.name()}: {e} {traceback.print_exc()}")
                 continue
         return data, context
 

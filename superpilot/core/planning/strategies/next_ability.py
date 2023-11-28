@@ -12,6 +12,7 @@ from superpilot.core.resource.model_providers import (
     LanguageModelMessage,
     MessageRole,
 )
+from superpilot.core.context.schema import Context
 
 
 class NextAbilityConfiguration(SystemConfiguration):
@@ -84,6 +85,8 @@ class NextAbility(PromptStrategy):
         self._user_prompt_template = user_prompt_template
         self._additional_ability_arguments = additional_ability_arguments
 
+        # TODO add logger here
+
     @property
     def model_classification(self) -> LanguageModelClassification:
         return self._model_classification
@@ -104,6 +107,8 @@ class NextAbility(PromptStrategy):
             **kwargs,
         }
 
+        context = kwargs.get("context", Context())
+
         for ability in ability_schema:
             ability["parameters"]["properties"].update(
                 self._additional_ability_arguments
@@ -113,12 +118,19 @@ class NextAbility(PromptStrategy):
             )
 
         template_kwargs["task_objective"] = task.objective
-        template_kwargs["cycle_count"] = task.context.cycle_count
+        template_kwargs["cycle_count"] = task.context.cycle_count + context.count()
         template_kwargs["action_history"] = to_numbered_list(
-            [action.summary() for action in task.context.prior_actions],
+            [action.summary() for action in task.context.prior_actions] + [item.summary() for item in context.items],
             no_items_response="You have not taken any actions yet.",
+            use_format=False,
             **template_kwargs,
         )
+        # template_kwargs["action_history"] += to_numbered_list(
+        #     [item.summary() for item in context.items],
+        #     no_items_response="You have not taken any actions yet.",
+        #     use_format=False,
+        #     **template_kwargs,
+        # )
         template_kwargs["additional_info"] = to_numbered_list(
             [memory.summary() for memory in task.context.memories]
             + [info for info in task.context.supplementary_info],
@@ -181,4 +193,6 @@ class NextAbility(PromptStrategy):
             "next_ability": function_name,
             "ability_arguments": function_arguments,
         }
+        # self._logger.debug(f"Next ability parsed response: {parsed_response}")
+        print(f"Next ability response: {parsed_response}")
         return parsed_response

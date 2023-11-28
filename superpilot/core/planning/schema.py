@@ -42,6 +42,7 @@ class LanguageModelPrompt(BaseModel):
 
     def __str__(self):
         return "\n\n".join([f"{m.role.value}: {m.content}" for m in self.messages])
+            # + "\n\nFunctions:" + "\n\n".join([f"{f.json_schema}" for f in self.functions])
 
 
 class LanguageModelResponse(LanguageModelProviderModelResponse):

@@ -30,6 +30,10 @@ from superpilot.core.resource.model_providers import (
 from superpilot.core.resource.model_providers.utils.token_counter import (
     count_string_tokens,
 )
+from superpilot.core.pilot.settings import (
+    PilotConfiguration,
+    ExecutionAlgo
+)
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory, ModelConfigFactory
 
 
@@ -40,6 +44,19 @@ class SimpleTaskPilot(TaskPilot, ABC):
         location=PluginLocation(
             storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
             storage_route="superpilot.core.flow.simple.SuperTaskPilot",
+        ),
+        pilot=PilotConfiguration(
+            name="simple_task_pilot",
+            role=(
+                "An AI Pilot designed to complete simple tasks with "
+            ),
+            goals=[
+                "Complete simple tasks",
+            ],
+            cycle_count=0,
+            max_task_cycle_count=3,
+            creation_time="",
+            execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
         ),
         execution_nature=ExecutionNature.SIMPLE,
         prompt_strategy=SimplePrompt.default_configuration,
@@ -144,6 +161,7 @@ class SimpleTaskPilot(TaskPilot, ABC):
             if model_classification == LanguageModelClassification.FAST_MODEL:
                 model_configuration.model_name = OpenAIModelName.GPT3_16K
             elif model_classification == LanguageModelClassification.SMART_MODEL:
+                print("Using GPT4_TURBO")
                 model_configuration.model_name = OpenAIModelName.GPT4_TURBO
         return model_configuration
 
