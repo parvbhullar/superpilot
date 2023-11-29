@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import logging
+from superpilot.core.context.schema import Context
 
 
 class BaseChain(ABC):
