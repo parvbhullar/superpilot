@@ -21,7 +21,7 @@ class AGQuestionSolverAbility(Ability):
         language_model_required=LanguageModelConfiguration(
             model_name=OpenAIModelName.GPT4,
             provider_name=ModelProviderName.OPENAI,
-            temperature=0.5,
+            temperature=0.9,
         ),
     )
 
@@ -53,16 +53,17 @@ class AGQuestionSolverAbility(Ability):
 
     async def __call__(self, query: str, **kwargs):
         self._logger.debug(query)
-        context = Context()
-        context.add(self.get_content(query, **kwargs))
+        context = kwargs.get("context", Context())
+        context.add(self.get_content(query, context, **kwargs))
         return context
 
-    def get_content(self, query: str, **kwargs) -> Content:
+    def get_content(self, query: str, context: Context, **kwargs) -> Content:
+        print("Executing Ability Query: ", query)
         import autogen
 
         openai_key = self._env_config.openai_api_key
         config_list = [
-            {"model": OpenAIModelName.GPT3, "api_key": openai_key},
+            {"model": OpenAIModelName.GPT4_TURBO, "api_key": openai_key},
             {"model": OpenAIModelName.GPT3_16K, "api_key": openai_key},
         ]
 
@@ -88,6 +89,11 @@ class AGQuestionSolverAbility(Ability):
             human_input_mode="NEVER",
             code_execution_config={"use_docker": False},
         )
+        # response = {
+        #     "question": query,
+        #     "solution": context.format_numbered(),
+        # }
+        # task = self.PROMPT_TEMPLATE.format(**response)
 
         mathproxyagent.initiate_chat(assistant, problem=query, prompt_type="python")
         # print("*" * 32, "Chatting", "*" * 32)
@@ -95,6 +101,13 @@ class AGQuestionSolverAbility(Ability):
         return Content.add_content_item(
             self.format_messages(mathproxyagent.chat_messages), ContentType.TEXT
         )
+
+    PROMPT_TEMPLATE = """
+                -------------
+                Question: {question}
+                -------------
+                Solution: {solution}
+                """
 
     def format_messages(self, messages):
         messages = list(messages.values())[0]

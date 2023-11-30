@@ -25,7 +25,7 @@ class SuperTaskPilot(BaseTaskPilot):
             storage_route=f"{__name__}.SuperTaskPilot",
         ),
         execution_nature=ExecutionNature.SEQUENTIAL,
-        prompt_strategy=strategies.StepExecution.default_configuration,
+        prompt_strategy=strategies.NextAbility.default_configuration,
         models={
             LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
                 model_name=OpenAIModelName.GPT3,
@@ -56,6 +56,6 @@ class SuperTaskPilot(BaseTaskPilot):
         for model, model_config in self._configuration.models.items():
             self._providers[model] = model_providers[model_config.provider_name]
 
-        self._prompt_strategy = strategies.StepExecution(
+        self._prompt_strategy = strategies.NextAbility(
             **self._configuration.prompt_strategy.dict()
         )

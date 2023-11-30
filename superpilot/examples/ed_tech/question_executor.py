@@ -10,9 +10,12 @@ from superpilot.tests.test_env_simple import get_env
 from superpilot.core.configuration.config import get_config
 from superpilot.core.ability.super import SuperAbilityRegistry
 from superpilot.examples.ed_tech.ag_question_solver_ability import (
-    AGQuestionSolverAbility,
+    AGQuestionSolverAbility
 )
-from superpilot.examples.pilots.tasks.super import SuperTaskPilot
+from superpilot.examples.ed_tech.wolfram_ability import (
+    WolframAbility
+)
+from superpilot.core.pilot.task.super import SuperTaskPilot
 from superpilot.core.pilot.chain.simple import SimpleChain
 from superpilot.core.resource.model_providers import (
     ModelProviderName,
@@ -28,13 +31,14 @@ from superpilot.core.planning.settings import (
 class QuestionExecutor(BaseExecutor):
     model_providers = ModelProviderFactory.load_providers()
     context = Context()
-    config = get_config()
     chain = SimpleChain()
+    config = get_config()
     env = get_env({})
     ALLOWED_ABILITY = {
         # SearchAndSummarizeAbility.name(): SearchAndSummarizeAbility.default_configuration,
         # TextSummarizeAbility.name(): TextSummarizeAbility.default_configuration,
         AGQuestionSolverAbility.name(): AGQuestionSolverAbility.default_configuration,
+        # WolframAbility.name(): WolframAbility.default_configuration,
     }
 
     def __init__(self, **kwargs):
@@ -64,16 +68,15 @@ class QuestionExecutor(BaseExecutor):
             smart_model_name=OpenAIModelName.GPT4_TURBO,
             fast_model_name=OpenAIModelName.GPT3,
         )
-        # auto_solver_pilot = SuperTaskPilot(super_ability_registry, self.model_providers)
+        auto_solver_pilot = SuperTaskPilot(super_ability_registry, self.model_providers)
         # print("VISION", vision_pilot)
 
         # Initialize and add pilots to the chain here, for example:
-        # self.chain.add_handler(auto_solver_pilot, self.vision_transformer)
         # self.chain.add_handler(vision_pilot, self.vision_transformer)
+        self.chain.add_handler(auto_solver_pilot, self.auto_solver_transformer)
         self.chain.add_handler(solver_pilot, self.solver_transformer)
         self.chain.add_handler(format_pilot, self.format_transformer)
 
-        #
         # self.super_prompt = QuestionSolverPrompt.factory()
         # anthropic_pilot = SimpleTaskPilot.factory(
         #         prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
@@ -135,6 +138,15 @@ class QuestionExecutor(BaseExecutor):
             Solution: {solution}
             """
 
+    def auto_solver_transformer(self, data, response, context):
+        print("Auto solver transformer", data, response)
+        response = {
+            "question": data,
+            "solution": response.format_numbered(),
+        }
+        task = self.PROMPT_TEMPLATE.format(**response)
+        return task, context
+
     def vision_transformer(self, data, response, context):
         response = {
             "question": response.get("content", data),
@@ -144,22 +156,25 @@ class QuestionExecutor(BaseExecutor):
         return task, context
 
     def solver_transformer(self, data, response, context):
+        print("Anthropic Solver", data, response)
+        print("Anthropic Solver Context ------- ", context)
         response = {
             "question": data,
             "solution": response.get("completion", ""),
         }
         task = self.PROMPT_TEMPLATE.format(**response)
+        # context.add_content(response.get("completion", ""))
         return task, context
 
     def format_transformer(self, data, response, context):
         # print("Task: ", data)
-        # print("Response: ", response)
         # print("Context: ", context)
         response = {
             "question": data,
             "solution": response.get("content", ""),
         }
         # task = self.PROMPT_TEMPLATE.format(**response)
+        print("Response: ", response)
         return response, context
 
     async def execute(self, task: str, **kwargs):

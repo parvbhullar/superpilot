@@ -192,6 +192,10 @@ class Context:
     def add(self, item: ContentItem) -> None:
         self.items.append(item)
 
+    def add_content(self, content: str) -> None:
+        item = Content.add_content_item(content, ContentType.TEXT)
+        self.items.append(item)
+
     def close(self, index: int) -> None:
         self.items.pop(index - 1)
 
