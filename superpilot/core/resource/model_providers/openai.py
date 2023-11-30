@@ -44,6 +44,7 @@ class OpenAIModelName(str, enum.Enum):
     GPT4_TURBO = "gpt-4-1106-preview"
     GPT4_VISION = "gpt-4-vision-preview"
     GPT4_32K_NEW = "gpt-4-32k-0613"
+    GPT3_FINETUNE_MODEL = "ft:gpt-3.5-turbo-0613:recalll::8PE7I1IF"
 
 
 OPEN_AI_EMBEDDING_MODELS = {
@@ -62,6 +63,14 @@ OPEN_AI_EMBEDDING_MODELS = {
 OPEN_AI_LANGUAGE_MODELS = {
     OpenAIModelName.GPT3: LanguageModelProviderModelInfo(
         name=OpenAIModelName.GPT3,
+        service=ModelProviderService.LANGUAGE,
+        provider_name=ModelProviderName.OPENAI,
+        prompt_token_cost=0.0015,
+        completion_token_cost=0.002,
+        max_tokens=4096,
+    ),
+    OpenAIModelName.GPT3_FINETUNE_MODEL: LanguageModelProviderModelInfo(
+        name=OpenAIModelName.GPT3_FINETUNE_MODEL,
         service=ModelProviderService.LANGUAGE,
         provider_name=ModelProviderName.OPENAI,
         prompt_token_cost=0.0015,

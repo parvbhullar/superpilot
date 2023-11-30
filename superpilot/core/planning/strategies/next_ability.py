@@ -108,6 +108,7 @@ class NextAbility(PromptStrategy):
         }
 
         context = kwargs.get("context", Context())
+        print("Context: ", type(context))
 
         for ability in ability_schema:
             ability["parameters"]["properties"].update(
