@@ -139,7 +139,7 @@ class QuestionExecutor(BaseExecutor):
             """
 
     def auto_solver_transformer(self, data, response, context):
-        print("Auto solver transformer", data, response)
+        # print("Auto solver transformer", data, response)
         response = {
             "question": data,
             "solution": response.format_numbered(),
@@ -156,8 +156,8 @@ class QuestionExecutor(BaseExecutor):
         return task, context
 
     def solver_transformer(self, data, response, context):
-        print("Anthropic Solver", data, response)
-        print("Anthropic Solver Context ------- ", context)
+        # print("Anthropic Solver", data, response)
+        # print("Anthropic Solver Context ------- ", context)
         response = {
             "question": data,
             "solution": response.get("completion", ""),
