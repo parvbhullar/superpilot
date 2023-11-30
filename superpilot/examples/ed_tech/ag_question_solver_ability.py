@@ -89,13 +89,13 @@ class AGQuestionSolverAbility(Ability):
             human_input_mode="NEVER",
             code_execution_config={"use_docker": False},
         )
-        response = {
-            "question": query,
-            "solution": context.format_numbered(),
-        }
-        task = self.PROMPT_TEMPLATE.format(**response)
+        # response = {
+        #     "question": query,
+        #     "solution": context.format_numbered(),
+        # }
+        # task = self.PROMPT_TEMPLATE.format(**response)
 
-        mathproxyagent.initiate_chat(assistant, problem=task, prompt_type="python")
+        mathproxyagent.initiate_chat(assistant, problem=query, prompt_type="python")
         # print("*" * 32, "Chatting", "*" * 32)
 
         return Content.add_content_item(

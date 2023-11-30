@@ -73,11 +73,10 @@ class QuestionExecutor(BaseExecutor):
 
         # Initialize and add pilots to the chain here, for example:
         # self.chain.add_handler(vision_pilot, self.vision_transformer)
-        self.chain.add_handler(solver_pilot, self.solver_transformer)
         self.chain.add_handler(auto_solver_pilot, self.auto_solver_transformer)
-        # self.chain.add_handler(format_pilot, self.format_transformer)
+        self.chain.add_handler(solver_pilot, self.solver_transformer)
+        self.chain.add_handler(format_pilot, self.format_transformer)
 
-        #
         # self.super_prompt = QuestionSolverPrompt.factory()
         # anthropic_pilot = SimpleTaskPilot.factory(
         #         prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
@@ -159,23 +158,23 @@ class QuestionExecutor(BaseExecutor):
     def solver_transformer(self, data, response, context):
         print("Anthropic Solver", data, response)
         print("Anthropic Solver Context ------- ", context)
-        # response = {
-        #     "question": data,
-        #     "solution": response.get("completion", ""),
-        # }
-        # task = self.PROMPT_TEMPLATE.format(**response)
-        context.add_content(response.get("completion", ""))
-        return data, context
+        response = {
+            "question": data,
+            "solution": response.get("completion", ""),
+        }
+        task = self.PROMPT_TEMPLATE.format(**response)
+        # context.add_content(response.get("completion", ""))
+        return task, context
 
     def format_transformer(self, data, response, context):
         # print("Task: ", data)
-        # print("Response: ", response)
         # print("Context: ", context)
         response = {
             "question": data,
             "solution": response.get("content", ""),
         }
         # task = self.PROMPT_TEMPLATE.format(**response)
+        print("Response: ", response)
         return response, context
 
     async def execute(self, task: str, **kwargs):
