@@ -69,10 +69,19 @@ class FigureQuestionExecutor(BaseExecutor):
         # print("VISION", vision_pilot)
 
         # Initialize and add pilots to the chain here, for example:
-        # self.chain.add_handler(auto_solver_pilot, self.vision_transformer)
         self.chain.add_handler(vision_pilot, self.vision_transformer)
+        # self.chain.add_handler(auto_solver_pilot, self.vision_transformer)
         self.chain.add_handler(solver_pilot, self.solver_transformer)
         self.chain.add_handler(format_pilot, self.format_transformer)
+
+    def auto_solver_transformer(self, data, response, context):
+        # print("Auto solver transformer", data, response)
+        response = {
+            "question": data,
+            "solution": response.format_numbered(),
+        }
+        task = self.PROMPT_TEMPLATE.format(**response)
+        return task, context
 
     def vision_transformer(self, data, response, context):
         response = {
