@@ -294,6 +294,9 @@ class LanguageModelProviderModelResponse(ModelProviderModelResponse):
             return default
         return self.content.get(key, default)
 
+    def get_content(self):
+        return self.content
+
 
 class LanguageModelProvider(ModelProvider):
     @abc.abstractmethod

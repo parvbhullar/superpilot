@@ -191,6 +191,16 @@ class SuperPilot(Pilot, Configurable):
     def __repr__(self):
         return "SuperPilot()"
 
+    def name(self) -> str:
+        """The name of the ability."""
+        return self._configuration.name
+
+    def dump(self) -> dict:
+        dump = "PilotName: " + self._configuration.name + "\n"
+        dump += "PilotRole: " + self._configuration.role + "\n"
+        dump += "PilotGoals: " + "\n".join(self._configuration.goals) + "\n"
+        return dump
+
 
 def _prune_empty_dicts(d: dict) -> dict:
     """

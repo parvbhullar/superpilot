@@ -1,13 +1,15 @@
 import asyncio
+import json
 import logging
 import platform
 import time
 from typing import List, Dict
 
-from superpilot.core.ability import SuperAbilityRegistry
+from services.gstgptservice.agents.gstr1_filing.abilities.observer_ability import ObserverAbility
+from services.gstgptservice.agents.gstr1_filing.pilots.observer import observer
 from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
-from superpilot.core.context.schema import Context
-from superpilot.core.ability.base import AbilityRegistry, Ability
+from superpilot.core.context.schema import Context, Content, ContentType
+from superpilot.core.ability.base import AbilityRegistry
 from superpilot.core.plugin.simple import (
     PluginLocation,
     PluginStorageFormat,
@@ -24,43 +26,44 @@ from superpilot.core.planning.schema import (
 from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
     LanguageModelClassification,
-    PromptStrategiesConfiguration, PromptStrategyConfiguration,
+    PromptStrategiesConfiguration,
 )
 from superpilot.core.resource.model_providers import (
     LanguageModelProvider,
     ModelProviderName,
-    OpenAIModelName, OpenAIProvider,
+    OpenAIModelName,
 )
 from superpilot.core.pilot.settings import (
     PilotConfiguration,
     ExecutionAlgo
 )
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory, ModelConfigFactory
-from superpilot.core.environment import Environment, SimpleEnv
-from superpilot.core.plugin.utlis import load_class
 
 
-class SuperTaskPilot(TaskPilot):
+class SuperPilot(TaskPilot):
 
     default_configuration = TaskPilotConfiguration(
         location=PluginLocation(
             storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
-            storage_route="superpilot.core.flow.simple.SuperTaskPilot",
+            storage_route="services.gstgptservice.agents.gstr1_filing.pilots.super_pilot.SuperPilot",
         ),
         pilot=PilotConfiguration(
             name="super_task_pilot",
             role=(
-                "An AI Pilot designed to complete simple tasks with "
+                "An AI Pilot designed to complete gstr1 filing with masters India"
             ),
             goals=[
-                "Complete simple tasks",
+                "Transform any json data to gstr 1 filing data",
+                "Call an api to push the filing data",
+                "Get the response from api and confirm with user",
+                "If user confirms, then file the gstr 1",
             ],
             cycle_count=0,
             max_task_cycle_count=3,
             creation_time="",
             execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
         ),
-        execution_nature=ExecutionNature.AUTO,
+        execution_nature=ExecutionNature.SEQUENTIAL,
         prompt_strategy=strategies.NextAbility.default_configuration,
         models={
             LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
@@ -92,12 +95,9 @@ class SuperTaskPilot(TaskPilot):
         for model, model_config in self._configuration.models.items():
             self._providers[model] = model_providers[model_config.provider_name]
 
-        prompt_config = self._configuration.prompt_strategy.dict()
-        location = prompt_config.pop("location", None)
-        if location is not None:
-            self._prompt_strategy = load_class(location, prompt_config)
-        else:
-            self._prompt_strategy = strategies.NextAbility(**prompt_config)
+        self._prompt_strategy = strategies.NextAbility(
+                **self._configuration.prompt_strategy.dict()
+            )
 
     async def execute(self, objective: str, *args, **kwargs) -> Context:
         """Execute the task."""
@@ -120,9 +120,89 @@ class SuperTaskPilot(TaskPilot):
             for response in res_list:
                 context_res.extend(response)
         elif self._execution_nature == ExecutionNature.AUTO:
-            context_res = await self.perform_ability(
-                task, self._ability_registry.dump_abilities(), context_res, **kwargs
-            )
+            user_input = f"Latest User input {task.objective}"
+            context = Context([Content.add_content_item(user_input, ContentType.TEXT, )])
+            context_res.extend(context)
+            # user_input = f"You have following functions provided \n {self._ability_registry.dump_abilities()}"
+            # context = Context([Content.add_content_item(user_input, ContentType.TEXT, )])
+            # context_res.extend(context)
+            errors_count = 0
+            while True:
+                # output will be in form of terminal(print)
+                # try yo convet observer to ability -> wil be called mannualy onky...not passed to context
+                # Observer Ability is asistent ability
+                observer_ability = ObserverAbility(environment=self._ability_registry._environment)
+                observer_task = Task.factory(
+                    """
+                        Based on the given context:
+                        1. identify if any user input/question is required if yes then ask for the same from user
+                        2. return if there is any relevant response that can be given to user
+                        3. please set call_function true if you think based on current context we can call function
+                        4. set is_exit true if you think user wants to exit
+                    """
+                )
+                # observer_response = await observer(context_res)
+                next_ability, ability_args = await self.perform_ability(
+                    observer_task, [observer_ability.dump()], context_res, **kwargs
+                )
+
+                # if ability_args.get('observer_response', {}).get('is_error'):
+                #     errors_count += 1
+                #     if errors_count > 3:
+                #         return context_res
+                # else:
+                #     errors_count = 0
+
+                
+                if ability_args.get('observer_response', {}).get('is_exit'):
+                    return context_res
+
+                if ability_args.get('observer_response', {}).get('info'):
+                    info_to_user = f"Response to user: {ability_args.get('observer_response', {}).get('info')}"
+                    context = Context([Content.add_content_item(info_to_user, ContentType.TEXT, )])
+                    context_res.extend(context)
+                    print(info_to_user)
+                
+                if ability_args.get('observer_response', {}).get('question'):
+                    print(ability_args.get('observer_response', {}).get('question'))
+                    user_input = input() # add proxy agent here (TAxFilingAgent)
+                    question = f"Question: {ability_args.get('observer_response', {}).get('question')}"
+                    context = Context([Content.add_content_item(question, ContentType.TEXT, )])
+                    context_res.extend(context)
+                    user_input = f"Latest User Input: {user_input}"
+                    context = Context([Content.add_content_item(user_input, ContentType.TEXT, )])
+                    context_res.extend(context)
+                    continue
+                
+                if ability_args.get('observer_response', {}).get('call_function'):
+                    next_ability, ability_args = await self.perform_ability(
+                        task, self._ability_registry.dump_abilities(), context_res, **kwargs
+                    )
+                    ability_action = await self._ability_registry.perform(
+                        next_ability, **ability_args
+                    )
+                    context = ability_action.knowledge
+                    context_res.extend(context)
+                    continue
+
+
+                question = "Do you need more assistant?"
+                context = Context([Content.add_content_item(question, ContentType.TEXT, )])
+                context_res.extend(context)
+                print(question)
+                user_input = input()
+                user_input = f"Latest User Input: {user_input}"
+                context = Context([Content.add_content_item(user_input, ContentType.TEXT, )])
+                context_res.extend(context)
+                #     Find ability anyway and of anulity bkt found, ask the questuon again
+                
+                
+                # TODO: exist based upon is_exit
+                # if not context.items:
+                #     break
+                # else:
+                #     context_res.extend(context)
+                #   add observer
         else:
             # Execute for Sequential nature
             for ability in self._ability_registry.abilities():
@@ -136,7 +216,8 @@ class SuperTaskPilot(TaskPilot):
 
     async def perform_ability(
         self, task: Task, ability_schema: List[dict], context, **kwargs
-    ) -> Context:
+    ) -> tuple:
+        print('Hello')
         if self._execution_nature == ExecutionNature.AUTO:
             response = await self.determine_next_ability(
                 task, ability_schema, context=context, **kwargs
@@ -145,12 +226,11 @@ class SuperTaskPilot(TaskPilot):
             response = await self.determine_exec_ability(
                 task, ability_schema, context=context, **kwargs
             )
+        if not response.content.get("next_ability"):
+            return Context()
         ability_args = response.content.get("ability_arguments", {})
-        ability_action = await self._ability_registry.perform(
-            response.content["next_ability"], **ability_args
-        )
-        context.extend(ability_action.knowledge)
-        return context
+        next_ability = response.content.get("next_ability")
+        return next_ability, ability_args
 
     async def determine_exec_ability(
         self, task: Task, ability_schema: List[dict], **kwargs
@@ -210,71 +290,14 @@ class SuperTaskPilot(TaskPilot):
     def __repr__(self):
         return f"SuperTaskPilot({self._configuration})"
 
-    def name(self) -> str:
-        """The name of the ability."""
-        return self._configuration.pilot.name
-
-    def dump(self) -> dict:
-        pilot_config = self._configuration.pilot
-        dump = "PilotName: " + pilot_config.name + "\n"
-        dump += "PilotRole: " + pilot_config.role + "\n"
-        dump += "PilotGoals: " + "\n".join(pilot_config.goals) + "\n"
-        return dump
-
-    @classmethod
-    def factory(
-            cls,
-            ability_registry: AbilityRegistry,
-            prompt_strategy: PromptStrategyConfiguration = None,
-            model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
-            execution_nature: ExecutionNature = None,
-            models: Dict[LanguageModelClassification, LanguageModelConfiguration] = None,
-            pilot_config: PilotConfiguration = None,
-            location: PluginLocation = None,
-            logger: logging.Logger = None,
-            **kwargs
-    ) -> "SuperTaskPilot":
-        # Initialize settings
-        config = cls.default_configuration.copy()
-        if location is not None:
-            config.location = location
-        if execution_nature is not None:
-            config.execution_nature = execution_nature
-        if prompt_strategy is not None:
-            config.prompt_strategy = prompt_strategy
-        if pilot_config is not None:
-            config.pilot = pilot_config
-        if models is not None:
-            config.models = models
-
-        # Use default logger if not provided
-        if logger is None:
-            logger = logging.getLogger(__name__)
-
-        # Use empty dictionary for model_providers if not provided
-        if model_providers is None:
-            # Load Model Providers
-            open_ai_provider = OpenAIProvider.factory()
-            model_providers = {ModelProviderName.OPENAI: open_ai_provider}
-
-        # Create and return SimpleTaskPilot instance
-        return cls(
-            ability_registry=ability_registry,
-            configuration=config, model_providers=model_providers, logger=logger)
-
     @classmethod
     def create(cls,
-               prompt_config=None,
+               prompt_config,
                smart_model_name=OpenAIModelName.GPT4,
                fast_model_name=OpenAIModelName.GPT3,
                smart_model_temp=0.9,
                fast_model_temp=0.9,
-               model_providers=None,
-               pilot_config=None,
-               abilities: List[Ability] = None,
-               environment: Environment = None,
-               **kwargs
-               ):
+               model_providers=None):
 
         models_config = ModelConfigFactory.get_models_config(
             smart_model_name=smart_model_name,
@@ -285,25 +308,10 @@ class SuperTaskPilot(TaskPilot):
         if model_providers is None:
             model_providers = ModelProviderFactory.load_providers()
 
-        if environment is None:
-            environment = SimpleEnv.create({})
-
-        ability_registry = None
-        if abilities is not None:
-            allowed_abilities = {}
-            for ability in abilities:
-                allowed_abilities[ability.name()] = ability.default_configuration
-            ability_registry = SuperAbilityRegistry.factory(
-                environment, allowed_abilities
-            )
-
         pilot = cls.factory(
-            ability_registry=ability_registry,
             prompt_strategy=prompt_config,
             model_providers=model_providers,
             models=models_config,
-            pilot_config=pilot_config,
-            **kwargs
         )
         return pilot
 

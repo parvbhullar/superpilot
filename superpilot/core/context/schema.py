@@ -1,4 +1,4 @@
-from typing import Dict, Type, Any, Optional
+from typing import Dict, Type, Any, Optional, List, Union
 from pydantic import BaseModel, create_model, root_validator, validator
 import enum
 from abc import ABC, abstractmethod
@@ -119,6 +119,34 @@ class FolderContentItem(ContentItem):
         return "\n".join(items)
 
 
+@dataclass
+class ObjectContent(ContentItem):
+    content: Union[List, Dict]
+    source: Optional[str] = None
+    type = ContentType.CLASS_OBJECT
+
+    @property
+    def description(self) -> str:
+        return f"The is object of '{self.source}'"
+
+    @property
+    def source(self) -> str:
+        return f"'{self.source}'"
+
+    @property
+    def content(self) -> str:
+        return str(self.content)
+
+    @staticmethod
+    def add(
+            content: dict | list,
+            source: str = None
+    ):
+        knowledge = ObjectContent(content, source)
+        knowledge.content_type = isinstance(content, dict) and ContentType.DICT or ContentType.LIST
+        return knowledge
+
+
 class Content(ContentItem):
     @property
     def type(self) -> ContentType:
@@ -189,12 +217,20 @@ class Context:
     def __bool__(self) -> bool:
         return len(self.items) > 0
 
-    def add(self, item: ContentItem) -> None:
+    def add(self, item: Any) -> None:
+        if isinstance(item, ContentItem):
+            self.items.append(item)
+        elif isinstance(item, str):
+            self.items.append(Content.add_content_item(item, ContentType.TEXT))
+        else:
+            self.items.append(ObjectContent.add(item))
+
         self.items.append(item)
 
     def add_content(self, content: str) -> None:
         item = Content.add_content_item(content, ContentType.TEXT)
         self.items.append(item)
+        return self
 
     def close(self, index: int) -> None:
         self.items.pop(index - 1)
@@ -217,3 +253,7 @@ class Context:
     def to_file(self, file_location: str) -> None:
         with open(file_location, "w") as f:
             f.write(str(self.format_numbered()))
+
+    @classmethod
+    def factory(cls, items: list[ContentItem] = []):
+        return cls(items)

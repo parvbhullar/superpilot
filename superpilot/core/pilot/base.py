@@ -22,6 +22,10 @@ class Pilot(abc.ABC):
         """The name of the ability."""
         return inflection.underscore(cls.__name__)
 
+    @abc.abstractmethod
+    def dump(self):
+        ...
+
 
 class BasePilot(Pilot):
     @abc.abstractmethod
@@ -44,3 +48,11 @@ class BasePilot(Pilot):
     async def watch(self, *args, **kwargs):
         ...
 
+    @abc.abstractmethod
+    def dump(self):
+        ...
+
+    @classmethod
+    def name(cls) -> str:
+        """The name of the ability."""
+        return inflection.underscore(cls.__name__)

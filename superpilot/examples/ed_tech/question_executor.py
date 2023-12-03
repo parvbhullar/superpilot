@@ -28,6 +28,7 @@ from superpilot.core.planning.settings import (
 )
 
 
+
 class QuestionExecutor(BaseExecutor):
     model_providers = ModelProviderFactory.load_providers()
     context = Context()
@@ -69,10 +70,11 @@ class QuestionExecutor(BaseExecutor):
             fast_model_name=OpenAIModelName.GPT3,
         )
         auto_solver_pilot = SuperTaskPilot(super_ability_registry, self.model_providers)
+        observer_pilot = SuperTaskPilot(super_ability_registry, self.model_providers)
         # print("VISION", vision_pilot)
 
         # Initialize and add pilots to the chain here, for example:
-        # self.chain.add_handler(vision_pilot, self.vision_transformer)
+        self.chain.add_observer(observer_pilot, self.vision_transformer)
         self.chain.add_handler(auto_solver_pilot, self.auto_solver_transformer)
         self.chain.add_handler(solver_pilot, self.solver_transformer)
         self.chain.add_handler(format_pilot, self.format_transformer)
