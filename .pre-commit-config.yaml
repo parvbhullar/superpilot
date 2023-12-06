@@ -31,7 +31,7 @@ repos:
     rev: 6.0.0
     hooks:
     -   id: flake8
-        args: ["--ignore=E501,E711,E741,E712,E266,W504,F811,E241,E265,E226,E275,F541,F841,W503,E302,E128,E231,E303,E225,E122,E272,E202,E222,E251,E402,E203 --per-file-ignores=__init__.py:F401"]
+        args: ["--ignore=E501,E711,E741,E712,E266,W504,F811,E241,E265,E226,E275,F541,F841,W503,E302,E128,E231,E303,E225,E122,E272,E202,E222,E251,E402,E203,E731 --per-file-ignores=__init__.py:F401"]
 -   repo: https://github.com/ambv/black
     rev: 23.7.0
     hooks:

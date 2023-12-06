@@ -23,14 +23,9 @@ class SerperWrapper(BaseModel):
     """
 
     search_engine: Any  #: :meta private:
-    payload: dict = Field(
-        default={
-            "page": 1,
-            "num": 10
-        }
-    )
-    config = Config()
-    serper_api_key: Optional[str] = config.serp_api_key #config.serper_api_key
+    payload: dict = Field(default={"page": 1, "num": 10})
+    config: Config = Config()
+    serper_api_key: Optional[str] = config.serp_api_key  # config.serper_api_key
     aiosession: Optional[aiohttp.ClientSession] = None
 
     class Config:
@@ -39,7 +34,9 @@ class SerperWrapper(BaseModel):
     async def run(self, query: str, **kwargs: Any) -> str:
         """Run query through Serper and parse result async."""
         queries = query.split("\n")
-        return "\n".join([self._process_response(res) for res in await self.results(queries)])
+        return "\n".join(
+            [self._process_response(res) for res in await self.results(queries)]
+        )
 
     async def results(self, queries: list[str]) -> dict:
         """Use aiohttp to run query through Serper and return the results async."""
@@ -53,10 +50,14 @@ class SerperWrapper(BaseModel):
         url, payloads, headers = construct_url_and_payload_and_headers()
         if not self.aiosession:
             async with aiohttp.ClientSession() as session:
-                async with session.post(url, data=payloads, headers=headers) as response:
+                async with session.post(
+                    url, data=payloads, headers=headers
+                ) as response:
                     res = await response.json()
         else:
-            async with self.aiosession.get.post(url, data=payloads, headers=headers) as response:
+            async with self.aiosession.get.post(
+                url, data=payloads, headers=headers
+            ) as response:
                 res = await response.json()
 
         return res
@@ -72,18 +73,17 @@ class SerperWrapper(BaseModel):
         return json.dumps(payloads, sort_keys=True)
 
     def get_headers(self) -> Dict[str, str]:
-        headers = {
-            'X-API-KEY':  self.serper_api_key,
-            'Content-Type': 'application/json'
-        }
+        headers = {"X-API-KEY": self.serper_api_key, "Content-Type": "application/json"}
         return headers
 
     @staticmethod
     def _process_response(res: dict) -> str:
         """Process response from SerpAPI."""
         # logger.debug(res)
-        focus = ['title', 'snippet', 'link']
-        def get_focused(x): return {i: j for i, j in x.items() if i in focus}
+        focus = ["title", "snippet", "link"]
+
+        def get_focused(x):
+            return {i: j for i, j in x.items() if i in focus}
 
         if "error" in res.keys():
             raise ValueError(f"Got error from SerpAPI: {res['error']}")
@@ -117,4 +117,4 @@ class SerperWrapper(BaseModel):
         if res.get("organic"):
             toret_l += [get_focused(i) for i in res.get("organic")]
 
-        return str(toret) + '\n' + str(toret_l)
+        return str(toret) + "\n" + str(toret_l)

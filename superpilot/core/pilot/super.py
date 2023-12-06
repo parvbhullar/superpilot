@@ -1,36 +1,21 @@
-import logging
 from datetime import datetime
-from pathlib import Path
-from typing import Any
 
 from superpilot.core.ability import (
     AbilityAction,
     AbilityRegistry,
-    SimpleAbilityRegistry,
 )
 from superpilot.core.pilot.base import Pilot
 from superpilot.core.pilot.settings import (
-    PilotSettings,
     PilotSystemSettings,
     PilotConfiguration,
-    PilotSystems,
-    ExecutionAlgo
+    ExecutionAlgo,
 )
 from superpilot.core.configuration import Configurable
-from superpilot.core.memory import SimpleMemory
 from superpilot.core.environment import SimpleEnv
 from superpilot.core.planning import SimplePlanner, Task, TaskStatus
-from superpilot.core.plugin.simple import (
-    PluginLocation,
-    PluginStorageFormat,
-    SimplePluginService,
-)
-from superpilot.core.resource.model_providers import OpenAIProvider
-from superpilot.core.workspace.simple import SimpleWorkspace
 
 
 class SuperPilot(Pilot, Configurable):
-
     default_settings = PilotSystemSettings(
         name="super_pilot",
         description="A super pilot.",
@@ -73,11 +58,7 @@ class SuperPilot(Pilot, Configurable):
         self._current_task = None
         self._next_step = None
 
-    async def initialize(
-            self,
-            user_objective: str,
-            *args, **kwargs
-    ) -> dict:
+    async def initialize(self, user_objective: str, *args, **kwargs) -> dict:
         self._logger.debug("Initializing SuperPilot.")
         model_response = await self._planning.decide_name_and_goals(
             user_objective,
@@ -97,7 +78,6 @@ class SuperPilot(Pilot, Configurable):
         pass
 
     async def watch(self, *args, **kwargs):
-
         pass
 
     async def build_initial_plan(self) -> dict:
@@ -108,7 +88,7 @@ class SuperPilot(Pilot, Configurable):
             pilot_goals=self._configuration.goals,
             abilities=self._ability_registry.list_abilities(),
         )
-        tasks = [Task.parse_obj(task) for task in plan.content["task_list"]]
+        tasks = [Task.model_validate(task) for task in plan.content["task_list"]]
 
         # TODO: Should probably do a step to evaluate the quality of the generated tasks,
         #  and ensure that they have actionable ready and acceptance criteria
