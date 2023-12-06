@@ -18,7 +18,7 @@ class SuperChain(BaseChain):
         self._current_task = None
         self._next_step = None
 
-    async def execute(self, task: str, context: Context, **kwargs):
+    async def execute1(self, task: str, context: Context, **kwargs):
         # TODO: Add a check to see if task needs to be created as multiple tasks
         # TODO: observe which pilot is suitable for the task and then execute it
         # TODO: Add a verify if the task is complete or not and if require run the task again based on given context
@@ -26,7 +26,7 @@ class SuperChain(BaseChain):
         while True:
             observation = await self.observe(task, context)
             if observation:
-                if observation.task_status == ObservationStatus.COMPLETE:
+                if observation.goal_status == ObservationStatus.COMPLETE:
                     return "The task is completed successfully", context  # TODO fix this
                 else:
                     handler, transformer = self.current_handler(observation.pilot_name)
@@ -36,6 +36,25 @@ class SuperChain(BaseChain):
                     # return task, context
             else:
                 return "Either observation or observer is not defined, please set observer in the chain.", context
+
+    async def execute(self, task: str, context: Context, **kwargs):
+        # Splitting the observation and execution phases
+        observation = await self.observe(task, context)
+        if observation:
+            return await self.handle_task_based_on_observation(observation, context, **kwargs)
+        else:
+            return "Either observation or observer is not defined, please set observer in the chain.", context
+
+    async def handle_task_based_on_observation(self, observation: Observation, context: Context, **kwargs):
+        # Logic to choose the right function and its arguments based on the observation
+        if observation.goal_status != ObservationStatus.COMPLETE:
+            for pilot_name, task_in_hand in observation.tasks:
+                if task_in_hand.status != TaskStatus.DONE:
+                    handler, transformer = self.current_handler(pilot_name)
+                    return await self.execute_handler(task_in_hand.objective, context, handler, transformer, **kwargs)
+            return "Task is already completed", context
+        else:
+            return "Task is already completed", context
 
     async def execute_handler(self, task, context: Context, handler, transformer, **kwargs):
         response = None

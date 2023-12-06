@@ -95,7 +95,7 @@ class ObserverPrompt(SimplePrompt, ABC):
           'reasoning': "Despite the limitation, the 'calculator' pilot can still handle the arithmetic operations which makes up the majority of the task",
           'tasks': [
               'objective': 'multiply 2 and 3 and then sum with 6 and then subtract 2 and then divide by 2',
-              'type': 'Arithmetic',
+              'type': 'code',
               'priority': 1,
               'ready_criteria': [
                 'Inputs are valid'
@@ -103,11 +103,11 @@ class ObserverPrompt(SimplePrompt, ABC):
               'acceptance_criteria': [
                 'Return correct computation result'
               ],
-              'status': 'not_started',
+              'status': 'backlog',
               'pilot_name': 'calculator'
             ,
               'objective': 'Plot the graph',
-              'type': 'Plot',
+              'type': 'code',
               'priority': 5,
               'ready_criteria': [
                 'Division result is available'
@@ -115,7 +115,7 @@ class ObserverPrompt(SimplePrompt, ABC):
               'acceptance_criteria': [
                 'Return correct plot'
               ],
-              'status': 'not_started',
+              'status': 'backlog',
               'pilot_name': ''
           ]
         
