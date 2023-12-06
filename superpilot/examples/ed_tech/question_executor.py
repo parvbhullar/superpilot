@@ -10,22 +10,11 @@ from superpilot.tests.test_env_simple import get_env
 from superpilot.core.configuration.config import get_config
 from superpilot.core.ability.super import SuperAbilityRegistry
 from superpilot.examples.ed_tech.ag_question_solver_ability import (
-    AGQuestionSolverAbility
-)
-from superpilot.examples.ed_tech.wolfram_ability import (
-    WolframAbility
+    AGQuestionSolverAbility,
 )
 from superpilot.core.pilot.task.super import SuperTaskPilot
 from superpilot.core.pilot.chain.simple import SimpleChain
-from superpilot.core.resource.model_providers import (
-    ModelProviderName,
-    AnthropicModelName,
-    OpenAIModelName,
-)
-from superpilot.core.planning.settings import (
-    LanguageModelConfiguration,
-    LanguageModelClassification,
-)
+from superpilot.core.resource.model_providers import AnthropicModelName, OpenAIModelName
 
 
 class QuestionExecutor(BaseExecutor):
@@ -239,26 +228,29 @@ class QuestionExecutor(BaseExecutor):
     # Function to get base64 string from image file
     def image_to_base64(self, image_path):
         import base64
+
         # Infer the image type from the file extension
-        image_type = image_path.split('.')[-1].lower()
+        image_type = image_path.split(".")[-1].lower()
         # Determine the correct MIME type
-        if image_type == 'png':
-            mime_type = 'image/png'
-        elif image_type in ['jpg', 'jpeg']:
-            mime_type = 'image/jpeg'
-        elif image_type == 'gif':
-            mime_type = 'image/gif'
+        if image_type == "png":
+            mime_type = "image/png"
+        elif image_type in ["jpg", "jpeg"]:
+            mime_type = "image/jpeg"
+        elif image_type == "gif":
+            mime_type = "image/gif"
         else:
             raise ValueError("Unsupported image type")
 
         # Open the image file in binary read mode
-        with open(image_path, 'rb') as image_file:
+        with open(image_path, "rb") as image_file:
             # Read the image file
             image_data = image_file.read()
             # Encode the image data using base64
             base64_encoded_data = base64.b64encode(image_data)
             # Format with the prefix for data URI scheme
-            base64_image = f"data:{mime_type};base64,{base64_encoded_data.decode('utf-8')}"
+            base64_image = (
+                f"data:{mime_type};base64,{base64_encoded_data.decode('utf-8')}"
+            )
             return base64_image
 
     def image_to_text(self, image_path):

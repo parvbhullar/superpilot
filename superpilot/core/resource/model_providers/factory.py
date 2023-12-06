@@ -11,9 +11,6 @@ from superpilot.core.resource.model_providers import (
     ANTHROPIC_MODELS,
     OLLAMA_MODELS,
     OpenAIModelName,
-    OpenAIProvider,
-    AnthropicModelName,
-    AnthropicApiProvider,
     LanguageModelProvider,
     ModelProviderName,
 )
@@ -55,10 +52,10 @@ class ModelProviderFactory:
     )
 
     def __init__(
-            self,
-            settings: ProviderFactorySettings,
-            logger: logging.Logger,
-            model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
+        self,
+        settings: ProviderFactorySettings,
+        logger: logging.Logger,
+        model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
     ):
         self._settings = settings
         self._logger = logger
@@ -66,11 +63,11 @@ class ModelProviderFactory:
 
     @classmethod
     def factory(
-            cls,
-            model_provider_configs: Dict[
-                ModelProviderName, ModelProviderConfiguration
-            ] = None,
-            logger: logging.Logger = None,
+        cls,
+        model_provider_configs: Dict[
+            ModelProviderName, ModelProviderConfiguration
+        ] = None,
+        logger: logging.Logger = None,
     ):
         if logger is None:
             logger = logging.getLogger(cls.__name__)
@@ -86,11 +83,11 @@ class ModelProviderFactory:
 
     @classmethod
     def load_providers(
-            cls,
-            model_provider_configs: Dict[
-                ModelProviderName, ModelProviderConfiguration
-            ] = None,
-            logger: logging.Logger = None,
+        cls,
+        model_provider_configs: Dict[
+            ModelProviderName, ModelProviderConfiguration
+        ] = None,
+        logger: logging.Logger = None,
     ):
         if logger is None:
             logger = logging.getLogger(cls.__name__)
@@ -114,12 +111,12 @@ class ModelProviderFactory:
 
     @classmethod
     def _get_model_provider_instance(
-            cls,
-            user_configuration: dict,
-            location: PluginLocation,
-            logger: logging.Logger,
-            *args,
-            **kwargs,
+        cls,
+        user_configuration: dict,
+        location: PluginLocation,
+        logger: logging.Logger,
+        *args,
+        **kwargs,
     ):
         model_provider_class = SimplePluginService.get_plugin(location)
         model_provider_settings = model_provider_class.init_settings(
@@ -142,19 +139,11 @@ class ModelProviderFactory:
         return model_provider_instance
 
 
-AI_MODELS = {
-    **OPEN_AI_MODELS,
-    **ANTHROPIC_MODELS,
-    **OLLAMA_MODELS
-}
+AI_MODELS = {**OPEN_AI_MODELS, **ANTHROPIC_MODELS, **OLLAMA_MODELS}
 
 
 class ModelConfigFactory:
-    AI_MODELS = {
-        **OPEN_AI_MODELS,
-        **ANTHROPIC_MODELS,
-        **OLLAMA_MODELS
-    }
+    AI_MODELS = {**OPEN_AI_MODELS, **ANTHROPIC_MODELS, **OLLAMA_MODELS}
 
     def __init__(self):
         pass
@@ -167,25 +156,26 @@ class ModelConfigFactory:
         return cls.AI_MODELS[model_name]
 
     @classmethod
-    def get_models_config(cls,
-                          smart_model_name=OpenAIModelName.GPT4,
-                          fast_model_name=OpenAIModelName.GPT3,
-                          smart_model_temp=0.2,
-                          fast_model_temp=0.2,
-                          ):
+    def get_models_config(
+        cls,
+        smart_model_name=OpenAIModelName.GPT4,
+        fast_model_name=OpenAIModelName.GPT3,
+        smart_model_temp=0.2,
+        fast_model_temp=0.2,
+    ):
         smart_model = cls.get_ai_model(smart_model_name)
         fast_model = cls.get_ai_model(fast_model_name)
         models_config = {
             LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-                        model_name=smart_model.name,
-                        provider_name=smart_model.provider_name,
-                        temperature=smart_model_temp,
-                    ),
+                model_name=smart_model.name,
+                provider_name=smart_model.provider_name,
+                temperature=smart_model_temp,
+            ),
             LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-                        model_name=fast_model.name,
-                        provider_name=fast_model.provider_name,
-                        temperature=fast_model_temp,
-                    )
+                model_name=fast_model.name,
+                provider_name=fast_model.provider_name,
+                temperature=fast_model_temp,
+            ),
         }
         return models_config
 

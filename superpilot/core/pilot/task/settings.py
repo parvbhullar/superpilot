@@ -1,22 +1,20 @@
 from typing import Dict
 
 from superpilot.core.configuration.schema import SystemConfiguration
-from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.schema import ExecutionNature
 from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
-    PromptStrategyConfiguration,
-    LanguageModelClassification
+    LanguageModelClassification,
 )
 from superpilot.core.pilot.settings import (
     PilotConfiguration,
 )
+from superpilot.core.plugin.base import PluginLocation
 
 
 class TaskPilotConfiguration(SystemConfiguration):
     """Struct for model configuration."""
 
-    from superpilot.core.plugin.base import PluginLocation
     location: PluginLocation
     models: Dict[LanguageModelClassification, LanguageModelConfiguration]
     pilot: PilotConfiguration = None

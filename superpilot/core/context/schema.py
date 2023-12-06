@@ -1,5 +1,5 @@
 from typing import Dict, Type, Any, Optional
-from pydantic import BaseModel, create_model, root_validator, validator
+from pydantic import field_validator, model_validator, BaseModel, create_model
 import enum
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -152,13 +152,15 @@ class Content(ContentItem):
     def create_model_class(cls, class_name: str, mapping: Dict[str, Type]):
         new_class = create_model(class_name, **mapping)
 
-        @validator("*", allow_reuse=True)
+        @field_validator("*")
+        @classmethod
         def check_name(v, field):
             if field.name not in mapping.keys():
                 raise ValueError(f"Unrecognized block: {field.name}")
             return v
 
-        @root_validator(pre=True, allow_reuse=True)
+        @model_validator(mode="before")
+        @classmethod
         def check_missing_fields(values):
             required_fields = set(mapping.keys())
             missing_fields = required_fields - set(values.keys())

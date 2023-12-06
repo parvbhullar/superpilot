@@ -7,11 +7,7 @@ from typing import List, Dict
 from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.base import AbilityRegistry
-from superpilot.core.plugin.simple import (
-    PluginLocation,
-    PluginStorageFormat,
-    SimplePluginService,
-)
+from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
 import distro
 from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning import strategies
@@ -23,22 +19,20 @@ from superpilot.core.planning.schema import (
 from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
     LanguageModelClassification,
-    PromptStrategiesConfiguration,
 )
 from superpilot.core.resource.model_providers import (
     LanguageModelProvider,
     ModelProviderName,
     OpenAIModelName,
 )
-from superpilot.core.pilot.settings import (
-    PilotConfiguration,
-    ExecutionAlgo
+from superpilot.core.pilot.settings import PilotConfiguration, ExecutionAlgo
+from superpilot.core.resource.model_providers.factory import (
+    ModelProviderFactory,
+    ModelConfigFactory,
 )
-from superpilot.core.resource.model_providers.factory import ModelProviderFactory, ModelConfigFactory
 
 
 class SuperTaskPilot(TaskPilot):
-
     default_configuration = TaskPilotConfiguration(
         location=PluginLocation(
             storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
@@ -46,9 +40,7 @@ class SuperTaskPilot(TaskPilot):
         ),
         pilot=PilotConfiguration(
             name="super_task_pilot",
-            role=(
-                "An AI Pilot designed to complete simple tasks with "
-            ),
+            role=("An AI Pilot designed to complete simple tasks with "),
             goals=[
                 "Complete simple tasks",
             ],
@@ -90,8 +82,8 @@ class SuperTaskPilot(TaskPilot):
             self._providers[model] = model_providers[model_config.provider_name]
 
         self._prompt_strategy = strategies.NextAbility(
-                **self._configuration.prompt_strategy.dict()
-            )
+            **self._configuration.prompt_strategy.dict()
+        )
 
     async def execute(self, objective: str, *args, **kwargs) -> Context:
         """Execute the task."""
@@ -190,7 +182,7 @@ class SuperTaskPilot(TaskPilot):
             **model_configuration,
             completion_parser=prompt_strategy.parse_response_content,
         )
-        return LanguageModelResponse.parse_obj(response.dict())
+        return LanguageModelResponse.model_validate(response.model_dump())
 
     def _make_template_kwargs_for_strategy(self, strategy: PromptStrategy):
         provider = self._providers[strategy.model_classification]
@@ -205,14 +197,15 @@ class SuperTaskPilot(TaskPilot):
         return f"SuperTaskPilot({self._configuration})"
 
     @classmethod
-    def create(cls,
-               prompt_config,
-               smart_model_name=OpenAIModelName.GPT4,
-               fast_model_name=OpenAIModelName.GPT3,
-               smart_model_temp=0.9,
-               fast_model_temp=0.9,
-               model_providers=None):
-
+    def create(
+        cls,
+        prompt_config,
+        smart_model_name=OpenAIModelName.GPT4,
+        fast_model_name=OpenAIModelName.GPT3,
+        smart_model_temp=0.9,
+        fast_model_temp=0.9,
+        model_providers=None,
+    ):
         models_config = ModelConfigFactory.get_models_config(
             smart_model_name=smart_model_name,
             fast_model_name=fast_model_name,
