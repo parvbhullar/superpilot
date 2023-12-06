@@ -1,16 +1,15 @@
-anthropic==0.4.1
+anthropic>=0.4.1
 auto-gpt-plugin-template==0.0.3
 beautifulsoup4>=4.12.2
 bert-extractive-summarizer==0.10.1
+colorama
 distro==1.8.0
 dnspython==1.16.0
 docx2txt==0.8
 duckduckgo-search==3.8.1
 google-api-python-client==2.91.0
 google-search-results==2.4.2
-gotrue==1.0.2
 gTTS==2.3.1
-httpx==0.23.3
 inflection==0.5.1
 joblib==1.2.0
 jsonschema==4.19.1
@@ -28,6 +27,7 @@ postgrest==0.10.6
 pre-commit==2.21.0
 prompt_toolkit==3.0.39
 pyautogen==0.1.14
+pydantic>=2.0.0
 pymupdf
 pytesseract==0.3.10
 selenium==4.1.4
