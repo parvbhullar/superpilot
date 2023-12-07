@@ -42,7 +42,7 @@ class AddAbility(Ability):
             "num2": {"type": "number", "description": "The second number."},
         }
 
-    async def __call__(self, num1: float, num2: float) -> Context:
+    async def __call__(self, num1: float, num2: float, **kwargs) -> Context:
         result = num1 + num2
         message = f"The sum is {result}."
         print(message)
@@ -81,11 +81,12 @@ class MultiplyAbility(Ability):
             "num2": {"type": "number", "description": "The second number."},
         }
 
-    async def __call__(self, num1: float, num2: float) -> Context:
+    async def __call__(self, num1: float, num2: float, **kwargs) -> Context:
         result = num1 * num2
         message = f"The Multiplication is {result}."
         print(message)
         # Rest of the method remains the same
+        print(Context.factory().add_content(message))
         return Context.factory().add_content(message)
 
 
@@ -121,7 +122,7 @@ class SubtractAbility(Ability):
             "num2": {"type": "number", "description": "The second number."},
         }
 
-    async def __call__(self, num1: float, num2: float) -> Context:
+    async def __call__(self, num1: float, num2: float, **kwargs) -> Context:
         result = num1 - num2
         message = f"The difference is {result}."
         # Rest of the method remains the same
@@ -160,7 +161,7 @@ class DivisionAbility(Ability):
             "num2": {"type": "number", "description": "The second number."},
         }
 
-    async def __call__(self, num1: float, num2: float) -> Context:
+    async def __call__(self, num1: float, num2: float, **kwargs) -> Context:
         if num2 == 0:
             message = "Division by zero error."
             return Context.factory().add_content(message)

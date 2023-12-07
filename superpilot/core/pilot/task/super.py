@@ -123,8 +123,9 @@ class SuperTaskPilot(TaskPilot):
             kwargs["context"] = args[0]
 
         while self._current_task.context.status != TaskStatus.DONE:
+            # TODO: No need to pass task because already member of class
             ability_actions = await self.exec_abilities(self._current_task, **kwargs)
-
+        # TODO: Use Ability actions to populate context?
         return self._current_context
 
     async def observe(self, objective: str, **kwargs) -> Observation:
@@ -170,7 +171,7 @@ class SuperTaskPilot(TaskPilot):
 
     async def perform_ability(
         self, task: Task, ability_schema: List[dict], **kwargs
-    ) -> Context:
+    ) -> AbilityAction:
         if self._execution_nature == ExecutionNature.AUTO:
             response = await self.determine_next_ability(
                 task, ability_schema, **kwargs
@@ -181,14 +182,21 @@ class SuperTaskPilot(TaskPilot):
             )
         ability_args = response.content.get("ability_arguments", {})
         # Add context to ability arguments
-        # ability_args["context"] = self._current_context
         ability_action = await self._ability_registry.perform(
-            response.content["next_ability"], **ability_args
+            response.content["next_ability"], ability_arguments=ability_args, **kwargs
         )
+
+        status = TaskStatus.DONE
+        if response.content.get("task_status"):
+            status = TaskStatus(response.content.get("task_status"))
+        self._current_task.context.status = status
         await self._update_tasks_and_memory(ability_action)
+        # TODO: below section of code is doing nothing as of now
         if self._current_task.context.status == TaskStatus.DONE:
+            # TODO: this queue is not used anywhere
             self._completed_tasks.append(self._current_task)
         else:
+            # TODO: this queue is not used anywhere
             self._task_queue.append(self._current_task)
         # self._current_task = None  #TODO : Check if this is required
         self._next_step = None
@@ -208,8 +216,8 @@ class SuperTaskPilot(TaskPilot):
 
         self._logger.info(f"Final response: {ability_result}")
 
-        self._current_task.context.status = TaskStatus.DONE
         self._current_task.context.enough_info = True
+        # TODO: we are still adding result of ability to prompt here
         self._current_task.context.memories = ability_result.get_memories()
         print("Ability result", ability_result.result)
 

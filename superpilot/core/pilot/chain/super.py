@@ -45,10 +45,13 @@ class SuperChain(BaseChain):
                         continue
                     response, context = await self.execute_handler(task_in_hand.objective, context, handler, transformer, **kwargs)
             if response:
+                # TODO: this task is different from the one in superpilot
                 self._current_task.status = TaskStatus.DONE
                 self._completed_tasks.append(self._current_task)
                 self._task_queue.remove(self._current_task)
                 return response, context
+            else:
+                return "There was some issue", context
         else:
             return "Task is already completed", context
 

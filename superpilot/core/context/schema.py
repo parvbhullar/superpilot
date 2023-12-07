@@ -209,7 +209,9 @@ class Content(ContentItem):
 class Context:
     items: list[ContentItem]
 
-    def __init__(self, items: list[ContentItem] = []):
+    def __init__(self, items: list[ContentItem] = None):
+        if not items:
+            items = []
         self.items = items
 
     def extend(self, context: "Context") -> None:
@@ -229,7 +231,7 @@ class Context:
         else:
             self.items.append(ObjectContent.add(item))
 
-    def add_content(self, content: str) -> None:
+    def add_content(self, content: str) -> "Context":
         item = Content.add_content_item(content, ContentType.TEXT)
         self.items.append(item)
         return self

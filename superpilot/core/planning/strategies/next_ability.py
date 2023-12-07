@@ -112,8 +112,8 @@ class NextAbility(PromptStrategy):
             **kwargs,
         }
 
-        context = kwargs.get("context", Context())
-        print("Context: ", type(context))
+        # context = kwargs.get("context", Context())
+        # print("Context: ", type(context))
 
         for ability in ability_schema:
             ability["parameters"]["properties"].update(
@@ -124,7 +124,7 @@ class NextAbility(PromptStrategy):
             )
 
         template_kwargs["task_objective"] = task.objective
-        template_kwargs["cycle_count"] = task.context.cycle_count + context.count()
+        template_kwargs["cycle_count"] = task.context.cycle_count
         template_kwargs["action_history"] = to_numbered_list(
             [action.summary() for action in task.context.prior_actions],
             no_items_response="You have not taken any actions yet.",

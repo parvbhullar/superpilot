@@ -87,24 +87,24 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
                 return ability
         raise ValueError(f"Ability '{ability_name}' not found.")
 
-    async def perform(self, ability_name: str, **kwargs) -> AbilityAction:
+    async def perform(self, ability_name: str, ability_arguments: dict, **kwargs) -> AbilityAction:
         ability_action = AbilityAction()
         ability_action.executed = True
         try:
             ability = self.get_ability(ability_name)
             # print("Perform Ability: ", ability_name, kwargs)
-            response = await ability(**kwargs)
+            response = await ability(**ability_arguments, **kwargs)
             ability_action.success = True
             ability_action.message = "Function executed successfully!"
             ability_action.ability_name = ability_name
-            ability_action.ability_args = kwargs
+            ability_action.ability_args = ability_arguments
             ability_action.add_result(response)
         except Exception as e:
-            self._logger.error("Error", e)
+            self._logger.error("Error %s", str(e))
             ability_action.success = False
             ability_action.message = f"Function execution failed with error: {e}"
             ability_action.ability_name = ability_name
-            ability_action.ability_args = kwargs
+            ability_action.ability_args = ability_arguments
             response = Context()
             response.add(e)
             ability_action.add_result(response)
