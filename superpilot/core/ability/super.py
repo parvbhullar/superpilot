@@ -8,6 +8,7 @@ from superpilot.core.configuration import (
     SystemConfiguration,
     SystemSettings,
 )
+from superpilot.core.context.schema import Context
 from superpilot.core.plugin.simple import SimplePluginService
 from superpilot.core.environment import Environment
 
@@ -91,21 +92,22 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
         ability_action.executed = True
         try:
             ability = self.get_ability(ability_name)
-            ability = self.get_ability(ability_name)
             # print("Perform Ability: ", ability_name, kwargs)
             response = await ability(**kwargs)
             ability_action.success = True
-            ability_action.message = "Ability executed successfully!"
+            ability_action.message = "Function executed successfully!"
             ability_action.ability_name = ability_name
             ability_action.ability_args = kwargs
             ability_action.add_result(response)
         except Exception as e:
             self._logger.error("Error", e)
             ability_action.success = False
-            ability_action.message = f"Ability execution failed with error: {e}"
+            ability_action.message = f"Function execution failed with error: {e}"
             ability_action.ability_name = ability_name
             ability_action.ability_args = kwargs
-            ability_action.add_result(e)
+            response = Context()
+            response.add(e)
+            ability_action.add_result(response)
         return ability_action
 
     def abilities(self) -> List[Ability]:

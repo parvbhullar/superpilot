@@ -4,6 +4,7 @@ from typing import ClassVar
 import inflection
 
 from superpilot.core.context.schema import Context
+from superpilot.core.pilot.chain.strategy.observation_strategy import Observation
 from superpilot.core.pilot.task.settings import TaskPilotConfiguration
 from superpilot.core.pilot.base import Pilot
 
@@ -21,6 +22,10 @@ class TaskPilot(Pilot, abc.ABC):
     @abc.abstractmethod
     async def execute(self, *args, **kwargs) -> Context:
         ...
+
+    # @abc.abstractmethod
+    # async def observe(self, *args, **kwargs) -> Observation:
+    #     ...
 
     @abc.abstractmethod
     def __repr__(self):

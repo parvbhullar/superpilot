@@ -5,6 +5,7 @@ import time
 from typing import List, Dict
 
 from superpilot.core.ability import SuperAbilityRegistry, AbilityAction
+from superpilot.core.pilot.chain.strategy.observation_strategy import Observation
 from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.base import AbilityRegistry, Ability
@@ -105,10 +106,12 @@ class SuperTaskPilot(TaskPilot):
         self._current_observation = None
         self._next_step = None
         self._current_context = Context()
+        self._parent = None
 
     async def execute(self, objective: str | Task, *args, **kwargs) -> Context:
         """Execute the task."""
         self._logger.debug(f"Executing task: {objective}")
+        self._parent = kwargs.get("current_chain", None)
         if isinstance(objective, str):
             task = Task.factory(objective, **kwargs)
         else:
@@ -119,10 +122,26 @@ class SuperTaskPilot(TaskPilot):
         if len(args) > 0:
             kwargs["context"] = args[0]
 
-        while self._current_task != TaskStatus.DONE:
+        while self._current_task.context.status != TaskStatus.DONE:
             ability_actions = await self.exec_abilities(self._current_task, **kwargs)
 
         return self._current_context
+
+    async def observe(self, objective: str, **kwargs) -> Observation:
+        """Observe the task."""
+        # self._logger.debug(f"Observing task: {objective}")
+        # observer = self.current_observer()
+        # if observer:
+        #     try:
+        #         response = await observer.execute(task, context, pilots=self.dump_pilots())
+        #         # TODO : send the consumtion metrics to service
+        #         print("response", response)
+        #         return Observation(**response.get_content())
+        #     except Exception as e:
+        #         import traceback
+        #         self.logger.error(f"Error in observer {observer.name()}: {e} {traceback.print_exc()}")
+        #         return None
+        return None
 
     async def exec_abilities(self, task: Task, **kwargs) -> List[AbilityAction]:
         ability_actions = []
@@ -161,6 +180,8 @@ class SuperTaskPilot(TaskPilot):
                 task, ability_schema, **kwargs
             )
         ability_args = response.content.get("ability_arguments", {})
+        # Add context to ability arguments
+        # ability_args["context"] = self._current_context
         ability_action = await self._ability_registry.perform(
             response.content["next_ability"], **ability_args
         )

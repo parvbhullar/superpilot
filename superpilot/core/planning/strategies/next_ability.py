@@ -4,7 +4,7 @@ from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
     LanguageModelPrompt,
-    Task,
+    Task, TaskStatus,
 )
 from superpilot.core.planning.strategies.utils import json_loads, to_numbered_list
 from superpilot.core.resource.model_providers import (
@@ -60,6 +60,11 @@ class NextAbility(PromptStrategy):
         "reasoning": {
             "type": "string",
             "description": "Your reasoning for choosing this function taking into account the `motivation` and weighing the `self_criticism`.",
+        },
+        "task_status": {
+            "type": "string",
+            "description": "Thoughtful decision about the status of the overall task",
+            "enum": [t for t in TaskStatus],
         },
     }
 
@@ -121,7 +126,7 @@ class NextAbility(PromptStrategy):
         template_kwargs["task_objective"] = task.objective
         template_kwargs["cycle_count"] = task.context.cycle_count + context.count()
         template_kwargs["action_history"] = to_numbered_list(
-            [action.summary() for action in task.context.prior_actions] + [item.summary() for item in context.items],
+            [action.summary() for action in task.context.prior_actions],
             no_items_response="You have not taken any actions yet.",
             use_format=False,
             **template_kwargs,
@@ -191,6 +196,7 @@ class NextAbility(PromptStrategy):
             "motivation": function_arguments.pop("motivation", None),
             "self_criticism": function_arguments.pop("self_criticism", None),
             "reasoning": function_arguments.pop("reasoning", None),
+            "task_status": function_arguments.pop("task_status", None),
             "next_ability": function_name,
             "ability_arguments": function_arguments,
         }

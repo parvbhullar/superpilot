@@ -13,6 +13,10 @@ class Pilot(abc.ABC):
     async def execute(self, *args, **kwargs):
         ...
 
+    # @abc.abstractmethod
+    # async def observe(self, *args, **kwargs):
+    #     ...
+
     @abc.abstractmethod
     def __repr__(self):
         ...
@@ -44,9 +48,9 @@ class BasePilot(Pilot):
     async def execute(self, *args, **kwargs):
         ...
 
-    @abc.abstractmethod
-    async def watch(self, *args, **kwargs):
-        ...
+    # @abc.abstractmethod
+    # async def observe(self, *args, **kwargs):
+    #     ...
 
     @abc.abstractmethod
     def dump(self):

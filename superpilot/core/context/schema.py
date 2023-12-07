@@ -19,6 +19,7 @@ class ContentType(str, enum.Enum):
     DICT = "dict"
     LIST = "dict"
     XML = "xml"
+    EXCEPTION = "exception"
     CLASS_OBJECT = "class_object"
 
 
@@ -221,6 +222,8 @@ class Context:
     def add(self, item: Any) -> None:
         if isinstance(item, ContentItem):
             self.items.append(item)
+        elif isinstance(item, Exception):
+            self.items.append(Content.add_content_item(str(item), ContentType.EXCEPTION))
         elif isinstance(item, str):
             self.items.append(Content.add_content_item(item, ContentType.TEXT))
         else:

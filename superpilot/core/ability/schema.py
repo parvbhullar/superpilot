@@ -27,7 +27,7 @@ class AbilityAction(BaseModel):
         kwargs = ", ".join(f"{k}={v}" for k, v in self.ability_args.items())
         # return f"{self.ability_name}({kwargs}): {self.message}"
         return (
-            f"function:{self.ability_name}({kwargs})\n"
+            f"{self.ability_name}({kwargs})\n"
             "```\n"
             f"{self.message}\n"
             "```"
