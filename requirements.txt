@@ -24,7 +24,7 @@ playsound==1.2.2
 playwright==1.36.0
 pre-commit==2.21.0
 prompt_toolkit==3.0.39
-pyautogen==0.1.14
+pyautogen>=0.2.0
 pydantic>=2.0.0
 pymupdf
 pytesseract==0.3.10
