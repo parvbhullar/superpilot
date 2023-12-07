@@ -210,7 +210,9 @@ class GenerateImage(Ability):
 
         from openai import OpenAI
 
-        client = OpenAI()
+        client = OpenAI(
+            api_key=api_key,
+        )
 
         if size not in [256, 512, 1024]:
             closest = min([256, 512, 1024], key=lambda x: abs(x - size))
@@ -221,11 +223,7 @@ class GenerateImage(Ability):
 
         try:
             response = client.images.generate(
-                prompt=prompt,
-                n=1,
-                size=f"{size}x{size}",
-                response_format="b64_json",
-                api_key=api_key,
+                prompt=prompt, n=1, size=f"{size}x{size}", response_format="b64_json"
             )
 
             self._logger.info(f"Image Generated for prompt:{prompt}")
