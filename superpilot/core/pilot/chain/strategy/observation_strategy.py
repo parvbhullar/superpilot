@@ -16,25 +16,11 @@ import enum
 from pydantic import Field
 
 
-class ObservationStatus(str, enum.Enum):
-    """The LanguageModelClassification is a functional description of the model.
-
-    This is used to determine what kind of model to use for a given prompt.
-    Sometimes we prefer a faster or cheaper model to accomplish a task when
-    possible.
-
-    """
-    NOT_STARTED: str = "not_started"
-    INCOMPLETE: str = "incomplete"
-    COMPLETE: str = "complete"
-    ON_HOLD: str = "on_hold"
-
-
 class Task(SchemaModel):
     """
     Class representing the data structure for task for pilot objective, whether it is complete or not.
     """
-    objective: str = Field(..., description="An imperative verb phrase that succinctly describes the task.")
+    objective: str = Field(..., description="An verbose description of the task.")
     type: TaskType = Field(
         default=TaskType.RESEARCH,
         description="A categorization for the task from [research, write, edit, code, design, test, plan].")
@@ -48,7 +34,12 @@ class Task(SchemaModel):
     status: TaskStatus = Field(
         default=TaskStatus.BACKLOG,
         description="The current status of the task from [backlog, in_progress, complete, on_hold].")
-    pilot_name: str = Field(..., description="Name of the pilot most suited for this task")
+    function_name: str = Field(..., description="Name of the pilot/function most suited for this task")
+    motivation: str = Field(..., description="Your justification for choosing this pilot instead of a different one.")
+    self_criticism: str = Field(..., description="Thoughtful self-criticism that explains why this pilot may not be "
+                                                 "the best choice.")
+    reasoning: str = Field(..., description="Your reasoning for choosing this pilot taking into account the "
+                                            "`motivation` and weighing the `self_criticism`.")
 
 
 class Observation(SchemaModel):
@@ -56,13 +47,7 @@ class Observation(SchemaModel):
     Class representing the data structure for observation for pilot objective, whether it is complete or not.
     If not complete, then the pilot name, motivation, self_criticism and reasoning for choosing the pilot.
     """
-    goal_status: ObservationStatus = Field(..., description="Status of the objective asked by the user from "
-                                                            "[not_started, incomplete, complete, on_hold]")
-    motivation: str = Field(..., description="Your justification for choosing this pilot instead of a different one.")
-    self_criticism: str = Field(..., description="Thoughtful self-criticism that explains why this pilot may not be "
-                                                 "the best choice.")
-    reasoning: str = Field(..., description="Your reasoning for choosing this pilot taking into account the "
-                                            "`motivation` and weighing the `self_criticism`.")
+    current_status: TaskStatus = Field(..., description="Status of the objective asked by the user ")
 
     tasks: List[Task] = Field(
         ..., description="List of tasks to be accomplished by the each pilot"

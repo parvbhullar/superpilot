@@ -70,7 +70,7 @@ class Calculator(BaseExecutor):
             smart_model_name=OpenAIModelName.GPT4_TURBO,
             fast_model_name=OpenAIModelName.GPT3,
             pilot_config=PilotConfiguration(
-                name="tranform_pilot",
+                name="transform_pilot",
                 role=(
                     "An AI Pilot converting the text into given json format"
                 ),

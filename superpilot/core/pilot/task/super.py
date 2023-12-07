@@ -4,7 +4,7 @@ import platform
 import time
 from typing import List, Dict
 
-from superpilot.core.ability import SuperAbilityRegistry
+from superpilot.core.ability import SuperAbilityRegistry, AbilityAction
 from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.base import AbilityRegistry, Ability
@@ -19,7 +19,7 @@ from superpilot.core.planning import strategies
 from superpilot.core.planning.schema import (
     LanguageModelResponse,
     ExecutionNature,
-    Task,
+    Task, TaskStatus,
 )
 from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
@@ -99,58 +99,100 @@ class SuperTaskPilot(TaskPilot):
         else:
             self._prompt_strategy = strategies.NextAbility(**prompt_config)
 
-    async def execute(self, objective: str, *args, **kwargs) -> Context:
+        self._task_queue = []
+        self._completed_tasks = []
+        self._current_task: Task = None
+        self._current_observation = None
+        self._next_step = None
+        self._current_context = Context()
+
+    async def execute(self, objective: str | Task, *args, **kwargs) -> Context:
         """Execute the task."""
         self._logger.debug(f"Executing task: {objective}")
-        task = Task.factory(objective, **kwargs)
+        if isinstance(objective, str):
+            task = Task.factory(objective, **kwargs)
+        else:
+            task = objective
+
+        self._current_task = task
+        self._current_context = kwargs.get("context", self._current_context)
         if len(args) > 0:
             kwargs["context"] = args[0]
-        context_res = await self.exec_task(task, **kwargs)
 
-        return context_res
+        while self._current_task != TaskStatus.DONE:
+            ability_actions = await self.exec_abilities(self._current_task, **kwargs)
 
-    async def exec_task(self, task: Task, **kwargs) -> Context:
-        context_res = kwargs.pop("context", Context())
+        return self._current_context
+
+    async def exec_abilities(self, task: Task, **kwargs) -> List[AbilityAction]:
+        ability_actions = []
         if self._execution_nature == ExecutionNature.PARALLEL:
             tasks = [
-                self.perform_ability(task, [ability.dump()], context_res, **kwargs)
+                self.perform_ability(task, [ability.dump()], **kwargs)
                 for ability in self._ability_registry.abilities()
             ]
             res_list = await asyncio.gather(*tasks)
             for response in res_list:
-                context_res.extend(response)
+                ability_actions.append(response)
         elif self._execution_nature == ExecutionNature.AUTO:
-            context_res = await self.perform_ability(
-                task, self._ability_registry.dump_abilities(), context_res, **kwargs
-            )
+            ability_actions.append(await self.perform_ability(
+                task, self._ability_registry.dump_abilities(), **kwargs
+            ))
         else:
             # Execute for Sequential nature
             for ability in self._ability_registry.abilities():
                 # print(res.content)
-                context_res = await self.perform_ability(
-                    task, [ability.dump()], context_res, **kwargs
-                )
+                ability_actions.append(await self.perform_ability(
+                    task, [ability.dump()], **kwargs
+                ))
                 # TODO add context to task prior actions as ability action.
                 # task.
-        return context_res
+        return ability_actions
 
     async def perform_ability(
-        self, task: Task, ability_schema: List[dict], context, **kwargs
+        self, task: Task, ability_schema: List[dict], **kwargs
     ) -> Context:
         if self._execution_nature == ExecutionNature.AUTO:
             response = await self.determine_next_ability(
-                task, ability_schema, context=context, **kwargs
+                task, ability_schema, **kwargs
             )
         else:
             response = await self.determine_exec_ability(
-                task, ability_schema, context=context, **kwargs
+                task, ability_schema, **kwargs
             )
         ability_args = response.content.get("ability_arguments", {})
         ability_action = await self._ability_registry.perform(
             response.content["next_ability"], **ability_args
         )
-        context.extend(ability_action.knowledge)
-        return context
+        await self._update_tasks_and_memory(ability_action)
+        if self._current_task.context.status == TaskStatus.DONE:
+            self._completed_tasks.append(self._current_task)
+        else:
+            self._task_queue.append(self._current_task)
+        # self._current_task = None  #TODO : Check if this is required
+        self._next_step = None
+        return ability_action
+
+    async def _update_tasks_and_memory(self, ability_result: AbilityAction):
+        self._current_task.context.cycle_count += 1
+        self._current_task.context.prior_actions.append(ability_result)
+        # TODO: Summarize new knowledge
+        # TODO: store knowledge and summaries in memory and in relevant tasks
+        # TODO: evaluate whether the task is complete
+        # TODO update memory with the facts, insights and knowledge
+        # self._current_task.context.add_memory(ability_action.knowledge)
+
+        # update goal status
+        # final_response = await self.analyze_goal_status(ability_action)
+
+        self._logger.info(f"Final response: {ability_result}")
+
+        self._current_task.context.status = TaskStatus.DONE
+        self._current_task.context.enough_info = True
+        self._current_task.context.memories = ability_result.get_memories()
+        print("Ability result", ability_result.result)
+
+        # TaskStore.save_task_with_status(self._current_goal, status, stage)
 
     async def determine_exec_ability(
         self, task: Task, ability_schema: List[dict], **kwargs

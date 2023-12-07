@@ -100,7 +100,7 @@ class BaseTaskPilot(TaskPilot):
             task=task,
         )
         if ability_action:
-            context.extend(ability_action.knowledge)
+            context.extend(ability_action.result)
         return context
 
     async def determine_exec_ability(

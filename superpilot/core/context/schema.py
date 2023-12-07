@@ -49,7 +49,7 @@ class ContentItem(ABC):
 
     def __str__(self) -> str:
         return (
-            f"{self.description} (source: {self.source})\n"
+            f"{self.description} (source: {self.source}) (type: {self.type})\n"
             "```\n"
             f"{self.content}\n"
             "```"
@@ -121,21 +121,25 @@ class FolderContentItem(ContentItem):
 
 @dataclass
 class ObjectContent(ContentItem):
-    content: Union[List, Dict]
-    source: Optional[str] = None
-    type = ContentType.CLASS_OBJECT
+    @property
+    def source(self) -> Optional[str]:
+        return self.obj_source
+
+    @property
+    def content(self) -> str:
+        return str(self.obj_content)
+
+    @property
+    def type(self) -> ContentType:
+        return self.obj_type
+
+    obj_content: Union[List, Dict]
+    obj_source: Optional[str] = None
+    obj_type = ContentType.CLASS_OBJECT
 
     @property
     def description(self) -> str:
         return f"The is object of '{self.source}'"
-
-    @property
-    def source(self) -> str:
-        return f"'{self.source}'"
-
-    @property
-    def content(self) -> str:
-        return str(self.content)
 
     @staticmethod
     def add(
@@ -154,7 +158,7 @@ class Content(ContentItem):
 
     @property
     def description(self) -> str:
-        return self.description
+        return f"The content of object of '{self.type}'"
 
     content: str = ""
     content_type: ContentType = ContentType.TEXT
@@ -200,9 +204,6 @@ class Content(ContentItem):
         )
         return new_class
 
-    def __str__(self):
-        return self.content + " " + self.content_type + " " + str(self.content_metadata)
-
 
 class Context:
     items: list[ContentItem]
@@ -224,8 +225,6 @@ class Context:
             self.items.append(Content.add_content_item(item, ContentType.TEXT))
         else:
             self.items.append(ObjectContent.add(item))
-
-        self.items.append(item)
 
     def add_content(self, content: str) -> None:
         item = Content.add_content_item(content, ContentType.TEXT)
@@ -250,10 +249,15 @@ class Context:
     def dict(self):
         return {"content": self.__str__()}
 
+    def to_list(self):
+        return [c for c in self.items]
+
     def to_file(self, file_location: str) -> None:
         with open(file_location, "w") as f:
             f.write(str(self.format_numbered()))
 
     @classmethod
-    def factory(cls, items: list[ContentItem] = []):
+    def factory(cls, items: list[ContentItem] = None):
+        if items is None:
+            items = []
         return cls(items)
