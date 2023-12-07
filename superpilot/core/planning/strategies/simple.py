@@ -15,6 +15,7 @@ from pydantic import Field
 from typing import List, Dict
 from superpilot.core.resource.model_providers import OpenAIModelName
 
+
 class BaseContent(SchemaModel):
     """
     Class representing a question and its answer as a list of facts each one should have a soruce.
@@ -96,7 +97,7 @@ class SimplePrompt(PromptStrategy):
         else:
             user_message = LanguageModelMessage(
                 role=MessageRole.USER,
-                content=self._user_prompt_template.format(**template_kwargs)
+                content=self._user_prompt_template.format(**template_kwargs),
             )
 
         functions = []
@@ -149,8 +150,10 @@ class SimplePrompt(PromptStrategy):
 
         """
         # print("Raw Model Response", response_content)
-        if "function_call" in response_content:
-            parsed_response = json_loads(response_content["function_call"]["arguments"])
+        if "function_call" in response_content and response_content["function_call"]:
+            parsed_response = json_loads(
+                response_content.get("function_call", {}).get("arguments", {})
+            )
         else:
             parsed_response = response_content
 
@@ -186,4 +189,3 @@ class SimplePrompt(PromptStrategy):
             config["parser_schema"] = parser
         config.pop("location", None)
         return cls(**config)
-
