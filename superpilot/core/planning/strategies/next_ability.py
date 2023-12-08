@@ -142,11 +142,13 @@ class NextAbility(PromptStrategy):
             [memory.summary() for memory in task.context.memories]
             + [info for info in task.context.supplementary_info],
             no_items_response="There is no additional information available at this time.",
+            use_format=False,
             **template_kwargs,
         )
         template_kwargs["user_input"] = to_numbered_list(
             [user_input for user_input in task.context.user_input],
             no_items_response="There are no additional considerations at this time.",
+            use_format=False,
             **template_kwargs,
         )
         template_kwargs["acceptance_criteria"] = to_numbered_list(

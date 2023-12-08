@@ -14,7 +14,7 @@ def to_numbered_list(
         else:
             # no requirement to use format?
             return "\n".join(
-                f"{i+1}. {item}" for i, item in enumerate(items)
+                f"{i+1}. {item.format(**template_args)}" for i, item in enumerate(items)
             )
     else:
         return no_items_response
