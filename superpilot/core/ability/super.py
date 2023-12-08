@@ -94,6 +94,8 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
             ability = self.get_ability(ability_name)
             # print("Perform Ability: ", ability_name, kwargs)
             response = await ability(**ability_arguments, **kwargs)
+            # TODO: Should we pass aroind the kwargs in ability action and also store in task context and keep extending it?
+            #  to pas wround the info without uploading to to llm ,(we will get like response, offline_data = await ability(**ability_arguments, **kwargs) )
             ability_action.success = True
             ability_action.message = "Function executed successfully!"
             ability_action.ability_name = ability_name

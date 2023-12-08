@@ -46,6 +46,7 @@ class NextAbility(PromptStrategy):
         "Please choose one of the provided functions to accomplish this task. "
         "Some tasks may require multiple functions to accomplish. If that is the case, choose the function that "
         "you think is most appropriate for the current situation given your progress so far."
+        "set the appropriate task status according to overall task objective"
     )
 
     DEFAULT_ADDITIONAL_ABILITY_ARGUMENTS = {
@@ -63,9 +64,9 @@ class NextAbility(PromptStrategy):
         },
         "task_status": {
             "type": "string",
-            "description": "Thoughtful decision about the status of the overall task",
+            "description": "overall status of the task",
             "enum": [t for t in TaskStatus],
-        },
+        }
     }
 
     default_configuration = NextAbilityConfiguration(

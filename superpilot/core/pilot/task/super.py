@@ -107,26 +107,33 @@ class SuperTaskPilot(TaskPilot):
         self._next_step = None
         self._current_context = Context()
         self._parent = None
+        self.ability_actions = []
 
     async def execute(self, objective: str | Task, *args, **kwargs) -> Context:
         """Execute the task."""
         self._logger.debug(f"Executing task: {objective}")
         self._parent = kwargs.get("current_chain", None)
         if isinstance(objective, str):
-            task = Task.factory(objective, **kwargs)
+            # if task is not passed, one is created with default settings
+            task = Task.factory(objective)
         else:
             task = objective
 
         self._current_task = task
+        self.ability_actions = kwargs.get("ability_actions", [])
         self._current_context = kwargs.get("context", self._current_context)
+        # Add the context to default task memory to make use of it in ability execution
+        self._current_task.set_default_memory(self._current_context.to_list())
+        # TODO: how to use passed context in task execution?
         if len(args) > 0:
             kwargs["context"] = args[0]
 
         while self._current_task.context.status != TaskStatus.DONE:
             # TODO: No need to pass task because already member of class
-            ability_actions = await self.exec_abilities(self._current_task, **kwargs)
+            ability_actions = await self.exec_abilities(**kwargs)
         # TODO: Use Ability actions to populate context?
-        return self._current_context
+        # TODO: we are overriding memories so this wll be the default ability response in most cases ( - aother way to improve context is keep the whole ability context when executing in pilot and pass only the last one as response)
+        return Context(self._current_task.context.memories)
 
     async def observe(self, objective: str, **kwargs) -> Observation:
         """Observe the task."""
@@ -144,11 +151,11 @@ class SuperTaskPilot(TaskPilot):
         #         return None
         return None
 
-    async def exec_abilities(self, task: Task, **kwargs) -> List[AbilityAction]:
+    async def exec_abilities(self,  **kwargs) -> List[AbilityAction]:
         ability_actions = []
         if self._execution_nature == ExecutionNature.PARALLEL:
             tasks = [
-                self.perform_ability(task, [ability.dump()], **kwargs)
+                self.perform_ability(self._current_task, [ability.dump()], **kwargs)
                 for ability in self._ability_registry.abilities()
             ]
             res_list = await asyncio.gather(*tasks)
@@ -156,14 +163,14 @@ class SuperTaskPilot(TaskPilot):
                 ability_actions.append(response)
         elif self._execution_nature == ExecutionNature.AUTO:
             ability_actions.append(await self.perform_ability(
-                task, self._ability_registry.dump_abilities(), **kwargs
+                self._current_task, self._ability_registry.dump_abilities(), **kwargs
             ))
         else:
             # Execute for Sequential nature
             for ability in self._ability_registry.abilities():
                 # print(res.content)
                 ability_actions.append(await self.perform_ability(
-                    task, [ability.dump()], **kwargs
+                    self._current_task, [ability.dump()], **kwargs
                 ))
                 # TODO add context to task prior actions as ability action.
                 # task.
@@ -217,8 +224,9 @@ class SuperTaskPilot(TaskPilot):
         self._logger.info(f"Final response: {ability_result}")
 
         self._current_task.context.enough_info = True
-        # TODO: we are still adding result of ability to prompt here
-        self._current_task.context.memories = ability_result.get_memories()
+        # todo: instead of overriding memories everytime ... aother way to improve context is keep the whole ability context when executing in pilot and pass only the last one as response
+        # TODO: we are still adding result of ability to prompt here (maybe be mindfull what to return in context?)
+        self._current_task.update_memory(ability_result.get_memories())
         print("Ability result", ability_result.result)
 
         # TaskStore.save_task_with_status(self._current_goal, status, stage)

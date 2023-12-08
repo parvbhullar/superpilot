@@ -95,10 +95,14 @@ class SimpleTaskPilot(TaskPilot, ABC):
         else:
             self._prompt_strategy = SimplePrompt(**prompt_config)
 
-    async def execute(self, objective: str, *args, **kwargs) -> LanguageModelResponse:
+    async def execute(self, objective: str | Task, *args, **kwargs) -> LanguageModelResponse:
         """Execute the task."""
         self._logger.debug(f"Executing task: {objective}")
-        task = Task.factory(objective, **kwargs)
+        if isinstance(objective, str):
+            # if task is not passed, one is created with default settings
+            task = Task.factory(objective)
+        else:
+            task = objective
         if len(args) > 0:
             kwargs["context"] = args[0]
         context_res = await self.exec_task(task, **kwargs)
