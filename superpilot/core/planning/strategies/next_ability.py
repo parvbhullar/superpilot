@@ -66,6 +66,24 @@ class NextAbility(PromptStrategy):
             "type": "string",
             "description": "overall status of the task",
             "enum": [t for t in TaskStatus],
+        },
+        'task_objective': {
+            "type": "string",
+            "description": "verbose description of the current sub task you will be performing. this should be "
+                           "current task not the whole objective"
+        },
+        "ambiguity": {
+            "type": "string",
+            "description": "your thoughtful reflection on the ambiguity of the task"
+        },
+        "clarifying_question": {
+            "type": "string",
+            "description": "ask the user relevant question only if all the conditions are met. conditions are:"
+                         "1. You are not currently solving the same `objective`"
+                         "2. the information is not already available "
+                         "3. you are blocked to proceed without user assistance"
+                         "4. you can not solve it by yourself or function call. "
+                         "if there is no question to ask then set question to empty string"
         }
     }
 
@@ -198,6 +216,9 @@ class NextAbility(PromptStrategy):
             "self_criticism": function_arguments.pop("self_criticism", None),
             "reasoning": function_arguments.pop("reasoning", None),
             "task_status": function_arguments.pop("task_status", None),
+            "task_objective": function_arguments.pop("task_objective", None),
+            "ambiguity": function_arguments.pop("ambiguity", None),
+            "clarifying_question": function_arguments.pop("clarifying_question", None),
             "next_ability": function_name,
             "ability_arguments": function_arguments,
         }
