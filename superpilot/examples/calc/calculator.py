@@ -3,6 +3,9 @@ import sys
 import asyncio
 import time
 
+from superpilot.core.state.base import State
+from superpilot.core.state.pickle import PickleState
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 from superpilot.core.pilot.chain.strategy.observation_strategy import ObserverPrompt
@@ -45,7 +48,6 @@ from superpilot.examples.calc.base_ability import AddAbility, MultiplyAbility, S
 class Calculator(BaseExecutor):
     model_providers = ModelProviderFactory.load_providers()
     context = Context()
-    chain = SuperChain()
     config = get_config()
     env = get_env({})
     ALLOWED_ABILITY = {
@@ -63,6 +65,8 @@ class Calculator(BaseExecutor):
         super_ability_registry = SuperAbilityRegistry.factory(
             self.env, self.ALLOWED_ABILITY
         )
+
+        self.chain = SuperChain(state=kwargs.get("state", State()))
 
         transform_pilot = SimpleTaskPilot.create(
             prompt_config=TransformerPrompt.default_configuration,
@@ -176,9 +180,14 @@ class Calculator(BaseExecutor):
 
 
 if __name__ == "__main__":
-    calc = Calculator()
+    environment = get_env({})
+    state = PickleState(thread_id='thread1', workspace=environment.workspace)
+    calc = Calculator(state=state)
     # print(asyncio.run(calc.run("add 2 and 3")))
     print(
         asyncio.run(calc.run("transform data from text and multiply 2 and 3 and then sum with 6 and then subtract 2 "
                              "and then divide by 2 and plot the graph using data from text")))
     # print(asyncio.run(calc.run("Please find the doc number 1 and date is 12-2-2021")))
+    print('='*100)
+    calc2 = Calculator(state=state)
+    print(asyncio.run(calc2.run("User Answer")))

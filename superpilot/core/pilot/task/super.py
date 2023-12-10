@@ -39,9 +39,10 @@ from superpilot.core.pilot.settings import (
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory, ModelConfigFactory
 from superpilot.core.environment import Environment, SimpleEnv
 from superpilot.core.plugin.utlis import load_class
+from superpilot.core.state.mixins import DictStateMixin, PickleStateMixin
 
 
-class SuperTaskPilot(TaskPilot):
+class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
 
     default_configuration = TaskPilotConfiguration(
         location=PluginLocation(
@@ -102,28 +103,33 @@ class SuperTaskPilot(TaskPilot):
 
         self._task_queue = []
         self._completed_tasks = []
-        self._current_task: Task = None
+
         self._current_observation = None
         self._next_step = None
         self._current_context = Context()
         self._parent = None
-        self.ability_actions = []
+
+        self._current_task: Task = None
+        self._status = TaskStatus.BACKLOG
+        self._interaction = False
 
     async def execute(self, objective: str | Task, *args, **kwargs) -> Context:
         """Execute the task."""
         self._logger.debug(f"Executing task: {objective}")
         self._parent = kwargs.get("current_chain", None)
-        if isinstance(objective, str):
-            # if task is not passed, one is created with default settings
-            task = Task.factory(objective)
-        else:
-            task = objective
-
-        self._current_task = task
-        self.ability_actions = kwargs.get("ability_actions", [])
+        self._interaction = False
         self._current_context = kwargs.get("context", self._current_context)
+        if self._current_task is None:
+            if isinstance(objective, str):
+                # if task is not passed, one is created with default settings
+                task = Task.factory(objective)
+            else:
+                task = objective
+            self._current_task = task
+            self._current_task.set_default_memory(self._current_context.to_list())
+       
         # Add the context to default task memory to make use of it in ability execution
-        self._current_task.set_default_memory(self._current_context.to_list())
+        
         # TODO: how to use passed context in task execution?
         if len(args) > 0:
             kwargs["context"] = args[0]
@@ -131,6 +137,8 @@ class SuperTaskPilot(TaskPilot):
         while self._current_task.context.status != TaskStatus.DONE:
             # TODO: No need to pass task because already member of class
             ability_actions = await self.exec_abilities(**kwargs)
+            if self._interaction:
+                break
         # TODO: Use Ability actions to populate context?
         # TODO: we are overriding memories so this wll be the default ability response in most cases ( - aother way to improve context is keep the whole ability context when executing in pilot and pass only the last one as response)
         return Context(self._current_task.context.memories)
@@ -152,6 +160,7 @@ class SuperTaskPilot(TaskPilot):
         return None
 
     async def exec_abilities(self,  **kwargs) -> List[AbilityAction]:
+        # TODO: Ability execution needs to be fixed for parallel and sequential execution
         ability_actions = []
         if self._execution_nature == ExecutionNature.PARALLEL:
             tasks = [
@@ -196,6 +205,7 @@ class SuperTaskPilot(TaskPilot):
         status = TaskStatus.DONE
         if response.content.get("task_status"):
             status = TaskStatus(response.content.get("task_status"))
+        self._status = status
         self._current_task.context.status = status
         await self._update_tasks_and_memory(ability_action)
         # TODO: below section of code is doing nothing as of now
@@ -207,6 +217,8 @@ class SuperTaskPilot(TaskPilot):
             self._task_queue.append(self._current_task)
         # self._current_task = None  #TODO : Check if this is required
         self._next_step = None
+        # TODO: Remove below line, only for testing purpose
+        self._interaction = True
         return ability_action
 
     async def _update_tasks_and_memory(self, ability_result: AbilityAction):
@@ -293,12 +305,31 @@ class SuperTaskPilot(TaskPilot):
         """The name of the ability."""
         return self._configuration.pilot.name
 
-    def dump(self) -> dict:
+    def dump(self) -> str:
         pilot_config = self._configuration.pilot
         dump = "PilotName: " + pilot_config.name + "\n"
         dump += "PilotRole: " + pilot_config.role + "\n"
         dump += "PilotGoals: " + "\n".join(pilot_config.goals) + "\n"
         return dump
+
+    async def to_dict_state(self) -> dict:
+        return {
+            '_current_task': self._current_task,
+            '_interaction': self._interaction,
+            '_status': self._status,
+        }
+
+    async def from_dict_state(self, state):
+        if state:
+            self._current_task = state.get('_current_task')
+            self._interaction = state.get('_interaction', False)
+            self._status = state.get('_status', TaskStatus.BACKLOG)
+
+    async def to_pickle_state(self):
+        return await self.to_dict_state()
+
+    async def from_pickle_state(self, state):
+        return await self.from_dict_state(state)
 
     @classmethod
     def factory(
