@@ -5,6 +5,7 @@ import time
 from typing import List, Dict
 
 from superpilot.core.ability import SuperAbilityRegistry, AbilityAction
+from superpilot.core.callback.base import BaseCallback
 from superpilot.core.pilot.chain.strategy.observation_strategy import Observation
 from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
 from superpilot.core.context.schema import Context
@@ -64,6 +65,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         ),
         execution_nature=ExecutionNature.AUTO,
         prompt_strategy=strategies.NextAbility.default_configuration,
+        # callbacks=[],  # TODO implement callback configuration
         models={
             LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
                 model_name=OpenAIModelName.GPT3,
@@ -82,6 +84,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         self,
         ability_registry: AbilityRegistry,
         model_providers: Dict[ModelProviderName, LanguageModelProvider],
+        callback: BaseCallback = None,
         configuration: TaskPilotConfiguration = default_configuration,
         logger: logging.Logger = logging.getLogger(__name__),
     ) -> None:
@@ -101,6 +104,8 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             self._prompt_strategy = load_class(location, prompt_config)
         else:
             self._prompt_strategy = strategies.NextAbility(**prompt_config)
+
+        self._callback = callback
 
         self._task_queue = []
         self._completed_tasks = []
@@ -205,6 +210,12 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             response = await self.determine_exec_ability(
                 task, ability_schema, **kwargs
             )
+
+        if response.content.get("clarifying_question"):
+            # TODO : Ask clarifying question to user using callback handler
+            pass
+            # self._callback.on_clarifying_question(response.content.get("clarifying_question"))
+
         ability_args = response.content.get("ability_arguments", {})
         # Add context to ability arguments
         ability_action = await self._ability_registry.perform(
