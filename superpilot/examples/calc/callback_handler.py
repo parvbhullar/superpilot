@@ -3,8 +3,6 @@ from abc import abstractmethod
 
 
 class CallbackHandler:
-    def __init__(self, callback):
-        self.callback = callback
 
     @abstractmethod
     async def transformer(self, task, context, **kwargs):
