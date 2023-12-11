@@ -24,7 +24,7 @@ class PickleState(BaseState):
         with open(state_file_path, 'wb') as file:
             pickle.dump(state, file)
 
-    async def load(self, obj: PickleStateMixin) -> dict:
+    async def load(self) -> dict:
         state = {}
         state_file_path = self._workspace.get_path(f"{self._thread_id}_state.pkl")
         if state_file_path.exists():
@@ -33,13 +33,13 @@ class PickleState(BaseState):
         return state
 
     @classmethod
-    async def load_from_dict(cls, obj: PickleStateMixin, state: dict) -> None:
+    async def deserialize(cls, obj: PickleStateMixin, state: dict) -> None:
         if not hasattr(obj, 'from_pickle_state'):
             raise Exception("Implement DictStateMixin")
         await obj.from_pickle_state(state)
 
     @classmethod
-    async def get_dict(cls, obj: PickleStateMixin) -> dict:
+    async def serialize(cls, obj: PickleStateMixin) -> dict:
         if not hasattr(obj, 'to_pickle_state'):
             raise Exception("Implement DictStateMixin")
         return await obj.to_pickle_state()

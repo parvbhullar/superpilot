@@ -35,8 +35,8 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
 
     async def execute(self, objective: str, context: Context, **kwargs):
         # Splitting the observation and execution phases
-        state = await self._state.load(self)
-        await self._state.load_from_dict(self, state)
+        state = await self._state.load()
+        await self._state.deserialize(self, state)
         kwargs['current_chain'] = self
         self._interaction = False
         if not self._current_observation:
@@ -92,7 +92,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
                 self._task_index += 1
             else:
                 # TODO: there should be Pilot Task where we store the pilot Action?
-                await self._state.load_from_dict(handler, self._pilot_state)
+                await self._state.deserialize(handler, self._pilot_state)
                 response, context = await self.execute_handler(self._current_task.objective, context, handler, transformer, **kwargs)
                 # TODO: Make it interaction based?
                 if self._pilot_state.get('_status', TaskStatus.DONE) == TaskStatus.DONE:
@@ -103,7 +103,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
                 else:
                     self._current_task.status = TaskStatus.IN_PROGRESS
                     self._interaction = True
-                    current_state = await self._state.get_dict(self)
+                    current_state = await self._state.serialize(self)
                     await self._state.save(current_state)
                 # self._task_queue.remove(self._current_task)
         else:
@@ -120,7 +120,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
             else:
                 response = await handler.execute(task, context=context, **kwargs)
 
-            self._pilot_state = await self._state.get_dict(handler) or {}
+            self._pilot_state = await self._state.serialize(handler) or {}
             if self._pilot_state.get('_status', TaskStatus.DONE) == TaskStatus.DONE:
                 if isinstance(response, LanguageModelResponse):
                     context.add(response.get_content())
