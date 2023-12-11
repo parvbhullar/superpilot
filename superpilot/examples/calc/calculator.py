@@ -2,6 +2,7 @@ import os
 import sys
 import asyncio
 import time
+from abc import abstractmethod
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
@@ -137,6 +138,7 @@ class Calculator(BaseExecutor):
                 -------------
                 Solution: {solution}
                 """
+
 
     def auto_transformer(self, data, response, context):
         print("Auto solver transformer", data, response)
