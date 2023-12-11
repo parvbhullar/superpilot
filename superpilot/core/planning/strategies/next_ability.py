@@ -60,30 +60,36 @@ class NextAbility(PromptStrategy):
         },
         "reasoning": {
             "type": "string",
-            "description": "Your reasoning for choosing this function taking into account the `motivation` and weighing the `self_criticism`.",
+            "description": "Your reasoning for choosing this function taking into account the `motivation` "
+                           "and weighing the `self_criticism`.",
         },
         "task_status": {
             "type": "string",
-            "description": "overall status of the task",
+            "description": "overall status of the task, on hold if ambiguous, "
+                           "ready if all the acceptance criteria are met",
             "enum": [t for t in TaskStatus],
         },
         'task_objective': {
             "type": "string",
             "description": "verbose description of the current sub task you will be performing. this should be "
-                           "current task not the whole objective"
+                           "current task not the whole objective",
         },
         "ambiguity": {
-            "type": "string",
-            "description": "your thoughtful reflection on the ambiguity of the task"
+            "type": "array",
+            "description": "your thoughtful reflection on the ambiguity of the task",
+            "items": {
+                "type": "string",
+                "description": "your thoughtful reflection on the ambiguity of the task"
+            }
         },
         "clarifying_question": {
             "type": "string",
             "description": "ask the user relevant question only if all the conditions are met. conditions are:"
-                         "1. You are not currently solving the same `objective`"
-                         "2. the information is not already available "
-                         "3. you are blocked to proceed without user assistance"
-                         "4. you can not solve it by yourself or function call. "
-                         "if there is no question to ask then set question to empty string"
+                           "1. You are not currently solving the same `objective`"
+                           "2. the information is not already available "
+                           "3. you are blocked to proceed without user assistance"
+                           "4. you can not solve it by yourself or function call. "
+                           "if there is no question to ask then set question to empty string"
         }
     }
 
@@ -96,12 +102,12 @@ class NextAbility(PromptStrategy):
     )
 
     def __init__(
-        self,
-        model_classification: LanguageModelClassification,
-        system_prompt_template: str,
-        system_info: List[str],
-        user_prompt_template: str,
-        additional_ability_arguments: dict,
+            self,
+            model_classification: LanguageModelClassification,
+            system_prompt_template: str,
+            system_info: List[str],
+            user_prompt_template: str,
+            additional_ability_arguments: dict,
     ):
         self._model_classification = model_classification
         self._system_prompt_template = system_prompt_template
@@ -116,13 +122,13 @@ class NextAbility(PromptStrategy):
         return self._model_classification
 
     def build_prompt(
-        self,
-        task: Task,
-        ability_schema: List[dict],
-        os_info: str,
-        api_budget: float,
-        current_time: str,
-        **kwargs,
+            self,
+            task: Task,
+            ability_schema: List[dict],
+            os_info: str,
+            api_budget: float,
+            current_time: str,
+            **kwargs,
     ) -> LanguageModelPrompt:
         template_kwargs = {
             "os_info": os_info,
@@ -160,11 +166,13 @@ class NextAbility(PromptStrategy):
             [memory.summary() for memory in task.context.memories]
             + [info for info in task.context.supplementary_info],
             no_items_response="There is no additional information available at this time.",
+            use_format=False,
             **template_kwargs,
         )
         template_kwargs["user_input"] = to_numbered_list(
             [user_input for user_input in task.context.user_input],
             no_items_response="There are no additional considerations at this time.",
+            use_format=False,
             **template_kwargs,
         )
         template_kwargs["acceptance_criteria"] = to_numbered_list(
@@ -197,8 +205,8 @@ class NextAbility(PromptStrategy):
         )
 
     def parse_response_content(
-        self,
-        response_content: dict,
+            self,
+            response_content: dict,
     ) -> dict:
         """Parse the actual text response from the objective model.
 

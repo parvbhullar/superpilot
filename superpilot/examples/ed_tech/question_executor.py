@@ -79,59 +79,6 @@ class QuestionExecutor(BaseExecutor):
         self.chain.add_handler(solver_pilot, self.solver_transformer)
         self.chain.add_handler(format_pilot, self.format_transformer)
 
-        # self.super_prompt = QuestionSolverPrompt.factory()
-        # anthropic_pilot = SimpleTaskPilot.factory(
-        #         prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
-        #         model_providers=self.model_providers,
-        #         models={
-        #                 LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-        #                     model_name=AnthropicModelName.CLAUD_2_INSTANT,
-        #                     provider_name=ModelProviderName.ANTHROPIC,
-        #                     temperature=0.5,
-        #                 ),
-        #                 LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-        #                     model_name=AnthropicModelName.CLAUD_2,
-        #                     provider_name=ModelProviderName.ANTHROPIC,
-        #                     temperature=0.5,
-        #                 ),
-        #             },
-        #     )
-        # self.pilots = [
-        #     # SimpleTaskPilot.factory(
-        #     #     prompt_strategy=QuestionSolverPrompt.factory().get_config(),
-        #     #     model_providers=self.model_providers,
-        #     #     # models={
-        #     #     #     LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-        #     #     #         model_name=AnthropicModelName.CLAUD_2_INSTANT,
-        #     #     #         provider_name=ModelProviderName.ANTHROPIC,
-        #     #     #         temperature=1,
-        #     #     #     ),
-        #     #     #     LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-        #     #     #         model_name=AnthropicModelName.CLAUD_2,
-        #     #     #         provider_name=ModelProviderName.ANTHROPIC,
-        #     #     #         temperature=0.9,
-        #     #     #     ),
-        #     #     # },
-        #     # ),
-        #     # SuperTaskPilot(super_ability_registry, self.model_providers),
-        #     anthropic_pilot,
-        #     SimpleTaskPilot.factory(
-        #         prompt_strategy=SolutionValidatorPrompt.factory().get_config(),
-        #         model_providers=self.model_providers,
-        #         models={
-        #             LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-        #                 model_name=OpenAIModelName.GPT3,
-        #                 provider_name=ModelProviderName.OPENAI,
-        #                 temperature=0.2,
-        #             ),
-        #             LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-        #                 model_name=OpenAIModelName.GPT4,
-        #                 provider_name=ModelProviderName.OPENAI,
-        #                 temperature=0.2,
-        #             ),
-        #         },
-        #     ),
-        # ]
 
     PROMPT_TEMPLATE = """
             -------------

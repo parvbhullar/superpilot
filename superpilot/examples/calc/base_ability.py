@@ -48,7 +48,6 @@ class DefaultAbility(Ability):
         return Context.factory().add_content(task_summary)
 
 
-
 class AddAbility(Ability):
     default_configuration = AbilityConfiguration(
         location=PluginLocation(

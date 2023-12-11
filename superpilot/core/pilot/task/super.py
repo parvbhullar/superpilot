@@ -89,6 +89,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         self._configuration = configuration
         self._execution_nature = configuration.execution_nature
         self._ability_registry = ability_registry
+        self._com_provider = {}
 
         self._providers: Dict[LanguageModelClassification, LanguageModelProvider] = {}
         for model, model_config in self._configuration.models.items():
@@ -139,6 +140,14 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             ability_actions = await self.exec_abilities(**kwargs)
             if self._interaction:
                 break
+            # messages = self._com_provider.receive()
+            # if messages:
+            #     self._logger.info(f"Message received: {message}")
+            #     self._current_context.add(message)
+
+            # TODO check if any user message is received and based on that interrupt the execution
+            # or update the context
+
         # TODO: Use Ability actions to populate context?
         # TODO: we are overriding memories so this wll be the default ability response in most cases ( - aother way to improve context is keep the whole ability context when executing in pilot and pass only the last one as response)
         return Context(self._current_task.context.memories)
@@ -199,15 +208,17 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         ability_args = response.content.get("ability_arguments", {})
         # Add context to ability arguments
         ability_action = await self._ability_registry.perform(
-            response.content["next_ability"], ability_arguments=ability_args, **kwargs
+            response.content["next_ability"], ability_args=ability_args, **kwargs
         )
 
-        status = TaskStatus.DONE
-        if response.content.get("task_status"):
-            status = TaskStatus(response.content.get("task_status"))
-        self._status = status
-        self._current_task.context.status = status
-        await self._update_tasks_and_memory(ability_action)
+        await self._update_tasks_and_memory(ability_action, response)
+
+        # TODO : DO we need to ask question to user here? if
+        # self._com_provider.send(message=ability_action.result)
+        # Will put this task on hold and wait for user response
+        # if task is on hold then we will store the current state of thread and wait for user response
+        # wait for 5 minutes for user response
+
         # TODO: below section of code is doing nothing as of now
         if self._current_task.context.status == TaskStatus.DONE:
             # TODO: this queue is not used anywhere
@@ -218,10 +229,10 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         # self._current_task = None  #TODO : Check if this is required
         self._next_step = None
         # TODO: Remove below line, only for testing purpose
-        self._interaction = True
+        # self._interaction = True
         return ability_action
 
-    async def _update_tasks_and_memory(self, ability_result: AbilityAction):
+    async def _update_tasks_and_memory(self, ability_result: AbilityAction, response: LanguageModelResponse):
         self._current_task.context.cycle_count += 1
         self._current_task.context.prior_actions.append(ability_result)
         # TODO: Summarize new knowledge
@@ -234,7 +245,10 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         # final_response = await self.analyze_goal_status(ability_action)
 
         self._logger.info(f"Final response: {ability_result}")
-
+        status = TaskStatus.IN_PROGRESS
+        if response.content.get("task_status"):
+            status = TaskStatus(response.content.get("task_status"))
+        self._current_task.context.status = status
         self._current_task.context.enough_info = True
         # todo: instead of overriding memories everytime ... aother way to improve context is keep the whole ability context when executing in pilot and pass only the last one as response
         # TODO: we are still adding result of ability to prompt here (maybe be mindfull what to return in context?)

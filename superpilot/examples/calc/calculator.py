@@ -2,11 +2,12 @@ import os
 import sys
 import asyncio
 import time
+from abc import abstractmethod
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 from superpilot.core.state.base import State
 from superpilot.core.state.pickle import PickleState
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 from superpilot.core.pilot.chain.strategy.observation_strategy import ObserverPrompt
 from superpilot.core.pilot.chain.super import SuperChain
@@ -142,6 +143,7 @@ class Calculator(BaseExecutor):
                 Solution: {solution}
                 """
 
+
     def auto_transformer(self, data, response, context):
         print("Auto solver transformer", data, response)
         # response = {
@@ -181,13 +183,15 @@ class Calculator(BaseExecutor):
 
 if __name__ == "__main__":
     environment = get_env({})
-    state = PickleState(thread_id='thread1', workspace=environment.workspace)
+    # state = PickleState(thread_id='thread1', workspace=environment.workspace)
+    state = State(thread_id='thread1', workspace=environment.workspace)
     calc = Calculator(state=state)
     # print(asyncio.run(calc.run("add 2 and 3")))
-    print(
-        asyncio.run(calc.run("transform data from text and multiply 2 and 3 and then sum with 6 and then subtract 2 "
-                             "and then divide by 2 and plot the graph using data from text")))
+    # print(
+    #     asyncio.run(calc.run("transform data from text and multiply 2 and 3 and then sum with 6 and then subtract 2 "
+    #                          "and then divide by 2 and plot the graph using data from text")))
+    print(asyncio.run(calc.run("Multiply few given numbers with 3")))
     # print(asyncio.run(calc.run("Please find the doc number 1 and date is 12-2-2021")))
     print('='*100)
     calc2 = Calculator(state=state)
-    print(asyncio.run(calc2.run("User Answer")))
+    # print(asyncio.run(calc2.run("User Answer")))

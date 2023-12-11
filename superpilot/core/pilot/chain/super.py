@@ -102,7 +102,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
                     self._task_index += 1
                 else:
                     self._current_task.status = TaskStatus.IN_PROGRESS
-                    self._interaction = True
+                    # self._interaction = True
                     current_state = await self._state.serialize(self)
                     await self._state.save(current_state)
                 # self._task_queue.remove(self._current_task)
