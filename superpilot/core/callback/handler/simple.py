@@ -7,21 +7,17 @@ from superpilot.core.callback.base import BaseCallback
 
 
 class SimpleCallbackHandler(BaseCallback):
-    @abc.abstractmethod
     async def on_chain_start(self, *args, **kwargs):
-        ...
+        print("SimpleCallbackHandler.on_chain_start")
 
-    @abc.abstractmethod
     async def on_pilot_execute(self, *args, **kwargs):
-        ...
+        print("SimpleCallbackHandler.on_pilot_execute")
 
-    @abc.abstractmethod
     async def on_ability_perform(self, *args, **kwargs):
-        ...
+        print("SimpleCallbackHandler.on_ability_perform")
 
-    @abc.abstractmethod
-    async def on_clarifying_question(self, *args, **kwargs):
-        ...
+    async def on_info(self, info, *args, **kwargs):
+        print("Info: ", info)
 
     @classmethod
     def name(cls) -> str:

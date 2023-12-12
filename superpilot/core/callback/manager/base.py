@@ -17,18 +17,6 @@ class BaseCallbackManager(BaseCallback):
         self._logger = logger
 
     @abc.abstractmethod
-    async def on_chain_start(self, *args, **kwargs):
-        ...
-
-    @abc.abstractmethod
-    async def on_pilot_execute(self, *args, **kwargs):
-        ...
-
-    @abc.abstractmethod
-    async def on_ability_perform(self, *args, **kwargs):
-        ...
-
-    @abc.abstractmethod
     async def on_clarifying_question(self, *args, **kwargs):
         ...
 

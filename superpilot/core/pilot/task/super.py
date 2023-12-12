@@ -6,6 +6,8 @@ from typing import List, Dict
 
 from superpilot.core.ability import SuperAbilityRegistry, AbilityAction
 from superpilot.core.callback.base import BaseCallback
+from superpilot.core.callback.manager.base import BaseCallbackManager
+from superpilot.core.callback.manager.std_io import STDInOutCallbackManager
 from superpilot.core.pilot.chain.strategy.observation_strategy import Observation
 from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
 from superpilot.core.context.schema import Context
@@ -84,7 +86,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         self,
         ability_registry: AbilityRegistry,
         model_providers: Dict[ModelProviderName, LanguageModelProvider],
-        callback: BaseCallback = None,
+        callback: BaseCallbackManager = STDInOutCallbackManager(),
         configuration: TaskPilotConfiguration = default_configuration,
         logger: logging.Logger = logging.getLogger(__name__),
     ) -> None:
@@ -119,6 +121,8 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         self._status = TaskStatus.BACKLOG
         self._interaction = False
 
+    # async def interaction_handler(self):
+
     async def execute(self, objective: str | Task, *args, **kwargs) -> Context:
         """Execute the task."""
         self._logger.debug(f"Executing task: {objective}")
@@ -133,6 +137,9 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
                 task = objective
             self._current_task = task
             self._current_task.set_default_memory(self._current_context.to_list())
+        else:
+            self._current_task.context.user_input.append(kwargs.get("user_input", ""))
+            # self._current_task.context.user_interactions[-1].user_input = kwargs.get("user_input", "")
        
         # Add the context to default task memory to make use of it in ability execution
         
@@ -142,7 +149,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
 
         while self._current_task.context.status != TaskStatus.DONE:
             # TODO: No need to pass task because already member of class
-            ability_actions = await self.exec_abilities(**kwargs)
+            await self.exec_abilities(**kwargs)
             if self._interaction:
                 break
             # messages = self._com_provider.receive()
@@ -173,35 +180,34 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         #         return None
         return None
 
-    async def exec_abilities(self,  **kwargs) -> List[AbilityAction]:
+    async def exec_abilities(self,  **kwargs) -> None:
         # TODO: Ability execution needs to be fixed for parallel and sequential execution
-        ability_actions = []
         if self._execution_nature == ExecutionNature.PARALLEL:
             tasks = [
                 self.perform_ability(self._current_task, [ability.dump()], **kwargs)
                 for ability in self._ability_registry.abilities()
             ]
-            res_list = await asyncio.gather(*tasks)
-            for response in res_list:
-                ability_actions.append(response)
+            await asyncio.gather(*tasks)
+            # res_list = await asyncio.gather(*tasks)
+            # for response in res_list:
+            #     ability_actions.append(response)
         elif self._execution_nature == ExecutionNature.AUTO:
-            ability_actions.append(await self.perform_ability(
+            await self.perform_ability(
                 self._current_task, self._ability_registry.dump_abilities(), **kwargs
-            ))
+            )
         else:
             # Execute for Sequential nature
             for ability in self._ability_registry.abilities():
                 # print(res.content)
-                ability_actions.append(await self.perform_ability(
+                await self.perform_ability(
                     self._current_task, [ability.dump()], **kwargs
-                ))
+                )
                 # TODO add context to task prior actions as ability action.
                 # task.
-        return ability_actions
 
     async def perform_ability(
         self, task: Task, ability_schema: List[dict], **kwargs
-    ) -> AbilityAction:
+    ) -> None:
         if self._execution_nature == ExecutionNature.AUTO:
             response = await self.determine_next_ability(
                 task, ability_schema, **kwargs
@@ -213,8 +219,14 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
 
         if response.content.get("clarifying_question"):
             # TODO : Ask clarifying question to user using callback handler
-            pass
-            # self._callback.on_clarifying_question(response.content.get("clarifying_question"))
+            user_input, hold = await self._callback.on_clarifying_question(
+                response.content.get("clarifying_question"), self._current_task, response, self._current_context
+            )
+            self._current_task.context.user_input.append(f"System: {response.content.get('clarifying_question')}")
+            if user_input:
+                self._current_task.context.user_input.append(f"User: {user_input}")
+            self._interaction = hold
+            return
 
         ability_args = response.content.get("ability_arguments", {})
         # Add context to ability arguments
@@ -241,7 +253,6 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         self._next_step = None
         # TODO: Remove below line, only for testing purpose
         # self._interaction = True
-        return ability_action
 
     async def _update_tasks_and_memory(self, ability_result: AbilityAction, response: LanguageModelResponse):
         self._current_task.context.cycle_count += 1
@@ -259,6 +270,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         status = TaskStatus.IN_PROGRESS
         if response.content.get("task_status"):
             status = TaskStatus(response.content.get("task_status"))
+        self._status = status
         self._current_task.context.status = status
         self._current_task.context.enough_info = True
         # todo: instead of overriding memories everytime ... aother way to improve context is keep the whole ability context when executing in pilot and pass only the last one as response
@@ -367,6 +379,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             pilot_config: PilotConfiguration = None,
             location: PluginLocation = None,
             logger: logging.Logger = None,
+            callback: BaseCallbackManager = STDInOutCallbackManager(),
             **kwargs
     ) -> "SuperTaskPilot":
         # Initialize settings
@@ -395,7 +408,11 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         # Create and return SimpleTaskPilot instance
         return cls(
             ability_registry=ability_registry,
-            configuration=config, model_providers=model_providers, logger=logger)
+            configuration=config,
+            model_providers=model_providers, 
+            logger=logger,
+            callback=callback
+        )
 
     @classmethod
     def create(cls,
@@ -408,6 +425,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
                pilot_config=None,
                abilities: List[Ability] = None,
                environment: Environment = None,
+               callback: BaseCallbackManager = STDInOutCallbackManager(),
                **kwargs
                ):
 
@@ -438,6 +456,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             model_providers=model_providers,
             models=models_config,
             pilot_config=pilot_config,
+            callback=callback,
             **kwargs
         )
         return pilot

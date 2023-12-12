@@ -18,11 +18,10 @@ class BaseCallback(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def on_clarifying_question(self, *args, **kwargs):
+    async def on_info(self, info, *args, **kwargs):
         ...
 
     @classmethod
     def name(cls) -> str:
         """The name of the ability."""
         return inflection.underscore(cls.__name__)
-

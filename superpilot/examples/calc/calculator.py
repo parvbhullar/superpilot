@@ -3,6 +3,11 @@ import sys
 import asyncio
 import time
 from abc import abstractmethod
+
+from superpilot.core.callback.handler.simple import SimpleCallbackHandler
+from superpilot.core.callback.manager.simple import SimpleCallbackManager
+from superpilot.core.callback.manager.std_io import STDInOutCallbackManager
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 from superpilot.core.state.base import State
@@ -67,7 +72,12 @@ class Calculator(BaseExecutor):
             self.env, self.ALLOWED_ABILITY
         )
 
-        self.chain = SuperChain(state=kwargs.get("state", State()))
+        self.chain = SuperChain(
+            state=kwargs.get("state", State()),
+            callback=STDInOutCallbackManager(
+                callbacks=[SimpleCallbackHandler()]
+            )
+        )
 
         transform_pilot = SimpleTaskPilot.create(
             prompt_config=TransformerPrompt.default_configuration,
@@ -103,6 +113,9 @@ class Calculator(BaseExecutor):
                 max_task_cycle_count=3,
                 creation_time="",
                 execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
+            ),
+            callback=STDInOutCallbackManager(
+                callbacks=[SimpleCallbackHandler()]
             ),
             abilities=[AddAbility, MultiplyAbility, SubtractAbility, DivisionAbility, RootAbility, DefaultAbility],
         )
@@ -159,7 +172,6 @@ class Calculator(BaseExecutor):
 
     async def run(self, query):
         response = await self.execute(query)
-        print("Response", response)
         return response
 
     def format_numbered(self, items) -> str:
@@ -183,15 +195,16 @@ class Calculator(BaseExecutor):
 
 if __name__ == "__main__":
     environment = get_env({})
-    # state = PickleState(thread_id='thread1', workspace=environment.workspace)
-    state = State(thread_id='thread1', workspace=environment.workspace)
+    state = PickleState(thread_id='thread1', workspace=environment.workspace)
+    # state = State()
     calc = Calculator(state=state)
     # print(asyncio.run(calc.run("add 2 and 3")))
     # print(
     #     asyncio.run(calc.run("transform data from text and multiply 2 and 3 and then sum with 6 and then subtract 2 "
     #                          "and then divide by 2 and plot the graph using data from text")))
-    print(asyncio.run(calc.run("Multiply few given numbers with 3")))
+    # print(asyncio.run(calc.run("Multiply few given numbers with 3")))
+    print(asyncio.run(calc.run("Multiply with 8")))
     # print(asyncio.run(calc.run("Please find the doc number 1 and date is 12-2-2021")))
-    print('='*100)
-    calc2 = Calculator(state=state)
+    # print('='*100)
+    # calc2 = Calculator(state=state)
     # print(asyncio.run(calc2.run("User Answer")))

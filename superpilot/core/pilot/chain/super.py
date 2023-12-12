@@ -1,4 +1,7 @@
 import logging
+
+from superpilot.core.callback.manager.base import BaseCallbackManager
+from superpilot.core.callback.manager.std_io import STDInOutCallbackManager
 from superpilot.core.pilot.chain.base import BaseChain, HandlerType
 
 from superpilot.core.ability import AbilityAction
@@ -15,12 +18,14 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
         self,
         logger: logging.Logger = logging.getLogger(__name__),
         state: BaseState = None,
+        callback: BaseCallbackManager = STDInOutCallbackManager(),
         **kwargs
     ):
         super().__init__(logger, **kwargs)
         self.logger = logger
         self._interaction = False
 
+        # state vars
         self._current_observation = None
         self._task_queue = []
         self._completed_tasks = []
@@ -29,6 +34,9 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
         self._response = None
         self._context = Context()
         self._pilot_state = {}
+
+        # utility vars
+        self._callback = callback
 
         # load the values from state
         self._state = state
@@ -48,7 +56,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
             self._pilot_state = {}
 
         while self._task_index < len(self._task_queue):
-            self._response, self._context = await self.execute_next(self._response, self._context, **kwargs)
+            self._response, self._context = await self.execute_next(self._response, self._context, objective, **kwargs)
             # TODO: interaction can be more  types, some may hault the execution and some may continue right after interaction immedatly (like..question and info)
             if self._interaction:
                 break
@@ -80,7 +88,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
         else:
             return "Task is already completed", context
 
-    async def execute_next(self, response, context: Context, **kwargs):
+    async def execute_next(self, response, context: Context, objective, **kwargs):
         self._current_task = self._task_queue[self._task_index]
         if self._current_task.status != TaskStatus.DONE:
             handler, transformer = self.current_handler(self._current_task.function_name)
@@ -93,7 +101,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
             else:
                 # TODO: there should be Pilot Task where we store the pilot Action?
                 await self._state.deserialize(handler, self._pilot_state)
-                response, context = await self.execute_handler(self._current_task.objective, context, handler, transformer, **kwargs)
+                response, context = await self.execute_handler(self._current_task.objective, context, handler, transformer, user_input=objective, **kwargs)
                 # TODO: Make it interaction based?
                 if self._pilot_state.get('_status', TaskStatus.DONE) == TaskStatus.DONE:
                     self._pilot_state = {}
@@ -102,7 +110,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
                     self._task_index += 1
                 else:
                     self._current_task.status = TaskStatus.IN_PROGRESS
-                    # self._interaction = True
+                    self._interaction = True
                     current_state = await self._state.serialize(self)
                     await self._state.save(current_state)
                 # self._task_queue.remove(self._current_task)
