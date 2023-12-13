@@ -230,6 +230,8 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             return
 
         ability_args = response.content.get("ability_arguments", {})
+        # TODO do a better implementation
+        kwargs['callback'] = self._callback
         # Add context to ability arguments
         ability_action = await self._ability_registry.perform(
             response.content["next_ability"], ability_args=ability_args, **kwargs

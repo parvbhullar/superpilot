@@ -205,7 +205,7 @@ if __name__ == "__main__":
     #     asyncio.run(calc.run("transform data from text and multiply 2 and 3 and then sum with 6 and then subtract 2 "
     #                          "and then divide by 2 and plot the graph using data from text")))
     # print(asyncio.run(calc.run("Multiply few given numbers with 3")))
-    print(asyncio.run(calc.run("Multiply with 8")))
+    print(asyncio.run(calc.run("add 2 and 3")))
     # print(asyncio.run(calc.run("Please find the doc number 1 and date is 12-2-2021")))
     # print('='*100)
     # calc2 = Calculator(state=state)

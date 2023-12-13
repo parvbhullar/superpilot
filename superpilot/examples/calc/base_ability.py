@@ -80,8 +80,11 @@ class AddAbility(Ability):
         }
 
     async def __call__(self, num1: float, num2: float, **kwargs) -> Context:
+        callback = kwargs.get("callback")
         result = num1 + num2
         message = f"The sum is {result}."
+        if callback:
+            await callback.on_info(message)
         print(message)
         return Context.factory().add_content(message)
 
