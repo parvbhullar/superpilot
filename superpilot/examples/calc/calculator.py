@@ -64,7 +64,7 @@ class Calculator(BaseExecutor):
         RootAbility.name(): RootAbility.default_configuration,
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, thread_id: str, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -72,8 +72,11 @@ class Calculator(BaseExecutor):
             self.env, self.ALLOWED_ABILITY
         )
 
+        environment = get_env({})
+        state = PickleState(thread_id=thread_id, workspace=environment.workspace)
+
         self.chain = SuperChain(
-            state=kwargs.get("state", State()),
+            state=state,
             callback=STDInOutCallbackManager(
                 callbacks=[SimpleCallbackHandler()]
             )
@@ -164,7 +167,7 @@ class Calculator(BaseExecutor):
         #     "solution": response.format_numbered(),
         # }
         # task = self.PROMPT_TEMPLATE.format(**response)
-        return data, context
+        return response, context
 
     async def execute(self, task: str):
         response, context = await self.chain.execute(task, self.context)
@@ -194,10 +197,9 @@ class Calculator(BaseExecutor):
 
 
 if __name__ == "__main__":
-    environment = get_env({})
-    state = PickleState(thread_id='thread1', workspace=environment.workspace)
     # state = State()
-    calc = Calculator(state=state)
+    thread_id = "thread1"
+    calc = Calculator(thread_id=thread_id)
     # print(asyncio.run(calc.run("add 2 and 3")))
     # print(
     #     asyncio.run(calc.run("transform data from text and multiply 2 and 3 and then sum with 6 and then subtract 2 "

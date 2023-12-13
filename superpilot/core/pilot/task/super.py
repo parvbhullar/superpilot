@@ -138,7 +138,8 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             self._current_task = task
             self._current_task.set_default_memory(self._current_context.to_list())
         else:
-            self._current_task.context.user_input.append(kwargs.get("user_input", ""))
+            user_input = kwargs.get("user_input", "")
+            self._current_task.context.user_input.append(f"User: {user_input}")
             # self._current_task.context.user_interactions[-1].user_input = kwargs.get("user_input", "")
        
         # Add the context to default task memory to make use of it in ability execution

@@ -43,23 +43,26 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
 
     async def execute(self, objective: str, context: Context, **kwargs):
         # Splitting the observation and execution phases
+        self._context = context
         state = await self._state.load()
         await self._state.deserialize(self, state)
         kwargs['current_chain'] = self
         self._interaction = False
         if not self._current_observation:
-            observation = await self.observe(objective, context)
+            observation = await self.observe(objective, self._context)
             if not observation:
-                return "Either observation or observer is not defined, please set observer in the chain.", context
+                return "Either observation or observer is not defined, please set observer in the chain.", self._context
             self._current_observation = observation
             self._task_queue = observation.tasks
             self._pilot_state = {}
 
         while self._task_index < len(self._task_queue):
-            self._response, self._context = await self.execute_next(self._response, self._context, objective, **kwargs)
+            await self.execute_next(objective, **kwargs)
             # TODO: interaction can be more  types, some may hault the execution and some may continue right after interaction immedatly (like..question and info)
             if self._interaction:
                 break
+        if self._task_index == len(self._task_queue):
+            await self._state.save({})
         return self._response, self._context
 
     async def handle_task_based_on_observation(self, context: Context, **kwargs):
@@ -88,7 +91,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
         else:
             return "Task is already completed", context
 
-    async def execute_next(self, response, context: Context, objective, **kwargs):
+    async def execute_next(self, objective, **kwargs):
         self._current_task = self._task_queue[self._task_index]
         if self._current_task.status != TaskStatus.DONE:
             handler, transformer = self.current_handler(self._current_task.function_name)
@@ -101,7 +104,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
             else:
                 # TODO: there should be Pilot Task where we store the pilot Action?
                 await self._state.deserialize(handler, self._pilot_state)
-                response, context = await self.execute_handler(self._current_task.objective, context, handler, transformer, user_input=objective, **kwargs)
+                self._response, self._context = await self.execute_handler(self._current_task.objective, self._context, handler, transformer, user_input=objective, **kwargs)
                 # TODO: Make it interaction based?
                 if self._pilot_state.get('_status', TaskStatus.DONE) == TaskStatus.DONE:
                     self._pilot_state = {}
@@ -115,9 +118,8 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
                     await self._state.save(current_state)
                 # self._task_queue.remove(self._current_task)
         else:
-            response = "Task is already completed"
+            self._response = "Task is already completed"
             self._task_index += 1
-        return response, context
 
     async def execute_handler(self, task, context: Context, handler, transformer, **kwargs):
         response = None
