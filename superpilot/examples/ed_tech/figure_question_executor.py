@@ -1,7 +1,9 @@
 from typing import List
 from superpilot.core.context.schema import Context
 from superpilot.core.pilot.task.simple import SimpleTaskPilot
-from superpilot.core.resource.model_providers.factory import ModelProviderFactory, ModelConfigFactory
+from superpilot.core.resource.model_providers.factory import (
+    ModelProviderFactory,
+)
 from superpilot.examples.executor.base import BaseExecutor
 from superpilot.examples.ed_tech.question_solver import QuestionSolverPrompt
 from superpilot.examples.ed_tech.solution_validator import SolutionValidatorPrompt
@@ -14,15 +16,11 @@ from superpilot.examples.ed_tech.ag_question_solver_ability import (
     AGQuestionSolverAbility,
 )
 from superpilot.core.pilot.chain.simple import SimpleChain
-from superpilot.examples.pilots.tasks.super import SuperTaskPilot
+
+# from superpilot.examples.pilots.tasks.super import SuperTaskPilot
 from superpilot.core.resource.model_providers import (
-    ModelProviderName,
     AnthropicModelName,
     OpenAIModelName,
-)
-from superpilot.core.planning.settings import (
-    LanguageModelConfiguration,
-    LanguageModelClassification,
 )
 
 
@@ -48,31 +46,40 @@ class FigureQuestionExecutor(BaseExecutor):
         self.super_prompt = QuestionSolverPrompt.factory()
 
         vision_pilot = SimpleTaskPilot.create(
-                DescribeQFigurePrompt.default_configuration,
-                model_providers=self.model_providers,
-                smart_model_name=OpenAIModelName.GPT4_VISION,
-                fast_model_name=OpenAIModelName.GPT3,
-            )
+            DescribeQFigurePrompt.default_configuration,
+            model_providers=self.model_providers,
+            smart_model_name=OpenAIModelName.GPT4_VISION,
+            fast_model_name=OpenAIModelName.GPT3,
+        )
         solver_pilot = SimpleTaskPilot.create(
-                SolutionValidatorPrompt.default_configuration,
-                model_providers=self.model_providers,
-                smart_model_name=AnthropicModelName.CLAUD_2,
-                fast_model_name=AnthropicModelName.CLAUD_2_INSTANT,
-            )
+            SolutionValidatorPrompt.default_configuration,
+            model_providers=self.model_providers,
+            smart_model_name=AnthropicModelName.CLAUD_2,
+            fast_model_name=AnthropicModelName.CLAUD_2_INSTANT,
+        )
         format_pilot = SimpleTaskPilot.create(
-                SolutionValidatorPrompt.default_configuration,
-                model_providers=self.model_providers,
-                smart_model_name=OpenAIModelName.GPT4_TURBO,
-                fast_model_name=OpenAIModelName.GPT3,
-            )
+            SolutionValidatorPrompt.default_configuration,
+            model_providers=self.model_providers,
+            smart_model_name=OpenAIModelName.GPT4_TURBO,
+            fast_model_name=OpenAIModelName.GPT3,
+        )
         # auto_solver_pilot = SuperTaskPilot(super_ability_registry, self.model_providers)
         # print("VISION", vision_pilot)
 
         # Initialize and add pilots to the chain here, for example:
-        # self.chain.add_handler(auto_solver_pilot, self.vision_transformer)
         self.chain.add_handler(vision_pilot, self.vision_transformer)
+        # self.chain.add_handler(auto_solver_pilot, self.auto_solver_transformer)
         self.chain.add_handler(solver_pilot, self.solver_transformer)
         self.chain.add_handler(format_pilot, self.format_transformer)
+
+    def auto_solver_transformer(self, data, response, context):
+        # print("Auto solver transformer", data, response)
+        response = {
+            "question": data,
+            "solution": response.format_numbered(),
+        }
+        task = self.PROMPT_TEMPLATE.format(**response)
+        return task, context
 
     def vision_transformer(self, data, response, context):
         response = {
@@ -149,26 +156,29 @@ class FigureQuestionExecutor(BaseExecutor):
     # Function to get base64 string from image file
     def image_to_base64(self, image_path):
         import base64
+
         # Infer the image type from the file extension
-        image_type = image_path.split('.')[-1].lower()
+        image_type = image_path.split(".")[-1].lower()
         # Determine the correct MIME type
-        if image_type == 'png':
-            mime_type = 'image/png'
-        elif image_type in ['jpg', 'jpeg']:
-            mime_type = 'image/jpeg'
-        elif image_type == 'gif':
-            mime_type = 'image/gif'
+        if image_type == "png":
+            mime_type = "image/png"
+        elif image_type in ["jpg", "jpeg"]:
+            mime_type = "image/jpeg"
+        elif image_type == "gif":
+            mime_type = "image/gif"
         else:
             raise ValueError("Unsupported image type")
 
         # Open the image file in binary read mode
-        with open(image_path, 'rb') as image_file:
+        with open(image_path, "rb") as image_file:
             # Read the image file
             image_data = image_file.read()
             # Encode the image data using base64
             base64_encoded_data = base64.b64encode(image_data)
             # Format with the prefix for data URI scheme
-            base64_image = f"data:{mime_type};base64,{base64_encoded_data.decode('utf-8')}"
+            base64_image = (
+                f"data:{mime_type};base64,{base64_encoded_data.decode('utf-8')}"
+            )
             return base64_image
 
     def image_to_text(self, image_path):
