@@ -88,6 +88,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         model_providers: Dict[ModelProviderName, LanguageModelProvider],
         callback: BaseCallbackManager = STDInOutCallbackManager(),
         configuration: TaskPilotConfiguration = default_configuration,
+        thread_id: str = None,
         logger: logging.Logger = logging.getLogger(__name__),
     ) -> None:
         self._logger = logger
@@ -108,6 +109,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             self._prompt_strategy = strategies.NextAbility(**prompt_config)
 
         self._callback = callback
+        self.thread_id = thread_id
 
         self._task_queue = []
         self._completed_tasks = []
@@ -221,7 +223,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         if response.content.get("clarifying_question"):
             # TODO : Ask clarifying question to user using callback handler
             user_input, hold = await self._callback.on_clarifying_question(
-                response.content.get("clarifying_question"), self._current_task, response, self._current_context
+                response.content.get("clarifying_question"), self._current_task, response, self._current_context, self.thread_id
             )
             self._current_task.context.user_input.append(f"System: {response.content.get('clarifying_question')}")
             if user_input:
@@ -232,6 +234,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         ability_args = response.content.get("ability_arguments", {})
         # TODO do a better implementation
         kwargs['callback'] = self._callback
+        kwargs['thread_id'] = self.thread_id
         # Add context to ability arguments
         ability_action = await self._ability_registry.perform(
             response.content["next_ability"], ability_args=ability_args, **kwargs
@@ -383,6 +386,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             location: PluginLocation = None,
             logger: logging.Logger = None,
             callback: BaseCallbackManager = STDInOutCallbackManager(),
+            thread_id: str = None,
             **kwargs
     ) -> "SuperTaskPilot":
         # Initialize settings
@@ -414,7 +418,8 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             configuration=config,
             model_providers=model_providers, 
             logger=logger,
-            callback=callback
+            callback=callback,
+            thread_id=thread_id,
         )
 
     @classmethod
@@ -429,6 +434,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
                abilities: List[Ability] = None,
                environment: Environment = None,
                callback: BaseCallbackManager = STDInOutCallbackManager(),
+               thread_id: str = None,
                **kwargs
                ):
 
@@ -460,6 +466,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             models=models_config,
             pilot_config=pilot_config,
             callback=callback,
+            thread_id=thread_id,
             **kwargs
         )
         return pilot

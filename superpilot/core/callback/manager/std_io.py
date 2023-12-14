@@ -26,7 +26,7 @@ class STDInOutCallbackManager(BaseCallbackManager):
     async def on_info(self, *args, **kwargs):
         await handle_event(self._callbacks, "on_info", *args, **kwargs)
 
-    async def on_clarifying_question(self, question, current_task, response, current_context, *args, **kwargs) -> Tuple[str, bool]:
+    async def on_clarifying_question(self, question, current_task, response, current_context, thread_id, *args, **kwargs) -> Tuple[str, bool]:
         print("Question ", question)
         try:
             user_input = input("Enter your response: ")

@@ -20,6 +20,9 @@ class BaseCallbackManager(BaseCallback):
     async def on_clarifying_question(self, *args, **kwargs):
         ...
 
+    async def on_user_interaction(self, *args, **kwargs):
+        pass
+
     @classmethod
     def name(cls) -> str:
         """The name of the ability."""

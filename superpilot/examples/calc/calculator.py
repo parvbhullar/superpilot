@@ -79,7 +79,8 @@ class Calculator(BaseExecutor):
             state=state,
             callback=STDInOutCallbackManager(
                 callbacks=[SimpleCallbackHandler()]
-            )
+            ),
+            thread_id=thread_id,
         )
 
         transform_pilot = SimpleTaskPilot.create(
@@ -120,6 +121,7 @@ class Calculator(BaseExecutor):
             callback=STDInOutCallbackManager(
                 callbacks=[SimpleCallbackHandler()]
             ),
+            thread_id=thread_id,
             abilities=[AddAbility, MultiplyAbility, SubtractAbility, DivisionAbility, RootAbility, DefaultAbility],
         )
 

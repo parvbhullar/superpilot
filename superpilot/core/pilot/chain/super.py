@@ -18,6 +18,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
         self,
         logger: logging.Logger = logging.getLogger(__name__),
         state: BaseState = None,
+        thread_id: str = None,
         callback: BaseCallbackManager = STDInOutCallbackManager(),
         **kwargs
     ):
@@ -37,6 +38,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
 
         # utility vars
         self._callback = callback
+        self.thread_id = thread_id
 
         # load the values from state
         self._state = state
@@ -63,6 +65,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
                 break
         if self._task_index == len(self._task_queue):
             await self._state.save({})
+            await self._callback.on_user_interaction(self.thread_id)
         return self._response, self._context
 
     async def handle_task_based_on_observation(self, context: Context, **kwargs):
@@ -116,6 +119,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
                     self._interaction = True
                     current_state = await self._state.serialize(self)
                     await self._state.save(current_state)
+                    await self._callback.on_user_interaction(self.thread_id)
                 # self._task_queue.remove(self._current_task)
         else:
             self._response = "Task is already completed"
