@@ -143,12 +143,11 @@ class ObjectContent(ContentItem):
         return f"The is object of '{self.source}'"
 
     @staticmethod
-    def add(
-            content: dict | list,
-            source: str = None
-    ):
+    def add(content: dict | list, source: str = None):
         knowledge = ObjectContent(content, source)
-        knowledge.content_type = isinstance(content, dict) and ContentType.DICT or ContentType.LIST
+        knowledge.content_type = (
+            isinstance(content, dict) and ContentType.DICT or ContentType.LIST
+        )
         return knowledge
 
 
@@ -225,7 +224,9 @@ class Context:
         if isinstance(item, ContentItem):
             self.items.append(item)
         elif isinstance(item, Exception):
-            self.items.append(Content.add_content_item(str(item), ContentType.EXCEPTION))
+            self.items.append(
+                Content.add_content_item(str(item), ContentType.EXCEPTION)
+            )
         elif isinstance(item, str):
             self.items.append(Content.add_content_item(item, ContentType.TEXT))
         else:
