@@ -4,7 +4,15 @@ import asyncio
 import time
 from abc import abstractmethod
 
+from superpilot.core.callback.handler.simple import SimpleCallbackHandler
+from superpilot.core.callback.manager.simple import SimpleCallbackManager
+from superpilot.core.callback.manager.std_io import STDInOutCallbackManager
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
+
+from superpilot.core.state.base import State
+from superpilot.core.state.pickle import PickleState
+
 
 from superpilot.core.pilot.chain.strategy.observation_strategy import ObserverPrompt
 from superpilot.core.pilot.chain.super import SuperChain
@@ -46,7 +54,6 @@ from superpilot.examples.calc.base_ability import AddAbility, MultiplyAbility, S
 class Calculator(BaseExecutor):
     model_providers = ModelProviderFactory.load_providers()
     context = Context()
-    chain = SuperChain()
     config = get_config()
     env = get_env({})
     ALLOWED_ABILITY = {
@@ -57,12 +64,23 @@ class Calculator(BaseExecutor):
         RootAbility.name(): RootAbility.default_configuration,
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, thread_id: str, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
         super_ability_registry = SuperAbilityRegistry.factory(
             self.env, self.ALLOWED_ABILITY
+        )
+
+        environment = get_env({})
+        state = PickleState(thread_id=thread_id, workspace=environment.workspace)
+
+        self.chain = SuperChain(
+            state=state,
+            callback=STDInOutCallbackManager(
+                callbacks=[SimpleCallbackHandler()]
+            ),
+            thread_id=thread_id,
         )
 
         transform_pilot = SimpleTaskPilot.create(
@@ -100,6 +118,10 @@ class Calculator(BaseExecutor):
                 creation_time="",
                 execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
             ),
+            callback=STDInOutCallbackManager(
+                callbacks=[SimpleCallbackHandler()]
+            ),
+            thread_id=thread_id,
             abilities=[AddAbility, MultiplyAbility, SubtractAbility, DivisionAbility, RootAbility, DefaultAbility],
         )
 
@@ -147,7 +169,7 @@ class Calculator(BaseExecutor):
         #     "solution": response.format_numbered(),
         # }
         # task = self.PROMPT_TEMPLATE.format(**response)
-        return data, context
+        return response, context
 
     async def execute(self, task: str):
         response, context = await self.chain.execute(task, self.context)
@@ -155,7 +177,6 @@ class Calculator(BaseExecutor):
 
     async def run(self, query):
         response = await self.execute(query)
-        print("Response", response)
         return response
 
     def format_numbered(self, items) -> str:
@@ -178,9 +199,16 @@ class Calculator(BaseExecutor):
 
 
 if __name__ == "__main__":
-    calc = Calculator()
+    # state = State()
+    thread_id = "thread1"
+    calc = Calculator(thread_id=thread_id)
     # print(asyncio.run(calc.run("add 2 and 3")))
-    print(
-        asyncio.run(calc.run("transform data from text and multiply 2 and 3 and then sum with 6 and then subtract 2 "
-                             "and then divide by 2 and plot the graph using data from text")))
+    # print(
+    #     asyncio.run(calc.run("transform data from text and multiply 2 and 3 and then sum with 6 and then subtract 2 "
+    #                          "and then divide by 2 and plot the graph using data from text")))
+    # print(asyncio.run(calc.run("Multiply few given numbers with 3")))
+    print(asyncio.run(calc.run("add 2 and 3")))
     # print(asyncio.run(calc.run("Please find the doc number 1 and date is 12-2-2021")))
+    # print('='*100)
+    # calc2 = Calculator(state=state)
+    # print(asyncio.run(calc2.run("User Answer")))

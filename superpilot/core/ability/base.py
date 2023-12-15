@@ -144,5 +144,5 @@ class AbilityRegistry(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def perform(self, ability_name: str, **kwargs) -> AbilityAction:
+    async def perform(self, ability_name: str, ability_args: dict, **kwargs) -> AbilityAction:
         ...

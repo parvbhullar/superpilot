@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 from superpilot.core.configuration.schema import SystemConfiguration
 from superpilot.core.planning.base import PromptStrategy
@@ -21,6 +21,7 @@ class TaskPilotConfiguration(SystemConfiguration):
     models: Dict[LanguageModelClassification, LanguageModelConfiguration]
     pilot: PilotConfiguration = None
     execution_nature: ExecutionNature = ExecutionNature.SIMPLE
+    callbacks: List[PluginLocation] = None
     prompt_strategy: SystemConfiguration = None
     memory_provider_required: bool = False
     workspace_required: bool = False
