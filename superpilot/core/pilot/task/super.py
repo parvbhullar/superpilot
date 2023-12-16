@@ -22,7 +22,6 @@ from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning import strategies
 from superpilot.core.planning.schema import (
     LanguageModelResponse,
-    ExecutionNature,
     Task, TaskStatus,
 )
 from superpilot.core.planning.settings import (
@@ -37,7 +36,7 @@ from superpilot.core.resource.model_providers import (
 )
 from superpilot.core.pilot.settings import (
     PilotConfiguration,
-    ExecutionAlgo
+    ExecutionAlgo, ExecutionNature
 )
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory, ModelConfigFactory
 from superpilot.core.environment import Environment, SimpleEnv

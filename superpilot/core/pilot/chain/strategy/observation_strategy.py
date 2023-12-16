@@ -4,7 +4,7 @@ from superpilot.core.planning.strategies.simple import SimplePrompt
 
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
-    LanguageModelPrompt, TaskStatus, TaskType,
+    LanguageModelPrompt, TaskStatus, TaskType, Task,
 )
 from superpilot.core.planning.strategies.utils import json_loads
 from superpilot.core.resource.model_providers import (
@@ -16,7 +16,7 @@ import enum
 from pydantic import Field
 
 
-class Task(SchemaModel):
+class TaskSchema(SchemaModel):
     """
     Class representing the data structure for task for pilot objective, whether it is complete or not.
     """
@@ -41,6 +41,9 @@ class Task(SchemaModel):
     reasoning: str = Field(..., description="Your reasoning for choosing this pilot taking into account the "
                                             "`motivation` and weighing the `self_criticism`.")
 
+    def get_task(self) -> Task:
+        return Task.factory(self.objective, self.type, self.priority, self.ready_criteria, self.acceptance_criteria, status=self.status)
+
 
 class Observation(SchemaModel):
     """
@@ -49,9 +52,15 @@ class Observation(SchemaModel):
     """
     current_status: TaskStatus = Field(..., description="Status of the objective asked by the user ")
 
-    tasks: List[Task] = Field(
+    tasks: List[TaskSchema] = Field(
         ..., description="List of tasks to be accomplished by the each pilot"
     )
+
+    def get_tasks(self) -> List[Task]:
+        lst = []
+        for task in self.tasks:
+            lst.append(task.get_task())
+        return lst
 
 
 class ObserverPrompt(SimplePrompt, ABC):

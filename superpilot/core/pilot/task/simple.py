@@ -11,7 +11,6 @@ from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.strategies.simple import SimplePrompt
 from superpilot.core.planning.schema import (
     LanguageModelResponse,
-    ExecutionNature,
     Task,
 )
 from superpilot.core.planning.settings import (
@@ -32,7 +31,7 @@ from superpilot.core.resource.model_providers.utils.token_counter import (
 )
 from superpilot.core.pilot.settings import (
     PilotConfiguration,
-    ExecutionAlgo
+    ExecutionAlgo, ExecutionNature
 )
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory, ModelConfigFactory
 from superpilot.core.state.mixins import PickleStateMixin, DictStateMixin

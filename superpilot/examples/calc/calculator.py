@@ -2,13 +2,13 @@ import os
 import sys
 import asyncio
 import time
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 from abc import abstractmethod
 
 from superpilot.core.callback.handler.simple import SimpleCallbackHandler
 from superpilot.core.callback.manager.simple import SimpleCallbackManager
 from superpilot.core.callback.manager.std_io import STDInOutCallbackManager
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 from superpilot.core.state.base import State
 from superpilot.core.state.pickle import PickleState

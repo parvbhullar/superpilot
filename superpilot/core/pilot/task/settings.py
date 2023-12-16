@@ -2,14 +2,13 @@ from typing import Dict, List
 
 from superpilot.core.configuration.schema import SystemConfiguration
 from superpilot.core.planning.base import PromptStrategy
-from superpilot.core.planning.schema import ExecutionNature
 from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
     PromptStrategyConfiguration,
     LanguageModelClassification
 )
 from superpilot.core.pilot.settings import (
-    PilotConfiguration,
+    PilotConfiguration, ExecutionNature,
 )
 
 
