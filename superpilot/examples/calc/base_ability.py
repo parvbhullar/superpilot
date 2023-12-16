@@ -1,12 +1,10 @@
 from dataclasses import dataclass
-from typing import List
 import logging
 
-from superpilot.core.ability import AbilityAction
 from superpilot.core.ability.base import Ability, AbilityConfiguration
 from superpilot.core.configuration import Config
 from superpilot.core.environment import Environment
-from superpilot.core.context.schema import Context, Content, ContentType
+from superpilot.core.context.schema import Context
 from superpilot.core.planning import PromptStrategy
 from superpilot.core.plugin.base import PluginLocation, PluginStorageFormat
 
@@ -22,10 +20,10 @@ class DefaultAbility(Ability):
     )
 
     def __init__(
-            self,
-            environment: Environment,
-            configuration: AbilityConfiguration = default_configuration,
-            prompt_strategy: PromptStrategy = None,
+        self,
+        environment: Environment,
+        configuration: AbilityConfiguration = default_configuration,
+        prompt_strategy: PromptStrategy = None,
     ):
         self._logger: logging.Logger = environment.get("logger")
         self._configuration = configuration
@@ -40,11 +38,16 @@ class DefaultAbility(Ability):
         return {
             "task_summary": {
                 "type": "string",
-                "description": "verbose completion summary of the task"
+                "description": "verbose completion summary of the task",
             }
         }
 
-    async def __call__(self, task_summary: str, **kwargs) -> Context:
+    async def __call__(self, task_summary: str = "", **kwargs) -> Context:
+        callback = kwargs.get("callback")
+        print('callback', callback)
+        if callback:
+            print("DefaultAbility", kwargs)
+            await callback.on_info(message=task_summary, **kwargs)
         return Context.factory().add_content(task_summary)
 
 
@@ -59,10 +62,10 @@ class AddAbility(Ability):
     )
 
     def __init__(
-            self,
-            environment: Environment,
-            configuration: AbilityConfiguration = default_configuration,
-            prompt_strategy: PromptStrategy = None,
+        self,
+        environment: Environment,
+        configuration: AbilityConfiguration = default_configuration,
+        prompt_strategy: PromptStrategy = None,
     ):
         self._logger: logging.Logger = environment.get("logger")
         self._configuration = configuration
@@ -80,12 +83,12 @@ class AddAbility(Ability):
         }
 
     async def __call__(self, num1: float, num2: float, **kwargs) -> Context:
-        callback = kwargs.get("callback")
         result = num1 + num2
         message = f"The sum is {result}."
+        callback = kwargs.get("callback")
         if callback:
-            await callback.on_info(message)
-        print(message)
+            thread_id = kwargs.get("thread_id")
+            await callback.on_info(thread_id, message)
         return Context.factory().add_content(message)
 
 
@@ -101,10 +104,10 @@ class MultiplyAbility(Ability):
     )
 
     def __init__(
-            self,
-            environment: Environment,
-            configuration: AbilityConfiguration = default_configuration,
-            prompt_strategy: PromptStrategy = None,
+        self,
+        environment: Environment,
+        configuration: AbilityConfiguration = default_configuration,
+        prompt_strategy: PromptStrategy = None,
     ):
         self._logger: logging.Logger = environment.get("logger")
         self._configuration = configuration
@@ -126,7 +129,11 @@ class MultiplyAbility(Ability):
         message = f"The Multiplication is {result}."
         print(message)
         # Rest of the method remains the same
-        print(Context.factory().add_content(message))
+        callback = kwargs.get("callback")
+        print(callback)
+        if callback:
+            thread_id = kwargs.get("thread_id")
+            await callback.on_info(thread_id, message)
         return Context.factory().add_content(message)
 
 
@@ -142,10 +149,10 @@ class SubtractAbility(Ability):
     )
 
     def __init__(
-            self,
-            environment: Environment,
-            configuration: AbilityConfiguration = default_configuration,
-            prompt_strategy: PromptStrategy = None,
+        self,
+        environment: Environment,
+        configuration: AbilityConfiguration = default_configuration,
+        prompt_strategy: PromptStrategy = None,
     ):
         self._logger: logging.Logger = environment.get("logger")
         self._configuration = configuration
@@ -166,6 +173,10 @@ class SubtractAbility(Ability):
         result = num1 - num2
         message = f"The difference is {result}."
         # Rest of the method remains the same
+        callback = kwargs.get("callback")
+        if callback:
+            thread_id = kwargs.get("thread_id")
+            await callback.on_info(thread_id, message)
         return Context.factory().add_content(message)
 
 
@@ -181,10 +192,10 @@ class DivisionAbility(Ability):
     )
 
     def __init__(
-            self,
-            environment: Environment,
-            configuration: AbilityConfiguration = default_configuration,
-            prompt_strategy: PromptStrategy = None,
+        self,
+        environment: Environment,
+        configuration: AbilityConfiguration = default_configuration,
+        prompt_strategy: PromptStrategy = None,
     ):
         self._logger: logging.Logger = environment.get("logger")
         self._configuration = configuration
@@ -208,6 +219,10 @@ class DivisionAbility(Ability):
         result = num1 / num2
         message = f"The quotient is {result}."
         # Rest of the method remains the same
+        callback = kwargs.get("callback")
+        if callback:
+            thread_id = kwargs.get("thread_id")
+            await callback.on_info(thread_id, message)
         return Context.factory().add_content(message)
 
 
@@ -223,10 +238,10 @@ class RootAbility(Ability):
     )
 
     def __init__(
-            self,
-            environment: Environment,
-            configuration: AbilityConfiguration = default_configuration,
-            prompt_strategy: PromptStrategy = None,
+        self,
+        environment: Environment,
+        configuration: AbilityConfiguration = default_configuration,
+        prompt_strategy: PromptStrategy = None,
     ):
         self._logger: logging.Logger = environment.get("logger")
         self._configuration = configuration
@@ -245,7 +260,7 @@ class RootAbility(Ability):
 
     async def __call__(self, num: float, root: float) -> Context:
         if root <= 0:
-            message="Root must be greater than zero."
+            message = "Root must be greater than zero."
             return Context.factory().add_content(message)
         result = num ** (1 / root)
         message = f"The {root}-root of {num} is {result}."
