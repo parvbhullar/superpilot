@@ -164,7 +164,7 @@ class NextAbility(PromptStrategy):
         #     **template_kwargs,
         # )
         template_kwargs["additional_info"] = to_numbered_list(
-            [memory.summary() for memory in task.context.memories]
+            [memory.summary for memory in task.context.memories]
             + [info for info in task.context.supplementary_info],
             no_items_response="There is no additional information available at this time.",
             use_format=False,
