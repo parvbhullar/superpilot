@@ -18,7 +18,7 @@ class BaseCallback(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def on_info(self, info, *args, **kwargs):
+    async def on_info(self, thread_id, message, *args, **kwargs):
         ...
 
     @classmethod

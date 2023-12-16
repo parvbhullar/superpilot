@@ -53,7 +53,7 @@ from superpilot.examples.calc.base_ability import AddAbility, MultiplyAbility, S
 
 class Calculator(BaseExecutor):
     model_providers = ModelProviderFactory.load_providers()
-    context = Context()
+    
     config = get_config()
     env = get_env({})
     ALLOWED_ABILITY = {
@@ -71,6 +71,8 @@ class Calculator(BaseExecutor):
         super_ability_registry = SuperAbilityRegistry.factory(
             self.env, self.ALLOWED_ABILITY
         )
+
+        self.context = Context()
 
         environment = get_env({})
         state = PickleState(thread_id=thread_id, workspace=environment.workspace)
