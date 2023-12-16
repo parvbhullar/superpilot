@@ -238,6 +238,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         # TODO do a better implementation
         kwargs['callback'] = self._callback
         kwargs['thread_id'] = self.thread_id
+        kwargs['action_objective'] = response.get("task_objective", "")
         # Add context to ability arguments
         ability_action = await self._ability_registry.perform(
             response.content["next_ability"], ability_args=ability_args, **kwargs

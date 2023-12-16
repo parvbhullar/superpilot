@@ -5,8 +5,8 @@ from superpilot.core.context.schema import Context, Content
 
 class AbilityAction(BaseModel):
     """The AbilityAction is a standard response struct for an ability."""
-    task_id: str = ""
     thread_id: str = ""
+    action_objective: str = ""
     ability_name: str = ""
     ability_args: Dict[str, str] = {}
     success: bool = False
@@ -27,14 +27,15 @@ class AbilityAction(BaseModel):
         kwargs = ", ".join(f"{k}={v}" for k, v in self.ability_args.items())
         # return f"{self.ability_name}({kwargs}): {self.message}"
         return (
-            f"{self.ability_name}({kwargs})\n"
+            f"objective: {self.action_objective}\n"
+            f"action:{self.ability_name}({kwargs})\n"
             "```\n"
-            f"{self.message}\n"
+            f"result:{self.message}\n"
             "```"
         )
 
     def get_memories(self):
-        print("get_memories", self.result.to_list())
+        # print("get_memories", self.result.to_list())
         return self.result.to_list()
 
 

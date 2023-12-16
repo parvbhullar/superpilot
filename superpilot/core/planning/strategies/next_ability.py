@@ -33,13 +33,13 @@ class NextAbility(PromptStrategy):
     ]
 
     DEFAULT_USER_PROMPT_TEMPLATE = (
-        "Your current task is is {task_objective}.\n"
+        "Your current task is '{task_objective}'.\n"
         "You have taken {cycle_count} actions on this task already. "
         "Here is the actions you have taken and their results:\n"
         "{action_history}\n\n"
         "Here is additional information that may be useful to you:\n"
         "{additional_info}\n\n"
-        "Additionally, you should consider the following:\n"
+        "Additionally, you should consider the following user conversation:\n"
         "{user_input}\n\n"
         "Your task of {task_objective} is complete when the following acceptance criteria have been met:\n"
         "{acceptance_criteria}\n\n"

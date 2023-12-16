@@ -134,12 +134,11 @@ class Task(BaseModel):
 
     def update_memory(self, memory: list):
         self.check_context()
-        self.context.memories = [*self.context.default_memory, *memory]
+        self.context.memories += memory
 
     def set_default_memory(self, memory: list):
         self.check_context()
         self.context.default_memory = memory
-        self.context.memories = memory
 
     def check_context(self):
         if self.context is None:
