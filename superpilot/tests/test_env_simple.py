@@ -55,7 +55,7 @@ def get_env(user_configuration: dict):
                     },
                     "planning": {
                         "storage_format": "installed_package",
-                        "storage_route": "superpilot.core.planning.SimplePlannerLegacy",
+                        "storage_route": "superpilot.core.planning.SimplePlanner",
                     },
                     "workspace": {
                         "storage_format": "installed_package",

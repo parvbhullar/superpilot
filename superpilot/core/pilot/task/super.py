@@ -62,7 +62,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             cycle_count=0,
             max_task_cycle_count=3,
             creation_time="",
-            execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
+            execution_nature=ExecutionNature.AUTO,
         ),
         execution_nature=ExecutionNature.AUTO,
         prompt_strategy=strategies.NextAbility.default_configuration,

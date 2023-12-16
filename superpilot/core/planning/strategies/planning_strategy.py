@@ -7,6 +7,7 @@ from superpilot.core.planning.schema import (
     LanguageModelPrompt, TaskStatus, TaskType, Task, TaskSchema, ObjectivePlan,
 )
 from superpilot.core.planning.strategies.utils import json_loads
+from superpilot.core.plugin.base import PluginLocation, PluginStorageFormat
 from superpilot.core.resource.model_providers import (
     SchemaModel, OpenAIModelName,
 )
@@ -82,6 +83,10 @@ class PlanningStrategy(SimplePrompt, ABC):
         system_prompt=DEFAULT_SYSTEM_PROMPT,
         user_prompt_template=DEFAULT_USER_PROMPT_TEMPLATE,
         parser_schema=DEFAULT_PARSER_SCHEMA,
+        location=PluginLocation(
+            storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
+            storage_route="superpilot.core.planning.strategies.planning_strategy.PlanningStrategy",
+        ),
     )
 
     def __init__(
@@ -114,7 +119,10 @@ class PlanningStrategy(SimplePrompt, ABC):
 
         """
         # print(response_content)
-        parsed_response = json_loads(response_content["function_call"]["arguments"])
+        if "function_call" in response_content:
+            parsed_response = json_loads(response_content["function_call"]["arguments"])
+        else:
+            parsed_response = response_content
         # print(response_content)
         # parsed_response = json_loads(response_content["content"])
         # parsed_response = self._parser_schema.from_response(response_content)

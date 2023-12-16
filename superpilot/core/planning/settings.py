@@ -52,7 +52,7 @@ class PlannerConfiguration(SystemConfiguration):
 
     models: Dict[LanguageModelClassification, LanguageModelConfiguration]
     planning_strategy: PromptStrategyConfiguration
-    execution_strategy: PromptStrategyConfiguration
+    execution_strategy: strategies.NextAbilityConfiguration
     reflection_strategy: PromptStrategyConfiguration
 
 

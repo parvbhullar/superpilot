@@ -36,7 +36,7 @@ class PilotConfiguration(SystemConfiguration):
     goals: list[str]
     # systems: PilotSystems
     # environment: PluginLocation
-    execution_algo: ExecutionAlgo
+    execution_nature: ExecutionNature
 
 
 class PilotSystemSettings(SystemSettings):

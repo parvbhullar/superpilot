@@ -8,7 +8,6 @@ from superpilot.core.ability import (
     AbilityRegistry,
     SimpleAbilityRegistry,
 )
-from superpilot.core.context.schema import Context
 from superpilot.core.pilot.base import Pilot
 from superpilot.core.pilot.settings import (
     PilotSettings,
@@ -21,7 +20,6 @@ from superpilot.core.configuration import Configurable
 from superpilot.core.memory import SimpleMemory
 from superpilot.core.environment import SimpleEnv
 from superpilot.core.planning import SimplePlannerLegacy, Task, TaskStatus
-from superpilot.core.planning.base import Planner
 from superpilot.core.plugin.simple import (
     PluginLocation,
     PluginStorageFormat,
@@ -31,7 +29,7 @@ from superpilot.core.resource.model_providers import OpenAIProvider
 from superpilot.core.workspace.simple import SimpleWorkspace
 
 
-class SuperPilot(Pilot, Configurable):
+class SuperPilotLegacy(Pilot, Configurable):
 
     default_settings = PilotSystemSettings(
         name="super_pilot",
@@ -58,7 +56,7 @@ class SuperPilot(Pilot, Configurable):
         self,
         settings: PilotSystemSettings,
         ability_registry: AbilityRegistry,
-        planning: Planner,
+        planning: SimplePlannerLegacy,
         environment: SimpleEnv,
     ):
         self._configuration = settings.configuration
@@ -91,25 +89,26 @@ class SuperPilot(Pilot, Configurable):
         self._configuration.creation_time = datetime.now().isoformat()
         return model_response.content
 
-    async def plan(self, user_objective: str, context: Context, **kwargs):
-        return await self.build_initial_plan(user_objective)
+    async def plan(self):
+        return await self.build_initial_plan()
 
-    async def execute(self, user_objective: str, context: Context, *args, **kwargs):
+    async def execute(self, *args, **kwargs):
         self._logger.info(f"Executing step {self._configuration.cycle_count}")
-        plan = await self.plan(user_objective, context)
         pass
 
     async def watch(self, *args, **kwargs):
 
         pass
 
-    async def build_initial_plan(self, user_objective: str) -> dict:
+    async def build_initial_plan(self) -> dict:
         # TODO: split query into mulitple queries to answer the question using the planner
-        plan = await self._planning.plan(
-            user_objective=user_objective,
+        plan = await self._planning.make_initial_plan(
+            pilot_name=self._configuration.name,
+            pilot_role=self._configuration.role,
+            pilot_goals=self._configuration.goals,
             abilities=self._ability_registry.list_abilities(),
         )
-        tasks = plan.tasks
+        tasks = [Task.parse_obj(task) for task in plan.content["task_list"]]
 
         # TODO: Should probably do a step to evaluate the quality of the generated tasks,
         #  and ensure that they have actionable ready and acceptance criteria
@@ -117,7 +116,7 @@ class SuperPilot(Pilot, Configurable):
         self._task_queue.extend(tasks)
         self._task_queue.sort(key=lambda t: t.priority, reverse=True)
         self._task_queue[-1].context.status = TaskStatus.READY
-        return plan.dict()
+        return plan.content
 
     async def determine_next_step(self, *args, **kwargs):
         if not self._task_queue:

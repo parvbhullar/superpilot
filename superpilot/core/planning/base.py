@@ -32,14 +32,13 @@ class Planner(abc.ABC):
     #     ...
 
     @abc.abstractmethod
-    async def plan(self, user_objective: str, context: Context) -> ObjectivePlan:
+    async def plan(self, user_objective: str, abilities: typing.List[str], **kwargs) -> ObjectivePlan:
         """Create a plan of tasks to accomplish the user objective.
 
         Args:
             user_objective: The user objective for the pilot.
-            context: A context object containing information about the pilot's
-                       progress, result, memories, and feedback.
-
+            abilities: The abilities available to the pilot.
+            **kwargs: Additional arguments to pass to the language model.
 
         Returns:
             A plan of tasks to accomplish the user objective.

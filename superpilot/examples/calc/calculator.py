@@ -44,7 +44,7 @@ from superpilot.core.planning.settings import (
 )
 from superpilot.core.pilot.settings import (
     PilotConfiguration,
-    ExecutionAlgo
+    ExecutionAlgo, ExecutionNature
 )
 from superpilot.examples.calc.transformer_prompt import TransformerPrompt
 from superpilot.examples.calc.base_ability import AddAbility, MultiplyAbility, SubtractAbility, DivisionAbility, \
@@ -101,7 +101,7 @@ class Calculator(BaseExecutor):
                 cycle_count=0,
                 max_task_cycle_count=3,
                 creation_time="",
-                execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
+                execution_nature=ExecutionNature.AUTO,
             )
         )
         calculator = SuperTaskPilot.create(
@@ -118,7 +118,7 @@ class Calculator(BaseExecutor):
                 cycle_count=0,
                 max_task_cycle_count=3,
                 creation_time="",
-                execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
+                execution_nature=ExecutionNature.AUTO,
             ),
             callback=STDInOutCallbackManager(
                 callbacks=[SimpleCallbackHandler()]
@@ -143,7 +143,7 @@ class Calculator(BaseExecutor):
                 cycle_count=0,
                 max_task_cycle_count=3,
                 creation_time="",
-                execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
+                execution_nature=ExecutionNature.AUTO,
             )
         )
 

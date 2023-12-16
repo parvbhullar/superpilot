@@ -181,7 +181,7 @@ ALLOWED_ABILITY = {
     TextSummarizeAbility.name(): TextSummarizeAbility.default_configuration,
 }
 from superpilot.tests.test_env_simple import get_env
-from superpilot.core.pilot import SuperPilot
+from superpilot.core.pilot import SuperPilotLegacy
 
 # Flow executor -> Context
 #
@@ -199,7 +199,7 @@ if __name__ == "__main__":
     planner = env.get("planning")
     ability_registry = env.get("ability_registry")
 
-    pilot = SuperPilot(SuperPilot.default_settings, ability_registry, planner, env)
+    pilot = SuperPilotLegacy(SuperPilotLegacy.default_settings, ability_registry, planner, env)
     asyncio.run(pilot.initialize(user_objectives))
     print(
         "***************** Pilot Initiated - Planing Started ******************************\n"

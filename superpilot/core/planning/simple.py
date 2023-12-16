@@ -21,6 +21,8 @@ from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
     PromptStrategiesConfiguration, PlannerSettings, PlannerConfiguration,
 )
+from superpilot.core.planning.strategies import NextAbility
+from superpilot.core.planning.strategies.planning_strategy import PlanningStrategy
 from superpilot.core.resource.model_providers import (
     LanguageModelProvider,
     ModelProviderName,
@@ -30,7 +32,7 @@ from superpilot.core.workspace import Workspace
 from superpilot.core.plugin.utlis import load_class
 
 
-class SimplePlanner(Planner):
+class SimplePlanner(Configurable, Planner):
     """Manages the pilot's planning and goal-setting by constructing language model prompts."""
 
     default_settings = PlannerSettings(
@@ -49,9 +51,9 @@ class SimplePlanner(Planner):
                     temperature=0.9,
                 ),
             },
-            planning_strategy=strategies.InitialPlan.default_configuration,
-            execution_strategy=strategies.NextAbility.default_configuration,
-            reflection_strategy=strategies.NextAbility.default_configuration,
+            planning_strategy=PlanningStrategy.default_configuration,
+            execution_strategy=NextAbility.default_configuration,
+            reflection_strategy=PlanningStrategy.default_configuration,
         ),
     )
 
@@ -74,11 +76,12 @@ class SimplePlanner(Planner):
         self._execution_strategy = self.init_strategy(self._configuration.execution_strategy)
         self._reflection_strategy = self.init_strategy(self._configuration.reflection_strategy)
 
-    async def plan(self, user_objective: str, context: Context, **kwargs) -> ObjectivePlan:
+    async def plan(self, user_objective: str, abilities: List[str], **kwargs) -> ObjectivePlan:
         template_kwargs = {"task_objective": user_objective}
         template_kwargs.update(kwargs)
         response = await self.chat_with_model(
             self._planning_strategy,
+            functions=abilities,
             **template_kwargs,
         )
         return ObjectivePlan(**response.get_content())
@@ -88,7 +91,6 @@ class SimplePlanner(Planner):
 
     def reflect(self, task: Task, context: Context) -> LanguageModelResponse:
         pass
-
 
     async def chat_with_model(
         self,

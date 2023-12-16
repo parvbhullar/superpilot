@@ -25,7 +25,7 @@ ALLOWED_ABILITY = {
     TextSummarizeAbility.name(): TextSummarizeAbility.default_configuration,
 }
 from superpilot.tests.test_env_simple import get_env
-from superpilot.core.pilot import SuperPilot
+from superpilot.core.pilot import SuperPilotLegacy
 from superpilot.core.configuration import get_config
 from superpilot.core.planning.strategies.simple import SimplePrompt
 
@@ -96,7 +96,7 @@ async def test_pilot():
 
     user_objectives = "What is the weather in Mumbai"
     # SuperPilot.default_settings.configuration
-    pilot_settings = SuperPilot.default_settings
+    pilot_settings = SuperPilotLegacy.default_settings
     # pilot = SuperPilot(pilot_settings, super_ability_registry, planner, env)
     # print(await pilot.initialize(user_objectives))
     print(

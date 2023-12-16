@@ -56,7 +56,7 @@ class SimpleTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin, ABC):
             cycle_count=0,
             max_task_cycle_count=3,
             creation_time="",
-            execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
+            execution_nature=ExecutionNature.AUTO,
         ),
         execution_nature=ExecutionNature.SIMPLE,
         prompt_strategy=SimplePrompt.default_configuration,
