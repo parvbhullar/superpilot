@@ -46,6 +46,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
     async def execute(self, objective: str, context: Context, **kwargs):
         # Splitting the observation and execution phases
         self._context = context
+        print('context given to chain', context)
         state = await self._state.load()
         await self._state.deserialize(self, state)
         kwargs['current_chain'] = self
@@ -64,8 +65,10 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
             if self._interaction:
                 break
         if self._task_index == len(self._task_queue):
+            print('resetting state', self.thread_id)
             await self._state.save({})
             await self._callback.on_user_interaction(self.thread_id)
+            print("chain completed")
         return self._response, self._context
 
     async def handle_task_based_on_observation(self, context: Context, **kwargs):
@@ -106,6 +109,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
                 self._task_index += 1
             else:
                 # TODO: there should be Pilot Task where we store the pilot Action?
+                print("Pilot state: ", self._pilot_state)
                 await self._state.deserialize(handler, self._pilot_state)
                 self._response, self._context = await self.execute_handler(self._current_task.objective, self._context, handler, transformer, user_input=objective, **kwargs)
                 # TODO: Make it interaction based?
@@ -118,7 +122,9 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
                     self._current_task.status = TaskStatus.IN_PROGRESS
                     self._interaction = True
                     current_state = await self._state.serialize(self)
+                    print('chain state: ', current_state)
                     await self._state.save(current_state)
+                    print("saving state task in progress", self.thread_id)
                     await self._callback.on_user_interaction(self.thread_id)
                 # self._task_queue.remove(self._current_task)
         else:
@@ -135,6 +141,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
                 response = await handler.execute(task, context=context, **kwargs)
 
             self._pilot_state = await self._state.serialize(handler) or {}
+            print(self._pilot_state)
             if self._pilot_state.get('_status', TaskStatus.DONE) == TaskStatus.DONE:
                 if isinstance(response, LanguageModelResponse):
                     context.add(response.get_content())

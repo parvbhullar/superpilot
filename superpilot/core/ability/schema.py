@@ -34,6 +34,7 @@ class AbilityAction(BaseModel):
         )
 
     def get_memories(self):
+        print("get_memories", self.result.to_list())
         return self.result.to_list()
 
 

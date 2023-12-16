@@ -131,6 +131,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         self._parent = kwargs.get("current_chain", None)
         self._interaction = False
         self._current_context = kwargs.get("context", self._current_context)
+        print("Pilot state and context: ", self._current_context, self._current_task)
         if self._current_task is None:
             if isinstance(objective, str):
                 # if task is not passed, one is created with default settings
@@ -154,6 +155,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             # TODO: No need to pass task because already member of class
             await self.exec_abilities(**kwargs)
             if self._interaction:
+                print("breaking from super pilot", self._interaction, self._current_task.context.status)
                 break
             # messages = self._com_provider.receive()
             # if messages:
@@ -225,9 +227,11 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             user_input, hold = await self._callback.on_clarifying_question(
                 response.content.get("clarifying_question"), self._current_task, response, self._current_context, self.thread_id
             )
+            print('in Super pilot', user_input, hold)
             self._current_task.context.user_input.append(f"System: {response.content.get('clarifying_question')}")
             if user_input:
                 self._current_task.context.user_input.append(f"User: {user_input}")
+            print('setting context done', user_input, hold)
             self._interaction = hold
             return
 
