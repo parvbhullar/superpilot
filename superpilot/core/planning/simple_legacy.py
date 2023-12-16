@@ -5,21 +5,19 @@ from typing import Dict, List
 
 import distro
 
-from superpilot.core import planning
 from superpilot.core.configuration import Configurable
-from superpilot.core.context.schema import Context
 from superpilot.core.planning import strategies
-from superpilot.core.planning.base import PromptStrategy, Planner
+from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
     LanguageModelResponse,
-    Task, ObjectivePlan,
+    Task,
 )
 from superpilot.core.planning.settings import (
     PlannerConfigurationLegacy,
     PlannerSettingsLegacy,
     LanguageModelConfiguration,
-    PromptStrategiesConfiguration, PlannerSettings, PlannerConfiguration,
+    PromptStrategiesConfiguration,
 )
 from superpilot.core.resource.model_providers import (
     LanguageModelProvider,
@@ -27,16 +25,15 @@ from superpilot.core.resource.model_providers import (
     OpenAIModelName,
 )
 from superpilot.core.workspace import Workspace
-from superpilot.core.plugin.utlis import load_class
 
 
-class SimplePlanner(Planner):
+class SimplePlannerLegacy(Configurable):
     """Manages the pilot's planning and goal-setting by constructing language model prompts."""
 
-    default_settings = PlannerSettings(
+    default_settings = PlannerSettingsLegacy(
         name="planner",
         description="Manages the pilot's planning and goal-setting by constructing language model prompts.",
-        configuration=PlannerConfiguration(
+        configuration=PlannerConfigurationLegacy(
             models={
                 LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
                     model_name=OpenAIModelName.GPT3,
@@ -49,15 +46,17 @@ class SimplePlanner(Planner):
                     temperature=0.9,
                 ),
             },
-            planning_strategy=strategies.InitialPlan.default_configuration,
-            execution_strategy=strategies.NextAbility.default_configuration,
-            reflection_strategy=strategies.NextAbility.default_configuration,
+            prompt_strategies=PromptStrategiesConfiguration(
+                name_and_goals=strategies.NameAndGoals.default_configuration,
+                initial_plan=strategies.InitialPlan.default_configuration,
+                next_ability=strategies.NextAbility.default_configuration,
+            ),
         ),
     )
 
     def __init__(
         self,
-        settings: PlannerSettings,
+        settings: PlannerSettingsLegacy,
         logger: logging.Logger,
         model_providers: Dict[ModelProviderName, LanguageModelProvider],
         workspace: Workspace = None,  # Workspace is not available during bootstrapping.
@@ -70,25 +69,49 @@ class SimplePlanner(Planner):
         for model, model_config in self._configuration.models.items():
             self._providers[model] = model_providers[model_config.provider_name]
 
-        self._planning_strategy = self.init_strategy(self._configuration.planning_strategy)
-        self._execution_strategy = self.init_strategy(self._configuration.execution_strategy)
-        self._reflection_strategy = self.init_strategy(self._configuration.reflection_strategy)
+        self._prompt_strategies = {
+            "name_and_goals": strategies.NameAndGoals(
+                **self._configuration.prompt_strategies.name_and_goals.dict()
+            ),
+            "initial_plan": strategies.InitialPlan(
+                **self._configuration.prompt_strategies.initial_plan.dict()
+            ),
+            "next_ability": strategies.NextAbility(
+                **self._configuration.prompt_strategies.next_ability.dict()
+            ),
+        }
 
-    async def plan(self, user_objective: str, context: Context, **kwargs) -> ObjectivePlan:
-        template_kwargs = {"task_objective": user_objective}
-        template_kwargs.update(kwargs)
-        response = await self.chat_with_model(
-            self._planning_strategy,
-            **template_kwargs,
+    async def decide_name_and_goals(self, user_objective: str) -> LanguageModelResponse:
+        return await self.chat_with_model(
+            self._prompt_strategies["name_and_goals"],
+            user_objective=user_objective,
         )
-        return ObjectivePlan(**response.get_content())
 
-    async def next(self, task: Task, context: Context) -> LanguageModelResponse:
-        pass
+    async def make_initial_plan(
+        self,
+        pilot_name: str,
+        pilot_role: str,
+        pilot_goals: List[str],
+        abilities: List[str],
+    ) -> LanguageModelResponse:
+        return await self.chat_with_model(
+            self._prompt_strategies["initial_plan"],
+            pilot_name=pilot_name,
+            pilot_role=pilot_role,
+            pilot_goals=pilot_goals,
+            abilities=abilities,
+        )
 
-    def reflect(self, task: Task, context: Context) -> LanguageModelResponse:
-        pass
-
+    async def determine_next_ability(
+        self,
+        task: Task,
+        ability_schema: List[dict],
+    ):
+        return await self.chat_with_model(
+            self._prompt_strategies["next_ability"],
+            task=task,
+            ability_schema=ability_schema,
+        )
 
     async def chat_with_model(
         self,
@@ -122,15 +145,6 @@ class SimplePlanner(Planner):
             "current_time": time.strftime("%c"),
         }
         return template_kwargs
-
-    @classmethod
-    def init_strategy(cls, prompt_config: PromptStrategiesConfiguration = None):
-        prompt_config = prompt_config.dict()
-        location = prompt_config.pop("location", None)
-        if location is not None:
-            return load_class(location, prompt_config)
-        else:
-            return strategies.NextAbility(**prompt_config)
 
 
 def get_os_info() -> str:

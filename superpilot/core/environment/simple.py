@@ -15,7 +15,7 @@ from superpilot.core.environment.settings import (
 )
 from superpilot.core.configuration import Configurable, ConfigBuilder
 from superpilot.core.memory import SimpleMemory
-from superpilot.core.planning import SimplePlanner, Task, TaskStatus
+from superpilot.core.planning import SimplePlannerLegacy, Task, TaskStatus
 from superpilot.core.plugin.simple import (
     PluginLocation,
     PluginStorageFormat,
@@ -51,7 +51,7 @@ class SimpleEnv(Environment, Configurable):
                 ),
                 planning=PluginLocation(
                     storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
-                    storage_route="superpilot.core.planning.SimplePlanner",
+                    storage_route="superpilot.core.planning.SimplePlannerLegacy",
                 ),
                 workspace=PluginLocation(
                     storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
@@ -68,7 +68,7 @@ class SimpleEnv(Environment, Configurable):
         # ability_registry: SimpleAbilityRegistry,
         memory: SimpleMemory,
         openai_provider: OpenAIProvider,
-        planning: SimplePlanner,
+        planning: SimplePlannerLegacy,
         workspace: SimpleWorkspace,
     ):
         self.configuration = settings.configuration
@@ -316,7 +316,7 @@ class SimpleEnv(Environment, Configurable):
                         },
                         "planning": {
                             "storage_format": "installed_package",
-                            "storage_route": "superpilot.core.planning.SimplePlanner",
+                            "storage_route": "superpilot.core.planning.SimplePlannerLegacy",
                         },
                         "workspace": {
                             "storage_format": "installed_package",

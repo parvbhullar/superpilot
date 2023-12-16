@@ -8,7 +8,6 @@ from pydantic import Field
 from superpilot.core.ability.schema import AbilityAction
 from superpilot.core.configuration import SystemConfiguration
 from superpilot.core.planning.settings import LanguageModelConfiguration
-from superpilot.core.planning.simple import PromptStrategy
 from superpilot.core.resource.model_providers import (
     LanguageModelMessage, LanguageModelFunction,
 )

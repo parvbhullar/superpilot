@@ -163,7 +163,6 @@ class Calculator(BaseExecutor):
                 Solution: {solution}
                 """
 
-
     def auto_transformer(self, data, response, context):
         print("Auto solver transformer", data, response)
         # response = {

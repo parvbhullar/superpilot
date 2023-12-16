@@ -19,7 +19,7 @@ from superpilot.core.pilot.settings import (
 from superpilot.core.configuration import Configurable
 from superpilot.core.memory import SimpleMemory
 from superpilot.core.environment import SimpleEnv
-from superpilot.core.planning import SimplePlanner, Task, TaskStatus
+from superpilot.core.planning import SimplePlannerLegacy, Task, TaskStatus
 from superpilot.core.plugin.simple import (
     PluginLocation,
     PluginStorageFormat,
@@ -56,7 +56,7 @@ class SuperPilot(Pilot, Configurable):
         self,
         settings: PilotSystemSettings,
         ability_registry: AbilityRegistry,
-        planning: SimplePlanner,
+        planning: SimplePlannerLegacy,
         environment: SimpleEnv,
     ):
         self._configuration = settings.configuration

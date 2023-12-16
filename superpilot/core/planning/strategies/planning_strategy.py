@@ -4,7 +4,7 @@ from superpilot.core.planning.strategies.simple import SimplePrompt
 
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
-    LanguageModelPrompt, TaskStatus, TaskType, Task, TaskSchema,
+    LanguageModelPrompt, TaskStatus, TaskType, Task, TaskSchema, ObjectivePlan,
 )
 from superpilot.core.planning.strategies.utils import json_loads
 from superpilot.core.resource.model_providers import (
@@ -16,25 +16,7 @@ import enum
 from pydantic import Field
 
 
-class Observation(SchemaModel):
-    """
-    Class representing the data structure for observation for pilot objective, whether it is complete or not.
-    If not complete, then the pilot name, motivation, self_criticism and reasoning for choosing the pilot.
-    """
-    current_status: TaskStatus = Field(..., description="Status of the objective asked by the user ")
-
-    tasks: List[TaskSchema] = Field(
-        ..., description="List of tasks to be accomplished by the each pilot"
-    )
-
-    # def get_tasks(self) -> List[Task]:
-    #     lst = []
-    #     for task in self.tasks:
-    #         lst.append(task.get_task())
-    #     return lst
-
-
-class ObserverPrompt(SimplePrompt, ABC):
+class PlanningStrategy(SimplePrompt, ABC):
     DEFAULT_SYSTEM_PROMPT_TEMPLATE = "System Info:\n{system_info}"
 
     DEFAULT_SYSTEM_INFO = [
@@ -48,13 +30,13 @@ class ObserverPrompt(SimplePrompt, ABC):
         Then select the next pilot from pilots list to play. 
         Split task between pilots and each pilot should have a single task in sequence.
         
-        Pilot List:
-        {pilots}
+        Function List:
+        {functions}
         
         Example:
-        task: multiply 2 and 3 and then sum with 6 and then subtract 2 and then divide by 2 and plot the graph
+        task: multiply 2 and 3 and then sum with 6 and then subtract 2 and then divide by 2
         response:
-          'goal_status': 'not_started',
+          'current_status': 'not_started',
           'motivation': "The task requires both arithmetic operations and plotting, which can be accomplished by the 'calculator' pilot",
           'self_criticism': "The task involves plotting a graph which is not a specific function of the 'calculator' pilot.",
           'reasoning': "Despite the limitation, the 'calculator' pilot can still handle the arithmetic operations which makes up the majority of the task",
@@ -93,7 +75,7 @@ class ObserverPrompt(SimplePrompt, ABC):
         "{action_history}\n\n"
     )
 
-    DEFAULT_PARSER_SCHEMA = Observation.function_schema()
+    DEFAULT_PARSER_SCHEMA = ObjectivePlan.function_schema()
 
     default_configuration = PromptStrategyConfiguration(
         model_classification=LanguageModelClassification.SMART_MODEL,

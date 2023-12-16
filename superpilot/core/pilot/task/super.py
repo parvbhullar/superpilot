@@ -222,15 +222,12 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             )
 
         if response.content.get("clarifying_question"):
-            # TODO : Ask clarifying question to user using callback handler
+            self._current_task.context.user_input.append(f"Assistant: {response.content.get('clarifying_question')}")
             user_input, hold = await self._callback.on_clarifying_question(
                 response.content.get("clarifying_question"), self._current_task, response, self._current_context, self.thread_id
             )
-            print('in Super pilot', user_input, hold)
-            self._current_task.context.user_input.append(f"System: {response.content.get('clarifying_question')}")
             if user_input:
                 self._current_task.context.user_input.append(f"User: {user_input}")
-            print('setting context done', user_input, hold)
             self._interaction = hold
             return
 
@@ -271,10 +268,6 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         # TODO: store knowledge and summaries in memory and in relevant tasks
         # TODO: evaluate whether the task is complete
         # TODO update memory with the facts, insights and knowledge
-        # self._current_task.context.add_memory(ability_action.knowledge)
-
-        # update goal status
-        # final_response = await self.analyze_goal_status(ability_action)
 
         self._logger.info(f"Final response: {ability_result}")
         status = TaskStatus.IN_PROGRESS
@@ -283,10 +276,8 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         self._status = status
         self._current_task.context.status = status
         self._current_task.context.enough_info = True
-        # todo: instead of overriding memories everytime ... aother way to improve context is keep the whole ability context when executing in pilot and pass only the last one as response
-        # TODO: we are still adding result of ability to prompt here (maybe be mindfull what to return in context?)
         self._current_task.update_memory(ability_result.get_memories())
-        print("Ability result", ability_result.result)
+        # print("Ability result", ability_result.result)
 
         # TaskStore.save_task_with_status(self._current_goal, status, stage)
 

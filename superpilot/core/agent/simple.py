@@ -16,7 +16,7 @@ from superpilot.core.pilot.settings import (
 )
 from superpilot.core.configuration import Configurable
 from superpilot.core.memory import SimpleMemory
-from superpilot.core.planning import SimplePlanner, Task, TaskStatus
+from superpilot.core.planning import SimplePlannerLegacy, Task, TaskStatus
 from superpilot.core.plugin.simple import (
     PluginLocation,
     PluginStorageFormat,
@@ -76,7 +76,7 @@ class SimpleAgent(Agent, Configurable):
         ability_registry: SimpleAbilityRegistry,
         memory: SimpleMemory,
         openai_provider: OpenAIProvider,
-        planning: SimplePlanner,
+        planning: SimplePlannerLegacy,
         workspace: SimpleWorkspace,
     ):
         self._configuration = settings.configuration
@@ -284,7 +284,7 @@ class SimpleAgent(Agent, Configurable):
             logger=logger,
         )
         logger.debug("Loading pilot planner.")
-        pilot_planner: SimplePlanner = cls._get_system_instance(
+        pilot_planner: SimplePlannerLegacy = cls._get_system_instance(
             "planning",
             pilot_settings,
             logger=logger,
