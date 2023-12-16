@@ -116,7 +116,7 @@ class SuperPilot(Pilot, Configurable):
 
         self._task_queue.extend(tasks)
         self._task_queue.sort(key=lambda t: t.priority, reverse=True)
-        self._task_queue[-1].context.status = TaskStatus.READY
+        self._task_queue[-1].status = TaskStatus.READY
         return plan.dict()
 
     async def determine_next_step(self, *args, **kwargs):

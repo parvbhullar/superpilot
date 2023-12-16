@@ -37,7 +37,7 @@ class PlanningStrategy(SimplePrompt, ABC):
         Example:
         task: multiply 2 and 3 and then sum with 6 and then subtract 2 and then divide by 2
         response:
-          'current_status': 'not_started',
+          'current_status': 'backlog',
           'motivation': "The task requires both arithmetic operations and plotting, which can be accomplished by the 'calculator' pilot",
           'self_criticism': "The task involves plotting a graph which is not a specific function of the 'calculator' pilot.",
           'reasoning': "Despite the limitation, the 'calculator' pilot can still handle the arithmetic operations which makes up the majority of the task",

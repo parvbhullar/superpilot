@@ -111,6 +111,7 @@ class SimplePlanner(Configurable, Planner):
         response = await provider.create_language_completion(
             model_prompt=prompt.messages,
             functions=prompt.functions,
+            function_call=prompt.get_function_call(),
             **model_configuration,
             completion_parser=prompt_strategy.parse_response_content,
         )
