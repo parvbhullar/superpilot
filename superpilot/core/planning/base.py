@@ -32,12 +32,12 @@ class Planner(abc.ABC):
     #     ...
 
     @abc.abstractmethod
-    async def plan(self, user_objective: str, abilities: typing.List[str], **kwargs) -> ObjectivePlan:
+    async def plan(self, user_objective: str, functions: typing.List[str], **kwargs) -> ObjectivePlan:
         """Create a plan of tasks to accomplish the user objective.
 
         Args:
             user_objective: The user objective for the pilot.
-            abilities: The abilities available to the pilot.
+            functions: The functions available to the pilot.
             **kwargs: Additional arguments to pass to the language model.
 
         Returns:
@@ -46,13 +46,13 @@ class Planner(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def next(self, task: Task, context: Context) -> LanguageModelResponse:
+    async def next(self, task: Task, functions: typing.List[dict], **kwargs) -> LanguageModelResponse:
         """Based of the current task, decide the next executable function, pilot or ability.
 
         Args:
             task: The current task.
-            context: A context object containing information about previous execution and results.
-
+            functions: The functions available to the pilot.
+            **kwargs: Additional arguments to pass to the language model.
         Returns:
             The next function, pilot or ability to execute.
         """

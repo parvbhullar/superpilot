@@ -75,36 +75,9 @@ class SuperPilot(Pilot, Configurable):
         self._current_task = None
         self._next_step = None
 
-    async def initialize(
-            self,
-            user_objective: str,
-            *args, **kwargs
-    ) -> dict:
-        self._logger.debug("Initializing SuperPilot.")
-        model_response = await self._planning.decide_name_and_goals(
-            user_objective,
-        )
-        self._logger.debug(f"Model response: {model_response.content}")
-        self._configuration.name = model_response.content["pilot_name"]
-        self._configuration.role = model_response.content["pilot_role"]
-        self._configuration.goals = model_response.content["pilot_goals"]
-        self._configuration.creation_time = datetime.now().isoformat()
-        return model_response.content
-
     async def plan(self, user_objective: str, context: Context, **kwargs):
-        return await self.build_initial_plan(user_objective)
-
-    async def execute(self, user_objective: str, context: Context, *args, **kwargs):
-        self._logger.info(f"Executing step {self._configuration.cycle_count}")
-        plan = await self.plan(user_objective, context)
-        pass
-
-    async def watch(self, *args, **kwargs):
-
-        pass
-
-    async def build_initial_plan(self, user_objective: str) -> dict:
-        # TODO: split query into mulitple queries to answer the question using the planner
+        """Plan the next step for the pilot."""
+        # TODO: use context to determine what the next step should be
         plan = await self._planning.plan(
             user_objective=user_objective,
             abilities=self._ability_registry.list_abilities(),
@@ -118,6 +91,15 @@ class SuperPilot(Pilot, Configurable):
         self._task_queue.sort(key=lambda t: t.priority, reverse=True)
         self._task_queue[-1].status = TaskStatus.READY
         return plan.dict()
+
+    async def execute(self, user_objective: str, context: Context, *args, **kwargs):
+        self._logger.info(f"Executing step {self._configuration.cycle_count}")
+        plan = await self.plan(user_objective, context)
+        pass
+
+    async def watch(self, *args, **kwargs):
+
+        pass
 
     async def determine_next_step(self, *args, **kwargs):
         if not self._task_queue:

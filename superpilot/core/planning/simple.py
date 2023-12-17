@@ -76,18 +76,23 @@ class SimplePlanner(Configurable, Planner):
         self._execution_strategy = self.init_strategy(self._configuration.execution_strategy)
         self._reflection_strategy = self.init_strategy(self._configuration.reflection_strategy)
 
-    async def plan(self, user_objective: str, abilities: List[str], **kwargs) -> ObjectivePlan:
+    async def plan(self, user_objective: str, functions: List[str], **kwargs) -> ObjectivePlan:
         template_kwargs = {"task_objective": user_objective}
         template_kwargs.update(kwargs)
         response = await self.chat_with_model(
             self._planning_strategy,
-            functions=abilities,
+            functions=functions,
             **template_kwargs,
         )
         return ObjectivePlan(**response.get_content())
 
-    async def next(self, task: Task, context: Context) -> LanguageModelResponse:
-        pass
+    async def next(self, task: Task, functions: List[dict], **kwargs) -> LanguageModelResponse:
+        return await self.chat_with_model(
+            self._execution_strategy,
+            task=task,
+            ability_schema=functions,
+            **kwargs,
+        )
 
     def reflect(self, task: Task, context: Context) -> LanguageModelResponse:
         pass

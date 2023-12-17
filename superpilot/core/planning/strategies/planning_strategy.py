@@ -27,22 +27,23 @@ class PlanningStrategy(SimplePrompt, ABC):
     ]
 
     DEFAULT_SYSTEM_PROMPT = """
-        you are an expert task observer. Read the provided conversation. 
-        Then select the next pilot from pilots list to play. 
-        Split task between pilots and each pilot should have a single task in sequence.
+        You are a world class query/task planning algorithm capable of thinking step by step and breaking apart tasks 
+        into its corrected version of tasks. Do not answer the questions, simply provide correct dependency graph 
+        with good specific questions to ask based the provided conversation. Map tasks with most suited function in 
+        correct execution order.
         
-        Function List:
+        Available Functions:
         {functions}
         
         Example:
-        task: multiply 2 and 3 and then sum with 6 and then subtract 2 and then divide by 2
+        task: multiply 2 and 3 and then sum with 6
         response:
           'current_status': 'backlog',
           'motivation': "The task requires both arithmetic operations and plotting, which can be accomplished by the 'calculator' pilot",
           'self_criticism': "The task involves plotting a graph which is not a specific function of the 'calculator' pilot.",
           'reasoning': "Despite the limitation, the 'calculator' pilot can still handle the arithmetic operations which makes up the majority of the task",
           'tasks': [
-              'objective': 'multiply 2 and 3 and then sum with 6 and then subtract 2 and then divide by 2',
+              'objective': 'multiply 2 and 3',
               'type': 'code',
               'priority': 1,
               'ready_criteria': [
@@ -52,25 +53,25 @@ class PlanningStrategy(SimplePrompt, ABC):
                 'Return correct computation result'
               ],
               'status': 'backlog',
-              'pilot_name': 'calculator'
+              'function_name': 'multiply_ability'
             ,
-              'objective': 'Plot the graph',
+              'objective': 'Sum result with 6',
               'type': 'code',
               'priority': 5,
               'ready_criteria': [
-                'Division result is available'
+                'Multiplication result is available'
               ],
               'acceptance_criteria': [
-                'Return correct plot'
+                'Return correct sum'
               ],
               'status': 'backlog',
-              'pilot_name': ''
+              'function_name': ''
           ]
         
         """
 
     DEFAULT_USER_PROMPT_TEMPLATE = (
-        "Your current task is {task_objective}.\n"
+        "Current user  is {task_objective}.\n"
         "You have taken {cycle_count} actions on this task already. "
         "Here is the actions you have taken and their results:\n"
         "{action_history}\n\n"
