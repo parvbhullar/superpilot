@@ -94,7 +94,6 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         self._configuration = configuration
         self._execution_nature = configuration.execution_nature
         self._ability_registry = ability_registry
-        self._com_provider = {}
 
         self._providers: Dict[LanguageModelClassification, LanguageModelProvider] = {}
         for model, model_config in self._configuration.models.items():

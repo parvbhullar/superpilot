@@ -6,6 +6,7 @@ from typing import Dict, List
 import distro
 
 from superpilot.core import planning
+from superpilot.core.callback.base import BaseCallback
 from superpilot.core.configuration import Configurable
 from superpilot.core.context.schema import Context
 from superpilot.core.planning import strategies
@@ -62,11 +63,13 @@ class SimplePlanner(Configurable, Planner):
         settings: PlannerSettings,
         logger: logging.Logger,
         model_providers: Dict[ModelProviderName, LanguageModelProvider],
+        callback: BaseCallback = None,
         workspace: Workspace = None,  # Workspace is not available during bootstrapping.
     ) -> None:
         self._configuration = settings.configuration
         self._logger = logger
         self._workspace = workspace
+        self._callback = callback
 
         self._providers: Dict[LanguageModelClassification, LanguageModelProvider] = {}
         for model, model_config in self._configuration.models.items():

@@ -59,7 +59,7 @@ class Planner(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def reflect(
+    async def reflect(
         self,
         task: Task,
         context: Context,

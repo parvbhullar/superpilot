@@ -190,8 +190,8 @@ class ObjectivePlan(SchemaModel):
         ..., description="List of tasks to be accomplished by the each pilot"
     )
 
-    # def get_tasks(self) -> List[Task]:
-    #     lst = []
-    #     for task in self.tasks:
-    #         lst.append(task.get_task())
-    #     return lst
+    def get_tasks(self) -> List[Task]:
+        lst = []
+        for task in self.tasks:
+            lst.append(task.get_task())
+        return lst

@@ -1,13 +1,15 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, List, Dict
 
 from superpilot.core.ability import (
     AbilityAction,
     AbilityRegistry,
-    SimpleAbilityRegistry,
+    SimpleAbilityRegistry, SuperAbilityRegistry, Ability,
 )
+from superpilot.core.callback.manager.base import BaseCallbackManager
+from superpilot.core.callback.manager.std_io import STDInOutCallbackManager
 from superpilot.core.context.schema import Context
 from superpilot.core.pilot.base import Pilot
 from superpilot.core.pilot.settings import (
@@ -19,15 +21,17 @@ from superpilot.core.pilot.settings import (
 )
 from superpilot.core.configuration import Configurable
 from superpilot.core.memory import SimpleMemory
-from superpilot.core.environment import SimpleEnv
-from superpilot.core.planning import SimplePlannerLegacy, Task, TaskStatus
+from superpilot.core.environment import SimpleEnv, Environment
+from superpilot.core.planning import SimplePlannerLegacy, Task, TaskStatus, SimplePlanner
 from superpilot.core.planning.base import Planner
 from superpilot.core.plugin.simple import (
     PluginLocation,
     PluginStorageFormat,
     SimplePluginService,
 )
-from superpilot.core.resource.model_providers import OpenAIProvider
+from superpilot.core.resource.model_providers import OpenAIProvider, OpenAIModelName, ModelProviderName, \
+    LanguageModelProvider
+from superpilot.core.resource.model_providers.factory import ModelProviderFactory, ModelConfigFactory
 from superpilot.core.workspace.simple import SimpleWorkspace
 
 
@@ -58,18 +62,23 @@ class SuperPilot(Pilot, Configurable):
         self,
         settings: PilotSystemSettings,
         ability_registry: AbilityRegistry,
-        planning: Planner,
+        planner: Planner,
         environment: SimpleEnv,
+        callback: BaseCallbackManager,
+        **kwargs
     ):
         self._configuration = settings.configuration
-        self._logger = environment.get("logger")
         self._ability_registry = ability_registry
+        self._logger = environment.get("logger")
         self._memory = environment.get("memory")
         # FIXME: Need some work to make this work as a dict of providers
         #  Getting the construction of the config to work is a bit tricky
+
         self._openai_provider = environment.get("model_providers")["openai"]
-        self._planning = planning
+        self._planner = planner
+        self._callback = callback
         self._workspace = environment.get("workspace")
+
         self._task_queue = []
         self._completed_tasks = []
         self._current_task = None
@@ -78,27 +87,33 @@ class SuperPilot(Pilot, Configurable):
     async def plan(self, user_objective: str, context: Context, **kwargs):
         """Plan the next step for the pilot."""
         # TODO: use context to determine what the next step should be
-        plan = await self._planning.plan(
+        plan = await self._planner.plan(
             user_objective=user_objective,
-            abilities=self._ability_registry.list_abilities(),
+            functions=self._ability_registry.list_abilities(),
         )
-        tasks = plan.tasks
+        tasks = plan.get_tasks()
 
         # TODO: Should probably do a step to evaluate the quality of the generated tasks,
         #  and ensure that they have actionable ready and acceptance criteria
 
         self._task_queue.extend(tasks)
         self._task_queue.sort(key=lambda t: t.priority, reverse=True)
-        self._task_queue[-1].status = TaskStatus.READY
+        self._task_queue[-1].context.status = TaskStatus.READY
         return plan.dict()
 
     async def execute(self, user_objective: str, context: Context, *args, **kwargs):
         self._logger.info(f"Executing step {self._configuration.cycle_count}")
         plan = await self.plan(user_objective, context)
-        pass
 
-    async def watch(self, *args, **kwargs):
+        while self._task_queue:
+            await self.determine_next_step(*args, **kwargs)
+            # TODO callback to take user input if required.
+            await self.execute_next_step(*args, **kwargs)
 
+            await self.reflect(*args, **kwargs)
+
+    async def reflect(self, *args, **kwargs):
+        await self._planner.reflect(self._current_task, self._current_task.context)
         pass
 
     async def determine_next_step(self, *args, **kwargs):
@@ -118,7 +133,8 @@ class SuperPilot(Pilot, Configurable):
         self._next_step = next_ability.content
         return self._current_task, self._next_step
 
-    async def execute_next_step(self, user_input: str, *args, **kwargs):
+    async def execute_next_step(self, *args, **kwargs):
+        user_input = "y"
         if user_input == "y":
             ability = self._ability_registry.get_ability(
                 self._next_step["next_ability"]
@@ -159,7 +175,7 @@ class SuperPilot(Pilot, Configurable):
             # Don't ask the LLM, just set the next action as "breakdown_task" with an appropriate reason
             raise NotImplementedError
         else:
-            next_ability = await self._planning.determine_next_step(
+            next_ability = await self._planner.next(
                 task, ability_schema
             )
             return next_ability
@@ -170,6 +186,66 @@ class SuperPilot(Pilot, Configurable):
         # TODO: Summarize new knowledge
         # TODO: store knowledge and summaries in memory and in relevant tasks
         # TODO: evaluate whether the task is complete
+
+    @classmethod
+    def create(cls,
+               smart_model_name=OpenAIModelName.GPT4,
+               fast_model_name=OpenAIModelName.GPT3,
+               smart_model_temp=0.9,
+               fast_model_temp=0.9,
+               model_providers=None,
+               pilot_config=None,
+               abilities: List[Ability] = None,
+               environment: Environment = None,
+               planner: Planner = None,
+               callback: BaseCallbackManager = STDInOutCallbackManager(),
+               thread_id: str = None,
+               **kwargs
+               ):
+
+        models_config = ModelConfigFactory.get_models_config(
+            smart_model_name=smart_model_name,
+            fast_model_name=fast_model_name,
+            smart_model_temp=smart_model_temp,
+            fast_model_temp=fast_model_temp,
+        )
+        if model_providers is None:
+            model_providers = ModelProviderFactory.load_providers()
+
+        if environment is None:
+            environment = SimpleEnv.create({})
+
+        if planner is None:
+            planner_settings = SimplePlanner.default_settings.copy()
+            planner = SimplePlanner(
+                settings=planner_settings,
+                workspace=environment.get("workspace"),
+                logger=environment.get("logger"),
+                callback=callback,
+                model_providers=model_providers
+            )
+
+        ability_registry = None
+        if abilities is not None:
+            allowed_abilities = {}
+            for ability in abilities:
+                allowed_abilities[ability.name()] = ability.default_configuration
+            ability_registry = SuperAbilityRegistry.factory(
+                environment, allowed_abilities
+            )
+
+        settings = cls.default_settings.copy()
+        settings.configuration = pilot_config
+
+        pilot = cls(
+            settings=settings,
+            ability_registry=ability_registry,
+            environment=environment,
+            planner=planner,
+            callback=callback,
+            **kwargs
+        )
+        return pilot
 
     def __repr__(self):
         return "SuperPilot()"
