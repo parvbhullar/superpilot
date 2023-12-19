@@ -18,8 +18,11 @@ class BaseCallback(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def on_info(self, thread_id, message, *args, **kwargs):
+    async def on_info(self, *args, **kwargs):
         ...
+
+    async def on_observation_start(self, *args, **kwargs):
+        pass
 
     @classmethod
     def name(cls) -> str:

@@ -55,9 +55,12 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
         kwargs['current_chain'] = self
         self._interaction = False
         if not self._current_observation:
+            await self._callback.on_observation_start(**kwargs)
             observation = await self.observe(objective, self._context)
             if not observation:
                 return "Either observation or observer is not defined, please set observer in the chain.", self._context
+            print("kwargs in chain", kwargs)
+            await self._callback.on_observation(observation, **kwargs)
             self._current_observation = observation
             self._task_queue = observation.tasks
             self._pilot_state = {}

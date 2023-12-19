@@ -23,6 +23,9 @@ class BaseCallbackManager(BaseCallback):
     async def on_user_interaction(self, *args, **kwargs):
         pass
 
+    async def on_observation(self, observation, *args, **kwargs):
+        pass
+
     @classmethod
     def name(cls) -> str:
         """The name of the ability."""

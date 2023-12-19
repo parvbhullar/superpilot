@@ -166,7 +166,9 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
 
         # TODO: Use Ability actions to populate context?
         # TODO: we are overriding memories so this wll be the default ability response in most cases ( - aother way to improve context is keep the whole ability context when executing in pilot and pass only the last one as response)
-        return Context(self._current_task.context.memories)
+        if self._current_task.context.prior_actions:
+            return Context().add_content(self._current_task.context.prior_actions[-1].message)
+        return Context()
 
     async def observe(self, objective: str, **kwargs) -> Observation:
         """Observe the task."""
@@ -224,7 +226,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         if response.content.get("clarifying_question"):
             # TODO : Ask clarifying question to user using callback handler
             user_input, hold = await self._callback.on_clarifying_question(
-                response.content.get("clarifying_question"), self._current_task, response, self._current_context, self.thread_id
+                response.content.get("clarifying_question"), self._current_task, response, self._current_context, self.thread_id, **kwargs
             )
             print('in Super pilot', user_input, hold)
             self._current_task.context.user_input.append(f"System: {response.content.get('clarifying_question')}")
@@ -237,7 +239,6 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         ability_args = response.content.get("ability_arguments", {})
         # TODO do a better implementation
         kwargs['callback'] = self._callback
-        kwargs['thread_id'] = self.thread_id
         kwargs['action_objective'] = response.get("task_objective", "")
         # Add context to ability arguments
         ability_action = await self._ability_registry.perform(

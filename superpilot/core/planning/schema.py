@@ -139,6 +139,7 @@ class Task(BaseModel):
     def set_default_memory(self, memory: list):
         self.check_context()
         self.context.default_memory = memory
+        self.context.memories = memory
 
     def check_context(self):
         if self.context is None:
