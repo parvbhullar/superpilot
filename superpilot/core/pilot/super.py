@@ -166,6 +166,7 @@ class SuperPilot(Pilot, Configurable):
             if self._current_task.context.status == TaskStatus.DONE:
                 self._completed_tasks.append(self._current_task)
             else:
+                # TODO insert the new task if required
                 self._task_queue.append(self._current_task)
             self._current_task = None
             self._next_step_response = None

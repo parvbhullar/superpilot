@@ -167,22 +167,6 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         # TODO: we are overriding memories so this wll be the default ability response in most cases ( - aother way to improve context is keep the whole ability context when executing in pilot and pass only the last one as response)
         return Context(self._current_task.context.memories)
 
-    async def observe(self, objective: str, **kwargs) -> Observation:
-        """Observe the task."""
-        # self._logger.debug(f"Observing task: {objective}")
-        # observer = self.current_observer()
-        # if observer:
-        #     try:
-        #         response = await observer.execute(task, context, pilots=self.dump_pilots())
-        #         # TODO : send the consumtion metrics to service
-        #         print("response", response)
-        #         return Observation(**response.get_content())
-        #     except Exception as e:
-        #         import traceback
-        #         self.logger.error(f"Error in observer {observer.name()}: {e} {traceback.print_exc()}")
-        #         return None
-        return None
-
     async def exec_abilities(self,  **kwargs) -> None:
         # TODO: Ability execution needs to be fixed for parallel and sequential execution
         if self._execution_nature == ExecutionNature.PARALLEL:
