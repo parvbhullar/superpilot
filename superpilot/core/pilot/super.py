@@ -22,7 +22,7 @@ from superpilot.core.pilot.settings import (
 from superpilot.core.configuration import Configurable
 from superpilot.core.memory import SimpleMemory
 from superpilot.core.environment import SimpleEnv, Environment
-from superpilot.core.planning import SimplePlannerLegacy, Task, TaskStatus, SimplePlanner
+from superpilot.core.planning import SimplePlannerLegacy, Task, TaskStatus, SimplePlanner, LanguageModelResponse
 from superpilot.core.planning.base import Planner
 from superpilot.core.plugin.simple import (
     PluginLocation,
@@ -82,7 +82,7 @@ class SuperPilot(Pilot, Configurable):
         self._task_queue = []
         self._completed_tasks = []
         self._current_task = None
-        self._next_step = None
+        self._next_step_response = None
 
     async def plan(self, user_objective: str, context: Context, **kwargs):
         """Plan the next step for the pilot."""
@@ -106,11 +106,25 @@ class SuperPilot(Pilot, Configurable):
         plan = await self.plan(user_objective, context)
 
         while self._task_queue:
-            await self.determine_next_step(*args, **kwargs)
+            task, response = await self.determine_next_step(*args, **kwargs)
+            user_input, hold = await self.check_for_clarification(response, context)
             # TODO callback to take user input if required.
-            await self.execute_next_step(*args, **kwargs)
+            await self.execute_next_step(hold, *args, **kwargs)
 
-            await self.reflect(*args, **kwargs)
+            # await self.reflect(*args, **kwargs)
+
+    async def check_for_clarification(self, response, context):
+        if response.get("clarifying_question"):
+            self._current_task.context.user_input.append(
+                f"Assistant: {response.get('clarifying_question')}")
+            user_input, hold = await self._callback.on_clarifying_question(
+                response.get("clarifying_question"), self._current_task, response,
+                context, thread_id=1
+            )
+            if user_input:
+                self._current_task.context.user_input.append(f"User: {user_input}")
+            return user_input, hold
+        return None, False
 
     async def reflect(self, *args, **kwargs):
         await self._planner.reflect(self._current_task, self._current_task.context)
@@ -125,28 +139,36 @@ class SuperPilot(Pilot, Configurable):
         self._logger.info(f"Working on task: {task}")
 
         task = await self._evaluate_task_and_add_context(task)
-        next_ability = await self._choose_next_step(
+        next_response = await self._choose_next_step(
             task,
             self._ability_registry.dump_abilities(),
         )
         self._current_task = task
-        self._next_step = next_ability.content
-        return self._current_task, self._next_step
+        self._next_step_response = next_response
+        return self._current_task, self._next_step_response
 
-    async def execute_next_step(self, *args, **kwargs):
-        user_input = "y"
-        if user_input == "y":
-            ability = self._ability_registry.get_ability(
-                self._next_step["next_ability"]
+    async def execute_next_step(self, hold, *args, **kwargs):
+        if not hold:
+            # ability = self._ability_registry.get_ability(
+            #     self._next_step_response.get("next_ability")
+            # )
+            ability_args = self._next_step_response.get("ability_arguments", {})
+            kwargs['action_objective'] = self._next_step_response.get("task_objective", "")
+            kwargs['callback'] = self._callback
+            # kwargs['thread_id'] = self.thread_id
+            # Add context to ability arguments
+            ability_response = await self._ability_registry.perform(
+                self._next_step_response.get("next_ability"), ability_args=ability_args, **kwargs
             )
-            ability_response = await ability(**self._next_step["ability_arguments"])
-            await self._update_tasks_and_memory(ability_response)
+            # ability_response = await ability(**self._next_step_response["ability_arguments"], **kwargs)
+            await self._update_tasks_and_memory(ability_response, self._next_step_response)
+
             if self._current_task.context.status == TaskStatus.DONE:
                 self._completed_tasks.append(self._current_task)
             else:
                 self._task_queue.append(self._current_task)
             self._current_task = None
-            self._next_step = None
+            self._next_step_response = None
 
             return ability_response.dict()
         else:
@@ -175,17 +197,30 @@ class SuperPilot(Pilot, Configurable):
             # Don't ask the LLM, just set the next action as "breakdown_task" with an appropriate reason
             raise NotImplementedError
         else:
-            next_ability = await self._planner.next(
+            next_response = await self._planner.next(
                 task, ability_schema
             )
-            return next_ability
+            return next_response
 
-    async def _update_tasks_and_memory(self, ability_result: AbilityAction):
+    async def _update_tasks_and_memory(self, ability_response: AbilityAction, response: LanguageModelResponse):
         self._current_task.context.cycle_count += 1
-        self._current_task.context.prior_actions.append(ability_result)
+        self._current_task.context.prior_actions.append(ability_response)
         # TODO: Summarize new knowledge
         # TODO: store knowledge and summaries in memory and in relevant tasks
         # TODO: evaluate whether the task is complete
+        # TODO update memory with the facts, insights and knowledge
+
+        self._logger.info(f"Final response: {ability_response}")
+        status = TaskStatus.IN_PROGRESS
+        if response.content.get("task_status"):
+            status = TaskStatus(response.content.get("task_status"))
+        self._status = status
+        self._current_task.context.status = status
+        self._current_task.context.enough_info = True
+        self._current_task.update_memory(ability_response.get_memories())
+        # print("Ability result", ability_result.result)
+
+        # TaskStore.save_task_with_status(self._current_goal, status, stage)
 
     @classmethod
     def create(cls,
