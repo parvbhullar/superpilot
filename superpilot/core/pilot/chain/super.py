@@ -73,7 +73,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
         if self._task_index == len(self._task_queue):
             print('resetting state', self.thread_id)
             await self._state.save({})
-            await self._callback.on_user_interaction(self.thread_id)
+            await self._callback.on_chain_complete(**kwargs)
             print("chain completed")
         return self._response, self._context
 
@@ -131,7 +131,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
                     print('chain state: ', current_state)
                     await self._state.save(current_state)
                     print("saving state task in progress", self.thread_id)
-                    await self._callback.on_user_interaction(self.thread_id)
+                    await self._callback.on_user_interaction(**kwargs)
                 # self._task_queue.remove(self._current_task)
         else:
             self._response = "Task is already completed"

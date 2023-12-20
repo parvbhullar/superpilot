@@ -26,6 +26,9 @@ class BaseCallbackManager(BaseCallback):
     async def on_observation(self, observation, *args, **kwargs):
         pass
 
+    async def on_chain_complete(self, *args, **kwargs):
+        pass
+
     @classmethod
     def name(cls) -> str:
         """The name of the ability."""
