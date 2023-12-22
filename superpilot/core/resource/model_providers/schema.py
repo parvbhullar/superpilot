@@ -37,6 +37,7 @@ class MessageRole(str, enum.Enum):
     USER = "user"
     SYSTEM = "system"
     ASSISTANT = "assistant"
+    FUNCTION = "function"
 
 
 class MessageContentType(str, enum.Enum):

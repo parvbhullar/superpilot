@@ -75,7 +75,7 @@ class ClipDropGenerator(Ability):
             f.write(response)
         content = ImageContentItem(file_path=file_path)
         items.append(content)
-        return Context(items=items)
+        return Context(messages=items)
 
     @staticmethod
     def _parse_response(response_content: dict) -> dict:

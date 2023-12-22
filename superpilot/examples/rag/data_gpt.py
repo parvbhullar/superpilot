@@ -121,7 +121,7 @@ class DataGPTExecutor:
 
     async def execute(self, task: str, **kwargs):
         # task = {}
-        self.context.add("")
+        self.context.add_attachment("")
 
         # task = Task.factory(task, **kwargs)
         # response = await self.api_pilot.execute(task, self.context, **kwargs)

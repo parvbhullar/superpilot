@@ -58,7 +58,7 @@ class WolframAbility(Ability):
     async def __call__(self, query: str, **kwargs):
         self._logger.debug(query)
         context = Context()
-        context.add(self.get_content(query, **kwargs))
+        context.add_attachment(self.get_content(query, **kwargs))
         return context
 
     def get_content(self, query: str, **kwargs) -> Content:

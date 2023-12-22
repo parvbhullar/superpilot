@@ -109,7 +109,7 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
             ability_action.success = False
             ability_action.message = f"Function execution failed with error: {e}"
             response = Context()
-            response.add(e)
+            response.add_attachment(e)
             ability_action.add_result(response)
         return ability_action
 

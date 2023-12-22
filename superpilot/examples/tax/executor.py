@@ -122,7 +122,7 @@ class Gstr1FillingExecutor(BaseExecutor):
                         "Content-Type": "application/json"
                     }
                 }
-        self.context.add(Content.add_content_item(
+        self.context.add_attachment(Content.add_content_item(
             self.PROMPT_TEMPLATE.format(**task), ContentType.DICT
         ))
         task = "Use given data to fill GSTR1 return then observe the response given from api."

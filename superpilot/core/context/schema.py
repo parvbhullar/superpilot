@@ -1,9 +1,15 @@
+from datetime import datetime
 from typing import Dict, Type, Any, Optional, List, Union
+import uuid
+
 from pydantic import BaseModel, create_model, root_validator, validator
 import enum
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
+
+from superpilot.core.planning import Task
+from superpilot.core.resource.model_providers import LanguageModelMessage, MessageRole
 
 
 class ContentType(str, enum.Enum):
@@ -207,68 +213,198 @@ class Content(ContentItem):
         return new_class
 
 
-class Context:
-    items: list[ContentItem]
+class Role(str, enum.Enum):
+    USER = "user"
+    ASSISTANT = "assistant"
+    FUNCTION = "function"
+    SYSTEM = "system"
 
-    def __init__(self, items: list[ContentItem] = None):
-        if not items:
-            items = []
-        self.items = items
+    def __str__(self):
+        return self.value
 
-    def extend(self, context: "Context") -> None:
-        if context:
-            self.items.extend(context.items)
 
-    def __bool__(self) -> bool:
-        return len(self.items) > 0
+class Event(str, enum.Enum):
+    PLANNING = "planning"
+    EXECUTION = "execution"
+    USER_INPUT = "user_input"
 
-    def add(self, item: Any) -> None:
+    def __str__(self):
+        return self.value
+
+
+class User(BaseModel):
+    """Struct for metadata about a sender."""
+    id: uuid.UUID
+    name: str
+    role: Role
+    additional_data: dict = None
+
+    @property
+    def username(self):
+        return f"{self.name} ({self.role})"
+
+    @classmethod
+    def add_user(cls, name: str = "System", role: Role = Role.SYSTEM, _id: uuid.UUID = uuid.uuid4(), additional_data: dict = None):
+        if not additional_data:
+            additional_data = {}
+        return cls(id=_id, name=name, role=role, additional_data=additional_data)
+
+
+class MessageContent(BaseModel):
+    pass
+
+
+class Message(BaseModel):
+    """Struct for a message and its metadata."""
+    sender: User
+    message: str
+    attachments: list[ContentItem]
+    additional_data: Any = None
+    event: Event = Event.USER_INPUT
+    thread_id: str = str(uuid.uuid4())
+    timestamp: datetime = datetime.now()
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    @classmethod
+    def create(
+            cls,
+            message: str,
+            user: User = None,
+            event: Event = None,
+            attachments: list[ContentItem] = None,
+            additional_data: Any = None
+    ):
+        if not attachments:
+            attachments = []
+        if not user:
+            user = User.add_user()
+        return cls(sender=user, message=message, attachments=attachments, event=event, additional_data=additional_data)
+
+    @classmethod
+    def add_user_message(cls, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
+        user = User.add_user(name="User", role=Role.USER)
+        cls.create(message, user, attachments, additional_data)
+
+    @classmethod
+    def add_assistant_message(cls, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
+        user = User.add_user(name="Assistant", role=Role.ASSISTANT)
+        cls.create(message, user, attachments, additional_data)
+
+    def add_attachment(self, item: Any) -> None:
         if isinstance(item, ContentItem):
-            self.items.append(item)
+            self.attachments.append(item)
         elif isinstance(item, Exception):
-            self.items.append(
+            self.attachments.append(
                 Content.add_content_item(str(item), ContentType.EXCEPTION)
             )
         elif isinstance(item, str):
-            self.items.append(Content.add_content_item(item, ContentType.TEXT))
+            self.attachments.append(Content.add_content_item(item, ContentType.TEXT))
         else:
-            self.items.append(ObjectContent.add(item))
+            self.attachments.append(ObjectContent.add(item))
+
+    def __str__(self) -> str:
+        # return "\n\n".join([f"{c}" for i, c in enumerate(self.attachments, 1)])
+        summary = "\n\n".join([f"{c.summary}" for i, c in enumerate(self.attachments, 1)])
+        return (
+            f"[{self.event}] - {self.sender.username}: {self.message}\n"
+            "```\n"
+            f"{summary}\n"
+            "```"
+        )
+
+    def to_list(self):
+        return [c for c in self.attachments]
+
+    def to_file(self, file_location: str) -> None:
+        with open(file_location, "w") as f:
+            f.write(str(self))
+
+    @property
+    def summary(self) -> str:
+        return self.__str__()
+
+
+class Context:
+    thread_id: uuid.UUID
+    objective: str
+    messages: list[Message]
+    tasks: list[Task]
+    active_task: int = 0
+    active_message: int = -1
+
+    def __init__(self, messages: list[Message] = None):
+        if not messages:
+            messages = []
+        self.messages = messages
+
+    def extend(self, context: "Context") -> None:
+        if context:
+            self.messages.extend(context.messages)
+
+    def __bool__(self) -> bool:
+        return len(self.messages) > 0
+
+    def add_message(self, message: Message):
+        self.messages.append(message)
+
+    def add_user_message(self, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
+        user = User.add_user(name="User", role=Role.USER)
+        self.add_message(Message.create(message, user, attachments, additional_data))
+
+    def add_assistant_message(self, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
+        user = User.add_user(name="Assistant", role=Role.ASSISTANT)
+        self.add_message(Message.create(message, user, attachments, additional_data))
+
+    def add_attachment(self, item: Any, message: str = "Empty") -> None:
+        if len(self.messages) == 0:
+            self.add_user_message(message)
+        self.messages[self.active_message].add_attachment(item)
 
     def add_content(self, content: str) -> "Context":
         item = Content.add_content_item(content, ContentType.TEXT)
-        self.items.append(item)
+        self.add_attachment(item)
         return self
 
     def close(self, index: int) -> None:
-        self.items.pop(index - 1)
+        self.messages.pop(index - 1)
 
     def clear(self) -> None:
-        self.items.clear()
+        self.messages.clear()
 
     def count(self) -> int:
-        return len(self.items)
+        return len(self.messages)
 
     def format_numbered(self) -> str:
-        return "\n\n".join([f"{i}. {c}" for i, c in enumerate(self.items, 1)])
+        return "\n\n".join([f"{i}. {c}" for i, c in enumerate(self.messages, 1)])
 
     def __str__(self) -> str:
-        return "\n\n".join([f"{c}" for i, c in enumerate(self.items, 1)])
+        return "\n\n".join([f"{c}" for i, c in enumerate(self.messages, 1)])
 
     def dict(self):
         return {"content": self.__str__()}
 
     def to_list(self):
-        return [c for c in self.items]
+        return [c for c in self.messages]
 
     def to_file(self, file_location: str) -> None:
         with open(file_location, "w") as f:
             f.write(str(self.format_numbered()))
 
     def summary(self) -> str:
-        return "\n\n".join([f"{c.summary}" for i, c in enumerate(self.items, 1)])
+        return "\n\n".join([f"{c.summary}" for i, c in enumerate(self.messages, 1)])
 
     @classmethod
     def factory(cls, items: list[ContentItem] = None):
         if items is None:
             items = []
         return cls(items)
+
+    @classmethod
+    def load_context(cls, message: Message):
+        # TODO load context from file
+        context = cls()
+        context.thread_id = message.thread_id
+        context.add_message(message)
+        return context

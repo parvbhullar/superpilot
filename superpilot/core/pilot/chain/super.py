@@ -5,7 +5,7 @@ from superpilot.core.callback.manager.std_io import STDInOutCallbackManager
 from superpilot.core.pilot.chain.base import BaseChain, HandlerType
 
 from superpilot.core.ability import AbilityAction
-from superpilot.core.context.schema import Context
+from superpilot.core.context.schema import Context, Message
 from superpilot.core.pilot.chain.strategy.observation_strategy import Observation
 from superpilot.core.planning import TaskStatus, Task, LanguageModelResponse
 from superpilot.core.state.base import BaseState, State
@@ -46,17 +46,22 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
             state = State()
         self._state = state
 
-    async def execute(self, objective: str, context: Context, **kwargs):
+    # TODO add files and data and additional kwargs
+    async def execute(self, objective: str | Message, context: Context, **kwargs):
+        if not isinstance(objective, Message):
+            objective = Message.add_user_message(objective)
+            # TODO: add files and data to context
+        self._context = Context.load_context(objective)
+
         # Splitting the observation and execution phases
-        self._context = context
         print('context given to chain', context)
-        state = await self._state.load()
+        # state = await self._state.load()
         # await self._state.deserialize(self, state)
         kwargs['current_chain'] = self
         self._interaction = False
         if not self._current_observation:
             await self._callback.on_observation_start(**kwargs)
-            observation = await self.observe(objective, self._context)
+            observation = await self.observe(objective.message, self._context)
             if not observation:
                 return "Either observation or observer is not defined, please set observer in the chain.", self._context
             print("kwargs in chain", kwargs)
@@ -150,7 +155,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
             print(self._pilot_state)
             if self._pilot_state.get('_status', TaskStatus.DONE) == TaskStatus.DONE:
                 if isinstance(response, LanguageModelResponse):
-                    context.add(response.get_content())
+                    context.add_attachment(response.get_content())
                 elif isinstance(response, Context):
                     context.extend(response)
                 elif isinstance(response, AbilityAction):

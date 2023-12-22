@@ -126,7 +126,7 @@ class StableDiffusionGenerator(Ability):
                 f.write(base64.b64decode(image["base64"]))
             content = ImageContentItem(file_path=file_path)
             items.append(content)
-        return Context(items=items)
+        return Context(messages=items)
 
     @staticmethod
     def _parse_response(response_content: dict) -> dict:

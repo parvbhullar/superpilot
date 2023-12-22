@@ -1,6 +1,5 @@
 from typing import Dict, Type, Any, Optional
 from pydantic import BaseModel, create_model, root_validator, validator
-from superpilot.core.context.schema import Context, Content
 
 
 class AbilityAction(BaseModel):
@@ -13,16 +12,19 @@ class AbilityAction(BaseModel):
     executed: bool = False
     wait_for_user: bool = False
     message: str = ""
-    result: Context = None
+    result: Any = None
 
     class Config:
         arbitrary_types_allowed = True
 
-    def add_result(self, result: Context):
+    def add_result(self, result: Any):
         # print("Ability Knowledge", knowledge)
         self.result = result
 
     def summary(self):
+        return self.__str__()
+
+    def __str__(self):
         # return self.knowledge.content
         kwargs = ", ".join(f"{k}={v}" for k, v in self.ability_args.items())
         # return f"{self.ability_name}({kwargs}): {self.message}"

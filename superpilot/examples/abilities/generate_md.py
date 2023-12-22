@@ -77,7 +77,7 @@ class GenerateMarkdownContent(Ability):
         with open(file_path, "w") as f:
             f.write(text_summary)
         content = FileContentItem(file_path=file_path)
-        return Context(items=[content])
+        return Context(messages=[content])
 
     @staticmethod
     def _parse_response(response_content: dict) -> dict:

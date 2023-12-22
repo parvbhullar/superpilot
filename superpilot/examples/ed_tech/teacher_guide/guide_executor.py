@@ -48,7 +48,7 @@ class GuideExecutor(BaseExecutor):
         return response.get("content"), context
 
     async def execute(self, task: str, chapter: str, **kwargs):
-        self.context.add(chapter)
+        self.context.add_attachment(chapter)
         self.final_content = ""
         await self.chain.execute(task, self.context, **kwargs)
         return self.final_content
