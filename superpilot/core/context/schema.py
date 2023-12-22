@@ -226,6 +226,7 @@ class Role(str, enum.Enum):
 class Event(str, enum.Enum):
     PLANNING = "planning"
     EXECUTION = "execution"
+    LLM_RESPONSE = "llm_response"
     USER_INPUT = "user_input"
 
     def __str__(self):
@@ -258,7 +259,7 @@ class Message(BaseModel):
     """Struct for a message and its metadata."""
     sender: User
     message: str
-    attachments: list[ContentItem]
+    attachments: list[ContentItem] = []
     additional_data: Any = None
     event: Event = Event.USER_INPUT
     thread_id: str = str(uuid.uuid4())
@@ -285,12 +286,17 @@ class Message(BaseModel):
     @classmethod
     def add_user_message(cls, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
         user = User.add_user(name="User", role=Role.USER)
-        cls.create(message, user, attachments, additional_data)
+        return cls.create(message, user, Event.USER_INPUT, attachments, additional_data)
 
     @classmethod
     def add_assistant_message(cls, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
         user = User.add_user(name="Assistant", role=Role.ASSISTANT)
-        cls.create(message, user, attachments, additional_data)
+        return cls.create(message, user, Event.LLM_RESPONSE, attachments, additional_data)
+
+    @classmethod
+    def add_execution_message(cls, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
+        user = User.add_user(name="Assistant", role=Role.ASSISTANT)
+        return cls.create(message, user, Event.EXECUTION, attachments, additional_data)
 
     def add_attachment(self, item: Any) -> None:
         if isinstance(item, ContentItem):
@@ -350,12 +356,16 @@ class Context:
         self.messages.append(message)
 
     def add_user_message(self, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
-        user = User.add_user(name="User", role=Role.USER)
-        self.add_message(Message.create(message, user, attachments, additional_data))
+        message = Message.add_user_message(message, attachments, additional_data)
+        self.add_message(message)
 
     def add_assistant_message(self, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
-        user = User.add_user(name="Assistant", role=Role.ASSISTANT)
-        self.add_message(Message.create(message, user, attachments, additional_data))
+        message = Message.add_assistant_message(message, attachments, additional_data)
+        self.add_message(message)
+
+    def add_execution_message(self, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
+        message = Message.add_execution_message(message, attachments, additional_data)
+        self.add_message(message)
 
     def add_attachment(self, item: Any, message: str = "Empty") -> None:
         if len(self.messages) == 0:

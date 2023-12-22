@@ -47,11 +47,8 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
         self._state = state
 
     # TODO add files and data and additional kwargs
-    async def execute(self, objective: str | Message, context: Context, **kwargs):
-        if not isinstance(objective, Message):
-            objective = Message.add_user_message(objective)
-            # TODO: add files and data to context
-        self._context = Context.load_context(objective)
+    async def execute(self, objective: str | Message, context: Context = None, **kwargs):
+        objective = await self.init_context(context, objective)
 
         # Splitting the observation and execution phases
         print('context given to chain', context)
@@ -81,6 +78,17 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
             await self._callback.on_chain_complete(**kwargs)
             print("chain completed")
         return self._response, self._context
+
+    async def init_context(self, context, objective):
+        if not isinstance(objective, Message):
+            objective = Message.add_user_message(objective)
+            # TODO: add files and data to context
+        if context is not None:
+            context.add_message(objective)
+            self._context = context
+        else:
+            self._context = Context.load_context(objective)
+        return objective
 
     async def handle_task_based_on_observation(self, context: Context, **kwargs):
         # Logic to choose the right function and its arguments based on the observation

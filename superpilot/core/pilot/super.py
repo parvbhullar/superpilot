@@ -83,6 +83,7 @@ class SuperPilot(Pilot, Configurable):
         self._completed_tasks = []
         self._current_task = None
         self._next_step_response = None
+        self._context = None
 
     async def plan(self, user_objective: str, context: Context, **kwargs):
         """Plan the next step for the pilot."""
@@ -92,10 +93,12 @@ class SuperPilot(Pilot, Configurable):
             functions=self._ability_registry.list_abilities(),
         )
         tasks = plan.get_tasks()
+        self._context.tasks = tasks
 
         # TODO: Should probably do a step to evaluate the quality of the generated tasks,
         #  and ensure that they have actionable ready and acceptance criteria
 
+        self._context = context
         self._task_queue.extend(tasks)
         self._task_queue.sort(key=lambda t: t.priority, reverse=True)
         self._task_queue[-1].context.status = TaskStatus.READY
@@ -107,24 +110,21 @@ class SuperPilot(Pilot, Configurable):
 
         while self._task_queue:
             task, response = await self.determine_next_step(*args, **kwargs)
-            user_input, hold = await self.check_for_clarification(response, context)
             # TODO callback to take user input if required.
-            await self.execute_next_step(hold, *args, **kwargs)
+            await self.execute_next_step(*args, **kwargs)
 
             # await self.reflect(*args, **kwargs)
 
     async def check_for_clarification(self, response, context):
-        if response.get("clarifying_question"):
-            self._current_task.context.user_input.append(
-                f"Assistant: {response.get('clarifying_question')}")
-            user_input, hold = await self._callback.on_clarifying_question(
-                response.get("clarifying_question"), self._current_task, response,
-                context, thread_id=1
-            )
-            if user_input:
-                self._current_task.context.user_input.append(f"User: {user_input}")
-            return user_input, hold
-        return None, False
+        self._current_task.context.user_input.append(
+            f"Assistant: {response.get('clarifying_question')}")
+        user_input, hold = await self._callback.on_clarifying_question(
+            response.get("clarifying_question"), self._current_task, response,
+            context, thread_id=1
+        )
+        if user_input:
+            self._current_task.context.user_input.append(f"User: {user_input}")
+        return user_input, hold
 
     async def reflect(self, *args, **kwargs):
         await self._planner.reflect(self._current_task, self._current_task.context)
@@ -147,33 +147,37 @@ class SuperPilot(Pilot, Configurable):
         self._next_step_response = next_response
         return self._current_task, self._next_step_response
 
-    async def execute_next_step(self, hold, *args, **kwargs):
-        if not hold:
-            # ability = self._ability_registry.get_ability(
-            #     self._next_step_response.get("next_ability")
-            # )
-            ability_args = self._next_step_response.get("ability_arguments", {})
-            kwargs['action_objective'] = self._next_step_response.get("task_objective", "")
-            kwargs['callback'] = self._callback
-            # kwargs['thread_id'] = self.thread_id
-            # Add context to ability arguments
-            ability_response = await self._ability_registry.perform(
-                self._next_step_response.get("next_ability"), ability_args=ability_args, **kwargs
-            )
-            # ability_response = await ability(**self._next_step_response["ability_arguments"], **kwargs)
-            await self._update_tasks_and_memory(ability_response, self._next_step_response)
+    async def execute_next_step(self, *args, **kwargs):
+        if self._next_step_response.get("clarifying_question"):
+            user_input, hold = await self.check_for_clarification(self._next_step_response, self._context)
+            if hold:
+                # TODO save state and exit
+                pass
+            await self.update_task_queue()
+            return
 
-            if self._current_task.context.status == TaskStatus.DONE:
-                self._completed_tasks.append(self._current_task)
-            else:
-                # TODO insert the new task if required
-                self._task_queue.append(self._current_task)
-            self._current_task = None
-            self._next_step_response = None
+        ability_args = self._next_step_response.get("ability_arguments", {})
+        kwargs['action_objective'] = self._next_step_response.get("task_objective", "")
+        kwargs['callback'] = self._callback # TODO pass callback to ability registry
+        # kwargs['thread_id'] = self.thread_id
+        # Add context to ability arguments
+        ability_response = await self._ability_registry.perform(
+            self._next_step_response.get("next_ability"), ability_args=ability_args, **kwargs
+        )
+        # ability_response = await ability(**self._next_step_response["ability_arguments"], **kwargs)
+        await self._update_tasks_and_memory(ability_response, self._next_step_response)
 
-            return ability_response.dict()
+        await self.update_task_queue()
+        self._current_task = None
+        self._next_step_response = None
+
+    async def update_task_queue(self):
+        if self._current_task.context.status == TaskStatus.DONE:
+            self._completed_tasks.append(self._current_task)
+            # self._context.add_task(self._current_task)
         else:
-            raise NotImplementedError
+            # TODO insert the new task if required
+            self._task_queue.append(self._current_task)
 
     async def _evaluate_task_and_add_context(self, task: Task) -> Task:
         """Evaluate the task and add context to it."""
