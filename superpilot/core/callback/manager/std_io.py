@@ -6,6 +6,8 @@ import inflection
 from superpilot.core.callback.handler.base import BaseCallbackHandler
 from superpilot.core.callback.manager.base import BaseCallbackManager
 from superpilot.core.callback.manager.callback_runner import handle_event
+from superpilot.core.context.schema import Message, Context
+from superpilot.core.planning import Task, LanguageModelResponse
 
 
 class STDInOutCallbackManager(BaseCallbackManager):
@@ -26,13 +28,22 @@ class STDInOutCallbackManager(BaseCallbackManager):
     async def on_info(self, *args, **kwargs):
         await handle_event(self._callbacks, "on_info", *args, **kwargs)
 
-    async def on_clarifying_question(self, question, current_task, response, current_context, thread_id, *args, **kwargs) -> Tuple[str, bool]:
-        print("Question ", question)
+    async def on_clarifying_question(
+        self,
+        question_message: Message,
+        current_task: Task,
+        response: LanguageModelResponse,
+        context: Context,
+        *args,
+        **kwargs
+    ) -> Tuple[Message, bool]:
+        print("Question ", question_message.message)
         try:
             user_input = input("Enter your response: ")
-            return user_input, False
+            user_message = Message.add_user_message(message=user_input)
+            return user_message, False
         except KeyboardInterrupt:
-            return "", True
+            return None, True
 
     @classmethod
     def name(cls) -> str:

@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Tuple
 
 from superpilot.core.ability import (
     AbilityAction,
@@ -10,7 +10,7 @@ from superpilot.core.ability import (
 )
 from superpilot.core.callback.manager.base import BaseCallbackManager
 from superpilot.core.callback.manager.std_io import STDInOutCallbackManager
-from superpilot.core.context.schema import Context
+from superpilot.core.context.schema import Context, Message
 from superpilot.core.pilot.base import Pilot
 from superpilot.core.pilot.settings import (
     PilotSettings,
@@ -82,8 +82,8 @@ class SuperPilot(Pilot, Configurable):
         self._task_queue = []
         self._completed_tasks = []
         self._current_task = None
-        self._next_step_response = None
-        self._context = None
+        self._next_step_response: LanguageModelResponse = None
+        self._context: Context = None
 
     async def plan(self, user_objective: str, context: Context, **kwargs):
         """Plan the next step for the pilot."""
@@ -93,12 +93,13 @@ class SuperPilot(Pilot, Configurable):
             functions=self._ability_registry.list_abilities(),
         )
         tasks = plan.get_tasks()
+        self._context = context
         self._context.tasks = tasks
 
         # TODO: Should probably do a step to evaluate the quality of the generated tasks,
         #  and ensure that they have actionable ready and acceptance criteria
 
-        self._context = context
+        
         self._task_queue.extend(tasks)
         self._task_queue.sort(key=lambda t: t.priority, reverse=True)
         self._task_queue[-1].context.status = TaskStatus.READY
@@ -115,16 +116,24 @@ class SuperPilot(Pilot, Configurable):
 
             # await self.reflect(*args, **kwargs)
 
-    async def check_for_clarification(self, response, context):
+    async def check_for_clarification(self, response, context, **kwargs) -> bool:
         self._current_task.context.user_input.append(
             f"Assistant: {response.get('clarifying_question')}")
+        question_message = Message.add_question_message(
+            message=response.get("clarifying_question")
+        )
+        self._context.add_message(question_message)
         user_input, hold = await self._callback.on_clarifying_question(
-            response.get("clarifying_question"), self._current_task, response,
-            context, thread_id=1
+            question_message,
+            self._current_task,
+            response,
+            context,
+            **kwargs
         )
         if user_input:
-            self._current_task.context.user_input.append(f"User: {user_input}")
-        return user_input, hold
+            self._current_task.context.user_input.append(f"User: {user_input.message}")
+            self._context.add_message(user_input)
+        return hold
 
     async def reflect(self, *args, **kwargs):
         await self._planner.reflect(self._current_task, self._current_task.context)
@@ -149,7 +158,7 @@ class SuperPilot(Pilot, Configurable):
 
     async def execute_next_step(self, *args, **kwargs):
         if self._next_step_response.get("clarifying_question"):
-            user_input, hold = await self.check_for_clarification(self._next_step_response, self._context)
+            hold = await self.check_for_clarification(self._next_step_response, self._context, **kwargs)
             if hold:
                 # TODO save state and exit
                 pass
@@ -192,7 +201,7 @@ class SuperPilot(Pilot, Configurable):
             task.context.status = TaskStatus.IN_PROGRESS
             return task
 
-    async def _choose_next_step(self, task: Task, ability_schema: list[dict]):
+    async def _choose_next_step(self, task: Task, ability_schema: list[dict]) -> LanguageModelResponse:
         """Choose the next ability to use for the task."""
         self._logger.debug(f"Choosing next ability for task {task}.")
         if task.context.cycle_count > self._configuration.max_task_cycle_count:

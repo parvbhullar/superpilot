@@ -228,6 +228,7 @@ class Event(str, enum.Enum):
     EXECUTION = "execution"
     LLM_RESPONSE = "llm_response"
     USER_INPUT = "user_input"
+    QUESTION = "question"
 
     def __str__(self):
         return self.value
@@ -287,6 +288,11 @@ class Message(BaseModel):
     def add_user_message(cls, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
         user = User.add_user(name="User", role=Role.USER)
         return cls.create(message, user, Event.USER_INPUT, attachments, additional_data)
+
+    @classmethod
+    def add_question_message(cls, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
+        user = User.add_user(name="Assistant", role=Role.ASSISTANT)
+        return cls.create(message, user, Event.QUESTION, attachments, additional_data)
 
     @classmethod
     def add_assistant_message(cls, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
