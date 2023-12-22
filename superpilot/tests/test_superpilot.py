@@ -45,6 +45,7 @@ from superpilot.core.planning.settings import (
 
 async def test_pilot():
     query = "File GSTR1 using the GSTN Portal"
+    query = "multiply 2 and 3 and then sum with 6 and then subtract 2 and then divide by 2"
 
     context = Context()
 

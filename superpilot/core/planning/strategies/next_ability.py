@@ -4,7 +4,7 @@ from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
     LanguageModelPrompt,
-    Task,
+    Task, TaskStatus,
 )
 from superpilot.core.planning.strategies.utils import json_loads, to_numbered_list
 from superpilot.core.resource.model_providers import (
@@ -46,6 +46,7 @@ class NextAbility(PromptStrategy):
         "Please choose one of the provided functions to accomplish this task. "
         "Some tasks may require multiple functions to accomplish. If that is the case, choose the function that "
         "you think is most appropriate for the current situation given your progress so far."
+        "set the appropriate task status according to overall task objective"
     )
 
     DEFAULT_ADDITIONAL_ABILITY_ARGUMENTS = {
@@ -59,8 +60,37 @@ class NextAbility(PromptStrategy):
         },
         "reasoning": {
             "type": "string",
-            "description": "Your reasoning for choosing this function taking into account the `motivation` and weighing the `self_criticism`.",
+            "description": "Your reasoning for choosing this function taking into account the `motivation` "
+                           "and weighing the `self_criticism`.",
         },
+        "task_status": {
+            "type": "string",
+            "description": "overall status of the task, on hold if ambiguous, "
+                           "ready if all the acceptance criteria are met",
+            "enum": [t for t in TaskStatus],
+        },
+        'task_objective': {
+            "type": "string",
+            "description": "verbose description of the current sub task you will be performing. this should be "
+                           "current task not the whole objective",
+        },
+        "ambiguity": {
+            "type": "array",
+            "description": "your thoughtful reflection on the ambiguity of the task",
+            "items": {
+                "type": "string",
+                "description": "your thoughtful reflection on the ambiguity of the task"
+            }
+        },
+        "clarifying_question": {
+            "type": "string",
+            "description": "ask the user relevant question only if all the conditions are met. conditions are:"
+                           "1. You are not currently solving the same `objective`"
+                           "2. the information is not already available "
+                           "3. you are blocked to proceed without user assistance"
+                           "4. you can not solve it by yourself or function call. "
+                           "if there is no question to ask then set question to empty string"
+        }
     }
 
     default_configuration = NextAbilityConfiguration(
@@ -72,12 +102,12 @@ class NextAbility(PromptStrategy):
     )
 
     def __init__(
-        self,
-        model_classification: LanguageModelClassification,
-        system_prompt_template: str,
-        system_info: List[str],
-        user_prompt_template: str,
-        additional_ability_arguments: dict,
+            self,
+            model_classification: LanguageModelClassification,
+            system_prompt_template: str,
+            system_info: List[str],
+            user_prompt_template: str,
+            additional_ability_arguments: dict,
     ):
         self._model_classification = model_classification
         self._system_prompt_template = system_prompt_template
@@ -92,13 +122,13 @@ class NextAbility(PromptStrategy):
         return self._model_classification
 
     def build_prompt(
-        self,
-        task: Task,
-        ability_schema: List[dict],
-        os_info: str,
-        api_budget: float,
-        current_time: str,
-        **kwargs,
+            self,
+            task: Task,
+            ability_schema: List[dict],
+            os_info: str,
+            api_budget: float,
+            current_time: str,
+            **kwargs,
     ) -> LanguageModelPrompt:
         template_kwargs = {
             "os_info": os_info,
@@ -107,8 +137,8 @@ class NextAbility(PromptStrategy):
             **kwargs,
         }
 
-        context = kwargs.get("context", Context())
-        print("Context: ", type(context))
+        # context = kwargs.get("context", Context())
+        # print("Context: ", type(context))
 
         for ability in ability_schema:
             ability["parameters"]["properties"].update(
@@ -119,9 +149,9 @@ class NextAbility(PromptStrategy):
             )
 
         template_kwargs["task_objective"] = task.objective
-        template_kwargs["cycle_count"] = task.context.cycle_count + context.count()
+        template_kwargs["cycle_count"] = task.context.cycle_count
         template_kwargs["action_history"] = to_numbered_list(
-            [action.summary() for action in task.context.prior_actions] + [item.summary() for item in context.items],
+            [action.summary() for action in task.context.prior_actions],
             no_items_response="You have not taken any actions yet.",
             use_format=False,
             **template_kwargs,
@@ -136,11 +166,13 @@ class NextAbility(PromptStrategy):
             [memory.summary() for memory in task.context.memories]
             + [info for info in task.context.supplementary_info],
             no_items_response="There is no additional information available at this time.",
+            use_format=False,
             **template_kwargs,
         )
         template_kwargs["user_input"] = to_numbered_list(
             [user_input for user_input in task.context.user_input],
             no_items_response="There are no additional considerations at this time.",
+            use_format=False,
             **template_kwargs,
         )
         template_kwargs["acceptance_criteria"] = to_numbered_list(
@@ -173,8 +205,8 @@ class NextAbility(PromptStrategy):
         )
 
     def parse_response_content(
-        self,
-        response_content: dict,
+            self,
+            response_content: dict,
     ) -> dict:
         """Parse the actual text response from the objective model.
 
@@ -191,6 +223,10 @@ class NextAbility(PromptStrategy):
             "motivation": function_arguments.pop("motivation", None),
             "self_criticism": function_arguments.pop("self_criticism", None),
             "reasoning": function_arguments.pop("reasoning", None),
+            "task_status": function_arguments.pop("task_status", None),
+            "task_objective": function_arguments.pop("task_objective", None),
+            "ambiguity": function_arguments.pop("ambiguity", None),
+            "clarifying_question": function_arguments.pop("clarifying_question", None),
             "next_ability": function_name,
             "ability_arguments": function_arguments,
         }

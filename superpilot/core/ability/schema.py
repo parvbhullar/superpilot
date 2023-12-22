@@ -13,20 +13,27 @@ class AbilityAction(BaseModel):
     executed: bool = False
     wait_for_user: bool = False
     message: str = ""
-    knowledge: Context = None
+    result: Context = None
 
     class Config:
         arbitrary_types_allowed = True
 
-    def add_knowledge(self, knowledge: Context):
+    def add_result(self, result: Context):
         # print("Ability Knowledge", knowledge)
-        self.knowledge = knowledge
+        self.result = result
 
     def summary(self):
         # return self.knowledge.content
-
         kwargs = ", ".join(f"{k}={v}" for k, v in self.ability_args.items())
-        return f"{self.ability_name}({kwargs}): {self.message}"
+        # return f"{self.ability_name}({kwargs}): {self.message}"
+        return (
+            f"{self.ability_name}({kwargs})\n"
+            "```\n"
+            f"{self.message}\n"
+            "```"
+        )
 
+    def get_memories(self):
+        return self.result.to_list()
 
 

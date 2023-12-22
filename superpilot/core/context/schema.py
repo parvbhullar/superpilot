@@ -1,4 +1,4 @@
-from typing import Dict, Type, Any, Optional
+from typing import Dict, Type, Any, Optional, List, Union
 from pydantic import BaseModel, create_model, root_validator, validator
 import enum
 from abc import ABC, abstractmethod
@@ -19,6 +19,7 @@ class ContentType(str, enum.Enum):
     DICT = "dict"
     LIST = "dict"
     XML = "xml"
+    EXCEPTION = "exception"
     CLASS_OBJECT = "class_object"
 
 
@@ -49,7 +50,7 @@ class ContentItem(ABC):
 
     def __str__(self) -> str:
         return (
-            f"{self.description} (source: {self.source})\n"
+            f"{self.description} (source: {self.source}) (type: {self.type})\n"
             "```\n"
             f"{self.content}\n"
             "```"
@@ -119,6 +120,37 @@ class FolderContentItem(ContentItem):
         return "\n".join(items)
 
 
+@dataclass
+class ObjectContent(ContentItem):
+    @property
+    def source(self) -> Optional[str]:
+        return self.obj_source
+
+    @property
+    def content(self) -> str:
+        return str(self.obj_content)
+
+    @property
+    def type(self) -> ContentType:
+        return self.obj_type
+
+    obj_content: Union[List, Dict]
+    obj_source: Optional[str] = None
+    obj_type = ContentType.CLASS_OBJECT
+
+    @property
+    def description(self) -> str:
+        return f"The is object of '{self.source}'"
+
+    @staticmethod
+    def add(content: dict | list, source: str = None):
+        knowledge = ObjectContent(content, source)
+        knowledge.content_type = (
+            isinstance(content, dict) and ContentType.DICT or ContentType.LIST
+        )
+        return knowledge
+
+
 class Content(ContentItem):
     @property
     def type(self) -> ContentType:
@@ -126,7 +158,7 @@ class Content(ContentItem):
 
     @property
     def description(self) -> str:
-        return self.description
+        return f"The content of object of '{self.type}'"
 
     content: str = ""
     content_type: ContentType = ContentType.TEXT
@@ -172,14 +204,13 @@ class Content(ContentItem):
         )
         return new_class
 
-    def __str__(self):
-        return self.content + " " + self.content_type + " " + str(self.content_metadata)
-
 
 class Context:
     items: list[ContentItem]
 
-    def __init__(self, items: list[ContentItem] = []):
+    def __init__(self, items: list[ContentItem] = None):
+        if not items:
+            items = []
         self.items = items
 
     def extend(self, context: "Context") -> None:
@@ -189,12 +220,22 @@ class Context:
     def __bool__(self) -> bool:
         return len(self.items) > 0
 
-    def add(self, item: ContentItem) -> None:
-        self.items.append(item)
+    def add(self, item: Any) -> None:
+        if isinstance(item, ContentItem):
+            self.items.append(item)
+        elif isinstance(item, Exception):
+            self.items.append(
+                Content.add_content_item(str(item), ContentType.EXCEPTION)
+            )
+        elif isinstance(item, str):
+            self.items.append(Content.add_content_item(item, ContentType.TEXT))
+        else:
+            self.items.append(ObjectContent.add(item))
 
-    def add_content(self, content: str) -> None:
+    def add_content(self, content: str) -> "Context":
         item = Content.add_content_item(content, ContentType.TEXT)
         self.items.append(item)
+        return self
 
     def close(self, index: int) -> None:
         self.items.pop(index - 1)
@@ -214,6 +255,15 @@ class Context:
     def dict(self):
         return {"content": self.__str__()}
 
+    def to_list(self):
+        return [c for c in self.items]
+
     def to_file(self, file_location: str) -> None:
         with open(file_location, "w") as f:
             f.write(str(self.format_numbered()))
+
+    @classmethod
+    def factory(cls, items: list[ContentItem] = None):
+        if items is None:
+            items = []
+        return cls(items)
