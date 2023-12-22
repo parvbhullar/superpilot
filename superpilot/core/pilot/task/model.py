@@ -9,7 +9,7 @@ from superpilot.core.pilot.task.settings import ModelTaskPilotConfiguration
 from superpilot.core.planning.strategies.model import ModelPromptStrategy
 from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
 from superpilot.core.planning.base import PromptStrategy
-from superpilot.core.planning.schema import LanguageModelResponse, Task
+from superpilot.core.planning.schema import LanguageModelResponse
 from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
     PromptStrategyConfiguration,
@@ -55,27 +55,13 @@ class ModelTaskPilot(TaskPilot, ABC):
             self._prompt_strategy = ModelPromptStrategy(**prompt_config)
 
     async def execute(
-        self, objective: str | Task, *args, **kwargs
+        self, objective: str, message_history=[], *args, **kwargs
     ) -> LanguageModelResponse:
         """Execute the task."""
-        thread_id = kwargs.get("thread_id", None)
-        if not thread_id:
-            return LanguageModelResponse(
-                model_info={
-                    "name": self._model_provider.model_name,
-                    "service": "language",
-                    "provider_name": self._model_provider.provider_name,
-                },
-                prompt_tokens_used=0,
-                completion_tokens_used=0,
-                total_tokens_used=0,
-                content={
-                    "content": "Please provide the Thread Id",
-                    "role": "assistant",
-                },
-            )
         prompt_strategy = self._prompt_strategy
-        response = await self.chat_with_model(prompt_strategy, user_input=objective)
+        response = await self.chat_with_model(
+            prompt_strategy, user_input=objective, message_history=message_history
+        )
         return response
 
     async def chat_with_model(
