@@ -1,5 +1,6 @@
 import logging
 import platform
+from typing import List
 import distro
 import time
 from abc import ABC
@@ -17,6 +18,7 @@ from superpilot.core.planning.settings import (
 from superpilot.core.plugin.utlis import load_class
 from superpilot.core.resource.model_providers import ModelProviderName, OpenAIModelName
 from superpilot.core.resource.model_providers.factory import load_model_provider
+from superpilot.core.resource.model_providers.schema import LanguageModelMessage
 
 
 class ModelTaskPilot(TaskPilot, ABC):
@@ -55,7 +57,11 @@ class ModelTaskPilot(TaskPilot, ABC):
             self._prompt_strategy = ModelPromptStrategy(**prompt_config)
 
     async def execute(
-        self, objective: str, message_history=[], *args, **kwargs
+        self,
+        objective: str,
+        message_history: List[LanguageModelMessage] = [],
+        *args,
+        **kwargs,
     ) -> LanguageModelResponse:
         """Execute the task."""
         prompt_strategy = self._prompt_strategy
