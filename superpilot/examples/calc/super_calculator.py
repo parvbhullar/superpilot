@@ -3,11 +3,12 @@ import sys
 import asyncio
 import time
 
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
+from superpilot.core.pilot import SuperPilot
 from abc import abstractmethod
 
 from superpilot.core.callback.handler.simple import SimpleCallbackHandler
-from superpilot.core.callback.manager.simple import SimpleCallbackManager
 from superpilot.core.callback.manager.std_io import STDInOutCallbackManager
 
 from superpilot.core.state.base import State
@@ -51,7 +52,7 @@ from superpilot.examples.calc.base_ability import AddAbility, MultiplyAbility, S
     RootAbility, DefaultAbility
 
 
-class Calculator(BaseExecutor):
+class SuperCalculator(BaseExecutor):
     model_providers = ModelProviderFactory.load_providers()
     
     config = get_config()
@@ -104,7 +105,7 @@ class Calculator(BaseExecutor):
                 execution_nature=ExecutionNature.AUTO,
             )
         )
-        calculator = SuperTaskPilot.create(
+        calculator = SuperPilot.create(
             model_providers=self.model_providers,
             pilot_config=PilotConfiguration(
                 name="calculator",
@@ -152,7 +153,7 @@ class Calculator(BaseExecutor):
         # print("VISION", vision_pilot)
 
         # Initialize and add pilots to the chain here, for example:
-        self.chain.add_handler(transform_pilot, self.auto_transformer)
+        # self.chain.add_handler(transform_pilot, self.auto_transformer)
         self.chain.add_handler(calculator)
         self.chain.add_observer(observer_pilot)
 
@@ -202,7 +203,7 @@ class Calculator(BaseExecutor):
 if __name__ == "__main__":
     # state = State()
     thread_id = "thread1"
-    calc = Calculator(thread_id=thread_id)
+    calc = SuperCalculator(thread_id=thread_id)
     # print(asyncio.run(calc.run("add 2 and 3")))
     # print(
     #     asyncio.run(calc.run("transform data from text and multiply 2 and 3 and then sum with 6 and then subtract 2 "

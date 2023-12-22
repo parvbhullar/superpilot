@@ -3,15 +3,15 @@ import logging
 
 
 class SimpleChain(BaseChain):
-    def __init__(self,
-                 logger: logging.Logger = logging.getLogger(__name__),
-                 **kwargs):
+    def __init__(self, logger: logging.Logger = logging.getLogger(__name__), **kwargs):
         self.logger = logger
         self.pilots = {}
         self.transformers = {}
 
     async def execute(self, data, context, **kwargs):
-        for handler, transformer in zip(self.pilots[HandlerType.HANDLER], self.transformers[HandlerType.HANDLER]):
+        for handler, transformer in zip(
+            self.pilots[HandlerType.HANDLER], self.transformers[HandlerType.HANDLER]
+        ):
             try:
                 # Check if the handler is a function or a class with an execute method
                 if callable(handler):
@@ -19,11 +19,16 @@ class SimpleChain(BaseChain):
                 else:
                     response = await handler.execute(data, context, **kwargs)
                 if transformer:
-                    data, context = transformer(data=data, response=response, context=context)
+                    data, context = transformer(
+                        data=data, response=response, context=context
+                    )
                 else:
                     data = response
             except Exception as e:
                 import traceback
-                self.logger.error(f"Error in handler {handler.name()}: {e} {traceback.print_exc()}")
+
+                self.logger.error(
+                    f"Error in handler {handler.name()}: {e} {traceback.print_exc()}"
+                )
                 continue
         return data, context

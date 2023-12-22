@@ -34,11 +34,26 @@ class PromptStrategiesConfiguration(SystemConfiguration):
     step_response: strategies.StepStrategyConfiguration = None
 
 
-class PlannerConfiguration(SystemConfiguration):
+class PlannerConfigurationLegacy(SystemConfiguration):
     """Configuration for the Planner subsystem."""
 
     models: Dict[LanguageModelClassification, LanguageModelConfiguration]
     prompt_strategies: PromptStrategiesConfiguration
+
+
+class PlannerSettingsLegacy(SystemSettings):
+    """Settings for the Planner subsystem."""
+
+    configuration: PlannerConfigurationLegacy
+
+
+class PlannerConfiguration(SystemConfiguration):
+    """Configuration for the Planner subsystem."""
+
+    models: Dict[LanguageModelClassification, LanguageModelConfiguration]
+    planning_strategy: PromptStrategyConfiguration
+    execution_strategy: strategies.NextAbilityConfiguration
+    reflection_strategy: PromptStrategyConfiguration
 
 
 class PlannerSettings(SystemSettings):

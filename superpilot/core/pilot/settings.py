@@ -3,7 +3,7 @@ from superpilot.core.ability import AbilityRegistrySettings
 from superpilot.core.configuration import SystemConfiguration, SystemSettings
 from superpilot.core.configuration.schema import WorkspaceSettings
 from superpilot.core.memory.settings import MemorySettings
-from superpilot.core.planning.settings import PlannerSettings
+from superpilot.core.planning.settings import PlannerSettingsLegacy
 from superpilot.core.environment.settings import EnvSettings
 from superpilot.core.plugin.base import PluginLocation
 from superpilot.core.resource.model_providers.openai import OpenAISettings
@@ -36,7 +36,7 @@ class PilotConfiguration(SystemConfiguration):
     goals: list[str]
     # systems: PilotSystems
     # environment: PluginLocation
-    execution_algo: ExecutionAlgo
+    execution_nature: ExecutionNature
 
 
 class PilotSystemSettings(SystemSettings):

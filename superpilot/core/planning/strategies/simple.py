@@ -15,6 +15,7 @@ from pydantic import Field
 from typing import List, Dict
 from superpilot.core.resource.model_providers import OpenAIModelName
 
+
 class BaseContent(SchemaModel):
     """
     Class representing a question and its answer as a list of facts each one should have a soruce.

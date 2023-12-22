@@ -62,7 +62,7 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             cycle_count=0,
             max_task_cycle_count=3,
             creation_time="",
-            execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
+            execution_nature=ExecutionNature.AUTO,
         ),
         execution_nature=ExecutionNature.AUTO,
         prompt_strategy=strategies.NextAbility.default_configuration,
@@ -94,7 +94,6 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         self._configuration = configuration
         self._execution_nature = configuration.execution_nature
         self._ability_registry = ability_registry
-        self._com_provider = {}
 
         self._providers: Dict[LanguageModelClassification, LanguageModelProvider] = {}
         for model, model_config in self._configuration.models.items():
@@ -170,22 +169,6 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             return Context().add_content(self._current_task.context.prior_actions[-1].message)
         return Context()
 
-    async def observe(self, objective: str, **kwargs) -> Observation:
-        """Observe the task."""
-        # self._logger.debug(f"Observing task: {objective}")
-        # observer = self.current_observer()
-        # if observer:
-        #     try:
-        #         response = await observer.execute(task, context, pilots=self.dump_pilots())
-        #         # TODO : send the consumtion metrics to service
-        #         print("response", response)
-        #         return Observation(**response.get_content())
-        #     except Exception as e:
-        #         import traceback
-        #         self.logger.error(f"Error in observer {observer.name()}: {e} {traceback.print_exc()}")
-        #         return None
-        return None
-
     async def exec_abilities(self,  **kwargs) -> None:
         # TODO: Ability execution needs to be fixed for parallel and sequential execution
         if self._execution_nature == ExecutionNature.PARALLEL:
@@ -224,15 +207,12 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
             )
 
         if response.content.get("clarifying_question"):
-            # TODO : Ask clarifying question to user using callback handler
+            self._current_task.context.user_input.append(f"Assistant: {response.content.get('clarifying_question')}")
             user_input, hold = await self._callback.on_clarifying_question(
                 response.content.get("clarifying_question"), self._current_task, response, self._current_context, self.thread_id, **kwargs
             )
-            print('in Super pilot', user_input, hold)
-            self._current_task.context.user_input.append(f"System: {response.content.get('clarifying_question')}")
             if user_input:
                 self._current_task.context.user_input.append(f"User: {user_input}")
-            print('setting context done', user_input, hold)
             self._interaction = hold
             return
 
@@ -272,10 +252,6 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         # TODO: store knowledge and summaries in memory and in relevant tasks
         # TODO: evaluate whether the task is complete
         # TODO update memory with the facts, insights and knowledge
-        # self._current_task.context.add_memory(ability_action.knowledge)
-
-        # update goal status
-        # final_response = await self.analyze_goal_status(ability_action)
 
         self._logger.info(f"Final response: {ability_result}")
         status = TaskStatus.IN_PROGRESS
@@ -284,10 +260,8 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         self._status = status
         self._current_task.context.status = status
         self._current_task.context.enough_info = True
-        # todo: instead of overriding memories everytime ... aother way to improve context is keep the whole ability context when executing in pilot and pass only the last one as response
-        # TODO: we are still adding result of ability to prompt here (maybe be mindfull what to return in context?)
         self._current_task.update_memory(ability_result.get_memories())
-        print("Ability result", ability_result.result)
+        # print("Ability result", ability_result.result)
 
         # TaskStore.save_task_with_status(self._current_goal, status, stage)
 

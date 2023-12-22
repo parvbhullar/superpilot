@@ -19,7 +19,7 @@ from superpilot.core.configuration import (
     WorkspaceSettings,
 )
 from superpilot.core.memory import MemorySettings, SimpleMemory
-from superpilot.core.planning import PlannerSettings, Task, TaskStatus, ResearchPlanner
+from superpilot.core.planning import PlannerSettingsLegacy, Task, TaskStatus, ResearchPlanner
 from superpilot.core.plugin.research import (
     ResearchPluginService,
     PluginLocation,
@@ -56,7 +56,7 @@ class AgentSettings(BaseModel):
     ability_registry: AbilityRegistrySettings
     memory: MemorySettings
     openai_provider: OpenAISettings
-    planning: PlannerSettings
+    planning: PlannerSettingsLegacy
     workspace: WorkspaceSettings
 
     def update_pilot_name_and_goals(self, pilot_goals: dict) -> None:

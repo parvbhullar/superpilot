@@ -51,7 +51,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
         self._context = context
         print('context given to chain', context)
         state = await self._state.load()
-        await self._state.deserialize(self, state)
+        # await self._state.deserialize(self, state)
         kwargs['current_chain'] = self
         self._interaction = False
         if not self._current_observation:
@@ -72,7 +72,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
                 break
         if self._task_index == len(self._task_queue):
             print('resetting state', self.thread_id)
-            await self._state.save({})
+            # await self._state.save({})
             await self._callback.on_chain_complete(**kwargs)
             print("chain completed")
         return self._response, self._context
@@ -116,7 +116,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
             else:
                 # TODO: there should be Pilot Task where we store the pilot Action?
                 print("Pilot state: ", self._pilot_state)
-                await self._state.deserialize(handler, self._pilot_state)
+                # await self._state.deserialize(handler, self._pilot_state)
                 self._response, self._context = await self.execute_handler(self._current_task.get_task(), self._context, handler, transformer, user_input=objective, **kwargs)
                 # TODO: Make it interaction based?
                 if self._pilot_state.get('_status', TaskStatus.DONE) == TaskStatus.DONE:
@@ -127,9 +127,9 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
                 else:
                     self._current_task.status = TaskStatus.IN_PROGRESS
                     self._interaction = True
-                    current_state = await self._state.serialize(self)
-                    print('chain state: ', current_state)
-                    await self._state.save(current_state)
+                    # current_state = await self._state.serialize(self)
+                    # print('chain state: ', current_state)
+                    # await self._state.save(current_state)
                     print("saving state task in progress", self.thread_id)
                     await self._callback.on_user_interaction(**kwargs)
                 # self._task_queue.remove(self._current_task)
@@ -146,7 +146,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
             else:
                 response = await handler.execute(task, context=context, **kwargs)
 
-            self._pilot_state = await self._state.serialize(handler) or {}
+            # self._pilot_state = await self._state.serialize(handler) or {}
             print(self._pilot_state)
             if self._pilot_state.get('_status', TaskStatus.DONE) == TaskStatus.DONE:
                 if isinstance(response, LanguageModelResponse):

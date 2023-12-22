@@ -29,7 +29,7 @@ ALLOWED_ABILITY = {
     AGQuestionSolverAbility.name(): AGQuestionSolverAbility.default_configuration,
 }
 from superpilot.tests.test_env_simple import get_env
-from superpilot.core.pilot import SuperPilot
+from superpilot.core.pilot import SuperPilotLegacy
 from superpilot.core.configuration import get_config
 from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
@@ -159,8 +159,8 @@ async def test_pilot():
     user_objectives = "What is the weather in Mumbai"
     user_objectives = query
     # SuperPilot.default_settings.configuration
-    pilot_settings = SuperPilot.default_settings
-    pilot = SuperPilot(pilot_settings, super_ability_registry, planner, env)
+    pilot_settings = SuperPilotLegacy.default_settings
+    pilot = SuperPilotLegacy(pilot_settings, super_ability_registry, planner, env)
     print(await pilot.initialize(user_objectives))
     print(
         "***************** Pilot Initiated - Planing Started ******************************\n"

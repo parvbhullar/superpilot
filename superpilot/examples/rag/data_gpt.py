@@ -52,7 +52,7 @@ class DataGPTExecutor:
                 cycle_count=0,
                 max_task_cycle_count=3,
                 creation_time="",
-                execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
+                execution_nature=ExecutionNature.AUTO,
             ),
             execution_nature=ExecutionNature.SEQUENTIAL,
             abilities=[RecoAbility],
@@ -73,7 +73,7 @@ class DataGPTExecutor:
                 cycle_count=0,
                 max_task_cycle_count=3,
                 creation_time="",
-                execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
+                execution_nature=ExecutionNature.AUTO,
             ),
             execution_nature=ExecutionNature.SEQUENTIAL,
             abilities=[QdrantAbility],
@@ -97,7 +97,7 @@ class DataGPTExecutor:
                 cycle_count=0,
                 max_task_cycle_count=3,
                 creation_time="",
-                execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
+                execution_nature=ExecutionNature.AUTO,
             )
         )
 

@@ -3,7 +3,7 @@ from typing import List
 
 from superpilot.core.ability.base import Ability, AbilityConfiguration
 from superpilot.core.ability.schema import AbilityAction
-from superpilot.core.planning.simple import LanguageModelConfiguration
+from superpilot.core.planning.settings import LanguageModelConfiguration
 from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
 from superpilot.core.resource.model_providers import (
     LanguageModelMessage,
