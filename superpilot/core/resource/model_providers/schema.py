@@ -6,6 +6,7 @@ from functools import wraps
 from pydantic import BaseModel, Field, SecretStr, validator, validate_arguments
 
 from superpilot.core.configuration import UserConfigurable
+from superpilot.core.plugin.base import PluginLocation
 from superpilot.core.resource.schema import (
     Embedding,
     ProviderBudget,
@@ -31,6 +32,11 @@ class ModelProviderName(str, enum.Enum):
     ANTHROPIC: str = "anthropic"
     HUGGINGFACE: str = "huggingface"
     OLLAMA: str = "ollama"
+
+
+class ModelProviderDetail(BaseModel):
+    name: ModelProviderName
+    location: PluginLocation
 
 
 class MessageRole(str, enum.Enum):
@@ -401,20 +407,22 @@ class SchemaModel(BaseModel):
     @classmethod
     def _resolve_ref(cls, ref, definitions):
         # Extract the key from the reference string and return the corresponding definition
-        ref_key = ref.split('/')[-1]
+        ref_key = ref.split("/")[-1]
         return definitions.get(ref_key)
 
     @classmethod
     def function_schema(cls, arguments_format=False) -> dict:
         schema = cls.schema()
-        definitions = schema.get('definitions', {})
+        definitions = schema.get("definitions", {})
 
         # Process the properties to replace $ref with actual definitions
-        properties = schema.get('properties', {})
+        properties = schema.get("properties", {})
         cls.set_properties(definitions, properties)
 
         # Prepare the final parameters excluding certain keys
-        parameters = {k: v for k, v in schema.items() if k not in ("title", "description")}
+        parameters = {
+            k: v for k, v in schema.items() if k not in ("title", "description")
+        }
         parameters["properties"] = properties
         parameters["required"] = sorted(parameters.get("properties", {}))
         # parameters["definitions"] = definitions
@@ -439,21 +447,33 @@ class SchemaModel(BaseModel):
     @classmethod
     def set_properties(cls, definitions, properties):
         for prop, details in properties.items():
-            if 'allOf' in details and len(details['allOf']) == 1 and '$ref' in details['allOf'][0]:
-                ref = details['allOf'][0]['$ref']
+            if (
+                "allOf" in details
+                and len(details["allOf"]) == 1
+                and "$ref" in details["allOf"][0]
+            ):
+                ref = details["allOf"][0]["$ref"]
                 resolved_ref = cls._resolve_ref(ref, definitions)
                 if resolved_ref:
                     properties[prop] = resolved_ref
-                    if resolved_ref.get('type') == 'object':
-                        cls.set_properties(definitions, resolved_ref.get('properties', {}))
-            if 'type' in details:
-                if details['type'] == 'array' and 'items' in details and '$ref' in details['items']:
-                    ref = details['items']['$ref']
+                    if resolved_ref.get("type") == "object":
+                        cls.set_properties(
+                            definitions, resolved_ref.get("properties", {})
+                        )
+            if "type" in details:
+                if (
+                    details["type"] == "array"
+                    and "items" in details
+                    and "$ref" in details["items"]
+                ):
+                    ref = details["items"]["$ref"]
                     resolved_ref = cls._resolve_ref(ref, definitions)
                     if resolved_ref:
-                        properties[prop]['items'] = resolved_ref
-                        if resolved_ref.get('type') == 'object':
-                            cls.set_properties(definitions, resolved_ref.get('properties', {}))
+                        properties[prop]["items"] = resolved_ref
+                        if resolved_ref.get("type") == "object":
+                            cls.set_properties(
+                                definitions, resolved_ref.get("properties", {})
+                            )
         return properties
 
     @classmethod
