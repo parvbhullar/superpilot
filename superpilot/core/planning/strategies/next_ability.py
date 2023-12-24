@@ -32,22 +32,19 @@ class NextAbility(PromptStrategy):
         "The current time and date is {current_time}",
     ]
 
+    # TODO: add he prompt template system message to make assistant understand the structure of conversation
     DEFAULT_USER_PROMPT_TEMPLATE = (
-        "Your current task is '{task_objective}'.\n"
-        "You have taken {cycle_count} actions on this task already. "
-        "Here is the actions you have taken and their results:\n"
-        "{action_history}\n\n"
-        "Here is additional information that may be useful to you:\n"
-        "{additional_info}\n\n"
-        "Additionally, you should consider the following user conversation:\n"
-        "{user_input}\n\n"
-        "Your task of {task_objective} is complete when the following acceptance criteria have been met:\n"
-        "{acceptance_criteria}\n\n"
-        "Please choose one of the provided functions to accomplish this task. "
+        "You are a expert assistant with strong problem solving abilities and function calling capabilities"
+        "You are responsible for accomplishing the user objective.\n"
+        "Please choose one of the provided functions to accomplish user objective."
         "Some tasks may require multiple functions to accomplish. If that is the case, choose the function that "
-        "you think is most appropriate for the current situation given your progress so far."
-        "set the appropriate task status according to overall task objective"
-        "avoid assumptions and ask clarifying questions if you are not sure about the task objective"
+        "you think is most appropriate for the current situation given your progress so far, calling a function is must.\n"
+        "Avoid assumptions and ask clarifying questions if you are not sure about the task objective\n"
+        "You are currently solving the task '{task_objective}'.\n"
+        "Set the appropriate task status according to overall task objective and set it done if this is last function to "
+        "accomplish current task."
+        "Analyse the below conversation of assistant with user with respective events and proceed:\n"
+        "{context}\n"
     )
 
     DEFAULT_ADDITIONAL_ABILITY_ARGUMENTS = {
@@ -129,6 +126,7 @@ class NextAbility(PromptStrategy):
             os_info: str,
             api_budget: float,
             current_time: str,
+            context: Context,
             **kwargs,
     ) -> LanguageModelPrompt:
         template_kwargs = {
@@ -149,42 +147,14 @@ class NextAbility(PromptStrategy):
                 self._additional_ability_arguments.keys()
             )
 
-        template_kwargs["task_objective"] = task.objective
-        template_kwargs["cycle_count"] = task.context.cycle_count
-        template_kwargs["action_history"] = to_numbered_list(
-            [action.summary() for action in task.context.prior_actions],
-            no_items_response="You have not taken any actions yet.",
-            use_format=False,
-            **template_kwargs,
-        )
-        # template_kwargs["action_history"] += to_numbered_list(
-        #     [item.summary() for item in context.items],
-        #     no_items_response="You have not taken any actions yet.",
-        #     use_format=False,
-        #     **template_kwargs,
-        # )
-        template_kwargs["additional_info"] = to_numbered_list(
-            [memory.summary for memory in task.context.memories]
-            + [info for info in task.context.supplementary_info],
-            no_items_response="There is no additional information available at this time.",
-            use_format=False,
-            **template_kwargs,
-        )
-        template_kwargs["user_input"] = to_numbered_list(
-            [user_input for user_input in task.context.user_input],
-            no_items_response="There are no additional considerations at this time.",
-            use_format=False,
-            **template_kwargs,
-        )
-        template_kwargs["acceptance_criteria"] = to_numbered_list(
-            [acceptance_criteria for acceptance_criteria in task.acceptance_criteria],
-            **template_kwargs,
-        )
-
         template_kwargs["system_info"] = to_numbered_list(
             self._system_info,
             **template_kwargs,
         )
+
+        template_kwargs['task_objective'] = context.current_sub_task.objective
+
+        template_kwargs["context"] = context
 
         system_prompt = LanguageModelMessage(
             role=MessageRole.SYSTEM,

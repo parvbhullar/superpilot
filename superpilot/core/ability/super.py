@@ -99,18 +99,11 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
             response = await ability(**ability_args, **kwargs)
             print("Ability response", response)
             ability_action.success = True
-            ability_action.message = "Function executed successfully!"
-            if response and isinstance(response, Context):
-                ability_action.message = response.summary()
-
-            ability_action.add_result(response)
+            ability_action.message = str(response)
         except Exception as e:
             self._logger.error("Error %s", str(e))
             ability_action.success = False
             ability_action.message = f"Function execution failed with error: {e}"
-            response = Context()
-            response.add_attachment(e)
-            ability_action.add_result(response)
         return ability_action
 
     def abilities(self) -> List[Ability]:

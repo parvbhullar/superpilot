@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from superpilot.core.planning import Task
+from superpilot.core.planning.schema import TaskSchema
 from superpilot.core.resource.model_providers import LanguageModelMessage, MessageRole
 
 
@@ -295,6 +296,12 @@ class Message(BaseModel):
         return cls.create(message, user, Event.QUESTION, attachments, additional_data)
 
     @classmethod
+    def add_planning_message(cls, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
+        user = User.add_user(name="Assistant", role=Role.ASSISTANT)
+        return cls.create(message, user, Event.PLANNING, attachments, additional_data)
+
+
+    @classmethod
     def add_assistant_message(cls, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
         user = User.add_user(name="Assistant", role=Role.ASSISTANT)
         return cls.create(message, user, Event.LLM_RESPONSE, attachments, additional_data)
@@ -320,10 +327,13 @@ class Message(BaseModel):
         # return "\n\n".join([f"{c}" for i, c in enumerate(self.attachments, 1)])
         summary = "\n\n".join([f"{c.summary}" for i, c in enumerate(self.attachments, 1)])
         return (
-            f"[{self.event}] - {self.sender.username}: {self.message}\n"
-            "```\n"
-            f"{summary}\n"
-            "```"
+            f"[{self.event}] - {self.sender.username}: \n{self.message}\n" +
+            (
+                "```\n"
+                f"{summary}\n"
+                "```"
+                if summary else ""
+            )
         )
 
     def to_list(self):
@@ -342,8 +352,12 @@ class Context:
     thread_id: uuid.UUID
     objective: str
     messages: list[Message]
-    tasks: list[Task]
-    active_task: int = 0
+
+    interaction: bool = False
+    tasks: list[TaskSchema]
+    sub_tasks: list[Task]
+    active_task_idx: int = 0
+    active_sub_task_idx: int = 0
     active_message: int = -1
 
     def __init__(self, messages: list[Message] = None):
@@ -424,3 +438,11 @@ class Context:
         context.thread_id = message.thread_id
         context.add_message(message)
         return context
+
+    @property
+    def current_task(self) -> TaskSchema:
+        return self.tasks[self.active_task_idx]
+
+    @property
+    def current_sub_task(self) -> Task:
+        return self.sub_tasks[self.active_sub_task_idx]
