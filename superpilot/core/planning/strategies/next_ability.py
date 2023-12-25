@@ -40,9 +40,9 @@ class NextAbility(PromptStrategy):
         "Some tasks may require multiple functions to accomplish. If that is the case, choose the function that "
         "you think is most appropriate for the current situation given your progress so far, calling a function is must.\n"
         "Avoid assumptions and ask clarifying questions if you are not sure about the task objective\n"
-        "You are currently solving the task '{task_objective}'.\n"
-        "Set the appropriate task status according to overall task objective and set it done if this is last function to "
-        "accomplish current task."
+        "You are currently solving the sub task '{task_objective}'.\n"
+        "Set the appropriate task status according to overall sub task objective and set it done if this is last function to "
+        "accomplish current sub task."
         "Analyse the below conversation of assistant with user with respective events and proceed:\n"
         "{context}\n"
     )

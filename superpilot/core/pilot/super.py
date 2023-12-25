@@ -196,7 +196,7 @@ class SuperPilot(Pilot, Configurable):
     async def update_task_queue(self):
         if self._current_task.context.status == TaskStatus.DONE:
             # self._completed_tasks.append(self._current_task)
-            self._context.active_sub_task_idx += 1
+            self.task.active_task_idx += 1
             # self._context.add_task(self._current_task)
         # else:
             # TODO insert the new task if required

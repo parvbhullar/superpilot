@@ -209,6 +209,7 @@ if __name__ == "__main__":
     #     asyncio.run(calc.run("transform data from text and multiply 2 and 3 and then sum with 6 and then subtract 2 "
     #                          "and then divide by 2 and plot the graph using data from text")))
     print(asyncio.run(calc.run("What is 3 times x plus 2?")))
+    # print(asyncio.run(calc.run("What is 3 times x plus 2 minus y divide by z?")))
     # print(asyncio.run(calc.run("What is 18/9*4+1?")))
     # print(asyncio.run(calc.run("add 2 and 3")))
     # print(asyncio.run(calc.run("Please find the doc number 1 and date is 12-2-2021")))
