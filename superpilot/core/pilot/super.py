@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List, Dict, Tuple
+from typing import Any, List, Dict, Tuple, Union
 
 from superpilot.core.ability import (
     AbilityAction,
@@ -80,20 +80,20 @@ class SuperPilot(Pilot, Configurable):
         self._workspace = environment.get("workspace")
 
         self._completed_tasks = []
-        self._current_task = None
+        self._current_task: Task = None
         self._next_step_response: LanguageModelResponse = None
         self._context: Context = None
+        self.task: Task = None
 
-    async def plan(self, user_objective: str, context: Context, **kwargs):
+    async def plan(self, task: Task, context: Context, **kwargs):
         """Plan the next step for the pilot."""
         # TODO: use context to determine what the next step should be
         plan = await self._planner.plan(
-            user_objective=user_objective,
+            user_objective=task.objective,
             functions=self._ability_registry.list_abilities(),
         )
         tasks = plan.get_tasks()
-        self._context = context
-        self._context.sub_tasks = tasks
+        self.task.sub_tasks = tasks
         planning_message = Message.add_planning_message(
             'Sub Task Breakdown:\n' + '\n'.join([task.objective for task in tasks])
         )
@@ -104,15 +104,23 @@ class SuperPilot(Pilot, Configurable):
 
         
         # self._task_queue.extend(tasks)
-        self._context.sub_tasks.sort(key=lambda t: t.priority)
+        self.task.sub_tasks.sort(key=lambda t: t.priority)
         # self._task_queue[-1].context.status = TaskStatus.READY
         return plan.dict()
 
-    async def execute(self, user_objective: str, context: Context, *args, **kwargs):
+    async def execute(self, task: Union[str, Task], context: Context, *args, **kwargs):
         self._logger.info(f"Executing step {self._configuration.cycle_count}")
-        plan = await self.plan(user_objective, context)
 
-        while self._context.active_sub_task_idx < len(self._context.sub_tasks):
+        if isinstance(task, str):
+            self.task = Task.factory(task)
+        else:
+            self.task = task
+
+        self._context = context
+
+        plan = await self.plan(task, context)
+
+        while self.task.active_task_idx < len(self.task.sub_tasks):
             await self.determine_next_step(*args, **kwargs)
             # TODO callback to take user input if required.
             if self._next_step_response.get("clarifying_question"):
@@ -155,17 +163,15 @@ class SuperPilot(Pilot, Configurable):
 
         # TODO: Maybe move config count to context as well
         self._configuration.cycle_count += 1
-        task = self._context.current_sub_task
-        self._logger.info(f"Working on task: {task}")
+        self._current_task = self.task.current_sub_task
+        self._logger.info(f"Working on task: {self._current_task}")
 
-        task = await self._evaluate_task_and_add_context(task)
+        task = await self._evaluate_task_and_add_context(self._current_task)
         next_response = await self._choose_next_step(
             task,
             self._ability_registry.dump_abilities(),
         )
-        self._current_task = task
         self._next_step_response = next_response
-        return self._current_task, self._next_step_response
 
     async def execute_next_step(self, *args, **kwargs):
         ability_args = self._next_step_response.get("ability_arguments", {})

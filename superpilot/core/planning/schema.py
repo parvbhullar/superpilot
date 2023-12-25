@@ -82,9 +82,14 @@ class Task(BaseModel):
     objective: str
     type: str  # TaskType  FIXME: gpt does not obey the enum parameter in its schema
     priority: int
+    function_name: str = ""
     ready_criteria: List[str]
     acceptance_criteria: List[str]
     context: TaskContext = Field(default_factory=TaskContext)
+    sub_tasks: List["Task"] = Field(default_factory=list)
+    active_task_idx: int = 0
+    status: TaskStatus = TaskStatus.BACKLOG
+
 
     @classmethod
     def factory(
@@ -95,6 +100,8 @@ class Task(BaseModel):
         ready_criteria: List[str] = None,
         acceptance_criteria: List[str] = None,
         context: TaskContext = None,
+        function_name: str = "",
+        status: TaskStatus = TaskStatus.BACKLOG,
         **kwargs,
     ):
         if ready_criteria is None:
@@ -113,6 +120,8 @@ class Task(BaseModel):
             ready_criteria=ready_criteria,
             acceptance_criteria=acceptance_criteria,
             context=context,
+            function_name=function_name,
+            status=status,
         )
 
     def generate_kwargs(self) -> dict[str, str]:
@@ -146,6 +155,10 @@ class Task(BaseModel):
             self.context = TaskContext()
         return True
 
+    @property
+    def current_sub_task(self) -> "Task":
+        return self.sub_tasks[self.active_task_idx]
+
 
 # Need to resolve the circular dependency between Task and TaskContext once both models are defined.
 TaskContext.update_forward_refs()
@@ -177,7 +190,10 @@ class TaskSchema(SchemaModel):
                                             "`motivation` and weighing the `self_criticism`.")
 
     def get_task(self) -> Task:
-        return Task.factory(self.objective, self.type, self.priority, self.ready_criteria, self.acceptance_criteria, status=self.status)
+        return Task.factory(
+            self.objective, self.type, self.priority, self.ready_criteria, self.acceptance_criteria, status=self.status,
+            function_name=self.function_name
+        )
 
 
 class ObjectivePlan(SchemaModel):

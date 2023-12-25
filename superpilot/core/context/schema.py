@@ -354,10 +354,7 @@ class Context:
     messages: list[Message]
 
     interaction: bool = False
-    tasks: list[TaskSchema]
-    sub_tasks: list[Task]
-    active_task_idx: int = 0
-    active_sub_task_idx: int = 0
+    task = Task
     active_message: int = -1
 
     def __init__(self, messages: list[Message] = None):
@@ -438,11 +435,3 @@ class Context:
         context.thread_id = message.thread_id
         context.add_message(message)
         return context
-
-    @property
-    def current_task(self) -> TaskSchema:
-        return self.tasks[self.active_task_idx]
-
-    @property
-    def current_sub_task(self) -> Task:
-        return self.sub_tasks[self.active_sub_task_idx]

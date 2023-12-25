@@ -152,8 +152,7 @@ class NextAbility(PromptStrategy):
             **template_kwargs,
         )
 
-        template_kwargs['task_objective'] = context.current_sub_task.objective
-
+        template_kwargs['task_objective'] = task.objective
         template_kwargs["context"] = context
 
         system_prompt = LanguageModelMessage(
