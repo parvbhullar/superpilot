@@ -60,15 +60,25 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
         self._interaction = False
         # TODO handle _current_observation and _task_queue in context
         if not self._current_observation:
-            await self._callback.on_observation_start(**kwargs)
-            observation = await self.observe(objective.message, self._context)
+            self.task = Task.factory(objective.message)
+            self._context.task = self.task
+            while True:
+                await self._callback.on_observation_start(**kwargs)
+                observation_response = await self.observe(objective.message, self._context, **kwargs)
+                ability_args = observation_response.content
+                if ability_args.get("clarifying_question"):
+                    hold = await self.handle_clarification(observation_response, ability_args, **kwargs)
+                    if hold:
+                        # TODO saveContext and continue from here
+                        pass
+                else:
+                    observation = Observation(**observation_response.get_content())
+                    break
             if not observation:
                 return "Either observation or observer is not defined, please set observer in the chain.", self._context
             print("kwargs in chain", kwargs)
             await self._callback.on_observation(observation, **kwargs)
 
-            self.task = Task.factory(objective.message)
-            self._context.task = self.task
             # self._current_observation = observation
             # self._task_queue = observation.tasks
             planning_message = Message.add_planning_message(
@@ -153,15 +163,32 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
         except Exception as e:
             import traceback
             self.logger.error(f"Error in handler {handler.name()}: {e} {traceback.print_exc()}")
+            
+    async def handle_clarification(self, response, ability_args, **kwargs) -> bool:
+        self._current_task.context.user_input.append(
+            f"Assistant: {ability_args.get('clarifying_question')}"
+        )
+        question_message = Message.add_question_message(
+            message=ability_args.get("clarifying_question")
+        )
+        self._context.add_message(question_message)
+        user_input, hold = await self._callback.on_clarifying_question(
+            question_message,
+            self.task,
+            response,
+            self._context,
+            **kwargs
+        )
+        if user_input:
+            self._current_task.context.user_input.append(f"User: {user_input.message}")
+            self._context.add_message(user_input)
+        return hold
 
-    async def observe(self, objective, context) -> Observation:
+    async def observe(self, objective, context, **kwargs) -> LanguageModelResponse:
         observer = self.current_observer()
         if observer:
             try:
-                response = await observer.execute(objective, context, pilots=self.dump_pilots())
-                # TODO : send the consumtion metrics to service
-                print("response", response)
-                return Observation(**response.get_content())
+                return await observer.execute(objective, context, pilots=self.dump_pilots())
             except Exception as e:
                 import traceback
                 self.logger.error(f"Error in observer {observer.name()}: {e} {traceback.print_exc()}")

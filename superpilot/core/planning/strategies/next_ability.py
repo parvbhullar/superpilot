@@ -4,7 +4,7 @@ from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
     LanguageModelPrompt,
-    Task, TaskStatus,
+    Task, TaskStatus, ClarifyingQuestion,
 )
 from superpilot.core.planning.strategies.utils import json_loads, to_numbered_list
 from superpilot.core.resource.model_providers import (
@@ -79,15 +79,6 @@ class NextAbility(PromptStrategy):
                 "type": "string",
                 "description": "your thoughtful reflection on the ambiguity of the task"
             }
-        },
-        "clarifying_question": {
-            "type": "string",
-            "description": "ask the user relevant question only if all the conditions are met. conditions are:"
-                           "1. You are not currently solving the same `objective`"
-                           "2. the information is not already available "
-                           "3. you are blocked to proceed without user assistance"
-                           "4. you can not solve it by yourself or function call. "
-                           "if there is no question to ask then set question to empty string"
         }
     }
 
@@ -167,6 +158,8 @@ class NextAbility(PromptStrategy):
             LanguageModelFunction(json_schema=ability) for ability in ability_schema
         ]
 
+        functions.append(LanguageModelFunction(json_schema=ClarifyingQuestion.function_schema()))
+
         return LanguageModelPrompt(
             messages=[system_prompt, user_prompt],
             functions=functions,
@@ -196,7 +189,6 @@ class NextAbility(PromptStrategy):
             "task_status": function_arguments.pop("task_status", None),
             "task_objective": function_arguments.pop("task_objective", None),
             "ambiguity": function_arguments.pop("ambiguity", None),
-            "clarifying_question": function_arguments.pop("clarifying_question", None),
             "next_ability": function_name,
             "ability_arguments": function_arguments,
         }

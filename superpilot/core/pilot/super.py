@@ -123,8 +123,9 @@ class SuperPilot(Pilot, Configurable):
         while self.task.active_task_idx < len(self.task.sub_tasks):
             await self.determine_next_step(*args, **kwargs)
             # TODO callback to take user input if required.
-            if self._next_step_response.get("clarifying_question"):
-                hold = await self.check_for_clarification(self._next_step_response, self._context, **kwargs)
+            ability_args = self._next_step_response.get("ability_arguments", {})
+            if ability_args.get("clarifying_question"):
+                hold = await self.handle_clarification(ability_args, **kwargs)
                 if hold:
                     # TODO save state and exit
                     pass
@@ -134,18 +135,19 @@ class SuperPilot(Pilot, Configurable):
 
             # await self.reflect(*args, **kwargs)
 
-    async def check_for_clarification(self, response, context, **kwargs) -> bool:
+    async def handle_clarification(self, ability_args, **kwargs) -> bool:
         self._current_task.context.user_input.append(
-            f"Assistant: {response.get('clarifying_question')}")
+            f"Assistant: {ability_args.get('clarifying_question')}"
+        )
         question_message = Message.add_question_message(
-            message=response.get("clarifying_question")
+            message=ability_args.get("clarifying_question")
         )
         self._context.add_message(question_message)
         user_input, hold = await self._callback.on_clarifying_question(
             question_message,
             self._current_task,
-            response,
-            context,
+            self._next_step_response,
+            self._context,
             **kwargs
         )
         if user_input:

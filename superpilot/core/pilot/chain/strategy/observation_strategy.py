@@ -7,6 +7,7 @@ from superpilot.core.planning.schema import (
     LanguageModelPrompt, TaskStatus, TaskType, Task, TaskSchema,
 )
 from superpilot.core.planning.strategies.utils import json_loads
+from superpilot.core.plugin.base import PluginLocation, PluginStorageFormat
 from superpilot.core.resource.model_providers import (
     SchemaModel, OpenAIModelName,
 )
@@ -18,7 +19,7 @@ from pydantic import Field
 
 class Observation(SchemaModel):
     """
-    Class representing the data structure for observation for pilot objective, whether it is complete or not.
+    Planning of the objective, whether it is complete or not.
     If not complete, then the pilot name, motivation, self_criticism and reasoning for choosing the pilot.
     """
     current_status: TaskStatus = Field(..., description="Status of the objective asked by the user ")
@@ -43,54 +44,20 @@ class ObserverPrompt(SimplePrompt, ABC):
         "The current time and date is {current_time}",
     ]
 
-    DEFAULT_SYSTEM_PROMPT = """
-        you are an expert task observer. Read the provided conversation. 
-        Then select the next pilot from pilots list to play. 
-        Split task between pilots and each pilot should have a single task in sequence.
-        
-        Pilot List:
-        {pilots}
-        
-        Example:
-        task: multiply 2 and 3 and then sum with 6 and then subtract 2 and then divide by 2 and plot the graph
-        response:
-          'goal_status': 'not_started',
-          'motivation': "The task requires both arithmetic operations and plotting, which can be accomplished by the 'calculator' pilot",
-          'self_criticism': "The task involves plotting a graph which is not a specific function of the 'calculator' pilot.",
-          'reasoning': "Despite the limitation, the 'calculator' pilot can still handle the arithmetic operations which makes up the majority of the task",
-          'tasks': [
-              'objective': 'multiply 2 and 3 and then sum with 6 and then subtract 2 and then divide by 2',
-              'type': 'code',
-              'priority': 1,
-              'ready_criteria': [
-                'Inputs are valid'
-              ],
-              'acceptance_criteria': [
-                'Return correct computation result'
-              ],
-              'status': 'backlog',
-              'pilot_name': 'calculator'
-            ,
-              'objective': 'Plot the graph',
-              'type': 'code',
-              'priority': 5,
-              'ready_criteria': [
-                'Division result is available'
-              ],
-              'acceptance_criteria': [
-                'Return correct plot'
-              ],
-              'status': 'backlog',
-              'pilot_name': ''
-          ]
-        
-        """
+    DEFAULT_SYSTEM_PROMPT = """You are a skilled task coordinator. Analyze the given conversation and allocate tasks 
+    among the pilots, ensuring each pilot is assigned one distinct task. Your role involves invoking the most 
+    suitable function based on the current scenario. Refrain from making assumptions and seek clarifications if the 
+    task's objective is unclear.
+
+    Pilot Roster:
+    {pilots}
+
+    Examine the following dialogue between the assistant and the user, along with corresponding events. Then, proceed accordingly:\n
+    {context}
+    """
 
     DEFAULT_USER_PROMPT_TEMPLATE = (
-        "Your current task is {task_objective}.\n"
-        "You have taken {cycle_count} actions on this task already. "
-        "Here is the actions you have taken and their results:\n"
-        "{action_history}\n\n"
+       ""
     )
 
     DEFAULT_PARSER_SCHEMA = Observation.function_schema()
@@ -100,6 +67,10 @@ class ObserverPrompt(SimplePrompt, ABC):
         system_prompt=DEFAULT_SYSTEM_PROMPT,
         user_prompt_template=DEFAULT_USER_PROMPT_TEMPLATE,
         parser_schema=DEFAULT_PARSER_SCHEMA,
+        location=PluginLocation(
+            storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
+            storage_route=f"{__name__}.ObserverPrompt",
+        )
     )
 
     def __init__(
@@ -117,6 +88,11 @@ class ObserverPrompt(SimplePrompt, ABC):
     @property
     def model_classification(self) -> LanguageModelClassification:
         return self._model_classification
+
+    def get_template_kwargs(self, kwargs):
+        template_kwargs = super().get_template_kwargs(kwargs)
+        template_kwargs["context"] = kwargs.get("context", "")
+        return template_kwargs
 
     def parse_response_content(
             self,

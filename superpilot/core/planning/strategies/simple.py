@@ -1,7 +1,7 @@
 from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
-    LanguageModelPrompt,
+    LanguageModelPrompt, ClarifyingQuestion, DefaultFunction,
 )
 from superpilot.core.planning.strategies.utils import json_loads
 from superpilot.core.resource.model_providers import (
@@ -106,10 +106,12 @@ class SimplePrompt(PromptStrategy):
                 json_schema=self._parser_schema,
             )
             functions.append(parser_function)
+
+        functions.append(LanguageModelFunction(json_schema=ClarifyingQuestion.function_schema()))
+
         prompt = LanguageModelPrompt(
             messages=[system_message, user_message],
             functions=functions,
-            function_call=None if not functions else functions[0],
             # TODO
             tokens_used=0,
         )

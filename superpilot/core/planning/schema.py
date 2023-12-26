@@ -42,7 +42,7 @@ class LanguageModelPrompt(BaseModel):
 
     def __str__(self):
         return "\n\n".join([f"{m.role.value}: {m.content}" for m in self.messages])
-            # + "\n\nFunctions:" + "\n\n".join([f"{f.json_schema}" for f in self.functions])
+        # + "\n\nFunctions:" + "\n\n".join([f"{f.json_schema}" for f in self.functions])
 
 
 class LanguageModelResponse(LanguageModelProviderModelResponse):
@@ -90,19 +90,18 @@ class Task(BaseModel):
     active_task_idx: int = 0
     status: TaskStatus = TaskStatus.BACKLOG
 
-
     @classmethod
     def factory(
-        cls,
-        objective: str,
-        type: str = TaskType.RESEARCH,
-        priority: int = 1,
-        ready_criteria: List[str] = None,
-        acceptance_criteria: List[str] = None,
-        context: TaskContext = None,
-        function_name: str = "",
-        status: TaskStatus = TaskStatus.BACKLOG,
-        **kwargs,
+            cls,
+            objective: str,
+            type: str = TaskType.RESEARCH,
+            priority: int = 1,
+            ready_criteria: List[str] = None,
+            acceptance_criteria: List[str] = None,
+            context: TaskContext = None,
+            function_name: str = "",
+            status: TaskStatus = TaskStatus.BACKLOG,
+            **kwargs,
     ):
         if ready_criteria is None:
             ready_criteria = [""]
@@ -212,3 +211,34 @@ class ObjectivePlan(SchemaModel):
         for task in self.tasks:
             lst.append(task.get_task())
         return lst
+
+
+class ClarifyingQuestion(SchemaModel):
+    """
+    Function to ask clarifying question to the user about objective if required
+    Ask the user relevant question only if all the conditions are met. conditions are:
+    1. the information is not already available.
+    2. you are blocked to proceed without user assistance
+    3. you can not solve it by yourself or function call.
+    """
+    clarifying_question: str = Field(
+        ...,
+        description="Relevant question to be asked to user in user friendly language"
+    )
+    motivation: str = Field(
+        ...,
+        description="Your justification for asking this question."
+    )
+    self_criticism: str = Field(
+        ...,
+        description="Thoughtful self-criticism that explains why this question might not be required"
+    )
+    reasoning: str = Field(
+        ...,
+        description="Your reasoning for asking this question. taking into account the `motivation` "
+                    "and weighing the `self_criticism`."
+    )
+    ambiguity: List[str] = Field(
+        ...,
+        description="your thoughtful reflection on the ambiguity of the task"
+    )
