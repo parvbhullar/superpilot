@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from superpilot.core.planning import Task
+from superpilot.core.planning.schema import TaskSchema
 from superpilot.core.resource.model_providers import LanguageModelMessage, MessageRole
 
 
@@ -151,7 +152,7 @@ class ObjectContent(ContentItem):
         return f"The is object of '{self.source}'"
 
     @staticmethod
-    def add(content: dict | list, source: str = None):
+    def add(content: Dict | list, source: str = None):
         knowledge = ObjectContent(content, source)
         knowledge.content_type = (
             isinstance(content, dict) and ContentType.DICT or ContentType.LIST
@@ -239,7 +240,7 @@ class User(BaseModel):
     id: uuid.UUID
     name: str
     role: Role
-    additional_data: dict = None
+    additional_data: Dict = None
 
     @property
     def username(self):
@@ -247,7 +248,7 @@ class User(BaseModel):
         # return f"{self.name} ({self.role})"
 
     @classmethod
-    def add_user(cls, name: str = "System", role: Role = Role.SYSTEM, _id: uuid.UUID = uuid.uuid4(), additional_data: dict = None):
+    def add_user(cls, name: str = "System", role: Role = Role.SYSTEM, _id: uuid.UUID = uuid.uuid4(), additional_data: Dict = None):
         if not additional_data:
             additional_data = {}
         return cls(id=_id, name=name, role=role, additional_data=additional_data)
@@ -296,6 +297,11 @@ class Message(BaseModel):
         return cls.create(message, user, Event.QUESTION, attachments, additional_data)
 
     @classmethod
+    def add_planning_message(cls, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
+        user = User.add_user(name="Assistant", role=Role.ASSISTANT)
+        return cls.create(message, user, Event.PLANNING, attachments, additional_data)
+
+    @classmethod
     def add_assistant_message(cls, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
         user = User.add_user(name="Assistant", role=Role.ASSISTANT)
         return cls.create(message, user, Event.LLM_RESPONSE, attachments, additional_data)
@@ -321,10 +327,13 @@ class Message(BaseModel):
         # return "\n\n".join([f"{c}" for i, c in enumerate(self.attachments, 1)])
         summary = "\n\n".join([f"{c.summary}" for i, c in enumerate(self.attachments, 1)])
         return (
-            f"{self.sender.username}: {self.message}\n"  # [{self.event}] - {self.timestamp}\n"
-            "```\n"
-            f"{summary}\n"
-            "```"
+            f"[{self.event}] - {self.sender.username}: \n{self.message}\n" +
+            (
+                "```\n"
+                f"{summary}\n"
+                "```"
+                if summary else ""
+            )
         )
 
     def to_list(self):
@@ -339,12 +348,13 @@ class Message(BaseModel):
         return self.__str__()
 
 
-class Context(BaseModel):
-    thread_id: uuid.UUID = uuid.uuid4()
-    objective: str = ""
+class Context:
+    thread_id: uuid.UUID
+    objective: str
     messages: list[Message] = []
-    tasks: list[Task] = []
-    active_task: int = 0
+
+    interaction: bool = False
+    task = Task
     active_message: int = -1
 
     # def __init__(self, messages: list[Message] = None):

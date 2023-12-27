@@ -64,6 +64,8 @@ class Ability(abc.ABC):
 
     default_configuration: ClassVar[AbilityConfiguration]
 
+    _summary: str = None
+
     @classmethod
     def name(cls) -> str:
         """The name of the ability."""
@@ -85,6 +87,11 @@ class Ability(abc.ABC):
     def required_arguments(cls) -> List[str]:
         """A list of required arguments."""
         return []
+
+    @property
+    def summary(self) -> str:
+        """A summary of the ability result."""
+        return self._summary
 
     @abc.abstractmethod
     async def __call__(self, *args, **kwargs) -> AbilityAction:

@@ -42,7 +42,7 @@ class LanguageModelPrompt(BaseModel):
 
     def __str__(self):
         return "\n\n".join([f"{m.role.value}: {m.content}" for m in self.messages])
-            # + "\n\nFunctions:" + "\n\n".join([f"{f.json_schema}" for f in self.functions])
+        # + "\n\nFunctions:" + "\n\n".join([f"{f.json_schema}" for f in self.functions])
 
 
 class LanguageModelResponse(LanguageModelProviderModelResponse):
@@ -82,20 +82,26 @@ class Task(BaseModel):
     objective: str
     type: str  # TaskType  FIXME: gpt does not obey the enum parameter in its schema
     priority: int
+    function_name: str = ""
     ready_criteria: List[str]
     acceptance_criteria: List[str]
     context: TaskContext = Field(default_factory=TaskContext)
+    sub_tasks: List["Task"] = Field(default_factory=list)
+    active_task_idx: int = 0
+    status: TaskStatus = TaskStatus.BACKLOG
 
     @classmethod
     def factory(
-        cls,
-        objective: str,
-        type: str = TaskType.RESEARCH,
-        priority: int = 1,
-        ready_criteria: List[str] = None,
-        acceptance_criteria: List[str] = None,
-        context: TaskContext = None,
-        **kwargs,
+            cls,
+            objective: str,
+            type: str = TaskType.RESEARCH,
+            priority: int = 1,
+            ready_criteria: List[str] = None,
+            acceptance_criteria: List[str] = None,
+            context: TaskContext = None,
+            function_name: str = "",
+            status: TaskStatus = TaskStatus.BACKLOG,
+            **kwargs,
     ):
         if ready_criteria is None:
             ready_criteria = [""]
@@ -113,6 +119,8 @@ class Task(BaseModel):
             ready_criteria=ready_criteria,
             acceptance_criteria=acceptance_criteria,
             context=context,
+            function_name=function_name,
+            status=status,
         )
 
     def generate_kwargs(self) -> dict[str, str]:
@@ -149,6 +157,10 @@ class Task(BaseModel):
     def dump(self):
         return f"Task: '{self.objective}' Priority: {self.priority} Status: {self.context.status}"
 
+    @property
+    def current_sub_task(self) -> "Task":
+        return self.sub_tasks[self.active_task_idx]
+
 
 # Need to resolve the circular dependency between Task and TaskContext once both models are defined.
 TaskContext.update_forward_refs()
@@ -180,7 +192,10 @@ class TaskSchema(SchemaModel):
                                             "`motivation` and weighing the `self_criticism`.")
 
     def get_task(self) -> Task:
-        return Task.factory(self.objective, self.type, self.priority, self.ready_criteria, self.acceptance_criteria, status=self.status)
+        return Task.factory(
+            self.objective, self.type, self.priority, self.ready_criteria, self.acceptance_criteria, status=self.status,
+            function_name=self.function_name
+        )
 
 
 class ObjectivePlan(SchemaModel):
@@ -199,3 +214,34 @@ class ObjectivePlan(SchemaModel):
         for task in self.tasks:
             lst.append(task.get_task())
         return lst
+
+
+class ClarifyingQuestion(SchemaModel):
+    """
+    Function to ask clarifying question to the user about objective if required
+    Ask the user relevant question only if all the conditions are met. conditions are:
+    1. the information is not already available.
+    2. you are blocked to proceed without user assistance
+    3. you can not solve it by yourself or function call.
+    """
+    clarifying_question: str = Field(
+        ...,
+        description="Relevant question to be asked to user in user friendly language"
+    )
+    motivation: str = Field(
+        ...,
+        description="Your justification for asking this question."
+    )
+    self_criticism: str = Field(
+        ...,
+        description="Thoughtful self-criticism that explains why this question might not be required"
+    )
+    reasoning: str = Field(
+        ...,
+        description="Your reasoning for asking this question. taking into account the `motivation` "
+                    "and weighing the `self_criticism`."
+    )
+    ambiguity: List[str] = Field(
+        ...,
+        description="your thoughtful reflection on the ambiguity of the task"
+    )

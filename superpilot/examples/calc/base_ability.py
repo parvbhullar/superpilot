@@ -42,13 +42,15 @@ class DefaultAbility(Ability):
             }
         }
 
-    async def __call__(self, task_summary: str = "", **kwargs) -> Context:
+    async def __call__(self, task_summary: str = "", **kwargs):
         callback = kwargs.get("callback")
+        self._summary = task_summary
         print('callback', callback)
         if callback:
             print("DefaultAbility", kwargs)
             await callback.on_info(message=task_summary, **kwargs)
-        return Context.factory().add_content(task_summary)
+        return task_summary
+        # return Context.factory().add_content(task_summary)
 
 
 class AddAbility(Ability):
@@ -82,14 +84,15 @@ class AddAbility(Ability):
             "num2": {"type": "number", "description": "The second number."},
         }
 
-    async def __call__(self, num1: float, num2: float, **kwargs) -> Context:
+    async def __call__(self, num1: float, num2: float, **kwargs):
         result = num1 + num2
         message = f"The sum is {result}."
         callback = kwargs.get("callback")
         if callback:
             thread_id = kwargs.get("thread_id")
             await callback.on_info(thread_id, message)
-        return Context.factory().add_content(message)
+        # return Context.factory().add_content(message)
+        return message
 
 
 @dataclass
@@ -124,7 +127,7 @@ class MultiplyAbility(Ability):
             "num2": {"type": "number", "description": "The second number."},
         }
 
-    async def __call__(self, num1: float, num2: float, **kwargs) -> Context:
+    async def __call__(self, num1: float, num2: float, **kwargs):
         result = num1 * num2
         message = f"The Multiplication is {result}."
         print(message)
@@ -134,7 +137,8 @@ class MultiplyAbility(Ability):
         if callback:
             thread_id = kwargs.get("thread_id")
             await callback.on_info(thread_id, message)
-        return Context.factory().add_content(message)
+        # return Context.factory().add_content(message)
+        return message
 
 
 @dataclass

@@ -4,7 +4,7 @@ from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
     LanguageModelPrompt,
-    Task, TaskStatus,
+    Task, TaskStatus, ClarifyingQuestion,
 )
 from superpilot.core.planning.strategies.utils import json_loads, to_numbered_list
 from superpilot.core.resource.model_providers import (
@@ -23,7 +23,7 @@ class NextAbilityConfiguration(SystemConfiguration):
     additional_ability_arguments: dict = UserConfigurable()
 
 
-class NextAbilityTask(PromptStrategy):
+class NextAbility(PromptStrategy):
     DEFAULT_SYSTEM_PROMPT_TEMPLATE = "System Info:\n{system_info}"
 
     DEFAULT_SYSTEM_INFO = [
@@ -32,22 +32,19 @@ class NextAbilityTask(PromptStrategy):
         "The current time and date is {current_time}",
     ]
 
+    # TODO: add he prompt template system message to make assistant understand the structure of conversation
     DEFAULT_USER_PROMPT_TEMPLATE = (
-        "Your current task is '{task_objective}'.\n"
-        "You have taken {cycle_count} actions on this task already. "
-        "Here is the actions you have taken and their results:\n"
-        "{action_history}\n\n"
-        "Here is additional information that may be useful to you:\n"
-        "{additional_info}\n\n"
-        "Additionally, you should consider the following user conversation:\n"
-        "{user_input}\n\n"
-        "Your task of {task_objective} is complete when the following acceptance criteria have been met:\n"
-        "{acceptance_criteria}\n\n"
-        "Please choose one of the provided functions to accomplish this task. "
+        "You are a expert assistant with strong problem solving abilities and function calling capabilities"
+        "You are responsible for accomplishing the user objective.\n"
+        "Please choose one of the provided functions to accomplish user objective."
         "Some tasks may require multiple functions to accomplish. If that is the case, choose the function that "
-        "you think is most appropriate for the current situation given your progress so far."
-        "set the appropriate task status according to overall task objective"
-        "avoid assumptions and ask clarifying questions if you are not sure about the task objective"
+        "you think is most appropriate for the current situation given your progress so far, calling a function is must.\n"
+        "Avoid assumptions and ask clarifying questions if you are not sure about the task objective\n"
+        "You are currently solving the sub task '{task_objective}'.\n"
+        "Set the appropriate task status according to overall sub task objective and set it done if this is last function to "
+        "accomplish current sub task."
+        "Analyse the below conversation of assistant with user with respective events and proceed:\n"
+        "{context}\n"
     )
 
     DEFAULT_ADDITIONAL_ABILITY_ARGUMENTS = {
@@ -82,15 +79,6 @@ class NextAbilityTask(PromptStrategy):
                 "type": "string",
                 "description": "your thoughtful reflection on the ambiguity of the task"
             }
-        },
-        "clarifying_question": {
-            "type": "string",
-            "description": "ask the user relevant question only if all the conditions are met. conditions are:"
-                           "1. You are not currently solving the same `objective`"
-                           "2. the information is not already available "
-                           "3. you are blocked to proceed without user assistance"
-                           "4. you can not solve it by yourself or function call. "
-                           "if there is no question to ask then set question to empty string"
         }
     }
 
@@ -150,42 +138,13 @@ class NextAbilityTask(PromptStrategy):
                 self._additional_ability_arguments.keys()
             )
 
-        template_kwargs["task_objective"] = task.objective
-        template_kwargs["cycle_count"] = task.context.cycle_count
-        template_kwargs["action_history"] = to_numbered_list(
-            [action.summary() for action in task.context.prior_actions],
-            no_items_response="You have not taken any actions yet.",
-            use_format=False,
-            **template_kwargs,
-        )
-        # template_kwargs["action_history"] += to_numbered_list(
-        #     [item.summary() for item in context.items],
-        #     no_items_response="You have not taken any actions yet.",
-        #     use_format=False,
-        #     **template_kwargs,
-        # )
-        template_kwargs["additional_info"] = to_numbered_list(
-            [memory.summary for memory in task.context.memories]
-            + [info for info in task.context.supplementary_info],
-            no_items_response="There is no additional information available at this time.",
-            use_format=False,
-            **template_kwargs,
-        )
-        template_kwargs["user_input"] = to_numbered_list(
-            [user_input for user_input in task.context.user_input],
-            no_items_response="There are no additional considerations at this time.",
-            use_format=False,
-            **template_kwargs,
-        )
-        template_kwargs["acceptance_criteria"] = to_numbered_list(
-            [acceptance_criteria for acceptance_criteria in task.acceptance_criteria],
-            **template_kwargs,
-        )
-
         template_kwargs["system_info"] = to_numbered_list(
             self._system_info,
             **template_kwargs,
         )
+
+        template_kwargs['task_objective'] = task.objective
+        template_kwargs["context"] = context
 
         system_prompt = LanguageModelMessage(
             role=MessageRole.SYSTEM,
@@ -198,6 +157,8 @@ class NextAbilityTask(PromptStrategy):
         functions = [
             LanguageModelFunction(json_schema=ability) for ability in ability_schema
         ]
+
+        functions.append(LanguageModelFunction(json_schema=ClarifyingQuestion.function_schema()))
 
         return LanguageModelPrompt(
             messages=[system_prompt, user_prompt],
@@ -228,7 +189,6 @@ class NextAbilityTask(PromptStrategy):
             "task_status": function_arguments.pop("task_status", None),
             "task_objective": function_arguments.pop("task_objective", None),
             "ambiguity": function_arguments.pop("ambiguity", None),
-            "clarifying_question": function_arguments.pop("clarifying_question", None),
             "next_ability": function_name,
             "ability_arguments": function_arguments,
         }

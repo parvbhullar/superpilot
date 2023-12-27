@@ -23,7 +23,7 @@ class NextAbilityConfiguration(SystemConfiguration):
     additional_ability_arguments: dict = UserConfigurable()
 
 
-class NextAbility(PromptStrategy):
+class NextAbilityHybrid(PromptStrategy):
     DEFAULT_SYSTEM_PROMPT_TEMPLATE = "System Info:\n{system_info}"
 
     DEFAULT_SYSTEM_INFO = [
