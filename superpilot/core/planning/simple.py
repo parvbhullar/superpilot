@@ -89,11 +89,12 @@ class SimplePlanner(Configurable, Planner):
         )
         return ObjectivePlan(**response.get_content())
 
-    async def next(self, task: Task, functions: List[dict], **kwargs) -> LanguageModelResponse:
+    async def next(self, task: Task, functions: List[dict], context: Context, **kwargs) -> LanguageModelResponse:
         return await self.chat_with_model(
             self._execution_strategy,
             task=task,
             ability_schema=functions,
+            context=context,
             **kwargs,
         )
 

@@ -146,6 +146,9 @@ class Task(BaseModel):
             self.context = TaskContext()
         return True
 
+    def dump(self):
+        return f"Task: '{self.objective}' Priority: {self.priority} Status: {self.context.status}"
+
 
 # Need to resolve the circular dependency between Task and TaskContext once both models are defined.
 TaskContext.update_forward_refs()

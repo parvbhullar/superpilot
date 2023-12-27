@@ -46,12 +46,14 @@ class Planner(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def next(self, task: Task, functions: typing.List[dict], **kwargs) -> LanguageModelResponse:
+    async def next(self, task: Task, functions: typing.List[dict], context: Context, **kwargs) -> LanguageModelResponse:
         """Based of the current task, decide the next executable function, pilot or ability.
 
         Args:
             task: The current task.
             functions: The functions available to the pilot.
+            context: A context object containing information about the pilot's
+                       reasoning, plan, thoughts, and criticism.
             **kwargs: Additional arguments to pass to the language model.
         Returns:
             The next function, pilot or ability to execute.

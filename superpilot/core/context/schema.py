@@ -243,7 +243,8 @@ class User(BaseModel):
 
     @property
     def username(self):
-        return f"{self.name} ({self.role})"
+        return f"{self.role}"
+        # return f"{self.name} ({self.role})"
 
     @classmethod
     def add_user(cls, name: str = "System", role: Role = Role.SYSTEM, _id: uuid.UUID = uuid.uuid4(), additional_data: dict = None):
@@ -320,7 +321,7 @@ class Message(BaseModel):
         # return "\n\n".join([f"{c}" for i, c in enumerate(self.attachments, 1)])
         summary = "\n\n".join([f"{c.summary}" for i, c in enumerate(self.attachments, 1)])
         return (
-            f"[{self.event}] - {self.sender.username}: {self.message}\n"
+            f"{self.sender.username}: {self.message}\n"  # [{self.event}] - {self.timestamp}\n"
             "```\n"
             f"{summary}\n"
             "```"
@@ -338,18 +339,18 @@ class Message(BaseModel):
         return self.__str__()
 
 
-class Context:
-    thread_id: uuid.UUID
-    objective: str
-    messages: list[Message]
-    tasks: list[Task]
+class Context(BaseModel):
+    thread_id: uuid.UUID = uuid.uuid4()
+    objective: str = ""
+    messages: list[Message] = []
+    tasks: list[Task] = []
     active_task: int = 0
     active_message: int = -1
 
-    def __init__(self, messages: list[Message] = None):
-        if not messages:
-            messages = []
-        self.messages = messages
+    # def __init__(self, messages: list[Message] = None):
+    #     if not messages:
+    #         messages = []
+    #     self.messages = messages
 
     def extend(self, context: "Context") -> None:
         if context:
@@ -359,6 +360,8 @@ class Context:
         return len(self.messages) > 0
 
     def add_message(self, message: Message):
+        if not self:
+            self.objective = message.message
         self.messages.append(message)
 
     def add_user_message(self, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
@@ -373,7 +376,7 @@ class Context:
         message = Message.add_execution_message(message, attachments, additional_data)
         self.add_message(message)
 
-    def add_attachment(self, item: Any, message: str = "Empty") -> None:
+    def add_attachment(self, item: Any, message: str = "") -> None:
         if len(self.messages) == 0:
             self.add_user_message(message)
         self.messages[self.active_message].add_attachment(item)
@@ -415,12 +418,29 @@ class Context:
     def factory(cls, items: list[ContentItem] = None):
         if items is None:
             items = []
-        return cls(items)
+        context = cls()
+        for item in items:
+            context.add_attachment(item)
+        return context
 
     @classmethod
     def load_context(cls, message: Message):
         # TODO load context from file
         context = cls()
         context.thread_id = message.thread_id
+        context.objective = message.message
         context.add_message(message)
         return context
+
+    def generate_kwargs(self) -> Dict[str, str]:
+        task_plan = "\n".join(
+            [task.dump() for task in self.tasks]
+        )
+        message_history = "\n".join(
+            [f"{message.sender.username}: {message.message}\n" for message in self.messages]
+        )
+        return {
+            "objective": self.objective,
+            "task_plan": task_plan,
+            "message_history": message_history,
+        }

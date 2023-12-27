@@ -150,6 +150,7 @@ class SuperPilot(Pilot, Configurable):
         next_response = await self._choose_next_step(
             task,
             self._ability_registry.dump_abilities(),
+            self._context,
         )
         self._current_task = task
         self._next_step_response = next_response
@@ -165,12 +166,13 @@ class SuperPilot(Pilot, Configurable):
             return
 
         ability_args = self._next_step_response.get("ability_arguments", {})
+        ability_name = self._next_step_response.get("next_ability", None)
         kwargs['action_objective'] = self._next_step_response.get("task_objective", "")
         kwargs['callback'] = self._callback # TODO pass callback to ability registry
         # kwargs['thread_id'] = self.thread_id
         # Add context to ability arguments
         ability_response = await self._ability_registry.perform(
-            self._next_step_response.get("next_ability"), ability_args=ability_args, **kwargs
+            ability_name, ability_args=ability_args, **kwargs
         )
         # ability_response = await ability(**self._next_step_response["ability_arguments"], **kwargs)
         await self._update_tasks_and_memory(ability_response, self._next_step_response)
@@ -200,7 +202,7 @@ class SuperPilot(Pilot, Configurable):
             task.context.status = TaskStatus.IN_PROGRESS
             return task
 
-    async def _choose_next_step(self, task: Task, ability_schema: list[dict]) -> LanguageModelResponse:
+    async def _choose_next_step(self, task: Task, ability_schema: list[dict], context: Context) -> LanguageModelResponse:
         """Choose the next ability to use for the task."""
         self._logger.debug(f"Choosing next ability for task {task}.")
         if task.context.cycle_count > self._configuration.max_task_cycle_count:
@@ -211,7 +213,7 @@ class SuperPilot(Pilot, Configurable):
             raise NotImplementedError
         else:
             next_response = await self._planner.next(
-                task, ability_schema
+                task, ability_schema, context
             )
             return next_response
 
@@ -247,7 +249,6 @@ class SuperPilot(Pilot, Configurable):
                environment: Environment = None,
                planner: Planner = None,
                callback: BaseCallbackManager = STDInOutCallbackManager(),
-               thread_id: str = None,
                **kwargs
                ):
 
