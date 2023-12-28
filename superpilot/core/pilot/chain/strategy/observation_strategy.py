@@ -83,10 +83,7 @@ class ObserverPrompt(SimplePrompt, ABC):
         Example:
         task: multiply 2 and 3 and then sum with 6 and then subtract 2 and then divide by 2 and plot the graph
         response:
-          'goal_status': 'not_started',
-          'motivation': "The task requires both arithmetic operations and plotting, which can be accomplished by the 'calculator' pilot",
-          'self_criticism': "The task involves plotting a graph which is not a specific function of the 'calculator' pilot.",
-          'reasoning': "Despite the limitation, the 'calculator' pilot can still handle the arithmetic operations which makes up the majority of the task",
+          'current_status': 'backlog',
           'tasks': [
               'objective': 'multiply 2 and 3 and then sum with 6 and then subtract 2 and then divide by 2',
               'type': 'code',
@@ -98,7 +95,7 @@ class ObserverPrompt(SimplePrompt, ABC):
                 'Return correct computation result'
               ],
               'status': 'backlog',
-              'pilot_name': 'calculator'
+              'function_name': 'calculator'
             ,
               'objective': 'Plot the graph',
               'type': 'code',
@@ -110,7 +107,7 @@ class ObserverPrompt(SimplePrompt, ABC):
                 'Return correct plot'
               ],
               'status': 'backlog',
-              'pilot_name': ''
+              'function_name': ''
           ]
         
         """
