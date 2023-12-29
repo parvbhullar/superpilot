@@ -1,7 +1,7 @@
 from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
-    LanguageModelPrompt, ClarifyingQuestion, DefaultFunction,
+    LanguageModelPrompt, ClarifyingQuestion,
 )
 from superpilot.core.planning.strategies.utils import json_loads
 from superpilot.core.resource.model_providers import (

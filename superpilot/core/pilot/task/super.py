@@ -327,11 +327,13 @@ class SuperTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin):
         """The name of the ability."""
         return self._configuration.pilot.name
 
-    def dump(self) -> str:
+    def dump(self) -> dict:
         pilot_config = self._configuration.pilot
-        dump = "PilotName: " + pilot_config.name + "\n"
-        dump += "PilotRole: " + pilot_config.role + "\n"
-        dump += "PilotGoals: " + "\n".join(pilot_config.goals) + "\n"
+        dump = {
+            "name": pilot_config.name,
+            "role": pilot_config.role,
+            "goals": pilot_config.goals
+        }
         return dump
 
     async def to_dict_state(self) -> dict:

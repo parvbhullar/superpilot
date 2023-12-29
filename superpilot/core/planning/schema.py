@@ -242,3 +242,30 @@ class ClarifyingQuestion(SchemaModel):
         ...,
         description="your thoughtful reflection on the ambiguity of the task"
     )
+
+
+class Reflection(SchemaModel):
+    """
+    Function to reflect on overall task progress
+    """
+    reflection: str = Field(
+        ...,
+        description="reflection on overall task progress"
+    )
+    motivation: str = Field(
+        ...,
+        description="Your justification for reflection."
+    )
+    self_criticism: str = Field(
+        ...,
+        description="Thoughtful self-criticism that explains why this reflection might not be required"
+    )
+    reasoning: str = Field(
+        ...,
+        description="Your reasoning reflection. taking into account the `motivation` "
+                    "and weighing the `self_criticism`."
+    )
+    ambiguity: List[str] = Field(
+        ...,
+        description="your thoughtful reflection on the ambiguity of the task"
+    )

@@ -320,9 +320,12 @@ class SuperPilot(Pilot, Configurable):
         return self._configuration.name
 
     def dump(self) -> dict:
-        dump = "PilotName: " + self._configuration.name + "\n"
-        dump += "PilotRole: " + self._configuration.role + "\n"
-        dump += "PilotGoals: " + "\n".join(self._configuration.goals) + "\n"
+        pilot_config = self._configuration
+        dump = {
+            "name": pilot_config.name,
+            "role": pilot_config.role,
+            "goals": pilot_config.goals
+        }
         return dump
 
 

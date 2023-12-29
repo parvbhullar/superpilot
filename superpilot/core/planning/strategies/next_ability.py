@@ -4,7 +4,7 @@ from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
     LanguageModelPrompt,
-    Task, TaskStatus, ClarifyingQuestion,
+    Task, TaskStatus, ClarifyingQuestion, Reflection,
 )
 from superpilot.core.planning.strategies.utils import json_loads, to_numbered_list
 from superpilot.core.resource.model_providers import (
@@ -159,6 +159,7 @@ class NextAbility(PromptStrategy):
         ]
 
         functions.append(LanguageModelFunction(json_schema=ClarifyingQuestion.function_schema()))
+        functions.append(LanguageModelFunction(json_schema=Reflection.function_schema()))
 
         return LanguageModelPrompt(
             messages=[system_prompt, user_prompt],
