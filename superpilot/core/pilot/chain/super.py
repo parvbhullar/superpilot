@@ -163,11 +163,8 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
         except Exception as e:
             import traceback
             self.logger.error(f"Error in handler {handler.name()}: {e} {traceback.print_exc()}")
-            
+
     async def handle_clarification(self, response, ability_args, **kwargs) -> bool:
-        self._current_task.context.user_input.append(
-            f"Assistant: {ability_args.get('clarifying_question')}"
-        )
         question_message = Message.add_question_message(
             message=ability_args.get("clarifying_question")
         )
@@ -180,7 +177,6 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
             **kwargs
         )
         if user_input:
-            self._current_task.context.user_input.append(f"User: {user_input.message}")
             self._context.add_message(user_input)
         return hold
 

@@ -60,6 +60,7 @@ class SuperPilot(Pilot, Configurable):
 
     def __init__(
         self,
+        context: Context,
         settings: PilotSystemSettings,
         ability_registry: AbilityRegistry,
         planner: Planner,
@@ -82,14 +83,14 @@ class SuperPilot(Pilot, Configurable):
         self._completed_tasks = []
         self._current_task: Task = None
         self._next_step_response: LanguageModelResponse = None
-        self._context: Context = None
+        self._context: Context = context
         self.task: Task = None
 
-    async def plan(self, task: Task, context: Context, **kwargs):
+    async def plan(self, task: Task, **kwargs):
         """Plan the next step for the pilot."""
         # TODO: use context to determine what the next step should be
         plan = await self._planner.plan(
-            user_objective=task.objective,
+            user_objective=task,
             functions=self._ability_registry.list_abilities(),
         )
         tasks = plan.get_tasks()
@@ -108,7 +109,7 @@ class SuperPilot(Pilot, Configurable):
         # self._task_queue[-1].context.status = TaskStatus.READY
         return plan.dict()
 
-    async def execute(self, task: Union[str, Task], context: Context, *args, **kwargs):
+    async def execute(self, task: Union[str, Task], *args, **kwargs):
         self._logger.info(f"Executing step {self._configuration.cycle_count}")
 
         if isinstance(task, str):
@@ -116,9 +117,7 @@ class SuperPilot(Pilot, Configurable):
         else:
             self.task = task
 
-        self._context = context
-
-        plan = await self.plan(task, context)
+        plan = await self.plan(task)
 
         while self.task.active_task_idx < len(self.task.sub_tasks):
             await self.determine_next_step(*args, **kwargs)
@@ -254,6 +253,7 @@ class SuperPilot(Pilot, Configurable):
 
     @classmethod
     def create(cls,
+               context: Context,
                smart_model_name=OpenAIModelName.GPT4,
                fast_model_name=OpenAIModelName.GPT3,
                smart_model_temp=0.9,
@@ -283,6 +283,7 @@ class SuperPilot(Pilot, Configurable):
         if planner is None:
             planner_settings = SimplePlanner.default_settings.copy()
             planner = SimplePlanner(
+                context=context,
                 settings=planner_settings,
                 workspace=environment.get("workspace"),
                 logger=environment.get("logger"),
@@ -303,6 +304,7 @@ class SuperPilot(Pilot, Configurable):
         settings.configuration = pilot_config
 
         pilot = cls(
+            context=context,
             settings=settings,
             ability_registry=ability_registry,
             environment=environment,

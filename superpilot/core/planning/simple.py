@@ -7,8 +7,9 @@ import distro
 
 from superpilot.core import planning
 from superpilot.core.callback.base import BaseCallback
+from superpilot.core.callback.manager.base import BaseCallbackManager
 from superpilot.core.configuration import Configurable
-from superpilot.core.context.schema import Context
+from superpilot.core.context.schema import Context, Message
 from superpilot.core.planning import strategies
 from superpilot.core.planning.base import PromptStrategy, Planner
 from superpilot.core.planning.schema import (
@@ -63,13 +64,15 @@ class SimplePlanner(Configurable, Planner):
         settings: PlannerSettings,
         logger: logging.Logger,
         model_providers: Dict[ModelProviderName, LanguageModelProvider],
-        callback: BaseCallback = None,
+        callback: BaseCallbackManager = None,
         workspace: Workspace = None,  # Workspace is not available during bootstrapping.
+        context: Context = None,
     ) -> None:
         self._configuration = settings.configuration
         self._logger = logger
         self._workspace = workspace
         self._callback = callback
+        self._context = context
 
         self._providers: Dict[LanguageModelClassification, LanguageModelProvider] = {}
         for model, model_config in self._configuration.models.items():
@@ -79,15 +82,43 @@ class SimplePlanner(Configurable, Planner):
         self._execution_strategy = self.init_strategy(self._configuration.execution_strategy)
         self._reflection_strategy = self.init_strategy(self._configuration.reflection_strategy)
 
-    async def plan(self, user_objective: str, functions: List[str], **kwargs) -> ObjectivePlan:
-        template_kwargs = {"task_objective": user_objective}
-        template_kwargs.update(kwargs)
-        response = await self.chat_with_model(
-            self._planning_strategy,
-            functions=functions,
-            **template_kwargs,
+    async def plan(self, user_objective: Task, functions: List[str], **kwargs) -> ObjectivePlan:
+        while True:
+            template_kwargs = {"task_objective": user_objective.objective}
+            template_kwargs.update(kwargs)
+            observation_response = await self.chat_with_model(
+                self._planning_strategy,
+                functions=functions,
+                context=self._context,
+                **template_kwargs,
+            )
+            ability_args = observation_response.content
+            if ability_args.get("clarifying_question"):
+                hold = await self.handle_clarification(observation_response, ability_args, user_objective, **kwargs)
+                if hold:
+                    # TODO saveContext and continue from here
+                    pass
+            else:
+                observation = ObjectivePlan(**observation_response.get_content())
+                break
+
+        return observation
+
+    async def handle_clarification(self, response, ability_args, task, **kwargs) -> bool:
+        question_message = Message.add_question_message(
+            message=ability_args.get("clarifying_question")
         )
-        return ObjectivePlan(**response.get_content())
+        self._context.add_message(question_message)
+        user_input, hold = await self._callback.on_clarifying_question(
+            question_message,
+            task,
+            response,
+            self._context,
+            **kwargs
+        )
+        if user_input:
+            self._context.add_message(user_input)
+        return hold
 
     async def next(self, task: Task, functions: List[dict], **kwargs) -> LanguageModelResponse:
         return await self.chat_with_model(

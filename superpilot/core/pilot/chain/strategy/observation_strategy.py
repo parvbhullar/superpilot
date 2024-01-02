@@ -45,21 +45,17 @@ class ObserverPrompt(SimplePrompt, ABC):
     ]
 
     DEFAULT_SYSTEM_PROMPT = """
-    You are a expert assistant function calling capabilities.
-    You always call the most appropriate function to accomplish the task.
     Understand the provided conversation thoroughly to understand the context and requirements of the tasks.
-    Call the single most appropriate function considering the specific details and nuances of the current scenario.
-    If anything is unclear, do not make assumptions and call ClarifyingQuestion function to gain a better understanding.
 
-    Task:
-    Assign each function from given functions a unique task based on the information gleaned from the
+    Perform the following tasks in order:
+    1. Ask clarifying questions to the user if required.
+    2. Assign each piot from given pilots a unique task based on the information gleaned from the
     conversation, ensuring no overlap in responsibilities.
 
-    Functions:
+    Pilots:
     {pilots}
 
-
-    Conversation:\n
+    Conversation:
     {context}
     """
 
@@ -125,41 +121,48 @@ class ObserverPrompt(SimplePrompt, ABC):
 
         self._parser_schema = PilotObservation.function_schema()
 
-        if model_name == OpenAIModelName.GPT4_VISION and "images" in template_kwargs:
-            user_message = LanguageModelMessage(
-                role=MessageRole.USER,
-            )
-            # print("VISION prompt", user_message)
-            user_message = self._generate_content_list(user_message, template_kwargs)
-        else:
-            user_message = LanguageModelMessage(
-                role=MessageRole.USER,
-                content=self._user_prompt_template.format(**template_kwargs)
-            )
-            
+        # if model_name == OpenAIModelName.GPT4_VISION and "images" in template_kwargs:
+        #     user_message = LanguageModelMessage(
+        #         role=MessageRole.USER,
+        #     )
+        #     # print("VISION prompt", user_message)
+        #     user_message = self._generate_content_list(user_message, template_kwargs)
+        # else:
+        #     user_message = LanguageModelMessage(
+        #         role=MessageRole.USER,
+        #         content=self._user_prompt_template.format(**template_kwargs)
+        #     )
+
         function = {
-            "name": "Wrapper Function",
-            "description": "function to call the most appropriate function",
+            "name": "execute_functions",
+            "description": "versatile function wrapper designed to execute multiple functions based on a structured "
+                           "object passed as its argument. This function simplifies the process of calling multiple "
+                           "functions with varying parameters by organizing the function calls and their respective "
+                           "parameters in a single, unified structure.",
             "parameters": {
-                "properties": {
-                    # TODO: add functon as properties
-                }
+                "type": "object",
+                "properties": {},
+                # "required": ["ClarifyingQuestion", "PilotObservation"]
             }
         }
 
-        functions = []
-        if self._parser_schema is not None:
-            parser_function = LanguageModelFunction(
-                json_schema=self._parser_schema,
+        for schema in [ClarifyingQuestion, PilotObservation]:
+            function["parameters"]["properties"].update(
+                schema.function_schema(arguments_format=True)
             )
-            functions.append(parser_function)
-
-        functions.append(LanguageModelFunction(json_schema=ClarifyingQuestion.function_schema()))
+        
+        function = LanguageModelFunction(json_schema=function)
+        functions = [function]
+        # if self._parser_schema is not None:
+        #     parser_function = LanguageModelFunction(
+        #         json_schema=self._parser_schema,
+        #     )
+        #     functions.append(parser_function)
 
         prompt = LanguageModelPrompt(
             messages=[system_message],
             functions=functions,
-            function_call=LanguageModelFunction(json_schema={"functions": ["PilotObservation", "ClarifyingQuestion"]}),
+            function_call=function,
             # TODO
             tokens_used=0,
         )
@@ -179,7 +182,11 @@ class ObserverPrompt(SimplePrompt, ABC):
 
         """
         # print(response_content)
-        parsed_response = json_loads(response_content["function_call"]["arguments"])
+        args = json_loads(response_content["function_call"]["arguments"])
+        if args.get("ClarifyingQuestion"):
+            parsed_response = args["ClarifyingQuestion"]
+        else:
+            parsed_response = args[list(args.keys())[0]] if args else {}
         # print(response_content)
         # parsed_response = json_loads(response_content["content"])
         # parsed_response = self._parser_schema.from_response(response_content)

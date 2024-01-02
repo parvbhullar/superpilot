@@ -426,9 +426,9 @@ class SchemaModel(BaseModel):
             multiple_args = cls.multiple_args()
             if multiple_args:
                 return parameters
+            parameters['description'] = schema["description"]
             return {
                 cls.name(): parameters,
-                # "description": schema["description"],
             }
         return {
             "name": schema["title"],

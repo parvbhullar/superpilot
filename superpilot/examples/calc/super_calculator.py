@@ -106,6 +106,7 @@ class SuperCalculator(BaseExecutor):
             )
         )
         calculator = SuperPilot.create(
+            context=self.context,
             model_providers=self.model_providers,
             pilot_config=PilotConfiguration(
                 name="calculator",

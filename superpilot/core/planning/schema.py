@@ -219,7 +219,6 @@ class ClarifyingQuestion(SchemaModel):
     Ask the user relevant question only if all the conditions are met. conditions are:
     1. the information is not already available.
     2. you are blocked to proceed without user assistance
-    3. you can not solve it by yourself or function call.
     """
     clarifying_question: str = Field(
         ...,

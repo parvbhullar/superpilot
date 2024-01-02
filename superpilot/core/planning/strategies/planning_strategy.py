@@ -4,12 +4,12 @@ from superpilot.core.planning.strategies.simple import SimplePrompt
 
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
-    LanguageModelPrompt, TaskStatus, TaskType, Task, TaskSchema, ObjectivePlan,
+    LanguageModelPrompt, TaskStatus, TaskType, Task, TaskSchema, ObjectivePlan, ClarifyingQuestion,
 )
 from superpilot.core.planning.strategies.utils import json_loads
 from superpilot.core.plugin.base import PluginLocation, PluginStorageFormat
 from superpilot.core.resource.model_providers import (
-    SchemaModel, OpenAIModelName,
+    SchemaModel, OpenAIModelName, LanguageModelMessage, MessageRole, LanguageModelFunction,
 )
 from superpilot.core.planning.settings import PromptStrategyConfiguration
 from typing import Dict, Optional, List
@@ -27,54 +27,25 @@ class PlanningStrategy(SimplePrompt, ABC):
     ]
 
     DEFAULT_SYSTEM_PROMPT = """
-        You are a world class query/task planning algorithm capable of thinking step by step and breaking apart tasks 
-        into its corrected version of tasks. Do not answer the questions, simply provide correct dependency graph 
-        with good specific questions to ask based the provided conversation. Map tasks with most suited function in 
-        correct execution order.
-        
-        Available Functions:
-        {functions}
-        
-        Example:
-        task: multiply 2 and 3 and then sum with 6
-        response:
-          'current_status': 'backlog',
-          'motivation': "The task requires both arithmetic operations and plotting, which can be accomplished by the 'calculator' pilot",
-          'self_criticism': "The task involves plotting a graph which is not a specific function of the 'calculator' pilot.",
-          'reasoning': "Despite the limitation, the 'calculator' pilot can still handle the arithmetic operations which makes up the majority of the task",
-          'tasks': [
-              'objective': 'multiply 2 and 3',
-              'type': 'code',
-              'priority': 1,
-              'ready_criteria': [
-                'Inputs are valid'
-              ],
-              'acceptance_criteria': [
-                'Return correct computation result'
-              ],
-              'status': 'backlog',
-              'function_name': 'multiply_ability'
-            ,
-              'objective': 'Sum result with 6',
-              'type': 'code',
-              'priority': 5,
-              'ready_criteria': [
-                'Multiplication result is available'
-              ],
-              'acceptance_criteria': [
-                'Return correct sum'
-              ],
-              'status': 'backlog',
-              'function_name': ''
-          ]
-        
-        """
+    Understand the provided conversation thoroughly to understand the context and requirements of the tasks.
+
+    Perform the following tasks in order:
+    1. Ask clarifying questions to the user if required.
+    2. Assign each function from given functions a unique task based on {task_objective}
+
+    Available Functions:
+    {functions}
+
+    Conversation:
+    {context}
+    """
 
     DEFAULT_USER_PROMPT_TEMPLATE = (
-        "Current user  is {task_objective}.\n"
-        "You have taken {cycle_count} actions on this task already. "
-        "Here is the actions you have taken and their results:\n"
-        "{action_history}\n\n"
+        ""
+        # "Current user  is {task_objective}.\n"
+        # "You have taken {cycle_count} actions on this task already. "
+        # "Here is the actions you have taken and their results:\n"
+        # "{action_history}\n\n"
     )
 
     DEFAULT_PARSER_SCHEMA = ObjectivePlan.function_schema()
@@ -106,6 +77,79 @@ class PlanningStrategy(SimplePrompt, ABC):
     def model_classification(self) -> LanguageModelClassification:
         return self._model_classification
 
+    def build_prompt(self, **kwargs) -> LanguageModelPrompt:
+        # print("kwargs",  v)
+        model_name = kwargs.pop("model_name", OpenAIModelName.GPT3)
+        template_kwargs = self.get_template_kwargs(kwargs)
+
+        system_message = LanguageModelMessage(
+            role=MessageRole.SYSTEM,
+            content=self._system_prompt_message.format(**template_kwargs),
+        )
+
+        # self._parser_schema = ObjectivePlan.function_schema()
+
+        # pilots = template_kwargs.pop("pilots", [])
+        # 
+        # pilot_enum = enum.Enum("Pilot", {value.get('name'): value.get('name') for value in pilots})
+
+        # class PilotTaskSchema(TaskSchema):
+        #     function_name: pilot_enum = Field(..., description="Name of the pilot/function most suited for this task")
+        # 
+        # class PilotObservation(ObjectivePlan):
+        #     tasks: List[PilotTaskSchema] = Field(
+        #         ..., description="List of tasks to be accomplished by the each pilot"
+        #     )
+        # 
+        # self._parser_schema = PilotObservation.function_schema()
+
+        # if model_name == OpenAIModelName.GPT4_VISION and "images" in template_kwargs:
+        #     user_message = LanguageModelMessage(
+        #         role=MessageRole.USER,
+        #     )
+        #     # print("VISION prompt", user_message)
+        #     user_message = self._generate_content_list(user_message, template_kwargs)
+        # else:
+        #     user_message = LanguageModelMessage(
+        #         role=MessageRole.USER,
+        #         content=self._user_prompt_template.format(**template_kwargs)
+        #     )
+
+        function = {
+            "name": "execute_functions",
+            "description": "versatile function wrapper designed to execute multiple functions based on a structured "
+                           "object passed as its argument. This function simplifies the process of calling multiple "
+                           "functions with varying parameters by organizing the function calls and their respective "
+                           "parameters in a single, unified structure.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                # "required": ["ClarifyingQuestion", "PilotObservation"]
+            }
+        }
+
+        for schema in [ClarifyingQuestion, ObjectivePlan]:
+            function["parameters"]["properties"].update(
+                schema.function_schema(arguments_format=True)
+            )
+
+        function = LanguageModelFunction(json_schema=function)
+        functions = [function]
+        # if self._parser_schema is not None:
+        #     parser_function = LanguageModelFunction(
+        #         json_schema=self._parser_schema,
+        #     )
+        #     functions.append(parser_function)
+
+        prompt = LanguageModelPrompt(
+            messages=[system_message],
+            functions=functions,
+            function_call=function,
+            # TODO
+            tokens_used=0,
+        )
+        return prompt
+
     def parse_response_content(
             self,
             response_content: dict,
@@ -120,10 +164,20 @@ class PlanningStrategy(SimplePrompt, ABC):
 
         """
         # print(response_content)
-        if "function_call" in response_content:
-            parsed_response = json_loads(response_content["function_call"]["arguments"])
+        # if "function_call" in response_content:
+        #     parsed_response = json_loads(response_content["function_call"]["arguments"])
+        # else:
+        #     parsed_response = response_content
+        # # print(response_content)
+        # # parsed_response = json_loads(response_content["content"])
+        # # parsed_response = self._parser_schema.from_response(response_content)
+        # return parsed_response
+
+        args = json_loads(response_content["function_call"]["arguments"])
+        if args.get("ClarifyingQuestion"):
+            parsed_response = args["ClarifyingQuestion"]
         else:
-            parsed_response = response_content
+            parsed_response = args[list(args.keys())[0]] if args else {}
         # print(response_content)
         # parsed_response = json_loads(response_content["content"])
         # parsed_response = self._parser_schema.from_response(response_content)
