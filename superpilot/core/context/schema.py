@@ -1,3 +1,4 @@
+import abc
 from datetime import datetime
 from typing import Dict, Type, Any, Optional, List, Union
 import uuid
@@ -254,16 +255,12 @@ class User(BaseModel):
         return cls(id=_id, name=name, role=role, additional_data=additional_data)
 
 
-class MessageContent(BaseModel):
-    pass
-
-
 class Message(BaseModel):
     """Struct for a message and its metadata."""
     sender: User
     message: str
     attachments: list[ContentItem] = []
-    additional_data: Any = None
+    metadata: Any = None
     event: Event = Event.USER_INPUT
     thread_id: str = str(uuid.uuid4())
     timestamp: datetime = datetime.now()
@@ -346,6 +343,12 @@ class Message(BaseModel):
     @property
     def summary(self) -> str:
         return self.__str__()
+
+
+class RunState(abc.ABC):
+    task_queue: list[Task]
+    current_task_idx: int = 0
+    handler: str = ""
 
 
 class Context:

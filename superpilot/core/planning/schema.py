@@ -198,7 +198,7 @@ class TaskSchema(SchemaModel):
         )
 
 
-class ObjectivePlan(SchemaModel):
+class TaskPlan(SchemaModel):
     """
     Class representing the data structure for observation for pilot objective, whether it is complete or not.
     If not complete, then the pilot name, motivation, self_criticism and reasoning for choosing the pilot.

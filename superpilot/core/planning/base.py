@@ -7,7 +7,7 @@ from superpilot.core.context.schema import Context
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
     LanguageModelMessage,
-    LanguageModelPrompt, LanguageModelResponse, ObjectivePlan, Task,
+    LanguageModelPrompt, LanguageModelResponse, TaskPlan, Task,
 )
 from superpilot.core.resource.model_providers import SchemaModel
 
@@ -32,7 +32,7 @@ class Planner(abc.ABC):
     #     ...
 
     @abc.abstractmethod
-    async def plan(self, user_objective: str, functions: typing.List[str], **kwargs) -> ObjectivePlan:
+    async def plan(self, user_objective: str, functions: typing.List[str], **kwargs) -> TaskPlan:
         """Create a plan of tasks to accomplish the user objective.
 
         Args:

@@ -14,7 +14,7 @@ from superpilot.core.planning.base import PromptStrategy, Planner
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
     LanguageModelResponse,
-    Task, ObjectivePlan,
+    Task, TaskPlan,
 )
 from superpilot.core.planning.settings import (
     PlannerConfigurationLegacy,
@@ -79,7 +79,7 @@ class SimplePlanner(Configurable, Planner):
         self._execution_strategy = self.init_strategy(self._configuration.execution_strategy)
         self._reflection_strategy = self.init_strategy(self._configuration.reflection_strategy)
 
-    async def plan(self, user_objective: str, functions: List[str], **kwargs) -> ObjectivePlan:
+    async def plan(self, user_objective: str, functions: List[str], **kwargs) -> TaskPlan:
         template_kwargs = {"task_objective": user_objective}
         template_kwargs.update(kwargs)
         response = await self.chat_with_model(
@@ -87,7 +87,7 @@ class SimplePlanner(Configurable, Planner):
             functions=functions,
             **template_kwargs,
         )
-        return ObjectivePlan(**response.get_content())
+        return TaskPlan(**response.get_content())
 
     async def next(self, task: Task, functions: List[dict], context: Context, **kwargs) -> LanguageModelResponse:
         return await self.chat_with_model(

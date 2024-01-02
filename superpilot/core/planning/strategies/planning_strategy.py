@@ -4,7 +4,7 @@ from superpilot.core.planning.strategies.simple import SimplePrompt
 
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
-    LanguageModelPrompt, TaskStatus, TaskType, Task, TaskSchema, ObjectivePlan,
+    LanguageModelPrompt, TaskStatus, TaskType, Task, TaskSchema, TaskPlan,
 )
 from superpilot.core.planning.strategies.utils import json_loads
 from superpilot.core.plugin.base import PluginLocation, PluginStorageFormat
@@ -77,7 +77,7 @@ class PlanningStrategy(SimplePrompt, ABC):
         "{action_history}\n\n"
     )
 
-    DEFAULT_PARSER_SCHEMA = ObjectivePlan.function_schema()
+    DEFAULT_PARSER_SCHEMA = TaskPlan.function_schema()
 
     default_configuration = PromptStrategyConfiguration(
         model_classification=LanguageModelClassification.SMART_MODEL,
