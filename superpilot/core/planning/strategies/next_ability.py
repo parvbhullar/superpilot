@@ -41,8 +41,7 @@ class NextAbility(PromptStrategy):
         "you think is most appropriate for the current situation given your progress so far, calling a function is must.\n"
         "Avoid assumptions and ask clarifying questions if you are not sure about the task objective\n"
         "You are currently solving the sub task '{task_objective}'.\n"
-        "Set the appropriate task status according to overall sub task objective and set it done if this is last function to "
-        "accomplish current sub task."
+        "Set the appropriate task status according to overall sub task objective."
         "Analyse the below conversation of assistant with user with respective events and proceed:\n"
         "{context}\n"
     )
@@ -154,16 +153,48 @@ class NextAbility(PromptStrategy):
             role=MessageRole.USER,
             content=self._user_prompt_template.format(**template_kwargs),
         )
-        functions = [
-            LanguageModelFunction(json_schema=ability) for ability in ability_schema
-        ]
+        # functions = [
+        #     LanguageModelFunction(json_schema=ability) for ability in ability_schema
+        # ]
+        # 
+        # functions.append(LanguageModelFunction(json_schema=ClarifyingQuestion.function_schema()))
+        # functions.append(LanguageModelFunction(json_schema=Reflection.function_schema()))
 
-        functions.append(LanguageModelFunction(json_schema=ClarifyingQuestion.function_schema()))
-        functions.append(LanguageModelFunction(json_schema=Reflection.function_schema()))
+        function = {
+            "name": "execute_functions",
+            "description": "versatile function wrapper designed to execute multiple functions based on a structured "
+                           "object passed as its argument. This function simplifies the process of calling multiple "
+                           "functions with varying parameters by organizing the function calls and their respective "
+                           "parameters in a single, unified structure.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                # "required": ["ClarifyingQuestion", "PilotObservation"]
+            }
+        }
+
+        for schema in [
+            ClarifyingQuestion.function_schema(arguments_format=True),
+        ]:
+            function["parameters"]["properties"].update(
+                schema
+            )
+
+        for ability in ability_schema:
+            function["parameters"]["properties"].update({
+                ability.get("name"): {
+                    "description": ability.get("description"),
+                    **ability.get("parameters", {})
+                }
+            })
+
+        function = LanguageModelFunction(json_schema=function)
+        functions = [function]
 
         return LanguageModelPrompt(
             messages=[system_prompt, user_prompt],
             functions=functions,
+            function_call=function,
             # TODO:
             tokens_used=0,
         )
@@ -181,8 +212,29 @@ class NextAbility(PromptStrategy):
             The parsed response.
 
         """
-        function_name = response_content.get("function_call", {}).get("name")
-        function_arguments = json_loads(response_content.get("function_call", {}).get("arguments", "{}"))
+        # function_name = response_content.get("function_call", {}).get("name")
+        # function_arguments = json_loads(response_content.get("function_call", {}).get("arguments", "{}"))
+        # parsed_response = {
+        #     "motivation": function_arguments.pop("motivation", None),
+        #     "self_criticism": function_arguments.pop("self_criticism", None),
+        #     "reasoning": function_arguments.pop("reasoning", None),
+        #     "task_status": function_arguments.pop("task_status", None),
+        #     "task_objective": function_arguments.pop("task_objective", None),
+        #     "ambiguity": function_arguments.pop("ambiguity", None),
+        #     "next_ability": function_name,
+        #     "ability_arguments": function_arguments,
+        # }
+        # # self._logger.debug(f"Next ability parsed response: {parsed_response}")
+        # print(f"Next ability response: {parsed_response}")
+        # return parsed_response
+
+        args = json_loads(response_content["function_call"]["arguments"])
+        if args.get("ClarifyingQuestion"):
+            function_name = "ClarifyingQuestion"
+            function_arguments = args["ClarifyingQuestion"]
+        else:
+            function_name = list(args.keys())[0]
+            function_arguments = args[list(args.keys())[0]] if args else {}
         parsed_response = {
             "motivation": function_arguments.pop("motivation", None),
             "self_criticism": function_arguments.pop("self_criticism", None),
@@ -193,6 +245,8 @@ class NextAbility(PromptStrategy):
             "next_ability": function_name,
             "ability_arguments": function_arguments,
         }
-        # self._logger.debug(f"Next ability parsed response: {parsed_response}")
-        print(f"Next ability response: {parsed_response}")
+
+        # print(response_content)
+        # parsed_response = json_loads(response_content["content"])
+        # parsed_response = self._parser_schema.from_response(response_content)
         return parsed_response

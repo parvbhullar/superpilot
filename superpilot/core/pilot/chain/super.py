@@ -145,9 +145,9 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
         try:
             # Check if the handler is a function or a class with an execute method
             if callable(handler):
-                response = await handler(self._current_task, context=self._context, **kwargs)
+                response = await handler(self._current_task, **kwargs)
             else:
-                response = await handler.execute(self._current_task, context=self._context, **kwargs)
+                response = await handler.execute(self._current_task, **kwargs)
 
             # self._pilot_state = await self._state.serialize(handler) or {}
             if not self._context.interaction:

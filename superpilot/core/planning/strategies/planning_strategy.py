@@ -27,17 +27,12 @@ class PlanningStrategy(SimplePrompt, ABC):
     ]
 
     DEFAULT_SYSTEM_PROMPT = """
-    Understand the provided conversation thoroughly to understand the context and requirements of the tasks.
-
-    Perform the following tasks in order:
-    1. Ask clarifying questions to the user if required.
-    2. Assign each function from given functions a unique task based on {task_objective}
-
-    Available Functions:
-    {functions}
-
-    Conversation:
-    {context}
+    Review and comprehend the conversation to grasp the context and specifics of the task.
+    Focus on the "{task_objective}" aspect of the larger task.
+    Identify and list the relevant sub-tasks for the "{task_objective}" component.
+    Reference the available functions: {functions}.
+    Analyze how these functions can be applied to each sub-task.
+    Ensure understanding aligns with the conversation details: {context}.
     """
 
     DEFAULT_USER_PROMPT_TEMPLATE = (
