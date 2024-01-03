@@ -167,7 +167,7 @@ class TaskSchema(SchemaModel):
     """
     Class representing the data structure for task for pilot objective, whether it is complete or not.
     """
-    objective: str = Field(..., description="An verbose description of the task.")
+    objective: str = Field(..., description="An verbose description of what exactly the task is.")
     type: TaskType = Field(
         default=TaskType.RESEARCH,
         description="A categorization for the task from [research, write, edit, code, design, test, plan].")
