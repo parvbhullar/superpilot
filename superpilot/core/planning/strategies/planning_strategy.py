@@ -32,6 +32,7 @@ class PlanningStrategy(SimplePrompt, ABC):
     Identify and list the relevant sub-tasks for the "{task_objective}" component.
     Reference the available functions: {functions}.
     Analyze how these functions can be applied to each sub-task.
+    self reflect on your thoughts and reasoning for choosing the functions and then give final result.
     Ensure understanding aligns with the conversation details: {context}.
     """
 
@@ -110,6 +111,18 @@ class PlanningStrategy(SimplePrompt, ABC):
         #         content=self._user_prompt_template.format(**template_kwargs)
         #     )
 
+        functions = template_kwargs.pop("functions", [])
+
+        function_enum = enum.Enum("Function", {value.get('name'): value.get('name') for value in functions})
+
+        class PilotTaskSchema(TaskSchema):
+            function_name: function_enum = Field(..., description="Name of the function most suited for this task")
+
+        class PilotObjective(ObjectivePlan):
+            tasks: List[PilotTaskSchema] = Field(
+                ..., description="List of tasks to be accomplished"
+            )
+
         function = {
             "name": "execute_functions",
             "description": "versatile function wrapper designed to execute multiple functions based on a structured "
@@ -123,7 +136,7 @@ class PlanningStrategy(SimplePrompt, ABC):
             }
         }
 
-        for schema in [ClarifyingQuestion, ObjectivePlan]:
+        for schema in [ClarifyingQuestion, PilotObjective]:
             function["parameters"]["properties"].update(
                 schema.function_schema(arguments_format=True)
             )

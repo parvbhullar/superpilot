@@ -91,7 +91,7 @@ class SuperPilot(Pilot, Configurable):
         # TODO: use context to determine what the next step should be
         plan = await self._planner.plan(
             user_objective=task,
-            functions=self._ability_registry.list_abilities(),
+            functions=self._ability_registry.dump_abilities(),
         )
         tasks = plan.get_tasks()
         self.task.sub_tasks = tasks
@@ -128,9 +128,11 @@ class SuperPilot(Pilot, Configurable):
                 if hold:
                     # TODO save state and exit
                     pass
-                await self.update_task_queue()
                 continue
-            await self.execute_next_step(*args, **kwargs)
+            await self.update_task_status()
+            await self.update_task_queue()
+            if self._current_task.context.status != TaskStatus.DONE:
+                await self.execute_next_step(*args, **kwargs)
 
             # await self.reflect(*args, **kwargs)
 
@@ -166,11 +168,11 @@ class SuperPilot(Pilot, Configurable):
         self._configuration.cycle_count += 1
         self._current_task = self.task.current_sub_task
         self._logger.info(f"Working on task: {self._current_task}")
-
+        # self._ability_registry.dump_abilities()
         task = await self._evaluate_task_and_add_context(self._current_task)
         next_response = await self._choose_next_step(
             task,
-            self._ability_registry.dump_abilities(),
+            [self._ability_registry.get_ability(self._current_task.function_name).dump()],
         )
         self._next_step_response = next_response
 
@@ -187,10 +189,8 @@ class SuperPilot(Pilot, Configurable):
         execution_message = Message.add_execution_message(message=str(ability_action))
         self._context.add_message(execution_message)
         # ability_response = await ability(**self._next_step_response["ability_arguments"], **kwargs)
-        await self._update_tasks_and_memory(ability_action, self._next_step_response)
+        await self._update_tasks_and_memory(ability_action)
         # if ability_action.success:
-            
-        await self.update_task_queue()
         self._current_task = None
         self._next_step_response = None
 
@@ -231,7 +231,7 @@ class SuperPilot(Pilot, Configurable):
         )
         return next_response
 
-    async def _update_tasks_and_memory(self, ability_response: AbilityAction, response: LanguageModelResponse):
+    async def _update_tasks_and_memory(self, ability_response: AbilityAction):
         self._current_task.context.cycle_count += 1
         self._current_task.context.prior_actions.append(ability_response)
         # TODO: Summarize new knowledge
@@ -240,16 +240,18 @@ class SuperPilot(Pilot, Configurable):
         # TODO update memory with the facts, insights and knowledge
 
         self._logger.info(f"Final response: {ability_response}")
-        status = TaskStatus.IN_PROGRESS
-        if response.content.get("task_status"):
-            status = TaskStatus(response.content.get("task_status"))
-        self._status = status
-        self._current_task.context.status = status
         self._current_task.context.enough_info = True
         # self._current_task.update_memory(ability_response.get_memories())
         # print("Ability result", ability_result.result)
 
         # TaskStore.save_task_with_status(self._current_goal, status, stage)
+
+    async def update_task_status(self):
+        status = TaskStatus.IN_PROGRESS
+        llm_status = self._next_step_response.content.get("task_status")
+        if llm_status:
+            status = TaskStatus(llm_status)
+        self._current_task.context.status = status
 
     @classmethod
     def create(cls,

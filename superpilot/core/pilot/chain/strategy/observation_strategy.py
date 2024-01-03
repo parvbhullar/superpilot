@@ -112,11 +112,11 @@ class ObserverPrompt(SimplePrompt, ABC):
         pilot_enum = enum.Enum("Pilot", {value.get('name'): value.get('name') for value in pilots})
 
         class PilotTaskSchema(TaskSchema):
-            function_name: pilot_enum = Field(..., description="Name of the pilot/function most suited for this task")
+            function_name: pilot_enum = Field(..., description="Name of the pilot most suited for this task")
 
         class PilotObservation(Observation):
             tasks: List[PilotTaskSchema] = Field(
-                ..., description="List of tasks to be accomplished by the each pilot"
+                ..., description="List of tasks to be accomplished"
             )
 
         self._parser_schema = PilotObservation.function_schema()

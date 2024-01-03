@@ -82,7 +82,7 @@ class SimplePlanner(Configurable, Planner):
         self._execution_strategy = self.init_strategy(self._configuration.execution_strategy)
         self._reflection_strategy = self.init_strategy(self._configuration.reflection_strategy)
 
-    async def plan(self, user_objective: Task, functions: List[str], **kwargs) -> ObjectivePlan:
+    async def plan(self, user_objective: Task, functions: List[dict], **kwargs) -> ObjectivePlan:
         while True:
             template_kwargs = {"task_objective": user_objective.objective}
             template_kwargs.update(kwargs)

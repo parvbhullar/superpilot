@@ -32,7 +32,7 @@ class Planner(abc.ABC):
     #     ...
 
     @abc.abstractmethod
-    async def plan(self, user_objective: Task, functions: typing.List[str], **kwargs) -> ObjectivePlan:
+    async def plan(self, user_objective: Task, functions: typing.List[dict], **kwargs) -> ObjectivePlan:
         """Create a plan of tasks to accomplish the user objective.
 
         Args:
