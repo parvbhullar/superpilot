@@ -135,7 +135,7 @@ class SimplePlanner(Configurable):
             **model_configuration,
             completion_parser=prompt_strategy.parse_response_content,
         )
-        return LanguageModelResponse.parse_obj(response.dict())
+        return LanguageModelResponse.model_validate(response.model_dump())
 
     def _make_template_kwargs_for_strategy(self, strategy: PromptStrategy):
         provider = self._providers[strategy.model_classification]

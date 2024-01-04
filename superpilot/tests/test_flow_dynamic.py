@@ -153,7 +153,7 @@ class SimpleFlow:
             **model_configuration,
             completion_parser=prompt_strategy.parse_response_content,
         )
-        res = LanguageModelResponse.parse_obj(response.dict())
+        res = LanguageModelResponse.model_validate(response.model_dump())
         flow = FlowModel(**res.content)
         return flow
 

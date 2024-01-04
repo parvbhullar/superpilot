@@ -8,7 +8,11 @@ from superpilot.core.planning.schema import (
     Task,
 )
 from superpilot.core.planning.strategies.utils import to_numbered_list, json_loads
-from superpilot.core.resource.model_providers import LanguageModelMessage, LanguageModelFunction, MessageRole
+from superpilot.core.resource.model_providers import (
+    LanguageModelMessage,
+    LanguageModelFunction,
+    MessageRole,
+)
 
 
 class InitialPlanConfiguration(SystemConfiguration):
@@ -20,7 +24,6 @@ class InitialPlanConfiguration(SystemConfiguration):
 
 
 class InitialPlan(PromptStrategy):
-
     DEFAULT_SYSTEM_PROMPT_TEMPLATE = (
         "You are an expert project planner. You're responsibility is to create work plans for autonomous pilots. "
         "You will be given a name, a role, set of goals for the pilot to accomplish. Your job is to "
@@ -28,7 +31,7 @@ class InitialPlan(PromptStrategy):
         "Agents are resourceful, but require clear instructions. Each task you create should have clearly defined "
         "`ready_criteria` that the pilot can check to see if the task is ready to be started. Each task should "
         "also have clearly defined `acceptance_criteria` that the pilot can check to evaluate if the task is complete. "
-        "You should create as many tasks as you think is necessary to accomplish the goals.\n\n"        
+        "You should create as many tasks as you think is necessary to accomplish the goals.\n\n"
         "System Info:\n{system_info}"
     )
 
@@ -83,11 +86,17 @@ class InitialPlan(PromptStrategy):
                                 },
                             },
                         },
-                        "required": ["objective", "type", "acceptance_criteria", "priority", "ready_criteria"],
+                        "required": [
+                            "objective",
+                            "type",
+                            "acceptance_criteria",
+                            "priority",
+                            "ready_criteria",
+                        ],
                     },
                 },
             },
-        }
+        },
     }
 
     default_configuration = InitialPlanConfiguration(
@@ -135,9 +144,13 @@ class InitialPlan(PromptStrategy):
             "current_time": current_time,
             **kwargs,
         }
-        template_kwargs["pilot_goals"] = to_numbered_list(pilot_goals, **template_kwargs)
+        template_kwargs["pilot_goals"] = to_numbered_list(
+            pilot_goals, **template_kwargs
+        )
         template_kwargs["abilities"] = to_numbered_list(abilities, **template_kwargs)
-        template_kwargs["system_info"] = to_numbered_list(self._system_info, **template_kwargs)
+        template_kwargs["system_info"] = to_numbered_list(
+            self._system_info, **template_kwargs
+        )
 
         system_prompt = LanguageModelMessage(
             role=MessageRole.SYSTEM,
@@ -174,6 +187,6 @@ class InitialPlan(PromptStrategy):
         print(response_content)
         parsed_response = json_loads(response_content["function_call"]["arguments"])
         parsed_response["task_list"] = [
-            Task.parse_obj(task) for task in parsed_response["task_list"]
+            Task.model_validate(task) for task in parsed_response["task_list"]
         ]
         return parsed_response

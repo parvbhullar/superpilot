@@ -4,11 +4,14 @@ import time
 from abc import ABC
 from typing import Dict
 
-from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
-from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
 import distro
+
+from superpilot.core.pilot.settings import (
+    ExecutionNature
+)
+from superpilot.core.pilot.settings import PilotConfiguration, ExecutionAlgo
+from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
 from superpilot.core.planning.base import PromptStrategy
-from superpilot.core.planning.strategies.simple import SimplePrompt
 from superpilot.core.planning.schema import (
     LanguageModelResponse,
     Task,
@@ -18,6 +21,8 @@ from superpilot.core.planning.settings import (
     LanguageModelClassification,
     PromptStrategyConfiguration,
 )
+from superpilot.core.planning.strategies.simple import SimplePrompt
+from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
 from superpilot.core.plugin.utlis import load_class
 from superpilot.core.resource.model_providers import (
     LanguageModelProvider,
@@ -26,14 +31,13 @@ from superpilot.core.resource.model_providers import (
     OpenAIProvider,
     OPEN_AI_MODELS,
 )
+from superpilot.core.resource.model_providers.factory import (
+    ModelProviderFactory,
+    ModelConfigFactory,
+)
 from superpilot.core.resource.model_providers.utils.token_counter import (
     count_string_tokens,
 )
-from superpilot.core.pilot.settings import (
-    PilotConfiguration,
-    ExecutionAlgo, ExecutionNature
-)
-from superpilot.core.resource.model_providers.factory import ModelProviderFactory, ModelConfigFactory
 from superpilot.core.state.mixins import PickleStateMixin, DictStateMixin
 
 
@@ -47,9 +51,7 @@ class SimpleTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin, ABC):
         ),
         pilot=PilotConfiguration(
             name="simple_task_pilot",
-            role=(
-                "An AI Pilot designed to complete simple tasks with "
-            ),
+            role=("An AI Pilot designed to complete simple tasks with "),
             goals=[
                 "Complete simple tasks",
             ],
@@ -75,10 +77,10 @@ class SimpleTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin, ABC):
     )
 
     def __init__(
-            self,
-            configuration: TaskPilotConfiguration = default_configuration,
-            model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
-            logger: logging.Logger = logging.getLogger(__name__),
+        self,
+        configuration: TaskPilotConfiguration = default_configuration,
+        model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
+        logger: logging.Logger = logging.getLogger(__name__),
     ) -> None:
         self._logger = logger
         self._configuration = configuration
@@ -130,16 +132,18 @@ class SimpleTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin, ABC):
         )
 
     async def chat_with_model(
-            self,
-            prompt_strategy: PromptStrategy,
-            **kwargs,
+        self,
+        prompt_strategy: PromptStrategy,
+        **kwargs,
     ) -> LanguageModelResponse:
         model_classification = prompt_strategy.model_classification
         model_configuration = self._configuration.models[model_classification]
 
         template_kwargs = self._make_template_kwargs_for_strategy(prompt_strategy)
         kwargs.update(template_kwargs)
-        prompt = prompt_strategy.build_prompt(model_name=model_configuration.model_name, **kwargs)
+        prompt = prompt_strategy.build_prompt(
+            model_name=model_configuration.model_name, **kwargs
+        )
         # print("Prompt", prompt)
         model_configuration = self.choose_model(
             model_classification, model_configuration, prompt
@@ -159,7 +163,7 @@ class SimpleTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin, ABC):
             completion_parser=prompt_strategy.parse_response_content,
         )
 
-        return LanguageModelResponse.parse_obj(response.dict())
+        return LanguageModelResponse.model_validate(response.dict())
 
     def choose_model(self, model_classification, model_configuration, prompt):
         if model_configuration.model_name not in [

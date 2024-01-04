@@ -1,6 +1,6 @@
-from typing import Dict, Type, Any, Optional
-from pydantic import BaseModel, create_model, root_validator, validator
-from superpilot.core.context.schema import Context, Content
+from typing import Dict
+from pydantic import ConfigDict, BaseModel
+from superpilot.core.context.schema import Context
 
 
 class AbilityAction(BaseModel):
@@ -14,9 +14,11 @@ class AbilityAction(BaseModel):
     wait_for_user: bool = False
     message: str = ""
     result: Context = None
+    knowledge: Context = None
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    class Config:
-        arbitrary_types_allowed = True
+    # class Config:
+    #     arbitrary_types_allowed = True
 
     def add_result(self, result: Context):
         # print("Ability Knowledge", knowledge)

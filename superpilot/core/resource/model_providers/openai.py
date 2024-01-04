@@ -6,7 +6,7 @@ import time
 from typing import Callable, List, TypeVar, Optional
 
 import openai
-from openai.error import APIError, RateLimitError
+from openai import APIError, RateLimitError
 
 from superpilot.core.configuration import (
     Configurable,
@@ -218,9 +218,7 @@ class OpenAIProvider(
             "completion_tokens_used": response.usage.completion_tokens,
         }
 
-        parsed_response = completion_parser(
-            response.choices[0].message.to_dict_recursive()
-        )
+        parsed_response = completion_parser(response.choices[0].message.dict())
         response = LanguageModelProviderModelResponse(
             content=parsed_response, **response_args
         )
@@ -247,9 +245,7 @@ class OpenAIProvider(
             "completion_tokens_used": response.usage.completion_tokens,
         }
 
-        parsed_response = completion_parser(
-            response.choices[0].message.to_dict_recursive()
-        )
+        parsed_response = completion_parser(response.choices[0].message.dict())
         response = LanguageModelProviderModelResponse(
             content=parsed_response, **response_args
         )
@@ -299,7 +295,7 @@ class OpenAIProvider(
             "model": model_name,
             **kwargs,
             **self._credentials.unmasked(),
-            "request_timeout": 300,
+            "timeout": 300,
             # "max_tokens": self.get_token_limit(model_name),
         }
         if model_name in ["gpt-4-vision-preview"]:
@@ -390,15 +386,13 @@ async def _create_embedding(text: str, *_, **kwargs) -> openai.Embedding:
     Returns:
         str: The embedding.
     """
-    return await openai.Embedding.acreate(
-        input=[text],
-        **kwargs,
-    )
+    aclient = openai.AsyncClient(api_key=kwargs.pop("api_key", None))
+    return await aclient.embeddings.create(input=[text], **kwargs)
 
 
 async def _create_completion(
     messages: List[LanguageModelMessage], *_, **kwargs
-) -> openai.Completion:
+) -> openai.types.Completion:
     """Create a chat completion using the OpenAI API.
 
     Args:
@@ -414,10 +408,8 @@ async def _create_completion(
     else:
         del kwargs["function_call"]
     # print(messages)
-    return await openai.ChatCompletion.acreate(
-        messages=messages,
-        **kwargs,
-    )
+    aclient = openai.AsyncClient(api_key=kwargs.pop("api_key", None))
+    return await aclient.chat.completions.create(messages=messages, **kwargs)
 
 
 _T = TypeVar("_T")
