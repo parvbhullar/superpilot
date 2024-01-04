@@ -218,7 +218,7 @@ class OpenAIProvider(
             "completion_tokens_used": response.usage.completion_tokens,
         }
 
-        parsed_response = completion_parser(response.choices[0].message.dict())
+        parsed_response = completion_parser(response.choices[0].message.to_dict())
         response = LanguageModelProviderModelResponse(
             content=parsed_response, **response_args
         )
@@ -394,7 +394,7 @@ async def _create_embedding(text: str, *_, **kwargs) -> openai.Embedding:
 
 async def _create_completion(
     messages: List[LanguageModelMessage], *_, **kwargs
-) -> openai.types.Completion:
+) -> openai.Completion:
     """Create a chat completion using the OpenAI API.
 
     Args:
