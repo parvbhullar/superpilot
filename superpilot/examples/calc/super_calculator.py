@@ -73,19 +73,20 @@ class SuperCalculator(BaseExecutor):
             self.env, self.ALLOWED_ABILITY
         )
 
-        self.context = Context()
+        self.thread_id = thread_id
 
+    async def init(self):
         environment = get_env({})
-        state = State(thread_id=thread_id, workspace=environment.workspace)
-
+        state = PickleState(thread_id=self.thread_id, workspace=environment.workspace)
+        self.context = await state.load()
         self.chain = SuperChain(
             state=state,
             callback=STDInOutCallbackManager(
                 callbacks=[SimpleCallbackHandler()]
             ),
-            thread_id=thread_id,
+            thread_id=self.thread_id,
+            context=self.context,
         )
-
         transform_pilot = SimpleTaskPilot.create(
             prompt_config=TransformerPrompt.default_configuration,
             model_providers=self.model_providers,
@@ -108,6 +109,7 @@ class SuperCalculator(BaseExecutor):
         calculator = SuperPilot.create(
             context=self.context,
             model_providers=self.model_providers,
+            state=state,
             pilot_config=PilotConfiguration(
                 name="calculator",
                 role=(
@@ -125,10 +127,9 @@ class SuperCalculator(BaseExecutor):
             callback=STDInOutCallbackManager(
                 callbacks=[SimpleCallbackHandler()]
             ),
-            thread_id=thread_id,
+            thread_id=self.thread_id,
             abilities=[AddAbility, MultiplyAbility, SubtractAbility, DivisionAbility, RootAbility, DefaultAbility],
         )
-
         observer_pilot = SimpleTaskPilot.create(
             prompt_config=ObserverPrompt.default_configuration,
             smart_model_name=OpenAIModelName.GPT4,
@@ -148,11 +149,8 @@ class SuperCalculator(BaseExecutor):
                 execution_nature=ExecutionNature.AUTO,
             )
         )
-
         # transform_pilot.execute("Choose the pilot based on given task.", )
-
         # print("VISION", vision_pilot)
-
         # Initialize and add pilots to the chain here, for example:
         # self.chain.add_handler(transform_pilot, self.auto_transformer)
         self.chain.add_handler(calculator)
@@ -175,12 +173,11 @@ class SuperCalculator(BaseExecutor):
         return response, context
 
     async def execute(self, task: str):
-        response, context = await self.chain.execute(task, self.context)
-        return response
+        await self.init()
+        await self.chain.execute(task)
 
     async def run(self, query):
-        response = await self.execute(query)
-        return response
+        await self.execute(query)
 
     def format_numbered(self, items) -> str:
         if not items:
@@ -210,6 +207,7 @@ if __name__ == "__main__":
     #     asyncio.run(calc.run("transform data from text and multiply 2 and 3 and then sum with 6 and then subtract 2 "
     #                          "and then divide by 2 and plot the graph using data from text")))
     print(asyncio.run(calc.run("What is 3 times x plus 2?")))
+    print(asyncio.run(calc.run("9")))
     # print(asyncio.run(calc.run("What is 3 times x plus 2 minus y divide by z?")))
     # print(asyncio.run(calc.run("What is 18/9*4+1?")))
     # print(asyncio.run(calc.run("add 2 and 3")))

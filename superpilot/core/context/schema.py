@@ -2,15 +2,14 @@ from datetime import datetime
 from typing import Dict, Type, Any, Optional, List, Union
 import uuid
 
-from pydantic import BaseModel, create_model, root_validator, validator
+from pydantic import BaseModel, create_model, root_validator, validator, Field
 import enum
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 
 from superpilot.core.planning import Task
-from superpilot.core.planning.schema import TaskSchema
-from superpilot.core.resource.model_providers import LanguageModelMessage, MessageRole
+
 
 
 class ContentType(str, enum.Enum):
@@ -349,18 +348,25 @@ class Message(BaseModel):
 
 
 class Context:
-    thread_id: uuid.UUID
+    thread_id: str
     objective: str
     messages: list[Message]
 
-    interaction: bool = False
-    task = Task
-    active_message: int = -1
+    interaction: bool
+    tasks: List[Task]
+    active_task_idx: int
+    active_message: int
 
     def __init__(self, messages: list[Message] = None):
         if not messages:
             messages = []
         self.messages = messages
+        self.tasks = []
+        self.interaction = False
+        self.active_task_idx = -1
+        self.active_message = -1
+        self.thread_id = ""
+        self.objective = ""
 
     def extend(self, context: "Context") -> None:
         if context:
@@ -428,10 +434,6 @@ class Context:
             items = []
         return cls(items)
 
-    @classmethod
-    def load_context(cls, message: Message):
-        # TODO load context from file
-        context = cls()
-        context.thread_id = message.thread_id
-        context.add_message(message)
-        return context
+    @property
+    def current_task(self) -> Task:
+        return self.tasks[self.active_task_idx] if self.active_task_idx >= 0 else None

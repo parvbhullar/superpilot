@@ -32,6 +32,7 @@ from superpilot.core.plugin.simple import (
 from superpilot.core.resource.model_providers import OpenAIProvider, OpenAIModelName, ModelProviderName, \
     LanguageModelProvider
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory, ModelConfigFactory
+from superpilot.core.state.base import BaseState
 from superpilot.core.workspace.simple import SimpleWorkspace
 
 
@@ -66,6 +67,7 @@ class SuperPilot(Pilot, Configurable):
         planner: Planner,
         environment: SimpleEnv,
         callback: BaseCallbackManager,
+        state: BaseState = None,
         **kwargs
     ):
         self._configuration = settings.configuration
@@ -84,6 +86,7 @@ class SuperPilot(Pilot, Configurable):
         self._current_task: Task = None
         self._next_step_response: LanguageModelResponse = None
         self._context: Context = context
+        self._state = state
         self.task: Task = None
 
     async def plan(self, task: Task, **kwargs):
@@ -93,6 +96,8 @@ class SuperPilot(Pilot, Configurable):
             user_objective=task,
             functions=self._ability_registry.dump_abilities(),
         )
+        if self._context.interaction:
+            return
         tasks = plan.get_tasks()
         self.task.sub_tasks = tasks
         planning_message = Message.add_planning_message(
@@ -102,22 +107,33 @@ class SuperPilot(Pilot, Configurable):
 
         # TODO: Should probably do a step to evaluate the quality of the generated tasks,
         #  and ensure that they have actionable ready and acceptance criteria
-
-        
         # self._task_queue.extend(tasks)
         self.task.sub_tasks.sort(key=lambda t: t.priority)
         # self._task_queue[-1].context.status = TaskStatus.READY
         return plan.dict()
 
-    async def execute(self, task: Union[str, Task], *args, **kwargs):
+    async def execute(self, objective: Union[str, Task, Message], *args, **kwargs):
         self._logger.info(f"Executing step {self._configuration.cycle_count}")
 
-        if isinstance(task, str):
-            self.task = Task.factory(task)
+        if isinstance(objective, Task):
+            self.task = objective
         else:
-            self.task = task
+            if isinstance(objective, str):
+                objective = Message.add_user_message(objective)
+            self._context.add_message(objective)
 
-        plan = await self.plan(task)
+        if not self.task:
+            task = self._context.current_task
+            if not task:
+                self.task = Task.factory(objective.message)
+                self._context.tasks.append(self.task)
+            else:
+                self.task = task
+
+        if not self.task or not self.task.sub_tasks:
+            plan = await self.plan(self.task)
+            if self._context.interaction:
+                return
 
         while self.task.active_task_idx < len(self.task.sub_tasks):
             await self.determine_next_step(*args, **kwargs)
@@ -126,8 +142,9 @@ class SuperPilot(Pilot, Configurable):
             if ability_args.get("clarifying_question"):
                 hold = await self.handle_clarification(ability_args, **kwargs)
                 if hold:
-                    # TODO save state and exit
-                    pass
+                    self._context.interaction = True
+                    await self._state.save(self._context)
+                    return None
                 continue
             await self.update_task_status()
             await self.update_task_queue()
@@ -267,6 +284,7 @@ class SuperPilot(Pilot, Configurable):
                planner: Planner = None,
                callback: BaseCallbackManager = STDInOutCallbackManager(),
                thread_id: str = None,
+               state: BaseState = None,
                **kwargs
                ):
 
@@ -290,7 +308,8 @@ class SuperPilot(Pilot, Configurable):
                 workspace=environment.get("workspace"),
                 logger=environment.get("logger"),
                 callback=callback,
-                model_providers=model_providers
+                model_providers=model_providers,
+                state=state
             )
 
         ability_registry = None
@@ -312,6 +331,7 @@ class SuperPilot(Pilot, Configurable):
             environment=environment,
             planner=planner,
             callback=callback,
+            state=state,
             **kwargs
         )
         return pilot

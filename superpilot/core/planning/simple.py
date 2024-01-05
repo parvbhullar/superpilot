@@ -30,6 +30,7 @@ from superpilot.core.resource.model_providers import (
     ModelProviderName,
     OpenAIModelName,
 )
+from superpilot.core.state.base import BaseState
 from superpilot.core.workspace import Workspace
 from superpilot.core.plugin.utlis import load_class
 
@@ -67,12 +68,14 @@ class SimplePlanner(Configurable, Planner):
         callback: BaseCallbackManager = None,
         workspace: Workspace = None,  # Workspace is not available during bootstrapping.
         context: Context = None,
+        state: BaseState = None,
     ) -> None:
         self._configuration = settings.configuration
         self._logger = logger
         self._workspace = workspace
         self._callback = callback
         self._context = context
+        self._state = state
 
         self._providers: Dict[LanguageModelClassification, LanguageModelProvider] = {}
         for model, model_config in self._configuration.models.items():
@@ -96,8 +99,9 @@ class SimplePlanner(Configurable, Planner):
             if ability_args.get("clarifying_question"):
                 hold = await self.handle_clarification(observation_response, ability_args, user_objective, **kwargs)
                 if hold:
-                    # TODO saveContext and continue from here
-                    pass
+                    self._context.interaction = True
+                    await self._state.save(self._context)
+                    return None
             else:
                 observation = ObjectivePlan(**observation_response.get_content())
                 break
