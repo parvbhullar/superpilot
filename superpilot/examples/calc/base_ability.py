@@ -11,6 +11,43 @@ from superpilot.core.planning import PromptStrategy
 from superpilot.core.plugin.base import PluginLocation, PluginStorageFormat
 
 
+class DefaultAbility(Ability):
+    default_configuration = AbilityConfiguration(
+        location=PluginLocation(
+            storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
+            storage_route=f"{__name__}.DefaultAbility",
+        ),
+        packages_required=[],
+        workspace_required=False,
+    )
+
+    def __init__(
+            self,
+            environment: Environment,
+            configuration: AbilityConfiguration = default_configuration,
+            prompt_strategy: PromptStrategy = None,
+    ):
+        self._logger: logging.Logger = environment.get("logger")
+        self._configuration = configuration
+        self._env_config: Config = environment.get("env_config")
+
+    @classmethod
+    def description(cls) -> str:
+        return "default to call, summarises the task completion"
+
+    @classmethod
+    def arguments(cls) -> dict:
+        return {
+            "task_summary": {
+                "type": "string",
+                "description": "verbose completion summary of the task"
+            }
+        }
+
+    async def __call__(self, task_summary: str, **kwargs) -> Context:
+        return Context.factory().add_content(task_summary)
+
+
 class AddAbility(Ability):
     default_configuration = AbilityConfiguration(
         location=PluginLocation(

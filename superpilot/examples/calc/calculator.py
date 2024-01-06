@@ -2,6 +2,7 @@ import os
 import sys
 import asyncio
 import time
+from abc import abstractmethod
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
@@ -39,7 +40,7 @@ from superpilot.core.pilot.settings import (
 )
 from superpilot.examples.calc.transformer_prompt import TransformerPrompt
 from superpilot.examples.calc.base_ability import AddAbility, MultiplyAbility, SubtractAbility, DivisionAbility, \
-    RootAbility
+    RootAbility, DefaultAbility
 
 
 class Calculator(BaseExecutor):
@@ -99,7 +100,7 @@ class Calculator(BaseExecutor):
                 creation_time="",
                 execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
             ),
-            abilities=[AddAbility, MultiplyAbility, SubtractAbility, DivisionAbility, RootAbility],
+            abilities=[AddAbility, MultiplyAbility, SubtractAbility, DivisionAbility, RootAbility, DefaultAbility],
         )
 
         observer_pilot = SimpleTaskPilot.create(
@@ -137,6 +138,7 @@ class Calculator(BaseExecutor):
                 -------------
                 Solution: {solution}
                 """
+
 
     def auto_transformer(self, data, response, context):
         print("Auto solver transformer", data, response)

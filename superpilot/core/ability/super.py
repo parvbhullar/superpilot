@@ -87,24 +87,26 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
                 return ability
         raise ValueError(f"Ability '{ability_name}' not found.")
 
-    async def perform(self, ability_name: str, ability_arguments: dict, **kwargs) -> AbilityAction:
+    async def perform(self, ability_name: str, ability_args: dict, **kwargs) -> AbilityAction:
         ability_action = AbilityAction()
         ability_action.executed = True
         try:
             ability = self.get_ability(ability_name)
             # print("Perform Ability: ", ability_name, kwargs)
-            response = await ability(**ability_arguments, **kwargs)
+            response = await ability(**ability_args, **kwargs)
+            # TODO: Should we pass aroind the kwargs in ability action and also store in task context and keep extending it?
+            #  to pas wround the info without uploading to to llm ,(we will get like response, offline_data = await ability(**ability_arguments, **kwargs) )
             ability_action.success = True
             ability_action.message = "Function executed successfully!"
             ability_action.ability_name = ability_name
-            ability_action.ability_args = ability_arguments
+            ability_action.ability_args = ability_args
             ability_action.add_result(response)
         except Exception as e:
             self._logger.error("Error %s", str(e))
             ability_action.success = False
             ability_action.message = f"Function execution failed with error: {e}"
             ability_action.ability_name = ability_name
-            ability_action.ability_args = ability_arguments
+            ability_action.ability_args = ability_args
             response = Context()
             response.add(e)
             ability_action.add_result(response)

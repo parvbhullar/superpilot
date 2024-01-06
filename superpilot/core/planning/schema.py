@@ -72,6 +72,7 @@ class TaskContext(BaseModel):
     parent: "Task" = None
     prior_actions: List[AbilityAction] = Field(default_factory=list)
     memories: list = Field(default_factory=list)
+    default_memory: list = Field(default_factory=list)
     user_input: List[str] = Field(default_factory=list)
     supplementary_info: List[str] = Field(default_factory=list)
     enough_info: bool = False
@@ -128,6 +129,13 @@ class Task(BaseModel):
             "user_input": user_input,
             "acceptance_criteria": acceptance_criteria,
         }
+
+    def update_memory(self, memory: list):
+        self.context.memories = [*self.context.default_memory, *memory]
+
+    def set_default_memory(self, memory: list):
+        self.context.default_memory = memory
+        self.context.memories = memory
 
 
 # Need to resolve the circular dependency between Task and TaskContext once both models are defined.

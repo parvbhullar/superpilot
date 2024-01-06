@@ -43,6 +43,7 @@ class SuperChain(BaseChain):
                         # return f"Handler named '{task_in_hand.function_name}' is not defined", context
                         self.logger.error(f"Handler named '{task_in_hand.function_name}' is not defined")
                         continue
+                    # TODO: there should be Pilot Task where we store the pilot Action?
                     response, context = await self.execute_handler(task_in_hand.objective, context, handler, transformer, **kwargs)
             if response:
                 # TODO: this task is different from the one in superpilot
@@ -60,9 +61,9 @@ class SuperChain(BaseChain):
         try:
             # Check if the handler is a function or a class with an execute method
             if callable(handler):
-                response = await handler(task, context, **kwargs)
+                response = await handler(task, context=context, **kwargs)
             else:
-                response = await handler.execute(task, context, **kwargs)
+                response = await handler.execute(task, context=context, **kwargs)
 
             if isinstance(response, LanguageModelResponse):
                 context.add(response.get_content())
