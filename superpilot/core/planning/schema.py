@@ -1,5 +1,5 @@
 import enum
-from typing import List
+from typing import List, Union
 
 from pydantic import BaseModel, Field
 
@@ -27,7 +27,7 @@ class LanguageModelClassification(str, enum.Enum):
 class LanguageModelPrompt(BaseModel):
     messages: List[LanguageModelMessage]
     functions: List[LanguageModelFunction] = Field(default_factory=list)
-    function_call: LanguageModelFunction = None
+    function_call: Union[LanguageModelFunction, None] = None
 
     def get_messages(self):
         return [m.to_dict() for m in self.messages]

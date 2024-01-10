@@ -17,6 +17,7 @@ class SimplePluginService(PluginService):
     def get_plugin(plugin_location) -> "PluginType":
         """Get a plugin from a plugin location."""
         if isinstance(plugin_location, dict):
+            # plugin_location = PluginLocation.model_validate(plugin_location)
             plugin_location = PluginLocation.parse_obj(plugin_location)
         if plugin_location.storage_format == PluginStorageFormat.WORKSPACE:
             return SimplePluginService.load_from_workspace(
@@ -39,7 +40,7 @@ class SimplePluginService(PluginService):
         """Load a plugin from a file path."""
         # TODO: Define an on disk storage format and implement this.
         #   Can pull from existing zip file loading implementation
-        raise NotImplemented("Loading from file path is not implemented.")
+        raise NotImplementedError("Loading from file path is not implemented.")
 
     @staticmethod
     def load_from_import_path(plugin_route: PluginStorageRoute) -> "PluginType":
@@ -56,7 +57,7 @@ class SimplePluginService(PluginService):
         #   storage locations. E.g. if we know that path_type is a file path, we can
         #   search the workspace for it. If it's an import path, we can check the core
         #   system and the superpilot_plugins package.
-        raise NotImplemented("Resolving plugin name to path is not implemented.")
+        raise NotImplementedError("Resolving plugin name to path is not implemented.")
 
     #####################################
     # High-level storage format loaders #

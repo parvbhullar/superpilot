@@ -1,11 +1,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
-
-from superpilot.core.ability import (
-    SimpleAbilityRegistry,
-)
+from typing import Any
 from superpilot.core.environment.base import Environment
 from superpilot.core.environment.settings import (
     EnvConfiguration,
@@ -23,7 +19,6 @@ from superpilot.core.plugin.simple import (
 )
 from superpilot.core.workspace.simple import SimpleWorkspace
 from superpilot.core.resource.model_providers import (
-    LanguageModelProvider,
     ModelProviderName,
     OpenAIProvider,
 )
@@ -56,7 +51,7 @@ class SimpleEnv(Environment, Configurable):
                 workspace=PluginLocation(
                     storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
                     storage_route="superpilot.core.workspace.SimpleWorkspace",
-                )
+                ),
             ),
         ),
     )
@@ -79,7 +74,9 @@ class SimpleEnv(Environment, Configurable):
         # FIXME: Need some work to make this work as a dict of providers
         #  Getting the construction of the config to work is a bit tricky
         self.openai_provider = openai_provider
-        self.model_providers = {ModelProviderName.OPENAI: openai_provider}  # TODO load models from model registry
+        self.model_providers = {
+            ModelProviderName.OPENAI: openai_provider
+        }  # TODO load models from model registry
         self.planning = planning
         self.workspace = workspace
 
@@ -89,7 +86,9 @@ class SimpleEnv(Environment, Configurable):
         workspace_path: Path,
         logger: logging.Logger,
     ) -> "SimpleEnv":
-        environment_settings = SimpleWorkspace.load_environment_settings(workspace_path, cls.name())
+        environment_settings = SimpleWorkspace.load_environment_settings(
+            workspace_path, cls.name()
+        )
         environment_args = {}
 
         environment_args["settings"] = environment_settings.environment
@@ -138,11 +137,12 @@ class SimpleEnv(Environment, Configurable):
 
     @classmethod
     def factory(cls, user_configuration: dict, logger: logging.Logger) -> "SimpleEnv":
-
         logger.debug("Getting environment settings")
 
         environment_workspace = (
-            user_configuration.get("workspace", {}).get("configuration", {}).get("root", "")
+            user_configuration.get("workspace", {})
+            .get("configuration", {})
+            .get("root", "")
         )
 
         # Configure logging before we do anything else.
@@ -219,6 +219,7 @@ class SimpleEnv(Environment, Configurable):
                 user_configuration.get(system_name, {})
             ).dict()
 
+        # return EnvSettings.model_validate(configuration_dict)
         return EnvSettings.parse_obj(configuration_dict)
 
     @classmethod
@@ -227,8 +228,8 @@ class SimpleEnv(Environment, Configurable):
         environment_settings: EnvSettings,
         logger: logging.Logger,
     ):
-        environment_settings.environment.configuration.creation_time = datetime.now().strftime(
-            "%Y%m%d_%H%M%S"
+        environment_settings.environment.configuration.creation_time = (
+            datetime.now().strftime("%Y%m%d_%H%M%S")
         )
         workspace: SimpleWorkspace = cls._get_system_instance(
             "workspace",
@@ -262,8 +263,8 @@ class SimpleEnv(Environment, Configurable):
         for key in kwargs:
             if key in system_parameter:
                 system_kwargs[key] = kwargs[key]
-        if 'logger' in system_parameter:
-            system_kwargs['logger'] = logger.getChild(system_name)
+        if "logger" in system_parameter:
+            system_kwargs["logger"] = logger.getChild(system_name)
         system_instance = system_class(
             system_settings,
             *args,

@@ -3,7 +3,9 @@ import logging
 import typing
 from typing import Any, Dict, Generic, TypeVar
 from pathlib import Path
-from pydantic import BaseModel, Field, SecretField
+# from pydantic import ConfigDict, BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field, SecretField
+
 
 if typing.TYPE_CHECKING:
     # Cyclic import
@@ -14,6 +16,14 @@ def UserConfigurable(*args, **kwargs):
     return Field(*args, **kwargs, user_configurable=True)
 
 
+# class SystemConfiguration(BaseModel):
+#     def get_user_config(self) -> Dict[str, Any]:
+#         return _get_user_config_fields(self)
+
+#     model_config = ConfigDict(
+#         extra="forbid", use_enum_values=True, arbitrary_types_allowed=True
+#     )
+
 class SystemConfiguration(BaseModel):
     def get_user_config(self) -> Dict[str, Any]:
         return _get_user_config_fields(self)
@@ -23,6 +33,13 @@ class SystemConfiguration(BaseModel):
         use_enum_values = True
         arbitrary_types_allowed = True
 
+# class SystemSettings(BaseModel):
+#     """A base class for all system settings."""
+
+#     name: str
+#     description: str
+#     model_config = ConfigDict(extra="forbid", use_enum_values=True)
+        
 
 class SystemSettings(BaseModel):
     """A base class for all system settings."""
@@ -55,6 +72,7 @@ class Configurable(abc.ABC, Generic[S]):
         defaults = cls.default_settings.dict()
         final_configuration = deep_update(defaults, configuration)
 
+        # return cls.default_settings.__class__.model_validate(final_configuration)
         return cls.default_settings.__class__.parse_obj(final_configuration)
 
 
@@ -142,6 +160,7 @@ class WorkspaceSetup(abc.ABC):
 
         settings.workspace.configuration.root = str(workspace_root)
 
+        # settings_json = settings.model_dump_json()
         settings_json = settings.json(
             encoder=lambda x: x.get_secret_value() if isinstance(x, SecretField) else x,
         )
@@ -158,7 +177,9 @@ class WorkspaceSetup(abc.ABC):
         return workspace_root if save_file else settings_json
 
     @staticmethod
-    def load_environment_settings(workspace_root: Path, config_name: str) -> "EnvSettings":
+    def load_environment_settings(
+        workspace_root: Path, config_name: str
+    ) -> "EnvSettings":
         # Cyclic import
         from superpilot.core.environment.simple import EnvSettings
         import json
@@ -178,6 +199,7 @@ class WorkspaceSetup(abc.ABC):
 
         goal = fetch_goal(goal, request_id, config_name)
         environment_settings = goal.get("settings_json", {})
+        # return EnvSettings.model_validate(environment_settings)
         return EnvSettings.parse_obj(environment_settings)
 
     @staticmethod

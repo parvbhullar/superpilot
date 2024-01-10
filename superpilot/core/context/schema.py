@@ -1,15 +1,15 @@
-from datetime import datetime
-from typing import Dict, Type, Any, Optional, List, Union
-import uuid
-
-from pydantic import BaseModel, create_model, root_validator, validator, Field
 import enum
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
+from typing import Dict, Type, Any, Optional, List, Union
+
+# from pydantic import field_validator, model_validator, BaseModel, create_model
+from pydantic import BaseModel, create_model
 
 from superpilot.core.planning import Task
-
 
 
 class ContentType(str, enum.Enum):
@@ -192,13 +192,15 @@ class Content(ContentItem):
     def create_model_class(cls, class_name: str, mapping: Dict[str, Type]):
         new_class = create_model(class_name, **mapping)
 
-        @validator("*", allow_reuse=True)
+        # @field_validator("*")
+        @classmethod
         def check_name(v, field):
             if field.name not in mapping.keys():
                 raise ValueError(f"Unrecognized block: {field.name}")
             return v
 
-        @root_validator(pre=True, allow_reuse=True)
+        # @model_validator(mode="before")
+        @classmethod
         def check_missing_fields(values):
             required_fields = set(mapping.keys())
             missing_fields = required_fields - set(values.keys())

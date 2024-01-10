@@ -69,14 +69,14 @@ class AGQuestionSolverAbility(Ability):
 
         from autogen.agentchat.contrib.math_user_proxy_agent import MathUserProxyAgent
 
-        autogen.ChatCompletion.start_logging()
+        # autogen.ChatCompletion.start_logging()
 
         # 1. create an AssistantAgent instance named "assistant"
         assistant = autogen.AssistantAgent(
             name="assistant",
             system_message="You are a helpful assistant.",
             llm_config={
-                "request_timeout": 600,
+                "timeout": 600,
                 "seed": 42,
                 "config_list": config_list,
             },

@@ -1,43 +1,26 @@
-import logging
 from datetime import datetime
-from pathlib import Path
-from typing import Any, List, Dict, Tuple, Union
 
 from superpilot.core.ability import (
-    AbilityAction,
     AbilityRegistry,
-    SimpleAbilityRegistry, SuperAbilityRegistry, Ability,
-)
+    SuperAbilityRegistry, )
 from superpilot.core.callback.manager.base import BaseCallbackManager
-from superpilot.core.callback.manager.std_io import STDInOutCallbackManager
+from superpilot.core.configuration import Configurable
 from superpilot.core.context.schema import Context, Message
+from superpilot.core.environment import SimpleEnv
 from superpilot.core.pilot.base import Pilot
 from superpilot.core.pilot.settings import (
-    PilotSettings,
     PilotSystemSettings,
     PilotConfiguration,
-    PilotSystems,
-    ExecutionAlgo, ExecutionNature
+    ExecutionNature,
 )
-from superpilot.core.configuration import Configurable
-from superpilot.core.memory import SimpleMemory
-from superpilot.core.environment import SimpleEnv, Environment
-from superpilot.core.planning import SimplePlannerLegacy, Task, TaskStatus, SimplePlanner, LanguageModelResponse
+from superpilot.core.planning import LanguageModelResponse
+from superpilot.core.planning import SimplePlanner, Task, TaskStatus
 from superpilot.core.planning.base import Planner
-from superpilot.core.plugin.simple import (
-    PluginLocation,
-    PluginStorageFormat,
-    SimplePluginService,
-)
-from superpilot.core.resource.model_providers import OpenAIProvider, OpenAIModelName, ModelProviderName, \
-    LanguageModelProvider
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory, ModelConfigFactory
 from superpilot.core.state.base import BaseState
-from superpilot.core.workspace.simple import SimpleWorkspace
 
 
 class SuperPilot(Pilot, Configurable):
-
     default_settings = PilotSystemSettings(
         name="super_pilot",
         description="A super pilot.",
@@ -104,6 +87,7 @@ class SuperPilot(Pilot, Configurable):
             'Sub Task Breakdown:\n' + '\n'.join([task.objective for task in tasks])
         )
         self._context.add_message(planning_message)
+
 
         # TODO: Should probably do a step to evaluate the quality of the generated tasks,
         #  and ensure that they have actionable ready and acceptance criteria

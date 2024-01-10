@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Union
 from superpilot.core.configuration.schema import (
     SystemConfiguration,
     SystemSettings,
@@ -21,17 +21,17 @@ class PromptStrategyConfiguration(SystemConfiguration):
     model_classification: LanguageModelClassification = UserConfigurable()
     system_prompt: str = UserConfigurable()
     user_prompt_template: str = UserConfigurable()
-    parser_schema: dict = None
+    parser_schema: Union[dict, None] = None
     location: dict = None
 
 
 class PromptStrategiesConfiguration(SystemConfiguration):
-    name_and_goals: strategies.NameAndGoalsConfiguration = None
-    initial_plan: strategies.InitialPlanConfiguration = None
-    next_ability: strategies.NextAbilityConfiguration = None
-    summarizer: strategies.SummarizerConfiguration = None
-    step_execution: strategies.StepExecutionConfiguration = None
-    step_response: strategies.StepStrategyConfiguration = None
+    name_and_goals: Union[strategies.NameAndGoalsConfiguration, None] = None
+    initial_plan: Union[strategies.InitialPlanConfiguration, None] = None
+    next_ability: Union[strategies.NextAbilityConfiguration, None] = None
+    summarizer: Union[strategies.SummarizerConfiguration, None] = None
+    step_execution: Union[strategies.StepExecutionConfiguration, None] = None
+    step_response: Union[strategies.StepStrategyConfiguration, None] = None
 
 
 class PlannerConfigurationLegacy(SystemConfiguration):
