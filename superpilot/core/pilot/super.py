@@ -1,12 +1,14 @@
 from datetime import datetime
+from typing import Union, List
 
 from superpilot.core.ability import (
     AbilityRegistry,
-    SuperAbilityRegistry, )
+    SuperAbilityRegistry, AbilityAction, Ability, )
 from superpilot.core.callback.manager.base import BaseCallbackManager
+from superpilot.core.callback.manager.std_io import STDInOutCallbackManager
 from superpilot.core.configuration import Configurable
 from superpilot.core.context.schema import Context, Message
-from superpilot.core.environment import SimpleEnv
+from superpilot.core.environment import SimpleEnv, Environment
 from superpilot.core.pilot.base import Pilot
 from superpilot.core.pilot.settings import (
     PilotSystemSettings,
@@ -16,6 +18,7 @@ from superpilot.core.pilot.settings import (
 from superpilot.core.planning import LanguageModelResponse
 from superpilot.core.planning import SimplePlanner, Task, TaskStatus
 from superpilot.core.planning.base import Planner
+from superpilot.core.resource.model_providers import OpenAIModelName
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory, ModelConfigFactory
 from superpilot.core.state.base import BaseState
 

@@ -1,6 +1,5 @@
 from typing import Dict, Any
 from pydantic import ConfigDict, BaseModel
-from superpilot.core.context.schema import Context
 
 
 class AbilityAction(BaseModel):
@@ -13,8 +12,8 @@ class AbilityAction(BaseModel):
     executed: bool = False
     wait_for_user: bool = False
     message: str = ""
-    result: Context = None
-    knowledge: Context = None
+    # result: Context = None
+    # knowledge: Context = None
     # model_config = ConfigDict(arbitrary_types_allowed=True)
 
     class Config:
