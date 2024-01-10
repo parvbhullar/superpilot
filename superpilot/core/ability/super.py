@@ -1,4 +1,5 @@
 from typing import Dict, List, Optional
+import traceback
 
 from superpilot.core.ability.base import Ability, AbilityConfiguration, AbilityRegistry
 from superpilot.core.ability.builtins import BUILTIN_ABILITIES
@@ -105,6 +106,7 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
 
             ability_action.add_result(response)
         except Exception as e:
+            traceback.print_exc()
             self._logger.error("Error %s", str(e))
             ability_action.success = False
             ability_action.message = f"Function execution failed with error: {e}"

@@ -15,10 +15,10 @@ class AbilityAction(BaseModel):
     message: str = ""
     result: Context = None
     knowledge: Context = None
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    # model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    # class Config:
-    #     arbitrary_types_allowed = True
+    class Config:
+        arbitrary_types_allowed = True
 
     def add_result(self, result: Context):
         # print("Ability Knowledge", knowledge)

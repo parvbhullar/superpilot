@@ -163,7 +163,7 @@ class SimpleTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin, ABC):
             completion_parser=prompt_strategy.parse_response_content,
         )
 
-        return LanguageModelResponse.model_validate(response.dict())
+        return LanguageModelResponse.parse_obj(response.dict())
 
     def choose_model(self, model_classification, model_configuration, prompt):
         if model_configuration.model_name not in [

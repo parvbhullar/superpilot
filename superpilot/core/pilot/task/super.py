@@ -331,7 +331,9 @@ class SuperTaskPilot(TaskPilot):
             **model_configuration,
             completion_parser=prompt_strategy.parse_response_content,
         )
-        return LanguageModelResponse.model_validate(response.model_dump())
+        # return LanguageModelResponse.model_validate(response.model_dump())
+        return LanguageModelResponse.parse_obj(response.dict())
+
 
     def _make_template_kwargs_for_strategy(self, strategy: PromptStrategy):
         provider = self._providers[strategy.model_classification]

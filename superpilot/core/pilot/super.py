@@ -88,7 +88,9 @@ class SuperPilot(Pilot, Configurable):
             pilot_goals=self._configuration.goals,
             abilities=self._ability_registry.list_abilities(),
         )
-        tasks = [Task.model_validate(task) for task in plan.content["task_list"]]
+        # tasks = [Task.model_validate(task) for task in plan.content["task_list"]]
+        tasks = [Task.parse_obj(task) for task in plan.content["task_list"]]
+
 
         # TODO: Should probably do a step to evaluate the quality of the generated tasks,
         #  and ensure that they have actionable ready and acceptance criteria

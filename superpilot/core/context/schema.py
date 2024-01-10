@@ -5,7 +5,8 @@ from pathlib import Path
 from typing import Dict, Type, Any, Optional
 from typing import List, Union
 
-from pydantic import field_validator, model_validator, BaseModel, create_model
+# from pydantic import field_validator, model_validator, BaseModel, create_model
+from pydantic import BaseModel, create_model
 
 
 class ContentType(str, enum.Enum):
@@ -189,14 +190,14 @@ class Content(ContentItem):
     def create_model_class(cls, class_name: str, mapping: Dict[str, Type]):
         new_class = create_model(class_name, **mapping)
 
-        @field_validator("*")
+        # @field_validator("*")
         @classmethod
         def check_name(v, field):
             if field.name not in mapping.keys():
                 raise ValueError(f"Unrecognized block: {field.name}")
             return v
 
-        @model_validator(mode="before")
+        # @model_validator(mode="before")
         @classmethod
         def check_missing_fields(values):
             required_fields = set(mapping.keys())

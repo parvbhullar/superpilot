@@ -187,6 +187,7 @@ class InitialPlan(PromptStrategy):
         print(response_content)
         parsed_response = json_loads(response_content["function_call"]["arguments"])
         parsed_response["task_list"] = [
-            Task.model_validate(task) for task in parsed_response["task_list"]
+            # Task.model_validate(task) for task in parsed_response["task_list"]
+            Task.parse_obj(task) for task in parsed_response["task_list"]
         ]
         return parsed_response

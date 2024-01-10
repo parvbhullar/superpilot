@@ -219,7 +219,8 @@ class SimpleEnv(Environment, Configurable):
                 user_configuration.get(system_name, {})
             ).dict()
 
-        return EnvSettings.model_validate(configuration_dict)
+        # return EnvSettings.model_validate(configuration_dict)
+        return EnvSettings.parse_obj(configuration_dict)
 
     @classmethod
     def provision_environment(

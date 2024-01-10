@@ -4,8 +4,8 @@ from typing import Callable, ClassVar, List, Optional, Union, Any
 import json
 from functools import wraps
 import numpy as np
-from pydantic import field_validator, ConfigDict, BaseModel, Field, SecretStr
-from pydantic.v1 import validate_arguments
+from pydantic import ConfigDict, BaseModel, Field, SecretStr ,validate_arguments
+# from pydantic.v1 import validate_arguments
 
 from superpilot.core.configuration import UserConfigurable
 from superpilot.core.resource.schema import (
@@ -141,6 +141,20 @@ class ModelProviderModelResponse(BaseModel):
     model_info: ModelProviderModelInfo
 
 
+# class ModelProviderCredentials(ProviderCredentials):
+#     """Credentials for a model provider."""
+
+#     api_key: Union[SecretStr, None] = UserConfigurable(default=None)
+#     api_type: Union[SecretStr, None] = UserConfigurable(default=None)
+#     api_base: Union[SecretStr, None] = UserConfigurable(default=None)
+#     api_version: Union[SecretStr, None] = UserConfigurable(default=None)
+#     deployment_id: Union[SecretStr, None] = UserConfigurable(default=None)
+
+#     def unmasked(self) -> dict:
+#         return unmask(self)
+
+#     model_config = ConfigDict(extra="ignore")
+
 class ModelProviderCredentials(ProviderCredentials):
     """Credentials for a model provider."""
 
@@ -153,7 +167,8 @@ class ModelProviderCredentials(ProviderCredentials):
     def unmasked(self) -> dict:
         return unmask(self)
 
-    model_config = ConfigDict(extra="ignore")
+    class Config:
+        extra = "ignore"
 
 
 def unmask(model: BaseModel):
@@ -255,7 +270,7 @@ class EmbeddingModelProviderModelResponse(ModelProviderModelResponse):
     embedding: Embedding = Field(default_factory=list)
 
     @classmethod
-    @field_validator("completion_tokens_used")
+    # @field_validator("completion_tokens_used")
     @classmethod
     def _verify_no_completion_tokens_used(cls, v):
         if v > 0:

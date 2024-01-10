@@ -2,8 +2,8 @@ import abc
 import enum
 from typing import List, Union
 
-from pydantic import ConfigDict, SecretBytes, SecretStr
-from pydantic.v1 import SecretField
+from pydantic import ConfigDict, SecretBytes, SecretStr, SecretField
+# from pydantic.v1 import SecretField
 
 from superpilot.core.configuration import (
     SystemConfiguration,
@@ -38,18 +38,28 @@ class ProviderBudget(SystemConfiguration):
         ...
 
 
+# class ProviderCredentials(SystemConfiguration):
+#     """Struct for credentials."""
+
+#     # TODO[pydantic]: The following keys were removed: `json_encoders`.
+#     # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+#     model_config = ConfigDict(
+#         json_encoders={
+#             SecretStr: lambda v: v.get_secret_value() if v else None,
+#             SecretBytes: lambda v: v.get_secret_value() if v else None,
+#             SecretField: lambda v: v.get_secret_value() if v else None,
+#         }
+#     )
+
 class ProviderCredentials(SystemConfiguration):
     """Struct for credentials."""
 
-    # TODO[pydantic]: The following keys were removed: `json_encoders`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    model_config = ConfigDict(
-        json_encoders={
+    class Config:
+        json_encoders = {
             SecretStr: lambda v: v.get_secret_value() if v else None,
             SecretBytes: lambda v: v.get_secret_value() if v else None,
             SecretField: lambda v: v.get_secret_value() if v else None,
         }
-    )
 
 
 class ProviderSettings(SystemSettings):
