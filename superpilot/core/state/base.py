@@ -27,7 +27,7 @@ class State(BaseState):
         **kwargs
     ):
         self._logger = logger
-        self._context = context or Context()
+        self._context = context if context is not None else Context()
 
     async def save(self, context: Context) -> None:
         self._context = context

@@ -29,7 +29,7 @@ class SuperChain(BaseChain):
         super().__init__(logger, **kwargs)
         self._state = state or State()
         self._thread_id = thread_id
-        self._context = context or Context()
+        self._context = context
         self.logger = logger
         self._callback = callback
         self.task: Task = None
