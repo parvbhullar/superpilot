@@ -86,7 +86,7 @@ class SuperChain(BaseChain):
                 break
         if self.task.active_task_idx == len(self.task.sub_tasks):
             print('resetting state', self._thread_id)
-            self._context.active_task_idx += 1
+            self._context.current_task.status = TaskStatus.DONE
             await self._state.save(self._context)
             await self._callback.on_chain_complete(**kwargs)
             print("chain completed")

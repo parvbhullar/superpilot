@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional
 import traceback
 
-from superpilot.core.ability.base import Ability, AbilityConfiguration, AbilityRegistry
+from superpilot.core.ability.base import Ability, AbilityConfiguration, AbilityRegistry, AbilityException
 from superpilot.core.ability.builtins import BUILTIN_ABILITIES
 from superpilot.core.ability.schema import AbilityAction
 from superpilot.core.configuration import (
@@ -9,7 +9,6 @@ from superpilot.core.configuration import (
     SystemConfiguration,
     SystemSettings,
 )
-from superpilot.core.context.schema import Context
 from superpilot.core.plugin.simple import SimplePluginService
 from superpilot.core.environment import Environment
 
@@ -101,6 +100,11 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
             print("Ability response", response)
             ability_action.success = True
             ability_action.message = str(response)
+        except AbilityException as e:
+            traceback.print_exc()
+            self._logger.error("Error %s", str(e))
+            ability_action.success = False
+            ability_action.message = str(e)
         except Exception as e:
             traceback.print_exc()
             self._logger.error("Error %s", str(e))

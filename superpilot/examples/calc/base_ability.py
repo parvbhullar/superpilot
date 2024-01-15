@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import logging
 
-from superpilot.core.ability.base import Ability, AbilityConfiguration
+from superpilot.core.ability.base import Ability, AbilityConfiguration, AbilityException
 from superpilot.core.configuration import Config
 from superpilot.core.environment import Environment
 from superpilot.core.context.schema import Context
@@ -128,6 +128,8 @@ class MultiplyAbility(Ability):
         }
 
     async def __call__(self, num1: float, num2: float, **kwargs):
+        if type(num1) not in [float, int] or type(num2) not in [float, int]:
+            raise AbilityException("num1 or num2 is not a number.")
         result = num1 * num2
         message = f"The Multiplication is {result}."
         print(message)

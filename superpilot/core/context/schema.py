@@ -9,7 +9,7 @@ from typing import Dict, Type, Any, Optional, List, Union
 # from pydantic import field_validator, model_validator, BaseModel, create_model
 from pydantic import BaseModel, create_model
 
-from superpilot.core.planning import Task
+from superpilot.core.planning import Task, TaskStatus
 
 
 class ContentType(str, enum.Enum):
@@ -356,7 +356,6 @@ class Context:
 
     interaction: bool
     tasks: List[Task]
-    active_task_idx: int
     active_message: int
 
     def __init__(self, messages: list[Message] = None):
@@ -365,7 +364,6 @@ class Context:
         self.messages = messages
         self.tasks = []
         self.interaction = False
-        self.active_task_idx = -1
         self.active_message = -1
         self.thread_id = ""
         self.objective = ""
@@ -438,4 +436,7 @@ class Context:
 
     @property
     def current_task(self) -> Task:
-        return self.tasks[self.active_task_idx] if self.active_task_idx >= 0 else None
+        if len(self.tasks):
+            task = self.tasks[-1]
+            if task.status != TaskStatus.DONE:
+                return task

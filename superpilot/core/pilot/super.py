@@ -133,10 +133,11 @@ class SuperPilot(Pilot, Configurable):
                     await self._state.save(self._context)
                     return None
                 continue
-            await self.update_task_status()
-            await self.update_task_queue()
-            if self._current_task.context.status != TaskStatus.DONE:
-                await self.execute_next_step(*args, **kwargs)
+            # await self.update_task_status()
+            # await self.update_task_queue()
+            # if self._current_task.context.status != TaskStatus.DONE:
+            #     await self.execute_next_step(*args, **kwargs)
+            await self.execute_next_step(*args, **kwargs)
 
             # await self.reflect(*args, **kwargs)
 
@@ -189,6 +190,11 @@ class SuperPilot(Pilot, Configurable):
         ability_action = await self._ability_registry.perform(
             self._next_step_response.get("next_ability"), ability_args=ability_args, **kwargs
         )
+        if ability_action.success:
+            self._current_task.context.status = TaskStatus.DONE
+            self.task.active_task_idx += 1
+            # if self._current_task.context.status != TaskStatus.DONE:
+            #     await self.execute_next_step(*args, **kwargs)
         # TODO: Take raw response and also summary
         execution_message = Message.add_execution_message(message=str(ability_action))
         self._context.add_message(execution_message)

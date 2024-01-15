@@ -149,3 +149,8 @@ class AbilityRegistry(abc.ABC):
     @abc.abstractmethod
     async def perform(self, ability_name: str, ability_args: dict, **kwargs) -> AbilityAction:
         ...
+
+
+class AbilityException(Exception):
+    """Base exception for the ability subsystem."""
+    pass
