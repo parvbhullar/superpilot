@@ -21,8 +21,12 @@ class BaseCallback(abc.ABC):
     async def on_info(self, *args, **kwargs):
         ...
 
+    async def on_execution(self, *args, **kwargs):
+        pass
+
     async def on_observation_start(self, *args, **kwargs):
         pass
+
 
     @classmethod
     def name(cls) -> str:

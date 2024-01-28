@@ -6,6 +6,7 @@ from typing import Dict
 
 import distro
 
+from superpilot.core.callback.manager.base import BaseCallbackManager
 from superpilot.core.pilot.settings import (
     ExecutionNature
 )
@@ -81,10 +82,14 @@ class SimpleTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin, ABC):
         configuration: TaskPilotConfiguration = default_configuration,
         model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
         logger: logging.Logger = logging.getLogger(__name__),
+        callback: BaseCallbackManager = None,
+        thread_id: str = None
     ) -> None:
+        self._thread_id = thread_id
         self._logger = logger
         self._configuration = configuration
         self._execution_nature = configuration.execution_nature
+        self._callback = callback
 
         self._providers: Dict[LanguageModelClassification, LanguageModelProvider] = {}
         for model, model_config in self._configuration.models.items():
@@ -159,6 +164,7 @@ class SimpleTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin, ABC):
             model_prompt=prompt.messages,
             functions=prompt.functions,
             function_call=prompt.get_function_call(),
+            req_res_callback=self._callback.model_req_res_callback if self._callback else None,
             **model_configuration,
             completion_parser=prompt_strategy.parse_response_content,
         )
@@ -224,6 +230,8 @@ class SimpleTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin, ABC):
             pilot_config: PilotConfiguration = None,
             location: PluginLocation = None,
             logger: logging.Logger = None,
+            callback: BaseCallbackManager = None,
+            thread_id: str = None
     ) -> "SimpleTaskPilot":
         # Initialize settings
         config = cls.default_configuration.copy()
@@ -249,7 +257,7 @@ class SimpleTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin, ABC):
             model_providers = {ModelProviderName.OPENAI: open_ai_provider}
 
         # Create and return SimpleTaskPilot instance
-        return cls(configuration=config, model_providers=model_providers, logger=logger)
+        return cls(configuration=config, model_providers=model_providers, logger=logger, callback=callback, thread_id=thread_id)
 
     @classmethod
     def create(cls,
@@ -260,6 +268,8 @@ class SimpleTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin, ABC):
                fast_model_temp=0.9,
                model_providers=None,
                pilot_config=None,
+               callback: BaseCallbackManager = None,
+               thread_id: str = None
                ):
 
         models_config = ModelConfigFactory.get_models_config(
@@ -276,6 +286,8 @@ class SimpleTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin, ABC):
             model_providers=model_providers,
             models=models_config,
             pilot_config=pilot_config,
+            callback=callback,
+            thread_id=thread_id,
         )
         return pilot
 

@@ -12,9 +12,10 @@ from superpilot.core.planning import Task, LanguageModelResponse
 
 class STDInOutCallbackManager(BaseCallbackManager):
 
-    def __init__(self, callbacks: List[BaseCallbackHandler] = None, logger: logging.Logger = logging.getLogger(__name__)):
+    def __init__(self, callbacks: List[BaseCallbackHandler] = None, logger: logging.Logger = logging.getLogger(__name__), thread_id: str = None, **kwargs):
         self._callbacks = callbacks
         self._logger = logger
+        self._thread_id = thread_id
 
     async def on_chain_start(self, *args, **kwargs):
         await handle_event(self._callbacks, "on_chain_start", *args, **kwargs)
@@ -27,6 +28,9 @@ class STDInOutCallbackManager(BaseCallbackManager):
 
     async def on_info(self, *args, **kwargs):
         await handle_event(self._callbacks, "on_info", *args, **kwargs)
+
+    async def on_execution(self, *args, **kwargs):
+        await handle_event(self._callbacks, "on_execution", *args, **kwargs)
 
     async def on_clarifying_question(
         self,
@@ -44,6 +48,26 @@ class STDInOutCallbackManager(BaseCallbackManager):
             return user_message, False
         except KeyboardInterrupt:
             return None, True
+
+    async def model_req_res_callback(
+            self,
+            model_prompt,
+            functions,
+            response,
+            parsed_response,
+            response_args,
+            *args, **kwargs
+    ):
+        thread_id = self._thread_id
+        data = {
+            "conversationId": thread_id,
+            "model_prompt": [message.dict() for message in model_prompt],
+            "functions": [function.json_schema for function in functions],
+            "response": response.dict(),
+            "parsed_response": parsed_response,
+            "response_args": response_args,
+        }
+        print(data)
 
     @classmethod
     def name(cls) -> str:

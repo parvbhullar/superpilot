@@ -155,6 +155,7 @@ class SimplePlanner(Configurable, Planner):
             model_prompt=prompt.messages,
             functions=prompt.functions,
             function_call=prompt.get_function_call(),
+            req_res_callback=self._callback.model_req_res_callback if self._callback else None,
             **model_configuration,
             completion_parser=prompt_strategy.parse_response_content,
         )

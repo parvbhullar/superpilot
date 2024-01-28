@@ -79,11 +79,15 @@ class SuperCalculator(BaseExecutor):
         environment = get_env({})
         state = PickleState(thread_id=self.thread_id, workspace=environment.workspace)
         self.context = await state.load()
+
+        call_back_manager = STDInOutCallbackManager(
+            callbacks=[SimpleCallbackHandler(thread_id=thread_id)],
+            thread_id=thread_id
+        )
+        
         self.chain = SuperChain(
             state=state,
-            callback=STDInOutCallbackManager(
-                callbacks=[SimpleCallbackHandler()]
-            ),
+            callback=call_back_manager,
             thread_id=self.thread_id,
             context=self.context,
         )
@@ -124,9 +128,7 @@ class SuperCalculator(BaseExecutor):
                 creation_time="",
                 execution_nature=ExecutionNature.AUTO,
             ),
-            callback=STDInOutCallbackManager(
-                callbacks=[SimpleCallbackHandler()]
-            ),
+            callback=call_back_manager,
             thread_id=self.thread_id,
             abilities=[AddAbility, MultiplyAbility, SubtractAbility, DivisionAbility, RootAbility, DefaultAbility],
         )
@@ -147,7 +149,9 @@ class SuperCalculator(BaseExecutor):
                 max_task_cycle_count=3,
                 creation_time="",
                 execution_nature=ExecutionNature.AUTO,
-            )
+            ),
+            callback = call_back_manager,
+            thread_id=self.thread_id,
         )
         # transform_pilot.execute("Choose the pilot based on given task.", )
         # print("VISION", vision_pilot)
@@ -200,7 +204,7 @@ class SuperCalculator(BaseExecutor):
 
 if __name__ == "__main__":
     # state = State()
-    thread_id = "thread1"
+    thread_id = "thread12"
     calc = SuperCalculator(thread_id=thread_id)
     # print(asyncio.run(calc.run("add 2 and 3")))
     # print(

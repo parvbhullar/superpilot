@@ -14,9 +14,10 @@ from superpilot.core.planning import Task, LanguageModelResponse
 class BaseCallbackManager(BaseCallback):
 
     @abc.abstractmethod
-    def __init__(self, callbacks: List[BaseCallbackHandler], logger: logging.Logger):
+    def __init__(self, callbacks: List[BaseCallbackHandler], logger: logging.Logger, thread_id: str = None, **kwargs):
         self._callbacks = callbacks
         self._logger = logger
+        self._thread_id = thread_id
 
     @abc.abstractmethod
     async def on_clarifying_question(
