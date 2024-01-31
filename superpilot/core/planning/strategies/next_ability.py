@@ -242,8 +242,8 @@ class NextAbility(PromptStrategy):
             "task_status": function_arguments.pop("task_status", None),
             "task_objective": function_arguments.pop("task_objective", None),
             "ambiguity": function_arguments.pop("ambiguity", None),
-            "next_ability": function_name,
-            "ability_arguments": function_arguments,
+            "function_name": function_name,
+            "function_arguments": function_arguments,
         }
 
         # print(response_content)

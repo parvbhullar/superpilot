@@ -125,7 +125,7 @@ class SuperPilot(Pilot, Configurable):
         while self.task.active_task_idx < len(self.task.sub_tasks):
             await self.determine_next_step(*args, **kwargs)
             # TODO callback to take user input if required.
-            ability_args = self._next_step_response.get("ability_arguments", {})
+            ability_args = self._next_step_response.get("function_arguments", {})
             if ability_args.get("clarifying_question"):
                 hold = await self.handle_clarification(ability_args, **kwargs)
                 if hold:
@@ -182,13 +182,13 @@ class SuperPilot(Pilot, Configurable):
         self._next_step_response = next_response
 
     async def execute_next_step(self, *args, **kwargs):
-        ability_args = self._next_step_response.get("ability_arguments", {})
+        ability_args = self._next_step_response.get("function_arguments", {})
         kwargs['action_objective'] = self._next_step_response.get("task_objective", "")
         kwargs['callback'] = self._callback # TODO pass callback to ability registry
         # kwargs['thread_id'] = self.thread_id
         # Add context to ability arguments
         ability_action = await self._ability_registry.perform(
-            self._next_step_response.get("next_ability"), ability_args=ability_args, **kwargs
+            self._next_step_response.get("function_name"), ability_args=ability_args, **kwargs
         )
         if ability_action.success:
             self._current_task.context.status = TaskStatus.DONE

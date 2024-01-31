@@ -95,7 +95,7 @@ class SimplePlanner(Configurable, Planner):
                 context=self._context,
                 **template_kwargs,
             )
-            ability_args = observation_response.content
+            ability_args = observation_response.content.get("function_arguments", {})
             if ability_args.get("clarifying_question"):
                 hold = await self.handle_clarification(observation_response, ability_args, user_objective, **kwargs)
                 if hold:
@@ -103,7 +103,7 @@ class SimplePlanner(Configurable, Planner):
                     await self._state.save(self._context)
                     return None
             else:
-                observation = ObjectivePlan(**observation_response.get_content())
+                observation = ObjectivePlan(**ability_args)
                 break
 
         return observation

@@ -59,7 +59,7 @@ class SuperChain(BaseChain):
             while True:
                 await self._callback.on_observation_start(**kwargs)
                 observation_response = await self.observe(objective.message, self._context, **kwargs)
-                ability_args = observation_response.content
+                ability_args = observation_response.content.get("function_arguments", {})
                 if ability_args.get("clarifying_question"):
                     hold = await self.handle_clarification(observation_response, ability_args, **kwargs)
                     if hold:
@@ -67,7 +67,7 @@ class SuperChain(BaseChain):
                         await self._state.save(self._context)
                         return
                 else:
-                    observation = Observation(**observation_response.get_content())
+                    observation = Observation(**ability_args)
                     if not observation:
                         raise Exception("Either observation or observer is not defined, please set observer in the chain.")
                     print("kwargs in chain", kwargs)

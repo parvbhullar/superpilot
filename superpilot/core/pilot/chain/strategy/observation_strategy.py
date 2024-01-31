@@ -184,9 +184,15 @@ class ObserverPrompt(SimplePrompt, ABC):
         # print(response_content)
         args = json_loads(response_content["function_call"]["arguments"])
         if args.get("ClarifyingQuestion"):
-            parsed_response = args["ClarifyingQuestion"]
+            function_name = "ClarifyingQuestion"
+            function_arguments = args["ClarifyingQuestion"]
         else:
-            parsed_response = args[list(args.keys())[0]] if args else {}
+            function_name = list(args.keys())[0]
+            function_arguments = args[list(args.keys())[0]] if args else {}
+        parsed_response = {
+            "function_name": function_name,
+            "function_arguments": function_arguments,
+        }
         # print(response_content)
         # parsed_response = json_loads(response_content["content"])
         # parsed_response = self._parser_schema.from_response(response_content)
