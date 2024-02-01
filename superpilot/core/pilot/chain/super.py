@@ -55,7 +55,7 @@ class SuperChain(BaseChain):
             else:
                 self.task = task
 
-        if not self.task.sub_tasks:
+        if not self.task.plan:
             if self.task.status == TaskStatus.BACKLOG:
                 task_start_message = Message.add_task_start_message(f"Starting Task: '{objective.message}'")
                 self._context.add_message(task_start_message)
@@ -81,14 +81,14 @@ class SuperChain(BaseChain):
                         '\n'.join([f"'{task.objective}' will be done by {task.function_name} pilot" for task in observation.tasks])
                     )
                     self._context.add_message(planning_message)
-                    self.task.sub_tasks = observation.get_tasks()
+                    self.task.add_plan(observation.get_tasks())
                     break
 
-        while self.task.active_task_idx < len(self.task.sub_tasks):
+        while self.task.active_task_idx < len(self.task.plan):
             await self.execute_next(objective, **kwargs)
             if self._context.interaction:
                 break
-        if self.task.active_task_idx == len(self.task.sub_tasks):
+        if self.task.active_task_idx == len(self.task.plan):
             print('resetting state', self._thread_id)
             self._context.current_task.status = TaskStatus.DONE
             task_end_message = Message.add_task_end_message(f"Task Completed: '{objective.message}'")

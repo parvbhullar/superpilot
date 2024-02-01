@@ -85,7 +85,7 @@ class SuperPilot(Pilot, Configurable):
         if self._context.interaction:
             return
         tasks = plan.get_tasks()
-        self.task.sub_tasks = tasks
+        self.task.add_plan(tasks)
         planning_message = Message.add_planning_message(
             f'Ability Level Task Breakdown of task "{task.objective}":\n' + 
             '\n'.join([f"'{task.objective}' will be done by {task.function_name} ability" for task in tasks])
@@ -96,7 +96,7 @@ class SuperPilot(Pilot, Configurable):
         # TODO: Should probably do a step to evaluate the quality of the generated tasks,
         #  and ensure that they have actionable ready and acceptance criteria
         # self._task_queue.extend(tasks)
-        self.task.sub_tasks.sort(key=lambda t: t.priority)
+        self.task.plan.sort(key=lambda t: t.priority)
         # self._task_queue[-1].context.status = TaskStatus.READY
         return plan.dict()
 
@@ -118,7 +118,7 @@ class SuperPilot(Pilot, Configurable):
             else:
                 self.task = task
 
-        if not self.task or not self.task.sub_tasks:
+        if not self.task or not self.task.plan:
             if self.task.status == TaskStatus.BACKLOG:
                 task_start_message = Message.add_task_start_message(f"{self.task.function_name} Starting Task: '{self.task.objective}'")
                 self._context.add_message(task_start_message)
@@ -127,7 +127,7 @@ class SuperPilot(Pilot, Configurable):
             if self._context.interaction:
                 return
 
-        while self.task.active_task_idx < len(self.task.sub_tasks):
+        while self.task.active_task_idx < len(self.task.plan):
             await self.determine_next_step(*args, **kwargs)
             # TODO callback to take user input if required.
             ability_args = self._next_step_response.get("function_arguments", {})
@@ -144,7 +144,7 @@ class SuperPilot(Pilot, Configurable):
             #     await self.execute_next_step(*args, **kwargs)
             await self.execute_next_step(*args, **kwargs)
 
-        if self.task.active_task_idx == len(self.task.sub_tasks):
+        if self.task.active_task_idx == len(self.task.plan):
             self.task.status = TaskStatus.DONE
             task_end_message = Message.add_task_end_message(f"{self.task.function_name}  Task Completed: '{self.task.objective}'")
             self._context.add_message(task_end_message)

@@ -87,7 +87,7 @@ class Task(BaseModel):
     ready_criteria: List[str]
     acceptance_criteria: List[str]
     context: TaskContext = Field(default_factory=TaskContext)
-    sub_tasks: List["Task"] = Field(default_factory=list)
+    sub_tasks: List[List["Task"]] = Field(default_factory=list)
     active_task_idx: int = 0
     status: TaskStatus = TaskStatus.BACKLOG
 
@@ -155,9 +155,17 @@ class Task(BaseModel):
             self.context = TaskContext()
         return True
 
+    def add_plan(self, plan: List["Task"]):
+        self.sub_tasks.append(plan)
+        self.active_task_idx = 0
+
+    @property
+    def plan(self):
+        return self.sub_tasks[-1] if self.sub_tasks else None
+
     @property
     def current_sub_task(self) -> "Task":
-        return self.sub_tasks[self.active_task_idx]
+        return self.plan[self.active_task_idx] if self.plan else None
 
 
 # Need to resolve the circular dependency between Task and TaskContext once both models are defined.

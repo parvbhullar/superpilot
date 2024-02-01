@@ -204,13 +204,14 @@ class SuperCalculator(BaseExecutor):
 
 if __name__ == "__main__":
     # state = State()
-    thread_id = "thread123456789101112131415"
+    thread_id = "thread1234567891011121314151617"
     calc = SuperCalculator(thread_id=thread_id)
     # print(asyncio.run(calc.run("add 2 and 3")))
     # print(
     #     asyncio.run(calc.run("transform data from text and multiply 2 and 3 and then sum with 6 and then subtract 2 "
     #                          "and then divide by 2 and plot the graph using data from text")))
-    print(asyncio.run(calc.run("add 10 to the previous calculation result")))
+    print(asyncio.run(calc.run("What is 3 times x plus 2")))
+    # print(asyncio.run(calc.run("add 10 to the previous calculation result")))
     # print(asyncio.run(calc.run("What is 4 times x plus 3?")))
     # print(asyncio.run(calc.run("9")))
     # print(asyncio.run(calc.run("What is 3 times x plus 2 minus y divide by z?")))
