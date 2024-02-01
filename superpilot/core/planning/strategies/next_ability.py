@@ -33,44 +33,40 @@ class NextAbility(PromptStrategy):
     ]
 
     # TODO: add he prompt template system message to make assistant understand the structure of conversation
-    DEFAULT_USER_PROMPT_TEMPLATE = (
-        "You are a expert assistant with strong problem solving abilities and function calling capabilities"
-        "You are responsible for accomplishing the user objective.\n"
-        "Please choose one of the provided functions to accomplish user objective."
-        "Some tasks may require multiple functions to accomplish. If that is the case, choose the function that "
-        "you think is most appropriate for the current situation given your progress so far, calling a function is must.\n"
-        "Avoid assumptions and ask clarifying questions if you are not sure about the task objective\n"
-        "You are currently solving the sub task '{task_objective}'.\n"
-        "Set the appropriate task status according to overall sub task objective."
-        "Analyse the below conversation of assistant with user with respective events and proceed:\n"
-        "{context}\n"
-    )
+    DEFAULT_USER_PROMPT_TEMPLATE = """
+    *Context*: {context}
+
+    Given the above context and the list of functions, do one of the following:
+    1. Make function arguments for the function *'{function_name}'* to accomplish the objective *'{task_objective}'*.
+    2. Ask a Clarifying Question if any aspect of task *'{task_objective}'* is unclear.
+    """
 
     DEFAULT_ADDITIONAL_ABILITY_ARGUMENTS = {
         "motivation": {
             "type": "string",
-            "description": "Your justification for choosing choosing this function instead of a different one.",
+            "description": "Your justification for choosing choosing this function parameters instead of a different one.",
         },
         "self_criticism": {
             "type": "string",
-            "description": "Thoughtful self-criticism that explains why this function may not be the best choice.",
+            "description": "Thoughtful self-criticism that explains why this function parameters may not be the best "
+                           "choice.",
         },
         "reasoning": {
             "type": "string",
-            "description": "Your reasoning for choosing this function taking into account the `motivation` "
+            "description": "Your reasoning for choosing this function parameters into account the `motivation` "
                            "and weighing the `self_criticism`.",
         },
-        "task_status": {
-            "type": "string",
-            "description": "overall status of the task, on hold if ambiguous, "
-                           "ready if all the acceptance criteria are met",
-            "enum": [t for t in TaskStatus],
-        },
-        'task_objective': {
-            "type": "string",
-            "description": "verbose description of the current sub task you will be performing. this should be "
-                           "current task not the whole objective",
-        },
+        # "task_status": {
+        #     "type": "string",
+        #     "description": "overall status of the task, on hold if ambiguous, "
+        #                    "ready if all the acceptance criteria are met",
+        #     "enum": [t for t in TaskStatus],
+        # },
+        # 'task_objective': {
+        #     "type": "string",
+        #     "description": "verbose description of the current sub task you will be performing. this should be "
+        #                    "current task not the whole objective",
+        # },
         "ambiguity": {
             "type": "array",
             "description": "your thoughtful reflection on the ambiguity of the task",
@@ -239,8 +235,8 @@ class NextAbility(PromptStrategy):
             "motivation": function_arguments.pop("motivation", None),
             "self_criticism": function_arguments.pop("self_criticism", None),
             "reasoning": function_arguments.pop("reasoning", None),
-            "task_status": function_arguments.pop("task_status", None),
-            "task_objective": function_arguments.pop("task_objective", None),
+            # "task_status": function_arguments.pop("task_status", None),
+            # "task_objective": function_arguments.pop("task_objective", None),
             "ambiguity": function_arguments.pop("ambiguity", None),
             "function_name": function_name,
             "function_arguments": function_arguments,

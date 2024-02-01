@@ -27,13 +27,13 @@ class PlanningStrategy(SimplePrompt, ABC):
     ]
 
     DEFAULT_SYSTEM_PROMPT = """
-    Review and comprehend the conversation to grasp the context and specifics of the task.
-    Focus on the "{task_objective}" aspect of the larger task.
-    Identify and list the relevant sub-tasks for the "{task_objective}" component.
-    Reference the available functions: {functions}.
-    Analyze how these functions can be applied to each sub-task.
-    self reflect on your thoughts and reasoning for choosing the functions and then give final result.
-    Ensure understanding aligns with the conversation details: {context}.
+    *Context*: {context}
+
+    *Functions*: {functions}
+    
+    Given the above context and the list of functions, do one of the following:
+    1. Divide the task *'{task_objective}'* into smaller tasks by mapping each of the objective's sub-goals to a function from the functions provided.
+    2. Ask a Clarifying Question if any aspect of task *'{task_objective}'* is unclear.
     """
 
     DEFAULT_USER_PROMPT_TEMPLATE = (

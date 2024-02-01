@@ -45,18 +45,13 @@ class ObserverPrompt(SimplePrompt, ABC):
     ]
 
     DEFAULT_SYSTEM_PROMPT = """
-    Understand the provided conversation thoroughly to understand the context and requirements of the tasks.
+    *Context*: {context}
 
-    Perform the following tasks in order:
-    1. Ask clarifying questions to the user if required.
-    2. Assign each piot from given pilots a unique task based on the information gleaned from the
-    conversation, ensuring no overlap in responsibilities.
+    *Pilots*: {pilots}
 
-    Pilots:
-    {pilots}
-
-    Conversation:
-    {context}
+    Given the above context and the list of pilots, do one of the following:
+    1. Divide the task *'{task_objective}'* into smaller tasks by mapping each of the objective's sub-goals to a pilot from the list of pilots provided.
+    2. Ask a Clarifying Question if any aspect of task *'{task_objective}'* is unclear.
     """
 
     DEFAULT_USER_PROMPT_TEMPLATE = (

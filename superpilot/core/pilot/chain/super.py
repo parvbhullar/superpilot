@@ -56,6 +56,10 @@ class SuperChain(BaseChain):
                 self.task = task
 
         if not self.task.sub_tasks:
+            if self.task.status == TaskStatus.BACKLOG:
+                task_start_message = Message.add_task_start_message(f"Starting Task: '{objective.message}'")
+                self._context.add_message(task_start_message)
+            self.task.status = TaskStatus.IN_PROGRESS
             while True:
                 await self._callback.on_observation_start(**kwargs)
                 observation_response = await self.observe(objective.message, self._context, **kwargs)
@@ -73,8 +77,8 @@ class SuperChain(BaseChain):
                     print("kwargs in chain", kwargs)
                     await self._callback.on_observation(observation, **kwargs)
                     planning_message = Message.add_planning_message(
-                        'Task Breakdown:\n' +
-                        '\n'.join([task.objective for task in observation.tasks])
+                        f'Pilot level Task Breakdown of "{objective.message}":\n' +
+                        '\n'.join([f"'{task.objective}' will be done by {task.function_name} pilot" for task in observation.tasks])
                     )
                     self._context.add_message(planning_message)
                     self.task.sub_tasks = observation.get_tasks()
@@ -87,6 +91,8 @@ class SuperChain(BaseChain):
         if self.task.active_task_idx == len(self.task.sub_tasks):
             print('resetting state', self._thread_id)
             self._context.current_task.status = TaskStatus.DONE
+            task_end_message = Message.add_task_end_message(f"Task Completed: '{objective.message}'")
+            self._context.add_message(task_end_message)
             await self._state.save(self._context)
             await self._callback.on_chain_complete(**kwargs)
             print("chain completed")
@@ -156,7 +162,7 @@ class SuperChain(BaseChain):
         observer = self.current_observer()
         if observer:
             try:
-                return await observer.execute(objective, context, pilots=self.dump_pilots())
+                return await observer.execute(objective, context, pilots=self.dump_pilots(), task_objective=self.task.objective, **kwargs)
             except Exception as e:
                 import traceback
                 self.logger.error(f"Error in observer {observer.name()}: {e} {traceback.print_exc()}")

@@ -87,7 +87,8 @@ class SuperPilot(Pilot, Configurable):
         tasks = plan.get_tasks()
         self.task.sub_tasks = tasks
         planning_message = Message.add_planning_message(
-            'Sub Task Breakdown:\n' + '\n'.join([task.objective for task in tasks])
+            f'Ability Level Task Breakdown of task "{task.objective}":\n' + 
+            '\n'.join([f"'{task.objective}' will be done by {task.function_name} ability" for task in tasks])
         )
         self._context.add_message(planning_message)
 
@@ -118,6 +119,10 @@ class SuperPilot(Pilot, Configurable):
                 self.task = task
 
         if not self.task or not self.task.sub_tasks:
+            if self.task.status == TaskStatus.BACKLOG:
+                task_start_message = Message.add_task_start_message(f"{self.task.function_name} Starting Task: '{self.task.objective}'")
+                self._context.add_message(task_start_message)
+            self.task.status = TaskStatus.IN_PROGRESS
             plan = await self.plan(self.task)
             if self._context.interaction:
                 return
@@ -138,6 +143,11 @@ class SuperPilot(Pilot, Configurable):
             # if self._current_task.context.status != TaskStatus.DONE:
             #     await self.execute_next_step(*args, **kwargs)
             await self.execute_next_step(*args, **kwargs)
+
+        if self.task.active_task_idx == len(self.task.sub_tasks):
+            self.task.status = TaskStatus.DONE
+            task_end_message = Message.add_task_end_message(f"{self.task.function_name}  Task Completed: '{self.task.objective}'")
+            self._context.add_message(task_end_message)
 
             # await self.reflect(*args, **kwargs)
 
@@ -183,7 +193,7 @@ class SuperPilot(Pilot, Configurable):
 
     async def execute_next_step(self, *args, **kwargs):
         ability_args = self._next_step_response.get("function_arguments", {})
-        kwargs['action_objective'] = self._next_step_response.get("task_objective", "")
+        kwargs['action_objective'] = self._current_task.objective
         kwargs['callback'] = self._callback # TODO pass callback to ability registry
         # kwargs['thread_id'] = self.thread_id
         # Add context to ability arguments
@@ -237,7 +247,7 @@ class SuperPilot(Pilot, Configurable):
         #     raise NotImplementedError
         # else:
         next_response = await self._planner.next(
-            task, ability_schema, context=self._context
+            task, ability_schema, context=self._context, function_name=self._current_task.function_name
         )
         return next_response
 

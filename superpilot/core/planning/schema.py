@@ -57,6 +57,7 @@ class TaskType(str, enum.Enum):
     DESIGN: str = "design"
     TEST: str = "test"
     PLAN: str = "plan"
+    default: str = "default"
 
 
 class TaskStatus(str, enum.Enum):
@@ -168,8 +169,8 @@ class TaskSchema(SchemaModel):
     Class representing the data structure for task for pilot objective, whether it is complete or not.
     """
     objective: str = Field(..., description="An verbose description of what exactly the task is.")
-    type: TaskType = Field(
-        default=TaskType.RESEARCH,
+    type: str = Field(
+        # default=TaskType.RESEARCH,
         description="A categorization for the task from [research, write, edit, code, design, test, plan].")
     priority: int = Field(..., description="A number between 1 and 10 indicating the priority of the task "
                                            "relative to other generated tasks.")

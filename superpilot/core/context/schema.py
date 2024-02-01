@@ -231,6 +231,8 @@ class Event(str, enum.Enum):
     LLM_RESPONSE = "llm_response"
     USER_INPUT = "user_input"
     QUESTION = "question"
+    TASK_START = "task_start"
+    TASK_END = "task_end"
 
     def __str__(self):
         return self.value
@@ -300,6 +302,16 @@ class Message(BaseModel):
     def add_planning_message(cls, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
         user = User.add_user(name="Assistant", role=Role.ASSISTANT)
         return cls.create(message, user, Event.PLANNING, attachments, additional_data)
+
+    @classmethod
+    def add_task_start_message(cls, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
+        user = User.add_user(name="Assistant", role=Role.ASSISTANT)
+        return cls.create(message, user, Event.TASK_START, attachments, additional_data)
+
+    @classmethod
+    def add_task_end_message(cls, message: str, attachments: list[ContentItem] = None, additional_data: Any = None):
+        user = User.add_user(name="Assistant", role=Role.ASSISTANT)
+        return cls.create(message, user, Event.TASK_END, attachments, additional_data)
 
 
     @classmethod
