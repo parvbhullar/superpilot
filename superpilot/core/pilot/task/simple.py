@@ -11,7 +11,6 @@ from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.strategies.simple import SimplePrompt
 from superpilot.core.planning.schema import (
     LanguageModelResponse,
-    ExecutionNature,
     Task,
 )
 from superpilot.core.planning.settings import (
@@ -32,12 +31,13 @@ from superpilot.core.resource.model_providers.utils.token_counter import (
 )
 from superpilot.core.pilot.settings import (
     PilotConfiguration,
-    ExecutionAlgo
+    ExecutionAlgo, ExecutionNature
 )
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory, ModelConfigFactory
+from superpilot.core.state.mixins import PickleStateMixin, DictStateMixin
 
 
-class SimpleTaskPilot(TaskPilot, ABC):
+class SimpleTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin, ABC):
     """A class representing a pilot step."""
 
     default_configuration = TaskPilotConfiguration(
@@ -107,6 +107,19 @@ class SimpleTaskPilot(TaskPilot, ABC):
             kwargs["context"] = args[0]
         context_res = await self.exec_task(task, **kwargs)
         return context_res
+
+    # TODO: State may not be required in Simple Pilot, find a way to manage Cain flow without state
+    async def to_dict_state(self) -> dict:
+        pass
+
+    async def from_dict_state(self, state):
+        pass
+
+    async def to_pickle_state(self):
+        pass
+
+    async def from_pickle_state(self, state):
+        pass
 
     async def exec_task(self, task: Task, **kwargs) -> LanguageModelResponse:
         template_kwargs = task.generate_kwargs()

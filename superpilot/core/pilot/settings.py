@@ -20,6 +20,13 @@ class ExecutionAlgo(str, enum.Enum):
     PLAN_AND_EXECUTE = "plan_and_execute"
 
 
+class ExecutionNature(str, enum.Enum):
+    SIMPLE = "simple"
+    PARALLEL = "parallel"
+    SEQUENTIAL = "sequential"
+    AUTO = "auto"
+
+
 class PilotConfiguration(SystemConfiguration):
     cycle_count: int
     max_task_cycle_count: int

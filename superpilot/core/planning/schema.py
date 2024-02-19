@@ -103,6 +103,8 @@ class Task(BaseModel):
             acceptance_criteria = [""]
         if context is None:
             context = TaskContext()
+        if kwargs and "status" in kwargs:
+            context.status = kwargs["status"]
 
         return cls(
             objective=objective,
@@ -131,22 +133,22 @@ class Task(BaseModel):
         }
 
     def update_memory(self, memory: list):
-        self.context.memories = [*self.context.default_memory, *memory]
+        self.check_context()
+        self.context.memories += memory
 
     def set_default_memory(self, memory: list):
+        self.check_context()
         self.context.default_memory = memory
         self.context.memories = memory
+
+    def check_context(self):
+        if self.context is None:
+            self.context = TaskContext()
+        return True
 
 
 # Need to resolve the circular dependency between Task and TaskContext once both models are defined.
 TaskContext.update_forward_refs()
-
-
-class ExecutionNature(str, enum.Enum):
-    SIMPLE = "simple"
-    PARALLEL = "parallel"
-    SEQUENTIAL = "sequential"
-    AUTO = "auto"
 
 
 class StepType(str, enum.Enum):

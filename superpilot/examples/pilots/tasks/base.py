@@ -2,6 +2,7 @@ import logging
 import time
 from typing import List, Dict
 
+from superpilot.core.pilot.settings import ExecutionNature
 from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.base import AbilityRegistry
@@ -13,7 +14,6 @@ from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning import strategies
 from superpilot.core.planning.schema import (
     LanguageModelResponse,
-    ExecutionNature,
     Task,
 )
 from superpilot.core.planning.settings import (

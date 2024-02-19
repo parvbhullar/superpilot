@@ -50,14 +50,16 @@ class ContentItem(ABC):
 
     def __str__(self) -> str:
         return (
-            f"{self.description} (source: {self.source}) (type: {self.type})\n"
+            f"{self.description}, source: {self.source})\n"
             "```\n"
             f"{self.content}\n"
             "```"
         )
 
+    @property
     def summary(self) -> str:
-        return self.__str__()
+        # TODO write a function to summarise the content
+        return self.content
 
 
 @dataclass
@@ -89,11 +91,11 @@ class ImageContentItem(ContentItem):
 
     @property
     def content(self) -> str:
-        return "Image content"
+        return open(self.file_path).read()
 
     @property
     def description(self) -> str:
-        return f"The contents of the file '{self.file_path}' in the workspace"
+        return f"The contents of the image '{self.file_path}' in the workspace"
 
 
 @dataclass
@@ -260,6 +262,9 @@ class Context:
     def to_file(self, file_location: str) -> None:
         with open(file_location, "w") as f:
             f.write(str(self.format_numbered()))
+
+    def summary(self) -> str:
+        return "\n\n".join([f"{c.summary}" for i, c in enumerate(self.items, 1)])
 
     @classmethod
     def factory(cls, items: list[ContentItem] = None):

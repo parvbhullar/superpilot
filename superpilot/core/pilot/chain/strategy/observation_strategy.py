@@ -4,7 +4,7 @@ from superpilot.core.planning.strategies.simple import SimplePrompt
 
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
-    LanguageModelPrompt, TaskStatus, TaskType,
+    LanguageModelPrompt, TaskStatus, TaskType, Task,
 )
 from superpilot.core.planning.strategies.utils import json_loads
 from superpilot.core.resource.model_providers import (
@@ -16,7 +16,7 @@ import enum
 from pydantic import Field
 
 
-class Task(SchemaModel):
+class TaskSchema(SchemaModel):
     """
     Class representing the data structure for task for pilot objective, whether it is complete or not.
     """
@@ -41,6 +41,9 @@ class Task(SchemaModel):
     reasoning: str = Field(..., description="Your reasoning for choosing this pilot taking into account the "
                                             "`motivation` and weighing the `self_criticism`.")
 
+    def get_task(self) -> Task:
+        return Task.factory(self.objective, self.type, self.priority, self.ready_criteria, self.acceptance_criteria, status=self.status)
+
 
 class Observation(SchemaModel):
     """
@@ -49,9 +52,15 @@ class Observation(SchemaModel):
     """
     current_status: TaskStatus = Field(..., description="Status of the objective asked by the user ")
 
-    tasks: List[Task] = Field(
+    tasks: List[TaskSchema] = Field(
         ..., description="List of tasks to be accomplished by the each pilot"
     )
+
+    # def get_tasks(self) -> List[Task]:
+    #     lst = []
+    #     for task in self.tasks:
+    #         lst.append(task.get_task())
+    #     return lst
 
 
 class ObserverPrompt(SimplePrompt, ABC):
@@ -74,10 +83,7 @@ class ObserverPrompt(SimplePrompt, ABC):
         Example:
         task: multiply 2 and 3 and then sum with 6 and then subtract 2 and then divide by 2 and plot the graph
         response:
-          'goal_status': 'not_started',
-          'motivation': "The task requires both arithmetic operations and plotting, which can be accomplished by the 'calculator' pilot",
-          'self_criticism': "The task involves plotting a graph which is not a specific function of the 'calculator' pilot.",
-          'reasoning': "Despite the limitation, the 'calculator' pilot can still handle the arithmetic operations which makes up the majority of the task",
+          'current_status': 'backlog',
           'tasks': [
               'objective': 'multiply 2 and 3 and then sum with 6 and then subtract 2 and then divide by 2',
               'type': 'code',
@@ -89,7 +95,7 @@ class ObserverPrompt(SimplePrompt, ABC):
                 'Return correct computation result'
               ],
               'status': 'backlog',
-              'pilot_name': 'calculator'
+              'function_name': 'calculator'
             ,
               'objective': 'Plot the graph',
               'type': 'code',
@@ -101,7 +107,7 @@ class ObserverPrompt(SimplePrompt, ABC):
                 'Return correct plot'
               ],
               'status': 'backlog',
-              'pilot_name': ''
+              'function_name': ''
           ]
         
         """
