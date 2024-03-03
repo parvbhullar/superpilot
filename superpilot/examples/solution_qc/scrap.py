@@ -268,7 +268,7 @@ def image_to_base64(content):
     base64_data = base64.b64encode(content).decode()
     return base64_data
 
-# 
+#
 # def latex_to_text(latex):
 #     if latex is None:
 #         return latex
