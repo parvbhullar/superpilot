@@ -39,7 +39,7 @@ def request_chegg(each):
         }
         SESSION_HEADERS["Apollographql-Client-Name"] = "chegg-web-producers"
         data = session.post(ANSWER_API, json=answer_payload, headers=SESSION_HEADERS)
-        print(each.get("answer_uuid", ""), each.get("preview_url"))
+        # print(each.get("answer_uuid", ""), each.get("preview_url"))
         return data
     return resp
 
@@ -59,7 +59,9 @@ def process_chegg_file(input_path, output_path):
             ) = (
                 sub_subject_str
             ) = topics_str = q_base64 = img_url = q_text = answer_html = ""
-            print(each.get("answer_uuid", ""), each.get("preview_url"))
+            print(
+                each.get("answer_uuid", ""), each.get("preview_url"), data.status_code
+            )
             if data.status_code == 200:
                 try:
                     json_data = data.json()
