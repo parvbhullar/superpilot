@@ -108,3 +108,7 @@ def list_item_html(data):
 def create_mathjax_span(item_text):
     span_html = f"""<span>\({item_text}\)</span>"""
     return span_html
+
+
+class EmptyObject(object):
+    pass

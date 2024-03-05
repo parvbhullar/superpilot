@@ -11,6 +11,7 @@ class CheggQCExecutor(BaseExecutor):
         file_path, count, total_count = process_chegg_file(input_file, output_file)
         file_name = file_path.split("/")[-1]
         print(file_path, count)
+
         return {
             "message": f"file successfully processed",
             "file_name": file_name,
