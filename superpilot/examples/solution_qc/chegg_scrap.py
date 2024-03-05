@@ -50,75 +50,78 @@ def process_chegg_file(input_path, output_path):
     total_count = len(records)
     final_list = []
     for each in list(records)[:500]:
-        if each.get("answer_uuid", "") != "":
-            data = request_chegg(each)
-            answer_body = (
-                question_body
-            ) = (
-                question_subject
-            ) = (
-                sub_subject_str
-            ) = topics_str = q_base64 = img_url = q_text = answer_html = ""
-            print(each.get("answer_uuid", ""), each.get("preview_url"))
-            if data.status_code == 200:
-                try:
-                    json_data = data.json()
-                    if "errors" not in json_data:
-                        json_data = json_data.get("data").get("answerByUuid", {})
-                        if json_data:
-                            try:
-                                answer_body = json.loads(json_data.get("body", None))
-                                answer_html = generate_html(answer_body)
-                            except Exception as e:
-                                traceback.print_exc()
-                                answer_body = json_data.get("body", None)
-                            question = json_data.get("question", {})
-                            question_body = question.get("body", "")
-                            if "<img" in question_body:
-                                html_content = bs(question_body, "lxml")
-                                img_url = html_content.find("img").get("src")
-                                q_base64, q_text = read_image(img_url)
-                                q_text = q_text.strip().replace("\n", "")
-                            question_subject = question.get("subject", {}).get("name")
-                            subject_classification = question.get(
-                                "subjectClassification", {}
-                            )
-                            if subject_classification:
-                                sub_subject = subject_classification.get(
-                                    "subSubjects", []
+        try:
+            if each.get("answer_uuid", "") != "":
+                data = request_chegg(each)
+                answer_body = (
+                    question_body
+                ) = (
+                    question_subject
+                ) = (
+                    sub_subject_str
+                ) = topics_str = q_base64 = img_url = q_text = answer_html = ""
+                print(each.get("answer_uuid", ""), each.get("preview_url"))
+                if data.status_code == 200:
+                    try:
+                        json_data = data.json()
+                        if "errors" not in json_data:
+                            json_data = json_data.get("data").get("answerByUuid", {})
+                            if json_data:
+                                try:
+                                    answer_body = json.loads(json_data.get("body", None))
+                                    answer_html = generate_html(answer_body)
+                                except Exception as e:
+                                    traceback.print_exc()
+                                    answer_body = json_data.get("body", None)
+                                question = json_data.get("question", {})
+                                question_body = question.get("body", "")
+                                if "<img" in question_body:
+                                    html_content = bs(question_body, "lxml")
+                                    img_url = html_content.find("img").get("src")
+                                    q_base64, q_text = read_image(img_url)
+                                    q_text = q_text.strip().replace("\n", "")
+                                question_subject = question.get("subject", {}).get("name")
+                                subject_classification = question.get(
+                                    "subjectClassification", {}
                                 )
-                                if sub_subject:
-                                    sub_subject_str = ""
-                                    for i in sub_subject:
-                                        if i.get("subSubject", {}):
-                                            sub_subject_str += (
-                                                i.get("subSubject", {}).get(
-                                                    "displayName"
+                                if subject_classification:
+                                    sub_subject = subject_classification.get(
+                                        "subSubjects", []
+                                    )
+                                    if sub_subject:
+                                        sub_subject_str = ""
+                                        for i in sub_subject:
+                                            if i.get("subSubject", {}):
+                                                sub_subject_str += (
+                                                    i.get("subSubject", {}).get(
+                                                        "displayName"
+                                                    )
+                                                    + ", "
                                                 )
-                                                + ", "
-                                            )
 
-                                topics = subject_classification.get("topics", [])
-                                if topics:
-                                    topics_str = ""
-                                    for i in topics:
-                                        if i.get("topic", {}):
-                                            topics_str += (
-                                                i.get("topic", {}).get("displayName")
-                                                + ", "
-                                            )
-                except Exception as e:
-                    traceback.print_exc()
-            each["Answer Body"] = answer_body
-            each["Question Body"] = question_body
-            each["Answer HTML"] = answer_html
-            each["Question Subject"] = question_subject
-            each["Sub Subject"] = sub_subject_str
-            each["Topic"] = topics_str
-            each["Question Base64"] = q_base64
-            each["Image URL"] = img_url
-            each["Question Text"] = q_text
-            final_list.append(each)
+                                    topics = subject_classification.get("topics", [])
+                                    if topics:
+                                        topics_str = ""
+                                        for i in topics:
+                                            if i.get("topic", {}):
+                                                topics_str += (
+                                                    i.get("topic", {}).get("displayName")
+                                                    + ", "
+                                                )
+                    except Exception as e:
+                        traceback.print_exc()
+                each["Answer Body"] = answer_body
+                each["Question Body"] = question_body
+                each["Answer HTML"] = answer_html
+                each["Question Subject"] = question_subject
+                each["Sub Subject"] = sub_subject_str
+                each["Topic"] = topics_str
+                each["Question Base64"] = q_base64
+                each["Image URL"] = img_url
+                each["Question Text"] = q_text
+                final_list.append(each)
+        except Exception as e:
+            print(e)
     if len(final_list):
         df = pd.DataFrame(final_list)
         df.to_excel(output_path, index=False)

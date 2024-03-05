@@ -8,12 +8,14 @@ from superpilot.examples.executor.chegg_qc import CheggQCExecutor
 from superpilot.examples.solution_qc.executor import QuestionAnalysisExecutor
 
 
-input_file = "test_sample.xlsx"
-output_file = "test_sample_output.xlsx"
+input_file = "sample_questions-small.xlsx"
+output_file = "sample_questions_output_scrap.xlsx"
 executor = CheggQCExecutor()
 response = asyncio.run(executor.run(input_file, output_file))
+
+print("Run CheggQCExecutor")
 executor_analsyis = QuestionAnalysisExecutor()
-output_file_analysis = "test_sample_analysis.xlsx"
+output_file_analysis = "sample_questions_output_qc.xlsx"
 response = asyncio.run(
     executor_analsyis.run(input_file=output_file, output_file=output_file_analysis)
 )
