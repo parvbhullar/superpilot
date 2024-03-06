@@ -77,28 +77,39 @@ class SuperPilot(Pilot, Configurable):
 
     async def plan(self, task: Task, **kwargs):
         """Plan the next step for the pilot."""
-        # TODO: use context to determine what the next step should be
-        plan = await self._planner.plan(
-            user_objective=task,
-            functions=self._ability_registry.dump_abilities(),
-        )
-        if self._context.interaction:
-            return
-        tasks = plan.get_tasks()
-        self.task.add_plan(tasks)
-        planning_message = Message.add_planning_message(
-            f'Ability Level Task Breakdown of task "{task.objective}":\n' + 
-            '\n'.join([f"'{task.objective}' will be done by {task.function_name} ability" for task in tasks])
-        )
-        self._context.add_message(planning_message)
-
-
-        # TODO: Should probably do a step to evaluate the quality of the generated tasks,
-        #  and ensure that they have actionable ready and acceptance criteria
-        # self._task_queue.extend(tasks)
-        self.task.plan.sort(key=lambda t: t.priority)
+        if self._configuration.execution_nature == ExecutionNature.SEQUENTIAL:
+            tasks = []
+            for ability in self._ability_registry.abilities():
+                tasks.append(
+                    Task(
+                        objective=task.objective,
+                        type=task.type,
+                        priority=task.priority,
+                        function_name=ability.name(),
+                        ready_criteria=task.ready_criteria,
+                        acceptance_criteria=task.acceptance_criteria,
+                    )
+                )
+            self.task.add_plan(tasks)
+        else:
+            plan = await self._planner.plan(
+                user_objective=task,
+                functions=self._ability_registry.dump_abilities(),
+            )
+            if self._context.interaction:
+                return
+            tasks = plan.get_tasks()
+            self.task.add_plan(tasks)
+            planning_message = Message.add_planning_message(
+                f'Ability Level Task Breakdown of task "{task.objective}":\n' + 
+                '\n'.join([f"'{task.objective}' will be done by {task.function_name} ability" for task in tasks])
+            )
+            self._context.add_message(planning_message)
+            # TODO: Should probably do a step to evaluate the quality of the generated tasks,
+            #  and ensure that they have actionable ready and acceptance criteria
+            # self._task_queue.extend(tasks)
+            self.task.plan.sort(key=lambda t: t.priority)
         # self._task_queue[-1].context.status = TaskStatus.READY
-        return plan.dict()
 
     async def execute(self, objective: Union[str, Task, Message], *args, **kwargs):
         self._logger.info(f"Executing step {self._configuration.cycle_count}")
@@ -120,10 +131,10 @@ class SuperPilot(Pilot, Configurable):
 
         if not self.task or not self.task.plan:
             if self.task.status == TaskStatus.BACKLOG:
-                task_start_message = Message.add_task_start_message(f"{self.task.function_name} Starting Task: '{self.task.objective}'")
+                task_start_message = Message.add_task_start_message(f"'{self.task.objective}' task started")
                 self._context.add_message(task_start_message)
             self.task.status = TaskStatus.IN_PROGRESS
-            plan = await self.plan(self.task)
+            await self.plan(self.task)
             if self._context.interaction:
                 return
 
@@ -146,8 +157,9 @@ class SuperPilot(Pilot, Configurable):
 
         if self.task.active_task_idx == len(self.task.plan):
             self.task.status = TaskStatus.DONE
-            task_end_message = Message.add_task_end_message(f"{self.task.function_name}  Task Completed: '{self.task.objective}'")
+            task_end_message = Message.add_task_end_message(f"'{self.task.objective}' task completed")
             self._context.add_message(task_end_message)
+            await self._state.save(self._context)
 
             # await self.reflect(*args, **kwargs)
 
