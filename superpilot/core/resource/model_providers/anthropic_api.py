@@ -38,6 +38,9 @@ AnthropicChatParser = Callable[[str], dict]
 
 
 class AnthropicModelName(str, enum.Enum):
+    CLAUD_3_SONET = "claude-3-sonnet-20240229"
+    CLAUD_3_OPUS = "claude-3-opus-20240229"
+    CLAUD_3_HAIKU = "claude-3-opus-20240229"
     CLAUD_2 = "claude-2"
     CLAUD_2_1 = "claude-2.1"
     CLAUD_2_FULL = "claude-2.0"
@@ -59,6 +62,30 @@ ANTHROPIC_EMBEDDING_MODELS = {
 
 
 ANTHROPIC_LANGUAGE_MODELS = {
+    AnthropicModelName.CLAUD_3_SONET: LanguageModelProviderModelInfo(
+        name=AnthropicModelName.CLAUD_3_SONET,
+        service=ModelProviderService.LANGUAGE,
+        provider_name=ModelProviderName.ANTHROPIC,
+        prompt_token_cost=0.00015,
+        completion_token_cost=0.002,
+        max_tokens=200000,
+    ),
+    AnthropicModelName.CLAUD_3_OPUS: LanguageModelProviderModelInfo(
+        name=AnthropicModelName.CLAUD_3_OPUS,
+        service=ModelProviderService.LANGUAGE,
+        provider_name=ModelProviderName.ANTHROPIC,
+        prompt_token_cost=0.00015,
+        completion_token_cost=0.002,
+        max_tokens=200000,
+    ),
+    AnthropicModelName.CLAUD_3_HAIKU: LanguageModelProviderModelInfo(
+            name=AnthropicModelName.CLAUD_3_HAIKU,
+            service=ModelProviderService.LANGUAGE,
+            provider_name=ModelProviderName.ANTHROPIC,
+            prompt_token_cost=0.00015,
+            completion_token_cost=0.002,
+            max_tokens=200000,
+        ),
     AnthropicModelName.CLAUD_2_1: LanguageModelProviderModelInfo(
         name=AnthropicModelName.CLAUD_2_1,
         service=ModelProviderService.LANGUAGE,
