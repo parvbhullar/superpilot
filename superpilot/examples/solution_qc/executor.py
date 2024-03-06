@@ -66,10 +66,15 @@ class QuestionAnalysisExecutor(BaseExecutor):
         output_file = kwargs.get("output_file")
         df = pd.read_excel(input_file)
         df.fillna("", inplace=True)
+        count = 0
         for index, row in df.iterrows():
             response = await self.process_row(row)
             for col_name, col_value in response.content.items():
                 df.at[index, col_name] = col_value
+
+            if count > 10:
+                break
+            count += 1
 
         df.to_excel(output_file, index=False)
         return output_file, len(df)
