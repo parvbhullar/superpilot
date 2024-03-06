@@ -39,7 +39,7 @@ def request_chegg(each):
         }
         SESSION_HEADERS["Apollographql-Client-Name"] = "chegg-web-producers"
         data = session.post(ANSWER_API, json=answer_payload, headers=SESSION_HEADERS)
-        print(each.get("answer_uuid", ""), each.get("preview_url"))
+        # print(each.get("answer_uuid", ""), each.get("preview_url"))
         return data
     return resp
 
@@ -68,7 +68,9 @@ def process_chegg_file(input_path, output_path):
                             json_data = json_data.get("data").get("answerByUuid", {})
                             if json_data:
                                 try:
-                                    answer_body = json.loads(json_data.get("body", None))
+                                    answer_body = json.loads(
+                                        json_data.get("body", None)
+                                    )
                                     answer_html = generate_html(answer_body)
                                 except Exception as e:
                                     traceback.print_exc()
@@ -80,7 +82,9 @@ def process_chegg_file(input_path, output_path):
                                     img_url = html_content.find("img").get("src")
                                     q_base64, q_text = read_image(img_url)
                                     q_text = q_text.strip().replace("\n", "")
-                                question_subject = question.get("subject", {}).get("name")
+                                question_subject = question.get("subject", {}).get(
+                                    "name"
+                                )
                                 subject_classification = question.get(
                                     "subjectClassification", {}
                                 )
@@ -105,7 +109,9 @@ def process_chegg_file(input_path, output_path):
                                         for i in topics:
                                             if i.get("topic", {}):
                                                 topics_str += (
-                                                    i.get("topic", {}).get("displayName")
+                                                    i.get("topic", {}).get(
+                                                        "displayName"
+                                                    )
                                                     + ", "
                                                 )
                     except Exception as e:
