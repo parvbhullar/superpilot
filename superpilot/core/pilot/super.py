@@ -146,7 +146,6 @@ class SuperPilot(Pilot, Configurable):
                 hold = await self.handle_clarification(ability_args, **kwargs)
                 if hold:
                     self._context.interaction = True
-                    await self._state.save(self._context)
                     return None
                 continue
             # await self.update_task_status()
@@ -159,9 +158,6 @@ class SuperPilot(Pilot, Configurable):
             self.task.status = TaskStatus.DONE
             task_end_message = Message.add_task_end_message(f"'{self.task.objective}' task completed")
             self._context.add_message(task_end_message)
-            await self._state.save(self._context)
-
-            # await self.reflect(*args, **kwargs)
 
     async def handle_clarification(self, ability_args, **kwargs) -> bool:
         self._current_task.context.user_input.append(

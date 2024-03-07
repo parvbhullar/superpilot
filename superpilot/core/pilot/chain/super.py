@@ -68,7 +68,6 @@ class SuperChain(BaseChain):
                     hold = await self.handle_clarification(observation_response, ability_args, **kwargs)
                     if hold:
                         self._context.interaction = True
-                        await self._state.save(self._context)
                         return
                 else:
                     observation = Observation(**ability_args)
@@ -93,7 +92,6 @@ class SuperChain(BaseChain):
             self._context.current_task.status = TaskStatus.DONE
             task_end_message = Message.add_task_end_message(f"Task Completed: '{objective.message}'")
             self._context.add_message(task_end_message)
-            await self._state.save(self._context)
             await self._callback.on_chain_complete(**kwargs)
             print("chain completed")
 
