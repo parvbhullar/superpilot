@@ -14,8 +14,8 @@ import pandas as pd
 
 def solve_question(image_path):
     t1 = time.time()
-    executor = QuestionExecutor()
-    # executor = FigureQuestionExecutor()
+    # executor = QuestionExecutor()
+    executor = FigureQuestionExecutor()
     print("\n", "*" * 32, "Running QuestionExecutor", "*" * 32, "\n\n")
     res = asyncio.run(executor.run(image_path))
     print(res.get("solution"))
@@ -120,7 +120,7 @@ if __name__ == "__main__":
     path = "/Users/parvbhullar/Drives/Vault/Projects/Unpod/superpilot/superpilot/docs/ques/question-one.jpeg"
     # math_pics_ocr(path)
     # path = "original/Chegg Ques/Screenshot_2023-10-21_103505.png"
-    # path = "original/Chegg Ques/Screenshot 2023-10-21 102000.png"
+    path = "original/Chegg Ques/Screenshot 2023-10-21 102000.png"
     solve_question(path)
     # for i in range(1, 5):
     # solve_question(path)

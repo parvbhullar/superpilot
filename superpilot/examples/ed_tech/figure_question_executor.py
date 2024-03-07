@@ -54,8 +54,8 @@ class FigureQuestionExecutor(BaseExecutor):
         solver_pilot = SimpleTaskPilot.create(
             SolutionValidatorPrompt.default_configuration,
             model_providers=self.model_providers,
-            smart_model_name=AnthropicModelName.CLAUD_2,
-            fast_model_name=AnthropicModelName.CLAUD_2_INSTANT,
+            smart_model_name=AnthropicModelName.CLAUD_3_SONET,
+            fast_model_name=AnthropicModelName.CLAUD_3_HAIKU,
         )
         format_pilot = SimpleTaskPilot.create(
             SolutionValidatorPrompt.default_configuration,
@@ -92,7 +92,7 @@ class FigureQuestionExecutor(BaseExecutor):
     def solver_transformer(self, data, response, context):
         response = {
             "question": data,
-            "solution": response.get("completion", ""),
+            "solution": response.get("content")[0]["text"],
         }
         task = self.PROMPT_TEMPLATE.format(**response)
         return task, context
