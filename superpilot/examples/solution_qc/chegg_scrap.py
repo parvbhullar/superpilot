@@ -49,7 +49,7 @@ def process_chegg_file(input_path, output_path):
     records = json.loads(df.T.to_json()).values()
     total_count = len(records)
     final_list = []
-    for each in list(records)[500:]:
+    for each in list(records)[:500]:
         try:
             if each.get("answer_uuid", "") != "":
                 data = request_chegg(each)
