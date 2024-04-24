@@ -180,6 +180,16 @@ class ModelConfigFactory:
         return models_config
 
 
+def load_model_provider(provider_name: ModelProviderName, user_configuration={}):
+    from superpilot.core.resource.model_providers.contants import MODEL_PROVIDERS_DICT
+
+    provider_location = MODEL_PROVIDERS_DICT.get(provider_name).location
+    logger = logging.getLogger(__name__)
+    return ModelProviderFactory._get_model_provider_instance(
+        user_configuration, provider_location, logger
+    )
+
+
 # Usage example
 if __name__ == "__main__":
     model_provider_list = ModelProviderFactory.load_providers()

@@ -22,3 +22,12 @@ class TaskPilotConfiguration(SystemConfiguration):
     prompt_strategy: SystemConfiguration = None
     memory_provider_required: bool = False
     workspace_required: bool = False
+
+
+class ModelTaskPilotConfiguration(SystemConfiguration):
+    """Struct for Model task pilot configuration."""
+
+    location: PluginLocation
+    model_provider: LanguageModelConfiguration
+    callbacks: List[PluginLocation] = None
+    prompt_strategy: SystemConfiguration = None

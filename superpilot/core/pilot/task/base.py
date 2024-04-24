@@ -4,15 +4,19 @@ from typing import ClassVar
 import inflection
 
 from superpilot.core.context.schema import Context
-from superpilot.core.pilot.chain.strategy.observation_strategy import Observation
-from superpilot.core.pilot.task.settings import TaskPilotConfiguration
+from superpilot.core.pilot.task.settings import (
+    TaskPilotConfiguration,
+    ModelTaskPilotConfiguration,
+)
 from superpilot.core.pilot.base import Pilot
 
 
 class TaskPilot(Pilot, abc.ABC):
     """A class representing a pilot step."""
 
-    default_configuration: ClassVar[TaskPilotConfiguration]
+    default_configuration: ClassVar[
+        TaskPilotConfiguration | ModelTaskPilotConfiguration
+    ]
 
     @classmethod
     def name(cls) -> str:
