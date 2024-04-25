@@ -9,8 +9,8 @@ from superpilot.framework.tools.latex import latex_to_text
 
 # from pylatexenc.latex2text import LatexNodes2Text
 
-username = "lauren.pena@spi-global.com"
-password = "Straive#160173927"
+username = "<EMAIL>"
+password = "<PASSWORD>"
 
 
 MATHPIX_APP_ID = os.environ.get("MATHPIX_APP_ID")
