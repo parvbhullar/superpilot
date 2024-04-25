@@ -14,7 +14,7 @@ from superpilot.core.plugin.simple import SimplePluginService
 from superpilot.core.workspace.base import Workspace
 from superpilot.core.environment import Environment
 from superpilot.core.planning import PromptStrategy
-from superpilot.core.planning.simple import LanguageModelConfiguration
+from superpilot.core.planning.settings import LanguageModelConfiguration
 from superpilot.core.resource.model_providers import (
     LanguageModelMessage,
     LanguageModelProvider,

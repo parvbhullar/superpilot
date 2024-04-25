@@ -5,7 +5,7 @@ import inflection
 from superpilot.core.ability.base import Ability, AbilityConfiguration
 from superpilot.core.context.schema import Context, ImageContentItem
 from superpilot.core.environment import Environment
-from superpilot.core.planning.simple import LanguageModelConfiguration
+from superpilot.core.planning.settings import LanguageModelConfiguration
 from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
 from superpilot.core.resource.model_providers import (
     ModelProviderName,
@@ -75,7 +75,7 @@ class ClipDropGenerator(Ability):
             f.write(response)
         content = ImageContentItem(file_path=file_path)
         items.append(content)
-        return Context(items=items)
+        return Context(messages=items)
 
     @staticmethod
     def _parse_response(response_content: dict) -> dict:

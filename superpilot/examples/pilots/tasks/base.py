@@ -2,6 +2,7 @@ import logging
 import time
 from typing import List, Dict
 
+from superpilot.core.pilot.settings import ExecutionNature
 from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.base import AbilityRegistry
@@ -13,7 +14,6 @@ from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning import strategies
 from superpilot.core.planning.schema import (
     LanguageModelResponse,
-    ExecutionNature,
     Task,
 )
 from superpilot.core.planning.settings import (
@@ -100,7 +100,7 @@ class BaseTaskPilot(TaskPilot):
             task=task,
         )
         if ability_action:
-            context.extend(ability_action.knowledge)
+            context.extend(ability_action.result)
         return context
 
     async def determine_exec_ability(
@@ -145,7 +145,9 @@ class BaseTaskPilot(TaskPilot):
             **model_configuration,
             completion_parser=prompt_strategy.parse_response_content,
         )
+        # return LanguageModelResponse.model_validate(response.model_dump())
         return LanguageModelResponse.parse_obj(response.dict())
+
 
     def _make_template_kwargs_for_strategy(self, strategy: PromptStrategy):
         provider = self._providers[strategy.model_classification]

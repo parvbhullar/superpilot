@@ -7,7 +7,7 @@ from superpilot.core.ability.base import Ability, AbilityConfiguration
 from superpilot.core.configuration import Config
 from superpilot.core.context.schema import Context, Content, ContentType
 from superpilot.core.environment import Environment
-from superpilot.core.planning.simple import LanguageModelConfiguration
+from superpilot.core.planning.settings import LanguageModelConfiguration
 from superpilot.core.planning.strategies import SummarizerStrategy
 from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
 from superpilot.core.resource.model_providers import (

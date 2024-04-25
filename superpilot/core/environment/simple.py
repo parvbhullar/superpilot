@@ -1,11 +1,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
-
-from superpilot.core.ability import (
-    SimpleAbilityRegistry,
-)
+from typing import Any
 from superpilot.core.environment.base import Environment
 from superpilot.core.environment.settings import (
     EnvConfiguration,
@@ -15,7 +11,7 @@ from superpilot.core.environment.settings import (
 )
 from superpilot.core.configuration import Configurable, ConfigBuilder
 from superpilot.core.memory import SimpleMemory
-from superpilot.core.planning import SimplePlanner, Task, TaskStatus
+from superpilot.core.planning import SimplePlannerLegacy, Task, TaskStatus
 from superpilot.core.plugin.simple import (
     PluginLocation,
     PluginStorageFormat,
@@ -23,7 +19,6 @@ from superpilot.core.plugin.simple import (
 )
 from superpilot.core.workspace.simple import SimpleWorkspace
 from superpilot.core.resource.model_providers import (
-    LanguageModelProvider,
     ModelProviderName,
     OpenAIProvider,
 )
@@ -51,12 +46,12 @@ class SimpleEnv(Environment, Configurable):
                 ),
                 planning=PluginLocation(
                     storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
-                    storage_route="superpilot.core.planning.SimplePlanner",
+                    storage_route="superpilot.core.planning.SimplePlannerLegacy",
                 ),
                 workspace=PluginLocation(
                     storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
                     storage_route="superpilot.core.workspace.SimpleWorkspace",
-                )
+                ),
             ),
         ),
     )
@@ -68,7 +63,7 @@ class SimpleEnv(Environment, Configurable):
         # ability_registry: SimpleAbilityRegistry,
         memory: SimpleMemory,
         openai_provider: OpenAIProvider,
-        planning: SimplePlanner,
+        planning: SimplePlannerLegacy,
         workspace: SimpleWorkspace,
     ):
         self.configuration = settings.configuration
@@ -79,7 +74,9 @@ class SimpleEnv(Environment, Configurable):
         # FIXME: Need some work to make this work as a dict of providers
         #  Getting the construction of the config to work is a bit tricky
         self.openai_provider = openai_provider
-        self.model_providers = {ModelProviderName.OPENAI: openai_provider}  # TODO load models from model registry
+        self.model_providers = {
+            ModelProviderName.OPENAI: openai_provider
+        }  # TODO load models from model registry
         self.planning = planning
         self.workspace = workspace
 
@@ -89,7 +86,9 @@ class SimpleEnv(Environment, Configurable):
         workspace_path: Path,
         logger: logging.Logger,
     ) -> "SimpleEnv":
-        environment_settings = SimpleWorkspace.load_environment_settings(workspace_path, cls.name())
+        environment_settings = SimpleWorkspace.load_environment_settings(
+            workspace_path, cls.name()
+        )
         environment_args = {}
 
         environment_args["settings"] = environment_settings.environment
@@ -138,11 +137,12 @@ class SimpleEnv(Environment, Configurable):
 
     @classmethod
     def factory(cls, user_configuration: dict, logger: logging.Logger) -> "SimpleEnv":
-
         logger.debug("Getting environment settings")
 
         environment_workspace = (
-            user_configuration.get("workspace", {}).get("configuration", {}).get("root", "")
+            user_configuration.get("workspace", {})
+            .get("configuration", {})
+            .get("root", "")
         )
 
         # Configure logging before we do anything else.
@@ -219,6 +219,7 @@ class SimpleEnv(Environment, Configurable):
                 user_configuration.get(system_name, {})
             ).dict()
 
+        # return EnvSettings.model_validate(configuration_dict)
         return EnvSettings.parse_obj(configuration_dict)
 
     @classmethod
@@ -227,8 +228,8 @@ class SimpleEnv(Environment, Configurable):
         environment_settings: EnvSettings,
         logger: logging.Logger,
     ):
-        environment_settings.environment.configuration.creation_time = datetime.now().strftime(
-            "%Y%m%d_%H%M%S"
+        environment_settings.environment.configuration.creation_time = (
+            datetime.now().strftime("%Y%m%d_%H%M%S")
         )
         workspace: SimpleWorkspace = cls._get_system_instance(
             "workspace",
@@ -262,14 +263,108 @@ class SimpleEnv(Environment, Configurable):
         for key in kwargs:
             if key in system_parameter:
                 system_kwargs[key] = kwargs[key]
-        if 'logger' in system_parameter:
-            system_kwargs['logger'] = logger.getChild(system_name)
+        if "logger" in system_parameter:
+            system_kwargs["logger"] = logger.getChild(system_name)
         system_instance = system_class(
             system_settings,
             *args,
             **system_kwargs,
         )
         return system_instance
+
+    @classmethod
+    def create(cls, user_configuration: dict):
+        """Run the Superpilot CLI client."""
+
+        client_logger = cls.get_logger()
+        client_logger.debug("Getting environment settings")
+
+        environment_workspace = (
+            user_configuration.get("workspace", {}).get("configuration", {}).get("root", "")
+        )
+
+        # Configure logging before we do anything else.
+        # client_logger.set_level(logging.DEBUG if debug else logging.INFO)
+        working_directory = Path(__file__).parent.parent.parent
+
+        # Load the configuration from the environment.
+        config = ConfigBuilder.load_env(workdir=working_directory)
+        # user_configuration['config'] = config
+
+        if not environment_workspace:  # We don't have an environment yet.
+            #################
+            # Bootstrapping #
+            #################
+            # Step 1. Collate the user's settings with the default system settings.
+            user_configuration["environment"] = {
+                "name": "simple_environment",
+                "description": "A simple environment.",
+                "configuration": {
+                    "creation_time": "20230826_154959",
+                    "request_id": "20230826_154959",
+                    "systems": {
+                        "ability_registry": {
+                            "storage_format": "installed_package",
+                            "storage_route": "superpilot.core.ability.SuperAbilityRegistry",
+                        },
+                        "memory": {
+                            "storage_format": "installed_package",
+                            "storage_route": "superpilot.core.memory.SimpleMemory",
+                        },
+                        "openai_provider": {
+                            "storage_format": "installed_package",
+                            "storage_route": "superpilot.core.resource.model_providers.OpenAIProvider",
+                        },
+                        "planning": {
+                            "storage_format": "installed_package",
+                            "storage_route": "superpilot.core.planning.SimplePlanner",
+                        },
+                        "workspace": {
+                            "storage_format": "installed_package",
+                            "storage_route": "superpilot.core.workspace.SimpleWorkspace",
+                        },
+                    },
+                },
+            }
+            environment_settings: EnvSettings = SimpleEnv.compile_settings(
+                client_logger,
+                user_configuration,
+            )
+
+            # Step 2. Provision the environment.
+            environment_workspace = SimpleEnv.provision_environment(
+                environment_settings, client_logger
+            )
+            print("environment is provisioned")
+
+        # launch environment interaction loop
+        environment = SimpleEnv.from_workspace(
+            environment_workspace,
+            client_logger,
+        )
+        print("environment is loaded")
+        # print(environment._configuration)
+        return environment
+
+    @classmethod
+    def get_logger(cls):
+        import logging
+        # Configure logging before we do anything else.
+        # Application logs need a place to live.
+        client_logger = logging.getLogger("superpilot_application")
+        client_logger.setLevel(logging.DEBUG)
+
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG)
+        ch.setFormatter(formatter)
+
+        client_logger.addHandler(ch)
+
+        return client_logger
 
 
 def _prune_empty_dicts(d: dict) -> dict:

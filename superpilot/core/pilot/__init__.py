@@ -1,6 +1,7 @@
 """The Pilot is an autonomouos entity guided by a LLM provider."""
 from superpilot.core.pilot.base import Pilot
 from superpilot.core.pilot.settings import PilotSettings
+from superpilot.core.pilot.super_legacy import SuperPilotLegacy
 from superpilot.core.pilot.super import SuperPilot
 from superpilot.core.status import ShortStatus, Status
 

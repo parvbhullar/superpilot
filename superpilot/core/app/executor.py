@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 # from superpilot.core.app.thread_manager import ThreadManager
 from superpilot.core.app.plugin_loader import PluginContainer
 from superpilot.tests.test_env_simple import get_env
-from superpilot.core.pilot import SuperPilot
+from superpilot.core.pilot import SuperPilotLegacy
 from superpilot.core.configuration import get_config
 
 

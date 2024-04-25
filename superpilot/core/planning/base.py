@@ -2,64 +2,80 @@ import abc
 import typing
 
 from superpilot.core.configuration import SystemConfiguration, UserConfigurable
+from superpilot.core.context.schema import Context
 # Cyclic import
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
     LanguageModelMessage,
-    LanguageModelPrompt,
+    LanguageModelPrompt, LanguageModelResponse, ObjectivePlan, Task,
 )
+from superpilot.core.resource.model_providers import SchemaModel
 
-# class Planner(abc.ABC):
-#     """Manages the pilot's planning and goal-setting by constructing language model prompts."""
-#
-#     @staticmethod
-#     @abc.abstractmethod
-#     async def decide_name_and_goals(
-#         user_objective: str,
-#     ) -> LanguageModelResponse:
-#         """Decide the name and goals of an Agent from a user-defined objective.
-#
-#         Args:
-#             user_objective: The user-defined objective for the pilot.
-#
-#         Returns:
-#             The pilot name and goals as a response from the language model.
-#
-#         """
-#         ...
-#
-#     @abc.abstractmethod
-#     async def plan(self, context: PlanningContext) -> LanguageModelResponse:
-#         """Plan the next ability for the Agent.
-#
-#         Args:
-#             context: A context object containing information about the pilot's
-#                        progress, result, memories, and feedback.
-#
-#
-#         Returns:
-#             The next ability the pilot should take along with thoughts and reasoning.
-#
-#         """
-#         ...
-#
-#     @abc.abstractmethod
-#     def reflect(
-#         self,
-#         context: ReflectionContext,
-#     ) -> LanguageModelResponse:
-#         """Reflect on a planned ability and provide self-criticism.
-#
-#
-#         Args:
-#             context: A context object containing information about the pilot's
-#                        reasoning, plan, thoughts, and criticism.
-#
-#         Returns:
-#             Self-criticism about the pilot's plan.
-#
-#         """
-#         ...
+
+class Planner(abc.ABC):
+    """Manages the pilot's planning and goal-setting by constructing language model prompts."""
+
+    # @staticmethod
+    # @abc.abstractmethod
+    # async def decide_name_and_goals(
+    #     user_objective: str,
+    # ) -> LanguageModelResponse:
+    #     """Decide the name and goals of an Agent from a user-defined objective.
+    #
+    #     Args:
+    #         user_objective: The user-defined objective for the pilot.
+    #
+    #     Returns:
+    #         The pilot name and goals as a response from the language model.
+    #
+    #     """
+    #     ...
+
+    @abc.abstractmethod
+    async def plan(self, user_objective: Task, functions: typing.List[dict], **kwargs) -> ObjectivePlan:
+        """Create a plan of tasks to accomplish the user objective.
+
+        Args:
+            user_objective: The user objective for the pilot.
+            functions: The functions available to the pilot.
+            **kwargs: Additional arguments to pass to the language model.
+
+        Returns:
+            A plan of tasks to accomplish the user objective.
+        """
+        ...
+
+    @abc.abstractmethod
+    async def next(self, task: Task, functions: typing.List[dict], **kwargs) -> LanguageModelResponse:
+        """Based of the current task, decide the next executable function, pilot or ability.
+
+        Args:
+            task: The current task.
+            functions: The functions available to the pilot.
+            **kwargs: Additional arguments to pass to the language model.
+        Returns:
+            The next function, pilot or ability to execute.
+        """
+        ...
+
+    @abc.abstractmethod
+    async def reflect(
+        self,
+        task: Task,
+        context: Context,
+    ) -> LanguageModelResponse:
+        """Reflect on executed function, pilot or ability. Provide feedback to the user.
+
+        Args:
+            task: The current task.
+            context: A context object containing information about the pilot's
+                       reasoning, plan, thoughts, and criticism.
+
+        Returns:
+            Self-criticism about the pilot's plan.
+
+        """
+        ...
 
 
 class PromptStrategy(abc.ABC):
