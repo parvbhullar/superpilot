@@ -325,12 +325,12 @@ class SuperPilot(Pilot, Configurable):
 
         ability_registry = None
         if abilities is not None:
-            allowed_abilities = {}
-            for ability in abilities:
-                allowed_abilities[ability.name()] = ability.default_configuration
-            ability_registry = SuperAbilityRegistry.factory(
-                environment, allowed_abilities
-            )
+            allowed_abilities = []
+            for ability_class in abilities:
+                ability = ability_class(environment)
+                allowed_abilities.append(ability)
+            ability_registry = SuperAbilityRegistry(SuperAbilityRegistry.default_settings, environment)
+            ability_registry._abilities = allowed_abilities
 
         settings = cls.default_settings.copy()
         settings.configuration = pilot_config

@@ -36,9 +36,7 @@ class NextAbility(PromptStrategy):
     DEFAULT_USER_PROMPT_TEMPLATE = """
     *Context*: {context}
 
-    Given the above context and the list of functions, do one of the following:
-    1. Make function arguments for the function *'{function_name}'* to accomplish the objective *'{task_objective}'*.
-    2. Ask a Clarifying Question if any aspect of task *'{task_objective}'* is unclear.
+    Make function arguments for the function *'{function_name}'* according to the context provided.
     """
 
     DEFAULT_ADDITIONAL_ABILITY_ARGUMENTS = {
@@ -138,7 +136,7 @@ class NextAbility(PromptStrategy):
             **template_kwargs,
         )
 
-        template_kwargs['task_objective'] = task.objective
+        # template_kwargs['task_objective'] = task.objective
         template_kwargs["context"] = context
 
         system_prompt = LanguageModelMessage(
@@ -169,12 +167,12 @@ class NextAbility(PromptStrategy):
             }
         }
 
-        for schema in [
-            ClarifyingQuestion.function_schema(arguments_format=True),
-        ]:
-            function["parameters"]["properties"].update(
-                schema
-            )
+        # for schema in [
+        #     ClarifyingQuestion.function_schema(arguments_format=True),
+        # ]:
+        #     function["parameters"]["properties"].update(
+        #         schema
+        #     )
 
         for ability in ability_schema:
             function["parameters"]["properties"].update({
