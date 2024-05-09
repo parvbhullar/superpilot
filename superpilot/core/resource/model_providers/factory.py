@@ -18,6 +18,7 @@ from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
     LanguageModelClassification,
 )
+from superpilot.core.resource.model_providers.together_ai import TOGETHER_AI_MODELS
 
 
 class ModelProviderConfiguration(SystemConfiguration):
@@ -139,11 +140,21 @@ class ModelProviderFactory:
         return model_provider_instance
 
 
-AI_MODELS = {**OPEN_AI_MODELS, **ANTHROPIC_MODELS, **OLLAMA_MODELS}
+AI_MODELS = {
+    **OPEN_AI_MODELS,
+    **ANTHROPIC_MODELS,
+    **OLLAMA_MODELS,
+    **TOGETHER_AI_MODELS,
+}
 
 
 class ModelConfigFactory:
-    AI_MODELS = {**OPEN_AI_MODELS, **ANTHROPIC_MODELS, **OLLAMA_MODELS}
+    AI_MODELS = {
+        **OPEN_AI_MODELS,
+        **ANTHROPIC_MODELS,
+        **OLLAMA_MODELS,
+        **TOGETHER_AI_MODELS,
+    }
 
     def __init__(self):
         pass
