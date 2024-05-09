@@ -27,8 +27,6 @@ class TaskPilotConfiguration(SystemConfiguration):
 class ModelTaskPilotConfiguration(SystemConfiguration):
     """Struct for Model task pilot configuration."""
 
-    from superpilot.core.plugin.base import PluginLocation
-
     location: PluginLocation
     model_provider: LanguageModelConfiguration
     callbacks: List[PluginLocation] = None
