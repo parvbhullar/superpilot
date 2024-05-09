@@ -49,4 +49,4 @@ class SimpleEmbeddingModel(EmbeddingModel, Configurable):
             model_name="embedding_model",
             embedding_parser=lambda x: x,
         )
-        return EmbeddingModelResponse.parse_obj(response.dict())
+        return EmbeddingModelResponse.model_validate(response.dict())
