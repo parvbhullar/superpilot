@@ -17,6 +17,7 @@ class Config(SystemSettings, arbitrary_types_allowed=True):
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
     together_api_key: Optional[str] = None
+    deepinfra_api_key: Optional[str] = None
 
     # Google
     google_api_key: Optional[str] = None
@@ -87,6 +88,7 @@ class ConfigBuilder(Configurable[Config]):
             "scraperapi_api_key": os.getenv("SCRAPERAPI_API_KEY"),
             "anthropic_api_key": os.getenv("ANTHROPIC_API_KEY"),
             "together_api_key": os.getenv("TOGETHER_API_KEY"),
+            "deepinfra_api_key": os.getenv("DEEPINFRA_API_KEY"),
         }
 
         config_dict_without_none_values = {

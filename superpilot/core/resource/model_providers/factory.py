@@ -18,6 +18,7 @@ from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
     LanguageModelClassification,
 )
+from superpilot.core.resource.model_providers.deepinfra import DEEP_INFRA_MODELS
 from superpilot.core.resource.model_providers.together_ai import TOGETHER_AI_MODELS
 
 
@@ -145,6 +146,7 @@ AI_MODELS = {
     **ANTHROPIC_MODELS,
     **OLLAMA_MODELS,
     **TOGETHER_AI_MODELS,
+    **DEEP_INFRA_MODELS,
 }
 
 
@@ -154,6 +156,7 @@ class ModelConfigFactory:
         **ANTHROPIC_MODELS,
         **OLLAMA_MODELS,
         **TOGETHER_AI_MODELS,
+        **DEEP_INFRA_MODELS,
     }
 
     def __init__(self):
