@@ -30,6 +30,7 @@ pymupdf
 pytesseract==0.3.10
 selenium==4.1.4
 tiktoken==0.3.3
+together
 tweepy==4.14.0
 webdriver-manager==3.8.6
 
