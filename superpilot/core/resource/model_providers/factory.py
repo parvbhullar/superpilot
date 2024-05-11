@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Dict
 from superpilot.core.plugin.simple import (
     PluginLocation,
@@ -50,7 +51,7 @@ class ModelProviderFactory:
                 ),
             ),
             ModelProviderName.DEEPINFRA: ModelProviderConfiguration(
-                user_configuration={},
+                user_configuration={"api_key": os.environ.get("DEEPINFRA_API_KEY")},
                 location=PluginLocation(
                     storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
                     storage_route="superpilot.core.resource.model_providers.DeepInfraProvider",
