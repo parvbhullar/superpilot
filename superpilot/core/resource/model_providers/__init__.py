@@ -16,12 +16,13 @@ from superpilot.core.resource.model_providers.deepinfra import (
     DeepInfraProvider,
     DeepInfraSettings,
 )
-from superpilot.core.resource.model_providers.together_ai import (
-    TOGETHER_AI_MODELS,
-    TogetherAIModelName,
-    TogetherAIProvider,
-    TogetherAISettings,
-)
+
+# from superpilot.core.resource.model_providers.together_ai import (
+#     TOGETHER_AI_MODELS,
+#     TogetherAIModelName,
+#     TogetherAIProvider,
+#     TogetherAISettings,
+# )
 from superpilot.core.resource.model_providers.ollama_api import (
     OLLAMA_MODELS,
     OllamaModelName,
@@ -51,6 +52,13 @@ from superpilot.core.resource.model_providers.schema import (
     SchemaModel,
     schema_function,
 )
+from superpilot.core.resource.model_providers.deepinfra import (
+    DEEP_INFRA_MODELS,
+    DeepInfraModelName,
+    DeepInfraProvider,
+    DeepInfraSettings,
+)
+
 # from superpilot.core.resource.model_providers.factory import ModelProviderFactory
 
 __all__ = [
@@ -88,4 +96,8 @@ __all__ = [
     "Embedding",
     "EmbeddingModelProviderModelInfo",
     "LanguageModelProviderModelInfo",
+    "DeepInfraModelName",
+    "DEEP_INFRA_MODELS",
+    "DeepInfraProvider",
+    "DeepInfraSettings",
 ]

@@ -2,6 +2,7 @@ import enum
 import functools
 import logging
 import math
+import os
 import time
 from typing import Callable, List, TypeVar, Optional
 
@@ -88,7 +89,9 @@ class TogetherAIProvider(Configurable, LanguageModelProvider):
         configuration=TogetherAIConfiguration(
             retries_per_request=10,
         ),
-        credentials=ModelProviderCredentials(),
+        credentials=ModelProviderCredentials(
+            api_key=os.environ.get("TOGETHER_API_KEY", "")
+        ),
         budget=TogetherAIModelProviderBudget(
             total_budget=math.inf,
             total_cost=0.0,
