@@ -50,12 +50,12 @@ async def test_pilot():
 
     SimpleTaskPilot.default_configuration.models = {
         LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-            model_name=TogetherAIModelName.META_LLMA_3_8B_CHAT_HF,
+            model_name=TogetherAIModelName.META_LLAMA_3_8B_CHAT_HF,
             provider_name=ModelProviderName.TOGETHER,
             temperature=0.9,
         ),
         LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-            model_name=TogetherAIModelName.META_LLMA_3_8B_CHAT_HF,
+            model_name=TogetherAIModelName.META_LLAMA_3_8B_CHAT_HF,
             provider_name=ModelProviderName.TOGETHER,
             temperature=0.9,
         ),
@@ -64,8 +64,8 @@ async def test_pilot():
     task_pilot = SimpleTaskPilot.create(
         GSTR1DataTransformerPrompt.default_configuration,
         model_providers=model_providers,
-        smart_model_name=TogetherAIModelName.META_LLMA_3_8B_CHAT_HF,
-        fast_model_name=TogetherAIModelName.META_LLMA_3_8B_CHAT_HF,
+        smart_model_name=TogetherAIModelName.META_LLAMA_3_8B_CHAT_HF,
+        fast_model_name=TogetherAIModelName.META_LLAMA_3_8B_CHAT_HF,
     )
 
     print("***************** Executing SimplePilot ******************************\n")

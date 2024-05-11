@@ -33,7 +33,7 @@ TogetherAIChatParser = Callable[[str], dict]
 
 
 class TogetherAIModelName(str, enum.Enum):
-    META_LLMA_3_8B_CHAT_HF = "meta-llama/Llama-3-8b-chat-hf"
+    META_LLAMA_3_8B_CHAT_HF = "meta-llama/Llama-3-8b-chat-hf"
     TOGETHER_LLAMA_2_7B_32K_INSTRUCT = "togethercomputer/Llama-2-7B-32K-Instruct"
 
 
@@ -49,8 +49,8 @@ TOGETHER_AI_LANGUAGE_MODELS = {
         completion_token_cost=0.0,
         max_tokens=32768,
     ),
-    TogetherAIModelName.META_LLMA_3_8B_CHAT_HF: LanguageModelProviderModelInfo(
-        name=TogetherAIModelName.META_LLMA_3_8B_CHAT_HF,
+    TogetherAIModelName.META_LLAMA_3_8B_CHAT_HF: LanguageModelProviderModelInfo(
+        name=TogetherAIModelName.META_LLAMA_3_8B_CHAT_HF,
         service=ModelProviderService.EMBEDDING,
         provider_name=ModelProviderName.TOGETHER,
         prompt_token_cost=0.0004,

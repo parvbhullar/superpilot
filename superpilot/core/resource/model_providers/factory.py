@@ -50,6 +50,20 @@ class ModelProviderFactory:
                     storage_route="superpilot.core.resource.model_providers.AnthropicApiProvider",
                 ),
             ),
+            ModelProviderName.DEEPINFRA: ModelProviderConfiguration(
+                user_configuration={},
+                location=PluginLocation(
+                    storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
+                    storage_route="superpilot.core.resource.model_providers.DeepInfraProvider",
+                ),
+            ),
+            ModelProviderName.TOGETHER: ModelProviderConfiguration(
+                user_configuration={},
+                location=PluginLocation(
+                    storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
+                    storage_route="superpilot.core.resource.model_providers.TogetherAIProvider",
+                ),
+            ),
         },
     )
 

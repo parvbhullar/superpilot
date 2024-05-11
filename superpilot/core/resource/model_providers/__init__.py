@@ -10,6 +10,18 @@ from superpilot.core.resource.model_providers.anthropic_api import (
     AnthropicApiProvider,
     AnthropicSettings,
 )
+from superpilot.core.resource.model_providers.deepinfra import (
+    DEEP_INFRA_MODELS,
+    DeepInfraModelName,
+    DeepInfraProvider,
+    DeepInfraSettings,
+)
+from superpilot.core.resource.model_providers.together_ai import (
+    TOGETHER_AI_MODELS,
+    TogetherAIModelName,
+    TogetherAIProvider,
+    TogetherAISettings,
+)
 from superpilot.core.resource.model_providers.ollama_api import (
     OLLAMA_MODELS,
     OllamaModelName,
