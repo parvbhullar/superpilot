@@ -17,12 +17,12 @@ from superpilot.core.resource.model_providers.deepinfra import (
     DeepInfraSettings,
 )
 
-# from superpilot.core.resource.model_providers.together_ai import (
-#     TOGETHER_AI_MODELS,
-#     TogetherAIModelName,
-#     TogetherAIProvider,
-#     TogetherAISettings,
-# )
+from superpilot.core.resource.model_providers.together_ai import (
+    TOGETHER_AI_MODELS,
+    TogetherAIModelName,
+    TogetherAIProvider,
+    TogetherAISettings,
+)
 from superpilot.core.resource.model_providers.ollama_api import (
     OLLAMA_MODELS,
     OllamaModelName,
@@ -100,4 +100,8 @@ __all__ = [
     "DEEP_INFRA_MODELS",
     "DeepInfraProvider",
     "DeepInfraSettings",
+    "TOGETHER_AI_MODELS",
+    "TogetherAIModelName",
+    "TogetherAIProvider",
+    "TogetherAISettings",
 ]
