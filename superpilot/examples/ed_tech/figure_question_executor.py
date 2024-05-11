@@ -68,7 +68,7 @@ class FigureQuestionExecutor(BaseExecutor):
         self.chain.add_handler(vision_pilot, self.vision_transformer)
         # self.chain.add_handler(auto_solver_pilot, self.auto_solver_transformer)
         self.chain.add_handler(solver_pilot, self.solver_transformer)
-        # self.chain.add_handler(format_pilot, self.format_transformer)
+        self.chain.add_handler(format_pilot, self.format_transformer)
 
     def auto_solver_transformer(self, data, response, context):
         # print("Auto solver transformer", data, response)
@@ -90,7 +90,7 @@ class FigureQuestionExecutor(BaseExecutor):
     def solver_transformer(self, data, response, context):
         response = {
             "question": data,
-            "solution": response.get("completion", ""),
+            "solution": response.get("content", ""),
         }
         task = self.PROMPT_TEMPLATE.format(**response)
         return task, context
@@ -147,6 +147,8 @@ class FigureQuestionExecutor(BaseExecutor):
         images = [base64_string]
         # print(images)
         response = await self.execute(query, images=images)
+        if isinstance(response, str):
+            response = {"solution": response}
         response["solution"] = response.get("solution", "").replace("&", " ")
         # print(response)
         return response
