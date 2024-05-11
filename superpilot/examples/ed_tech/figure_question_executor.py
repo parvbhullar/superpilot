@@ -18,10 +18,8 @@ from superpilot.examples.ed_tech.ag_question_solver_ability import (
 from superpilot.core.pilot.chain.simple import SimpleChain
 
 # from superpilot.examples.pilots.tasks.super import SuperTaskPilot
-from superpilot.core.resource.model_providers import (
-    AnthropicModelName,
-    OpenAIModelName,
-)
+from superpilot.core.resource.model_providers import OpenAIModelName
+from superpilot.core.resource.model_providers.deepinfra import DeepInfraModelName
 
 
 class FigureQuestionExecutor(BaseExecutor):
@@ -54,8 +52,8 @@ class FigureQuestionExecutor(BaseExecutor):
         solver_pilot = SimpleTaskPilot.create(
             SolutionValidatorPrompt.default_configuration,
             model_providers=self.model_providers,
-            smart_model_name=AnthropicModelName.CLAUD_2,
-            fast_model_name=AnthropicModelName.CLAUD_2_INSTANT,
+            smart_model_name=DeepInfraModelName.WIZARD_LM_8_22B,
+            fast_model_name=DeepInfraModelName.WIZARD_LM_8_22B,
         )
         format_pilot = SimpleTaskPilot.create(
             SolutionValidatorPrompt.default_configuration,
@@ -70,7 +68,7 @@ class FigureQuestionExecutor(BaseExecutor):
         self.chain.add_handler(vision_pilot, self.vision_transformer)
         # self.chain.add_handler(auto_solver_pilot, self.auto_solver_transformer)
         self.chain.add_handler(solver_pilot, self.solver_transformer)
-        self.chain.add_handler(format_pilot, self.format_transformer)
+        # self.chain.add_handler(format_pilot, self.format_transformer)
 
     def auto_solver_transformer(self, data, response, context):
         # print("Auto solver transformer", data, response)

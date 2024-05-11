@@ -32,6 +32,10 @@ async def test_pilot():
     27GSPMH0591G1ZK	Add	23210419	Normal	800/54	29-08-2021	Tax Invoice			0208		27.56	KGS	10620		237800.65	5	0	5945.01625	5945.01625	78.89	21.8500.111.150430.0000.000000.0000.000000.000000.00000000		IPM INDIA WHOLESALE TRADING PVT LTD	27					08-2021	082021	Delhi		GHTY/1200-005	15-02-2022
     """
 
+    query = """
+    a. Rewrite the given equation 4x+9y-36=0 slope-intercept form.
+    """
+
     context = Context()
 
     config = get_config()
