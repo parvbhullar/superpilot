@@ -27,4 +27,11 @@ MODEL_PROVIDERS_DICT = {
             storage_route="superpilot.core.resource.model_providers.OllamaApiProvider",
         ),
     ),
+    ModelProviderName.DEEPINFRA: ModelProviderDetail(
+        name=ModelProviderName.DEEPINFRA,
+        location=PluginLocation(
+            storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
+            storage_route="superpilot.core.resource.model_providers.DeepInfraProvider",
+        ),
+    ),
 }
