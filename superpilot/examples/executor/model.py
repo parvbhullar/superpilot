@@ -11,7 +11,7 @@ from superpilot.examples.executor.base import BaseExecutor
 
 class ModelPilotExecutor(BaseExecutor):
     def __init__(
-        self, provider_name: ModelProviderName, model_name: AI_MODELS, **kwargs
+        self, provider_name: ModelProviderName, model_name: AI_MODELS, **kwargs  # type: ignore
     ):
         for key, value in kwargs.items():
             setattr(self, key, value)
