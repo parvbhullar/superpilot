@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Dict
 from superpilot.core.plugin.simple import (
     PluginLocation,
@@ -18,6 +19,7 @@ from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
     LanguageModelClassification,
 )
+from superpilot.core.resource.model_providers.deepinfra import DEEP_INFRA_MODELS
 
 
 class ModelProviderConfiguration(SystemConfiguration):
@@ -46,6 +48,13 @@ class ModelProviderFactory:
                 location=PluginLocation(
                     storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
                     storage_route="superpilot.core.resource.model_providers.AnthropicApiProvider",
+                ),
+            ),
+            ModelProviderName.DEEPINFRA: ModelProviderConfiguration(
+                user_configuration={"api_key": os.environ.get("DEEPINFRA_API_KEY")},
+                location=PluginLocation(
+                    storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
+                    storage_route="superpilot.core.resource.model_providers.DeepInfraProvider",
                 ),
             ),
         },
@@ -139,11 +148,21 @@ class ModelProviderFactory:
         return model_provider_instance
 
 
-AI_MODELS = {**OPEN_AI_MODELS, **ANTHROPIC_MODELS, **OLLAMA_MODELS}
+AI_MODELS = {
+    **OPEN_AI_MODELS,
+    **ANTHROPIC_MODELS,
+    **OLLAMA_MODELS,
+    **DEEP_INFRA_MODELS,
+}
 
 
 class ModelConfigFactory:
-    AI_MODELS = {**OPEN_AI_MODELS, **ANTHROPIC_MODELS, **OLLAMA_MODELS}
+    AI_MODELS = {
+        **OPEN_AI_MODELS,
+        **ANTHROPIC_MODELS,
+        **OLLAMA_MODELS,
+        **DEEP_INFRA_MODELS,
+    }
 
     def __init__(self):
         pass

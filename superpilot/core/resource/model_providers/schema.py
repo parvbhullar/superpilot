@@ -32,6 +32,8 @@ class ModelProviderName(str, enum.Enum):
     ANTHROPIC: str = "anthropic"
     HUGGINGFACE: str = "huggingface"
     OLLAMA: str = "ollama"
+    TOGETHER: str = "together"
+    DEEPINFRA: str = "deepinfra"
 
 
 class ModelProviderDetail(BaseModel):

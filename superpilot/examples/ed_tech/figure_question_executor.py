@@ -1,3 +1,4 @@
+import os
 from typing import List
 from superpilot.core.context.schema import Context
 from superpilot.core.pilot.task.simple import SimpleTaskPilot
@@ -18,10 +19,8 @@ from superpilot.examples.ed_tech.ag_question_solver_ability import (
 from superpilot.core.pilot.chain.simple import SimpleChain
 
 # from superpilot.examples.pilots.tasks.super import SuperTaskPilot
-from superpilot.core.resource.model_providers import (
-    AnthropicModelName,
-    OpenAIModelName,
-)
+from superpilot.core.resource.model_providers import OpenAIModelName
+from superpilot.core.resource.model_providers.deepinfra import DeepInfraModelName
 
 
 class FigureQuestionExecutor(BaseExecutor):
@@ -54,8 +53,8 @@ class FigureQuestionExecutor(BaseExecutor):
         solver_pilot = SimpleTaskPilot.create(
             SolutionValidatorPrompt.default_configuration,
             model_providers=self.model_providers,
-            smart_model_name=AnthropicModelName.CLAUD_2,
-            fast_model_name=AnthropicModelName.CLAUD_2_INSTANT,
+            smart_model_name=DeepInfraModelName.WIZARD_LM_8_22B,
+            fast_model_name=DeepInfraModelName.WIZARD_LM_8_22B,
         )
         format_pilot = SimpleTaskPilot.create(
             SolutionValidatorPrompt.default_configuration,
@@ -92,7 +91,7 @@ class FigureQuestionExecutor(BaseExecutor):
     def solver_transformer(self, data, response, context):
         response = {
             "question": data,
-            "solution": response.get("completion", ""),
+            "solution": response.get("content", ""),
         }
         task = self.PROMPT_TEMPLATE.format(**response)
         return task, context
@@ -134,21 +133,29 @@ class FigureQuestionExecutor(BaseExecutor):
 
     async def run(self, image_path):
         # query = self.image_to_text(image_path)
-        query = self.extract_text_from_image(image_path)
-        query = query.replace("\\", " ")
-        if not query:
-            query = self.image_to_text(image_path)
-        if not query:
-            return {"solution": "We are unable to process this image"}
-        try:
-            query = latex_to_text(query)
-        except Exception as ex:
-            pass
-        print(query)
-        base64_string = self.image_to_base64(image_path)
-        images = [base64_string]
+        if os.path.exists(image_path) and os.path.isfile(image_path):
+            query = self.extract_text_from_image(image_path)
+            query = query.replace("\\", " ")
+            if not query:
+                query = self.image_to_text(image_path)
+            if not query:
+                return {"solution": "We are unable to process this image"}
+            try:
+                query = latex_to_text(query)
+            except Exception as ex:
+                pass
+            base64_string = self.image_to_base64(image_path)
+            images = [base64_string]
+        else:
+            query = image_path
+            images = []
+            self.chain.remove_handler(0)
+
+        print("FigureQuestionExecutor  Query --> ", query)
         # print(images)
         response = await self.execute(query, images=images)
+        if isinstance(response, str):
+            response = {"solution": response}
         response["solution"] = response.get("solution", "").replace("&", " ")
         # print(response)
         return response
