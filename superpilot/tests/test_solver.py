@@ -121,7 +121,8 @@ if __name__ == "__main__":
     # math_pics_ocr(path)
     # path = "original/Chegg Ques/Screenshot_2023-10-21_103505.png"
     # path = "original/Chegg Ques/Screenshot 2023-10-21 102000.png"
-    solve_question(path)
+    quuestion = "The cost and revenue functions of a product are given by C(x) = 20 x + 4000 and R(x) = 60x + 2000, respectively, where x is the number of items produced and sold. How many items must be sold to realise some profit?"
+    solve_question(quuestion)
     # for i in range(1, 5):
     # solve_question(path)
     # extract_text_from_image(path)
