@@ -1,4 +1,4 @@
-anthropic==0.4.1
+anthropic==0.19.1
 auto-gpt-plugin-template==0.0.3
 beautifulsoup4>=4.12.2
 bert-extractive-summarizer==0.10.1
