@@ -1,3 +1,4 @@
+import os
 from typing import List
 from superpilot.core.context.schema import Context
 from superpilot.core.pilot.task.simple import SimpleTaskPilot
@@ -132,19 +133,25 @@ class FigureQuestionExecutor(BaseExecutor):
 
     async def run(self, image_path):
         # query = self.image_to_text(image_path)
-        query = self.extract_text_from_image(image_path)
-        query = query.replace("\\", " ")
-        if not query:
-            query = self.image_to_text(image_path)
-        if not query:
-            return {"solution": "We are unable to process this image"}
-        try:
-            query = latex_to_text(query)
-        except Exception as ex:
-            pass
-        print(query)
-        base64_string = self.image_to_base64(image_path)
-        images = [base64_string]
+        if os.path.exists(image_path) and os.path.isfile(image_path):
+            query = self.extract_text_from_image(image_path)
+            query = query.replace("\\", " ")
+            if not query:
+                query = self.image_to_text(image_path)
+            if not query:
+                return {"solution": "We are unable to process this image"}
+            try:
+                query = latex_to_text(query)
+            except Exception as ex:
+                pass
+            base64_string = self.image_to_base64(image_path)
+            images = [base64_string]
+        else:
+            query = image_path
+            images = []
+            self.chain.remove_handler(0)
+
+        print("FigureQuestionExecutor  Query --> ", query)
         # print(images)
         response = await self.execute(query, images=images)
         if isinstance(response, str):

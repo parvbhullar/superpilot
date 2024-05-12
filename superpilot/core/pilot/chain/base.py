@@ -1,12 +1,9 @@
 from abc import ABC, abstractmethod
 import logging
-from superpilot.core.context.schema import Context
 
 
 class BaseChain(ABC):
-    def __init__(self,
-                 logger: logging.Logger = logging.getLogger(__name__),
-                 **kwargs):
+    def __init__(self, logger: logging.Logger = logging.getLogger(__name__), **kwargs):
         self.logger = logger
         self.handlers = []
         self.transformers = []
@@ -31,15 +28,27 @@ class BaseChain(ABC):
                 else:
                     response = await handler.execute(data, context, **kwargs)
                 if transformer:
-                    data, context = transformer(data=data, response=response, context=context)
+                    data, context = transformer(
+                        data=data, response=response, context=context
+                    )
                 else:
                     data = response
             except Exception as e:
                 import traceback
-                self.logger.error(f"Error in handler {handler.name()}: {e} {traceback.print_exc()}")
+
+                self.logger.error(
+                    f"Error in handler {handler.name()}: {e} {traceback.print_exc()}"
+                )
                 continue
         return data, context
 
     @abstractmethod
     async def execute_handler(self, handler, data, context, **kwargs):
         pass
+
+    def remove_handler(self, handler_index):
+        """
+        Removes a handler from the chain.
+        """
+        self.handlers.pop(handler_index)
+        self.transformers.pop(handler_index)
