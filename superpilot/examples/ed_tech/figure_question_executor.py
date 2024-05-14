@@ -56,11 +56,17 @@ class FigureQuestionExecutor(BaseExecutor):
             smart_model_name=DeepInfraModelName.WIZARD_LM_8_22B,
             fast_model_name=DeepInfraModelName.WIZARD_LM_8_22B,
         )
+        # solver_pilot = SimpleTaskPilot.create(
+        #     SolutionValidatorPrompt.default_configuration,
+        #     model_providers=self.model_providers,
+        #     smart_model_name=OpenAIModelName.GPT4_O,
+        #     fast_model_name=OpenAIModelName.GPT4_O,
+        # )
         format_pilot = SimpleTaskPilot.create(
             SolutionValidatorPrompt.default_configuration,
             model_providers=self.model_providers,
-            smart_model_name=OpenAIModelName.GPT4_TURBO,
-            fast_model_name=OpenAIModelName.GPT3,
+            smart_model_name=OpenAIModelName.GPT4_O,
+            fast_model_name=OpenAIModelName.GPT4_O,
         )
         # auto_solver_pilot = SuperTaskPilot(super_ability_registry, self.model_providers)
         # print("VISION", vision_pilot)
