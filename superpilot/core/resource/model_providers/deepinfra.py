@@ -55,8 +55,8 @@ DEEP_INFRA_LANGUAGE_MODELS = {
         name=DeepInfraModelName.WIZARD_LM_8_22B,
         service=ModelProviderService.LANGUAGE,
         provider_name=ModelProviderName.DEEPINFRA,
-        prompt_token_cost=0.650,
-        completion_token_cost=0.650,
+        prompt_token_cost=0.0006,
+        completion_token_cost=0.0006,
         max_tokens=65536,
     ),
 }
