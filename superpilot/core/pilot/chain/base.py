@@ -7,6 +7,7 @@ class BaseChain(ABC):
         self.logger = logger
         self.handlers = []
         self.transformers = []
+        self.total_cost = {}
 
     def add_handler(self, handler, transformer=None):
         """
@@ -33,6 +34,7 @@ class BaseChain(ABC):
                     )
                 else:
                     data = response
+                self.update_cost(response)
             except Exception as e:
                 import traceback
 
@@ -52,3 +54,15 @@ class BaseChain(ABC):
         """
         self.handlers.pop(handler_index)
         self.transformers.pop(handler_index)
+
+    def update_cost(cls, response):
+        total_cost = response.total_cost
+        completion_tokens_used = response.completion_tokens_used
+        prompt_tokens_used = response.prompt_tokens_used
+        cls.total_cost["total_cost"] = cls.total_cost.get("total_cost", 0) + total_cost
+        cls.total_cost["completion_tokens_used"] = (
+            cls.total_cost.get("completion_tokens_used", 0) + completion_tokens_used
+        )
+        cls.total_cost["prompt_tokens_used"] = (
+            cls.total_cost.get("prompt_tokens_used", 0) + prompt_tokens_used
+        )

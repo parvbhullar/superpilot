@@ -27,7 +27,6 @@ class FigureQuestionExecutor(BaseExecutor):
     model_providers = ModelProviderFactory.load_providers()
     context = Context()
     config = get_config()
-    chain = SimpleChain()
     env = get_env({})
     ALLOWED_ABILITY = {
         # SearchAndSummarizeAbility.name(): SearchAndSummarizeAbility.default_configuration,
@@ -38,7 +37,7 @@ class FigureQuestionExecutor(BaseExecutor):
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
-
+        self.chain = SimpleChain()
         super_ability_registry = SuperAbilityRegistry.factory(
             self.env, self.ALLOWED_ABILITY
         )
@@ -56,11 +55,17 @@ class FigureQuestionExecutor(BaseExecutor):
             smart_model_name=DeepInfraModelName.WIZARD_LM_8_22B,
             fast_model_name=DeepInfraModelName.WIZARD_LM_8_22B,
         )
+        # solver_pilot = SimpleTaskPilot.create(
+        #     SolutionValidatorPrompt.default_configuration,
+        #     model_providers=self.model_providers,
+        #     smart_model_name=OpenAIModelName.GPT4_O,
+        #     fast_model_name=OpenAIModelName.GPT4_O,
+        # )
         format_pilot = SimpleTaskPilot.create(
             SolutionValidatorPrompt.default_configuration,
             model_providers=self.model_providers,
-            smart_model_name=OpenAIModelName.GPT4_TURBO,
-            fast_model_name=OpenAIModelName.GPT3,
+            smart_model_name=OpenAIModelName.GPT4_O,
+            fast_model_name=OpenAIModelName.GPT4_O,
         )
         # auto_solver_pilot = SuperTaskPilot(super_ability_registry, self.model_providers)
         # print("VISION", vision_pilot)
@@ -116,6 +121,7 @@ class FigureQuestionExecutor(BaseExecutor):
 
     async def execute(self, task: str, **kwargs):
         response, context = await self.chain.execute(task, self.context, **kwargs)
+        response["total_cost"] = self.chain.total_cost
 
         # print("Task: ", response)
         # print("Context: ", context)
