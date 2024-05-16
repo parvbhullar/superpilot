@@ -61,12 +61,12 @@ class FigureQuestionExecutor(BaseExecutor):
         #     smart_model_name=OpenAIModelName.GPT4_O,
         #     fast_model_name=OpenAIModelName.GPT4_O,
         # )
-        format_pilot = SimpleTaskPilot.create(
-            SolutionValidatorPrompt.default_configuration,
-            model_providers=self.model_providers,
-            smart_model_name=OpenAIModelName.GPT4_O,
-            fast_model_name=OpenAIModelName.GPT4_O,
-        )
+        # format_pilot = SimpleTaskPilot.create(
+        #     SolutionValidatorPrompt.default_configuration,
+        #     model_providers=self.model_providers,
+        #     smart_model_name=OpenAIModelName.GPT4_O,
+        #     fast_model_name=OpenAIModelName.GPT4_O,
+        # )
         # auto_solver_pilot = SuperTaskPilot(super_ability_registry, self.model_providers)
         # print("VISION", vision_pilot)
 
@@ -74,7 +74,7 @@ class FigureQuestionExecutor(BaseExecutor):
         self.chain.add_handler(vision_pilot, self.vision_transformer)
         # self.chain.add_handler(auto_solver_pilot, self.auto_solver_transformer)
         self.chain.add_handler(solver_pilot, self.solver_transformer)
-        self.chain.add_handler(format_pilot, self.format_transformer)
+        # self.chain.add_handler(format_pilot, self.format_transformer)
 
     def auto_solver_transformer(self, data, response, context):
         # print("Auto solver transformer", data, response)
@@ -98,8 +98,9 @@ class FigureQuestionExecutor(BaseExecutor):
             "question": data,
             "solution": response.get("content", ""),
         }
-        task = self.PROMPT_TEMPLATE.format(**response)
-        return task, context
+        # task = self.PROMPT_TEMPLATE.format(**response)
+        # return task, context
+        return response, context
 
     def format_transformer(self, data, response, context):
         # print("Task: ", data)
