@@ -225,13 +225,30 @@ class FigureQuestionExecutor(BaseExecutor):
         for index, query in enumerate(query_list):
             try:
                 response = await self.run(query.get("Question Content"))
-                final_res.append({**query, **response})
+                print(response.get("total_cost"))
+                final_res.append(
+                    {
+                        **query,
+                        **response.copy(),
+                        "total_cost$": response.get("total_cost", {}).get(
+                            "total_cost", 0
+                        ),
+                    }
+                )
                 print(f"Query {index} finished", "\n\n")
             except Exception as e:
                 try:
                     print("Trying to run again")
                     response = await self.run(query.get("Question Content"))
-                    final_res.append({**query, **response})
+                    final_res.append(
+                        {
+                            **query,
+                            **response.copy(),
+                            "total_cost$": response.get("total_cost", {}).get(
+                                "total_cost", 0
+                            ),
+                        }
+                    )
                     print(f"Query {index} finished", "\n\n")
                 except Exception as e:
                     print(e, "Query Failed")
