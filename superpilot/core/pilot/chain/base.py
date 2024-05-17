@@ -7,7 +7,6 @@ class BaseChain(ABC):
         self.logger = logger
         self.handlers = []
         self.transformers = []
-        self.total_cost = {}
 
     def add_handler(self, handler, transformer=None):
         """
@@ -21,6 +20,7 @@ class BaseChain(ABC):
         return response, context
 
     async def execute(self, data, context, **kwargs):
+        self.total_cost = {}
         for handler, transformer in zip(self.handlers, self.transformers):
             try:
                 # Check if the handler is a function or a class with an execute method

@@ -1,21 +1,16 @@
 import os
-from typing import List
+from typing import Dict, List
 from superpilot.core.context.schema import Context
 from superpilot.core.pilot.task.simple import SimpleTaskPilot
 from superpilot.core.resource.model_providers.factory import (
     ModelProviderFactory,
 )
 from superpilot.examples.executor.base import BaseExecutor
-from superpilot.examples.ed_tech.question_solver import QuestionSolverPrompt
 from superpilot.examples.ed_tech.solution_validator import SolutionValidatorPrompt
 from superpilot.examples.ed_tech.describe_image_question import DescribeQFigurePrompt
 from superpilot.framework.tools.latex import latex_to_text
 from superpilot.tests.test_env_simple import get_env
 from superpilot.core.configuration.config import get_config
-from superpilot.core.ability.super import SuperAbilityRegistry
-from superpilot.examples.ed_tech.ag_question_solver_ability import (
-    AGQuestionSolverAbility,
-)
 from superpilot.core.pilot.chain.simple import SimpleChain
 
 # from superpilot.examples.pilots.tasks.super import SuperTaskPilot
@@ -28,20 +23,11 @@ class FigureQuestionExecutor(BaseExecutor):
     context = Context()
     config = get_config()
     env = get_env({})
-    ALLOWED_ABILITY = {
-        # SearchAndSummarizeAbility.name(): SearchAndSummarizeAbility.default_configuration,
-        # TextSummarizeAbility.name(): TextSummarizeAbility.default_configuration,
-        AGQuestionSolverAbility.name(): AGQuestionSolverAbility.default_configuration,
-    }
 
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
         self.chain = SimpleChain()
-        super_ability_registry = SuperAbilityRegistry.factory(
-            self.env, self.ALLOWED_ABILITY
-        )
-        self.super_prompt = QuestionSolverPrompt.factory()
 
         vision_pilot = SimpleTaskPilot.create(
             DescribeQFigurePrompt.default_configuration,
@@ -61,20 +47,19 @@ class FigureQuestionExecutor(BaseExecutor):
         #     smart_model_name=OpenAIModelName.GPT4_O,
         #     fast_model_name=OpenAIModelName.GPT4_O,
         # )
-        format_pilot = SimpleTaskPilot.create(
-            SolutionValidatorPrompt.default_configuration,
-            model_providers=self.model_providers,
-            smart_model_name=OpenAIModelName.GPT4_O,
-            fast_model_name=OpenAIModelName.GPT4_O,
-        )
+        # format_pilot = SimpleTaskPilot.create(
+        #     SolutionValidatorPrompt.default_configuration,
+        #     model_providers=self.model_providers,
+        #     smart_model_name=OpenAIModelName.GPT4_O,
+        #     fast_model_name=OpenAIModelName.GPT4_O,
+        # )
         # auto_solver_pilot = SuperTaskPilot(super_ability_registry, self.model_providers)
         # print("VISION", vision_pilot)
 
         # Initialize and add pilots to the chain here, for example:
         self.chain.add_handler(vision_pilot, self.vision_transformer)
-        # self.chain.add_handler(auto_solver_pilot, self.auto_solver_transformer)
         self.chain.add_handler(solver_pilot, self.solver_transformer)
-        self.chain.add_handler(format_pilot, self.format_transformer)
+        # self.chain.add_handler(format_pilot, self.format_transformer)
 
     def auto_solver_transformer(self, data, response, context):
         # print("Auto solver transformer", data, response)
@@ -98,8 +83,9 @@ class FigureQuestionExecutor(BaseExecutor):
             "question": data,
             "solution": response.get("content", ""),
         }
-        task = self.PROMPT_TEMPLATE.format(**response)
-        return task, context
+        # task = self.PROMPT_TEMPLATE.format(**response)
+        # return task, context
+        return response, context
 
     def format_transformer(self, data, response, context):
         # print("Task: ", data)
@@ -155,7 +141,8 @@ class FigureQuestionExecutor(BaseExecutor):
         else:
             query = image_path
             images = []
-            self.chain.remove_handler(0)
+            if "vision" in str(self.chain.handlers[0]):
+                self.chain.remove_handler(0)
 
         print("FigureQuestionExecutor  Query --> ", query)
         # print(images)
@@ -232,15 +219,38 @@ class FigureQuestionExecutor(BaseExecutor):
             return ""
         return "\n".join([f"{i}) {c}" for i, c in enumerate(items, 1)])
 
-    async def run_list(self, path_list: List[str]):
+    async def run_list(self, query_list: List[Dict]):
         final_res = []
-        try:
-            for index, path in enumerate(path_list):
-                response = await self.run(path)
-                final_res.append({"path": path, **response})
-                print(f"Query {response.get('question')}", "\n\n")
-                print(f"Solution {response.get('solution')}", "\n\n")
+        error_res = []
+        for index, query in enumerate(query_list):
+            try:
+                response = await self.run(query.get("Question Content"))
+                print(response.get("total_cost"))
+                final_res.append(
+                    {
+                        **query,
+                        **response.copy(),
+                        "total_cost$": response.get("total_cost", {}).get(
+                            "total_cost", 0
+                        ),
+                    }
+                )
                 print(f"Query {index} finished", "\n\n")
-        except Exception as e:
-            print(e)
-        return final_res
+            except Exception as e:
+                try:
+                    print("Trying to run again")
+                    response = await self.run(query.get("Question Content"))
+                    final_res.append(
+                        {
+                            **query,
+                            **response.copy(),
+                            "total_cost$": response.get("total_cost", {}).get(
+                                "total_cost", 0
+                            ),
+                        }
+                    )
+                    print(f"Query {index} finished", "\n\n")
+                except Exception as e:
+                    print(e, "Query Failed")
+                    error_res.append(query)
+        return final_res, error_res
