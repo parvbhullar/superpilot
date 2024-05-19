@@ -114,6 +114,8 @@ class SuperPilot(Pilot, Configurable):
     async def execute(self, objective: Union[str, Task, Message], *args, **kwargs):
         self._logger.info(f"Executing step {self._configuration.cycle_count}")
 
+        result = None
+
         if isinstance(objective, Task):
             self.task = objective
         else:
@@ -152,12 +154,14 @@ class SuperPilot(Pilot, Configurable):
             # await self.update_task_queue()
             # if self._current_task.context.status != TaskStatus.DONE:
             #     await self.execute_next_step(*args, **kwargs)
-            await self.execute_next_step(*args, **kwargs)
+            result = await self.execute_next_step(*args, **kwargs)
 
         if self.task.active_task_idx == len(self.task.plan):
             self.task.status = TaskStatus.DONE
             task_end_message = Message.add_task_end_message(f"'{self.task.objective}' task completed")
             self._context.add_message(task_end_message)
+
+        return result
 
     async def handle_clarification(self, ability_args, **kwargs) -> bool:
         self._current_task.context.user_input.append(
@@ -221,6 +225,7 @@ class SuperPilot(Pilot, Configurable):
         # if ability_action.success:
         self._current_task = None
         self._next_step_response = None
+        return ability_action.raw_response
 
     async def update_task_queue(self):
         if self._current_task.context.status == TaskStatus.DONE:

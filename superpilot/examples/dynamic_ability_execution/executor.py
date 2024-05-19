@@ -72,10 +72,10 @@ class SuperDynamicPilot(BaseExecutor):
 
     async def execute(self, task: str):
         await self.init()
-        await self.dynamic_pilot.execute(task)
+        return await self.dynamic_pilot.execute(task)
 
     async def run(self, query):
-        await self.execute(query)
+        return await self.execute(query)
 
 
 def create_class_from_json(ability_config):
@@ -135,6 +135,12 @@ def create_class_from_json(ability_config):
     )
 
     return cls
+
+
+def dynamic_run_llm(query, json_data):
+    thread_id = "thread1234567891011121314151617"
+    calc = SuperDynamicPilot(thread_id=thread_id, json_config=json_data)
+    return asyncio.run(calc.run(query))
 
 
 if __name__ == "__main__":
