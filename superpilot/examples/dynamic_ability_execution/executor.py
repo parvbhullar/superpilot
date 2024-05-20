@@ -42,8 +42,8 @@ class SuperDynamicPilot(BaseExecutor):
         self.context = await state.load()
 
         call_back_manager = STDInOutCallbackManager(
-            callbacks=[SimpleCallbackHandler(thread_id=thread_id)],
-            thread_id=thread_id
+            callbacks=[SimpleCallbackHandler(thread_id=self.thread_id)],
+            thread_id=self.thread_id
         )
 
         abilities = [create_class_from_json(ability_conf) for ability_conf in self.json_data]
@@ -198,8 +198,11 @@ result = ans
         },
     ]
 
-    # state = State()
-    thread_id = "thread1234567891011121314151617"
-    calc = SuperDynamicPilot(thread_id=thread_id, json_config=json_data)
-    print(asyncio.run(calc.run("What is 3 plus 2 minus 5")))
+    # # state = State()
+    # thread_id = "thread1234567891011121314151617"
+    # calc = SuperDynamicPilot(thread_id=thread_id, json_config=json_data)
+    # print(asyncio.run(calc.run("What is 3 plus 2 minus 5")))
+    ans = dynamic_run_llm("What is 3 plus 2 minus 5", json_data)
+
+    print('we got', ans)
   
