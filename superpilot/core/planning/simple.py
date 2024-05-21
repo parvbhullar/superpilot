@@ -5,29 +5,37 @@ from typing import Dict, List
 
 import distro
 
+from superpilot.core import planning
+from superpilot.core.callback.base import BaseCallback
+from superpilot.core.callback.manager.base import BaseCallbackManager
 from superpilot.core.configuration import Configurable
+from superpilot.core.context.schema import Context, Message
 from superpilot.core.planning import strategies
-from superpilot.core.planning.base import PromptStrategy
+from superpilot.core.planning.base import PromptStrategy, Planner
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
     LanguageModelResponse,
-    Task,
+    Task, ObjectivePlan,
 )
 from superpilot.core.planning.settings import (
-    PlannerConfiguration,
-    PlannerSettings,
+    PlannerConfigurationLegacy,
+    PlannerSettingsLegacy,
     LanguageModelConfiguration,
-    PromptStrategiesConfiguration,
+    PromptStrategiesConfiguration, PlannerSettings, PlannerConfiguration,
 )
+from superpilot.core.planning.strategies import NextAbility
+from superpilot.core.planning.strategies.planning_strategy import PlanningStrategy
 from superpilot.core.resource.model_providers import (
     LanguageModelProvider,
     ModelProviderName,
     OpenAIModelName,
 )
+from superpilot.core.state.base import BaseState
 from superpilot.core.workspace import Workspace
+from superpilot.core.plugin.utlis import load_class
 
 
-class SimplePlanner(Configurable):
+class SimplePlanner(Configurable, Planner):
     """Manages the pilot's planning and goal-setting by constructing language model prompts."""
 
     default_settings = PlannerSettings(
@@ -46,11 +54,9 @@ class SimplePlanner(Configurable):
                     temperature=0.9,
                 ),
             },
-            prompt_strategies=PromptStrategiesConfiguration(
-                name_and_goals=strategies.NameAndGoals.default_configuration,
-                initial_plan=strategies.InitialPlan.default_configuration,
-                next_ability=strategies.NextAbility.default_configuration,
-            ),
+            planning_strategy=PlanningStrategy.default_configuration,
+            execution_strategy=NextAbility.default_configuration,
+            reflection_strategy=PlanningStrategy.default_configuration,
         ),
     )
 
@@ -59,59 +65,75 @@ class SimplePlanner(Configurable):
         settings: PlannerSettings,
         logger: logging.Logger,
         model_providers: Dict[ModelProviderName, LanguageModelProvider],
+        callback: BaseCallbackManager = None,
         workspace: Workspace = None,  # Workspace is not available during bootstrapping.
+        context: Context = None,
+        state: BaseState = None,
     ) -> None:
         self._configuration = settings.configuration
         self._logger = logger
         self._workspace = workspace
+        self._callback = callback
+        self._context = context
+        self._state = state
 
         self._providers: Dict[LanguageModelClassification, LanguageModelProvider] = {}
         for model, model_config in self._configuration.models.items():
             self._providers[model] = model_providers[model_config.provider_name]
 
-        self._prompt_strategies = {
-            "name_and_goals": strategies.NameAndGoals(
-                **self._configuration.prompt_strategies.name_and_goals.dict()
-            ),
-            "initial_plan": strategies.InitialPlan(
-                **self._configuration.prompt_strategies.initial_plan.dict()
-            ),
-            "next_ability": strategies.NextAbility(
-                **self._configuration.prompt_strategies.next_ability.dict()
-            ),
-        }
+        self._planning_strategy = self.init_strategy(self._configuration.planning_strategy)
+        self._execution_strategy = self.init_strategy(self._configuration.execution_strategy)
+        self._reflection_strategy = self.init_strategy(self._configuration.reflection_strategy)
 
-    async def decide_name_and_goals(self, user_objective: str) -> LanguageModelResponse:
-        return await self.chat_with_model(
-            self._prompt_strategies["name_and_goals"],
-            user_objective=user_objective,
+    async def plan(self, user_objective: Task, functions: List[dict], **kwargs) -> ObjectivePlan:
+        while True:
+            template_kwargs = {"task_objective": user_objective.objective}
+            template_kwargs.update(kwargs)
+            observation_response = await self.chat_with_model(
+                self._planning_strategy,
+                functions=functions,
+                context=self._context,
+                **template_kwargs,
+            )
+            ability_args = observation_response.content.get("function_arguments", {})
+            if ability_args.get("clarifying_question"):
+                hold = await self.handle_clarification(observation_response, ability_args, user_objective, **kwargs)
+                if hold:
+                    self._context.interaction = True
+                    await self._state.save(self._context)
+                    return None
+            else:
+                observation = ObjectivePlan(**ability_args)
+                break
+
+        return observation
+
+    async def handle_clarification(self, response, ability_args, task, **kwargs) -> bool:
+        question_message = Message.add_question_message(
+            message=ability_args.get("clarifying_question")
         )
-
-    async def make_initial_plan(
-        self,
-        pilot_name: str,
-        pilot_role: str,
-        pilot_goals: List[str],
-        abilities: List[str],
-    ) -> LanguageModelResponse:
-        return await self.chat_with_model(
-            self._prompt_strategies["initial_plan"],
-            pilot_name=pilot_name,
-            pilot_role=pilot_role,
-            pilot_goals=pilot_goals,
-            abilities=abilities,
+        self._context.add_message(question_message)
+        user_input, hold = await self._callback.on_clarifying_question(
+            question_message,
+            task,
+            response,
+            self._context,
+            **kwargs
         )
+        if user_input:
+            self._context.add_message(user_input)
+        return hold
 
-    async def determine_next_ability(
-        self,
-        task: Task,
-        ability_schema: List[dict],
-    ):
+    async def next(self, task: Task, functions: List[dict], **kwargs) -> LanguageModelResponse:
         return await self.chat_with_model(
-            self._prompt_strategies["next_ability"],
+            self._execution_strategy,
             task=task,
-            ability_schema=ability_schema,
+            ability_schema=functions,
+            **kwargs,
         )
+
+    def reflect(self, task: Task, context: Context) -> LanguageModelResponse:
+        pass
 
     async def chat_with_model(
         self,
@@ -132,10 +154,14 @@ class SimplePlanner(Configurable):
         response = await provider.create_language_completion(
             model_prompt=prompt.messages,
             functions=prompt.functions,
+            function_call=prompt.get_function_call(),
+            req_res_callback=self._callback.model_req_res_callback if self._callback else None,
             **model_configuration,
             completion_parser=prompt_strategy.parse_response_content,
         )
-        return LanguageModelResponse.model_validate(response.model_dump())
+        # return LanguageModelResponse.model_validate(response.model_dump())
+        return LanguageModelResponse.parse_obj(response.dict())
+
 
     def _make_template_kwargs_for_strategy(self, strategy: PromptStrategy):
         provider = self._providers[strategy.model_classification]
@@ -145,6 +171,15 @@ class SimplePlanner(Configurable):
             "current_time": time.strftime("%c"),
         }
         return template_kwargs
+
+    @classmethod
+    def init_strategy(cls, prompt_config: PromptStrategiesConfiguration = None):
+        prompt_config = prompt_config.dict()
+        location = prompt_config.pop("location", None)
+        if location is not None:
+            return load_class(location, prompt_config)
+        else:
+            return strategies.NextAbility(**prompt_config)
 
 
 def get_os_info() -> str:

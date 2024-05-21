@@ -8,6 +8,9 @@ from pydantic import Field
 from superpilot.core.ability.schema import AbilityAction
 from superpilot.core.configuration import SystemConfiguration
 from superpilot.core.planning.settings import LanguageModelConfiguration
+from superpilot.core.resource.model_providers import (
+    LanguageModelMessage, LanguageModelFunction,
+)
 from superpilot.core.plugin.base import PluginLocation, PluginStorageFormat
 from superpilot.core.resource.model_providers import (
     ModelProviderName,
@@ -58,6 +61,8 @@ class Ability(abc.ABC):
 
     default_configuration: ClassVar[AbilityConfiguration]
 
+    _summary: str = None
+
     @classmethod
     def name(cls) -> str:
         """The name of the ability."""
@@ -79,6 +84,11 @@ class Ability(abc.ABC):
     def required_arguments(cls) -> List[str]:
         """A list of required arguments."""
         return []
+
+    @property
+    def summary(self) -> str:
+        """A summary of the ability result."""
+        return self._summary
 
     @abc.abstractmethod
     async def __call__(self, *args, **kwargs) -> AbilityAction:
@@ -137,5 +147,10 @@ class AbilityRegistry(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def perform(self, ability_name: str, **kwargs) -> AbilityAction:
+    async def perform(self, ability_name: str, ability_args: dict, **kwargs) -> AbilityAction:
         ...
+
+
+class AbilityException(Exception):
+    """Base exception for the ability subsystem."""
+    pass
