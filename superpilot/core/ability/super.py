@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional
+import traceback
 
-from superpilot.core.ability.base import Ability, AbilityConfiguration, AbilityRegistry
+from superpilot.core.ability.base import Ability, AbilityConfiguration, AbilityRegistry, AbilityException
 from superpilot.core.ability.builtins import BUILTIN_ABILITIES
 from superpilot.core.ability.schema import AbilityAction
 from superpilot.core.configuration import (
@@ -86,16 +87,30 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
                 return ability
         raise ValueError(f"Ability '{ability_name}' not found.")
 
-    async def perform(self, ability_name: str, **kwargs) -> AbilityAction:
-        ability = self.get_ability(ability_name)
-        # print("Perform Ability: ", ability_name, kwargs)
-        response = await ability(**kwargs)
-
+    async def perform(self, ability_name: str, ability_args: dict, **kwargs) -> AbilityAction:
         ability_action = AbilityAction()
         ability_action.executed = True
-        ability_action.message = "Ability executed"
-        # ability_action.wait_for_user = ability.wait()
-        ability_action.add_knowledge(response)
+        ability_action.action_objective = kwargs.get("action_objective", "")
+        ability_action.ability_name = ability_name
+        ability_action.ability_args = ability_args
+        try:
+            ability = self.get_ability(ability_name)
+            # print("Perform Ability: ", ability_name, kwargs)
+            response = await ability(**ability_args, **kwargs)
+            print("Ability response", response)
+            ability_action.success = True
+            ability_action.message = str(response)
+            ability_action.raw_response = response
+        except AbilityException as e:
+            traceback.print_exc()
+            self._logger.error("Error %s", str(e))
+            ability_action.success = False
+            ability_action.message = str(e)
+        except Exception as e:
+            traceback.print_exc()
+            self._logger.error("Error %s", str(e))
+            ability_action.success = False
+            ability_action.message = f"Function execution failed with error: {e}"
         return ability_action
 
     def abilities(self) -> List[Ability]:

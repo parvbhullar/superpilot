@@ -13,3 +13,5 @@ original/*
 Final/*
 final/*
 .cache
+.idea
+.DS_store

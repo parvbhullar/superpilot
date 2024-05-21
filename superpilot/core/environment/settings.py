@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from superpilot.core.configuration import SystemConfiguration, SystemSettings
 from superpilot.core.configuration.schema import WorkspaceSettings
 from superpilot.core.memory.settings import MemorySettings
-from superpilot.core.planning.settings import PlannerSettings
+from superpilot.core.planning.settings import PlannerSettingsLegacy, PlannerSettings
 from superpilot.core.plugin.base import PluginLocation
 from superpilot.core.resource.model_providers.openai import OpenAISettings
 

@@ -1,6 +1,12 @@
 from abc import ABC, abstractmethod
+from enum import Enum
 import logging
-from superpilot.core.context.schema import Context
+
+
+class HandlerType(Enum):
+    HANDLER = "handler"
+    OBSERVER = "observer"
+    COMMUNICATOR = "communicator"
 
 
 class BaseChain(ABC):
@@ -8,38 +14,58 @@ class BaseChain(ABC):
                  logger: logging.Logger = logging.getLogger(__name__),
                  **kwargs):
         self.logger = logger
-        self.handlers = []
-        self.transformers = []
+        self.pilots = {}
+        self.transformers = {}
 
     def add_handler(self, handler, transformer=None):
         """
         Adds a handler and an optional transformer to the chain.
         """
-        self.handlers.append(handler)
-        self.transformers.append(transformer or None)
+        self._add(handler, transformer, HandlerType.HANDLER)
+
+    def _add(self, pilot, transformer, pilot_type):
+        if pilot_type not in self.pilots:
+            self.pilots[pilot_type] = [pilot]
+            self.transformers[pilot_type] = [transformer or None]
+        else:
+            self.pilots[pilot_type].append(pilot)
+            self.transformers[pilot_type].append(transformer or None)
+
+    def add_observer(self, observer, transformer=None):
+        """
+        Adds a handler and an optional transformer to the chain.
+        """
+        if HandlerType.OBSERVER in self.pilots:
+            del self.pilots[HandlerType.OBSERVER]
+            del self.transformers[HandlerType.OBSERVER]
+        self._add(observer, transformer, HandlerType.OBSERVER)
+
+    def current_observer(self):
+        if HandlerType.OBSERVER not in self.pilots:
+            return None
+        return self.pilots[HandlerType.OBSERVER][-1]
+
+    def current_handler(self, pilot_name):
+        if HandlerType.HANDLER not in self.pilots:
+            return None, None
+        # TODO optimise this search
+        for i, handler in enumerate(self.pilots[HandlerType.HANDLER]):
+            if handler.name() == pilot_name:
+                return handler, self.transformers[HandlerType.HANDLER][i]
+        return None, None
 
     def default_transformer(self, data, response, context):
         response = response.get("content", data)
         return response, context
 
-    async def execute(self, data, context, **kwargs):
-        for handler, transformer in zip(self.handlers, self.transformers):
-            try:
-                # Check if the handler is a function or a class with an execute method
-                if callable(handler):
-                    response = await handler(data, context, **kwargs)
-                else:
-                    response = await handler.execute(data, context, **kwargs)
-                if transformer:
-                    data, context = transformer(data=data, response=response, context=context)
-                else:
-                    data = response
-            except Exception as e:
-                import traceback
-                self.logger.error(f"Error in handler {handler.name()}: {e} {traceback.print_exc()}")
-                continue
-        return data, context
-
     @abstractmethod
-    async def execute_handler(self, handler, data, context, **kwargs):
+    async def execute(self, data, context, **kwargs):
         pass
+
+    def dump_pilots(self):
+        pilots_dict = []
+        for pilot in self.pilots[HandlerType.HANDLER]:
+            pilots_dict.append(pilot.dump())
+
+        return pilots_dict
+
