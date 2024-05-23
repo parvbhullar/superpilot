@@ -5,6 +5,7 @@ from superpilot.core.pilot.task.simple import SimpleTaskPilot
 from superpilot.core.resource.model_providers.factory import (
     ModelProviderFactory,
 )
+from superpilot.examples.ed_tech.answer_categorizer import AnswerCategorizerPrompt
 from superpilot.examples.executor.base import BaseExecutor
 from superpilot.examples.ed_tech.solution_validator import SolutionValidatorPrompt
 from superpilot.examples.ed_tech.describe_image_question import DescribeQFigurePrompt
@@ -59,6 +60,13 @@ class FigureQuestionExecutor(BaseExecutor):
         # Initialize and add pilots to the chain here, for example:
         self.chain.add_handler(vision_pilot, self.vision_transformer)
         self.chain.add_handler(solver_pilot, self.solver_transformer)
+
+        self.answer_pilot = SimpleTaskPilot.create(
+            AnswerCategorizerPrompt().get_config(),
+            model_providers=self.model_providers,
+            smart_model_name=OpenAIModelName.GPT4_O,
+            fast_model_name=OpenAIModelName.GPT4_O,
+        )
         # self.chain.add_handler(format_pilot, self.format_transformer)
 
     def auto_solver_transformer(self, data, response, context):
@@ -150,7 +158,11 @@ class FigureQuestionExecutor(BaseExecutor):
         if isinstance(response, str):
             response = {"solution": response}
         response["solution"] = response.get("solution", "").replace("&", " ")
-        # print(response)
+        solution = response.get("solution", "")
+        sol_res = await self.answer_pilot.execute(
+            solution, response_format={"type": "json_object"}
+        )
+        response["solution_categorized"] = sol_res.content
         return response
 
     # Function to get base64 string from image file
