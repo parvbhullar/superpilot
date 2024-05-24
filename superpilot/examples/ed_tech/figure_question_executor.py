@@ -163,6 +163,8 @@ class FigureQuestionExecutor(BaseExecutor):
             solution, response_format={"type": "json_object"}
         )
         response["solution_categorized"] = sol_res.content
+        self.chain.update_cost(sol_res)
+        response["total_cost"] = self.chain.total_cost
         return response
 
     # Function to get base64 string from image file
