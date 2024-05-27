@@ -158,13 +158,13 @@ class FigureQuestionExecutor(BaseExecutor):
         if isinstance(response, str):
             response = {"solution": response}
         response["solution"] = response.get("solution", "").replace("&", " ")
-        solution = response.get("solution", "")
-        sol_res = await self.answer_pilot.execute(
-            solution, response_format={"type": "json_object"}
-        )
-        response["solution_categorized"] = sol_res.content
-        self.chain.update_cost(sol_res)
-        response["total_cost"] = self.chain.total_cost
+        # solution = response.get("solution", "")
+        # sol_res = await self.answer_pilot.execute(
+        #     solution, response_format={"type": "json_object"}
+        # )
+        # response["solution_categorized"] = sol_res.content
+        # self.chain.update_cost(sol_res)
+        # response["total_cost"] = self.chain.total_cost
         return response
 
     # Function to get base64 string from image file
