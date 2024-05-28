@@ -6,7 +6,7 @@ import time
 from typing import Callable, List, TypeVar, Optional
 
 import openai
-from openai.error import APIError, RateLimitError
+from openai import APIError, RateLimitError
 
 from superpilot.core.configuration import (
     Configurable,
@@ -321,7 +321,7 @@ class DeepInfraProvider(
 
 
 async def _create_embedding(text: str, *_, **kwargs) -> openai.Embedding:
-    """Embed text using the DeepInfra API.
+    """Embed text using the OpenAI API.
 
     Args:
         text str: The text to embed.
@@ -330,15 +330,15 @@ async def _create_embedding(text: str, *_, **kwargs) -> openai.Embedding:
     Returns:
         str: The embedding.
     """
-    return await openai.Embedding.acreate(
-        input=[text],
-        **kwargs,
+    aclient = openai.AsyncClient(
+        api_key=kwargs.pop("api_key", None), base_url=kwargs.pop("api_base", None)
     )
+    return await aclient.embeddings.create(input=[text], **kwargs)
 
 
 async def _create_completion(
     messages: List[LanguageModelMessage], *_, **kwargs
-) -> openai.Completion:
+) -> openai.types.Completion:
     """Create a chat completion using the DeepInfra API.
 
     Args:
@@ -354,10 +354,10 @@ async def _create_completion(
     else:
         del kwargs["function_call"]
     # print(messages)
-    return await openai.ChatCompletion.acreate(
-        messages=messages,
-        **kwargs,
+    aclient = openai.AsyncClient(
+        api_key=kwargs.pop("api_key", None), base_url=kwargs.pop("api_base", None)
     )
+    return await aclient.chat.completions.create(messages=messages, **kwargs)
 
 
 _T = TypeVar("_T")
