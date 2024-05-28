@@ -1,13 +1,7 @@
 from .base import BaseChain, HandlerType
-import logging
 
 
 class SimpleChain(BaseChain):
-    def __init__(self, logger: logging.Logger = logging.getLogger(__name__), **kwargs):
-        self.logger = logger
-        self.pilots = {}
-        self.transformers = {}
-
     async def execute(self, data, context, **kwargs):
         for handler, transformer in zip(
             self.pilots[HandlerType.HANDLER], self.transformers[HandlerType.HANDLER]

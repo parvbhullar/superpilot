@@ -149,7 +149,9 @@ class FigureQuestionExecutor(BaseExecutor):
         else:
             query = image_path
             images = []
-            if "vision" in str(self.chain.handlers[0]):
+            from superpilot.core.pilot.chain.base import HandlerType
+
+            if "vision" in str(self.chain.pilots[HandlerType.HANDLER][0]):
                 self.chain.remove_handler(0)
 
         print("FigureQuestionExecutor  Query --> ", query)

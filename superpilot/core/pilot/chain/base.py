@@ -14,6 +14,7 @@ class BaseChain(ABC):
         self.logger = logger
         self.pilots = {}
         self.transformers = {}
+        self.total_cost = {}
 
     def add_handler(self, handler, transformer=None):
         """
@@ -64,8 +65,8 @@ class BaseChain(ABC):
         """
         Removes a handler from the chain.
         """
-        self.handlers.pop(handler_index)
-        self.transformers.pop(handler_index)
+        self.pilots[HandlerType.HANDLER].pop(handler_index)
+        self.transformers[HandlerType.HANDLER].pop(handler_index)
 
     def update_cost(cls, response):
         total_cost = response.total_cost

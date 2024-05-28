@@ -1,15 +1,17 @@
 import abc
 import typing
 
-from superpilot.core.configuration import SystemConfiguration, UserConfigurable
+from superpilot.core.configuration import SystemConfiguration
 from superpilot.core.context.schema import Context
+
 # Cyclic import
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
-    LanguageModelMessage,
-    LanguageModelPrompt, LanguageModelResponse, ObjectivePlan, Task,
+    LanguageModelPrompt,
+    LanguageModelResponse,
+    ObjectivePlan,
+    Task,
 )
-from superpilot.core.resource.model_providers import SchemaModel
 
 
 class Planner(abc.ABC):
@@ -32,7 +34,9 @@ class Planner(abc.ABC):
     #     ...
 
     @abc.abstractmethod
-    async def plan(self, user_objective: Task, functions: typing.List[dict], **kwargs) -> ObjectivePlan:
+    async def plan(
+        self, user_objective: Task, functions: typing.List[dict], **kwargs
+    ) -> ObjectivePlan:
         """Create a plan of tasks to accomplish the user objective.
 
         Args:
@@ -46,7 +50,9 @@ class Planner(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def next(self, task: Task, functions: typing.List[dict], **kwargs) -> LanguageModelResponse:
+    async def next(
+        self, task: Task, functions: typing.List[dict], **kwargs
+    ) -> LanguageModelResponse:
         """Based of the current task, decide the next executable function, pilot or ability.
 
         Args:

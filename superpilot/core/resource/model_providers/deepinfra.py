@@ -145,6 +145,7 @@ class DeepInfraProvider(
         functions: List[LanguageModelFunction],
         model_name: DeepInfraModelName,
         completion_parser: Callable[[dict], dict],
+        req_res_callback: Callable = None,
         **kwargs,
     ) -> LanguageModelProviderModelResponse:
         """Create a completion using the DeepInfra API."""
@@ -159,9 +160,16 @@ class DeepInfraProvider(
             "completion_tokens_used": response.usage.completion_tokens,
         }
 
-        parsed_response = completion_parser(
-            response.choices[0].message.to_dict_recursive()
-        )
+        parsed_response = completion_parser(response.choices[0].message.dict())
+        if req_res_callback:
+            await req_res_callback(
+                model_prompt,
+                functions,
+                response,
+                parsed_response,
+                response_args,
+                **kwargs,
+            )
         response = LanguageModelProviderModelResponse(
             content=parsed_response, **response_args
         )
@@ -188,9 +196,7 @@ class DeepInfraProvider(
             "completion_tokens_used": response.usage.completion_tokens,
         }
 
-        parsed_response = completion_parser(
-            response.choices[0].message.to_dict_recursive()
-        )
+        parsed_response = completion_parser(response.choices[0].message.dict())
         response = LanguageModelProviderModelResponse(
             content=parsed_response, **response_args
         )
@@ -240,7 +246,7 @@ class DeepInfraProvider(
             "model": model_name,
             **kwargs,
             **self._credentials.unmasked(),
-            "request_timeout": 300,
+            "timeout": 300,
             "api_base": "https://api.deepinfra.com/v1/openai",
         }
         completion_kwargs["max_tokens"] = self.get_token_limit(model_name)

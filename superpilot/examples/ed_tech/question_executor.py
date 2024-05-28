@@ -1,5 +1,4 @@
 from typing import List
-from superpilot.core.context.schema import Context
 from superpilot.core.pilot.task.simple import SimpleTaskPilot
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory
 from superpilot.examples.executor.base import BaseExecutor
@@ -18,6 +17,8 @@ from superpilot.core.resource.model_providers import AnthropicModelName, OpenAIM
 
 
 class QuestionExecutor(BaseExecutor):
+    from superpilot.core.context.schema import Context
+
     model_providers = ModelProviderFactory.load_providers()
     context = Context()
     chain = SimpleChain()
@@ -170,6 +171,8 @@ class QuestionExecutor(BaseExecutor):
         response, context = await self.chain.execute(task, self.context, **kwargs)
         return response
         # Execute for Sequential nature
+        from superpilot.core.context.schema import Context
+
         response = {}
         for pilot in self.pilots:
             try:
