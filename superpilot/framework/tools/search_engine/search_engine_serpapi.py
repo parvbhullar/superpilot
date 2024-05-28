@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from typing import Any, Dict, Optional, Tuple
 
 import aiohttp
@@ -26,7 +23,7 @@ class SerpAPIWrapper(BaseModel):
             "hl": "en",
         }
     )
-    config = Config()
+    config: Config = Config()
     serpapi_api_key: Optional[str] = config.serp_api_key
     aiosession: Optional[aiohttp.ClientSession] = None
 
@@ -78,7 +75,7 @@ class SerpAPIWrapper(BaseModel):
     def _process_response(res: dict) -> str:
         """Process response from SerpAPI."""
         # print(res)
-        focus = ['title', 'snippet', 'link']
+        focus = ["title", "snippet", "link"]
         get_focused = lambda x: {i: j for i, j in x.items() if i in focus}
 
         if "error" in res.keys():

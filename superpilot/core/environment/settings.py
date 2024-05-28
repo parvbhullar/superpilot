@@ -1,9 +1,8 @@
 from pydantic import BaseModel
-from superpilot.core.ability import AbilityRegistrySettings
-from superpilot.core.configuration import SystemConfiguration, SystemSettings, Config
+from superpilot.core.configuration import SystemConfiguration, SystemSettings
 from superpilot.core.configuration.schema import WorkspaceSettings
 from superpilot.core.memory.settings import MemorySettings
-from superpilot.core.planning.settings import PlannerSettings
+from superpilot.core.planning.settings import PlannerSettingsLegacy, PlannerSettings
 from superpilot.core.plugin.base import PluginLocation
 from superpilot.core.resource.model_providers.openai import OpenAISettings
 
@@ -28,7 +27,6 @@ class EnvSystemSettings(SystemSettings):
 
 class EnvSettings(BaseModel):
     environment: EnvSystemSettings
-    # ability_registry: AbilityRegistrySettings
     memory: MemorySettings
     openai_provider: OpenAISettings
     planning: PlannerSettings

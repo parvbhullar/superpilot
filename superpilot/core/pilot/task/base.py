@@ -27,6 +27,10 @@ class TaskPilot(Pilot, abc.ABC):
     async def execute(self, *args, **kwargs) -> Context:
         ...
 
+    # @abc.abstractmethod
+    # async def observe(self, *args, **kwargs) -> Observation:
+    #     ...
+
     @abc.abstractmethod
     def __repr__(self):
         ...

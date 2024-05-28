@@ -1,9 +1,11 @@
 import abc
 import enum
-from typing import Callable, ClassVar, List, Union, Any
+from typing import Callable, ClassVar, List, Optional, Union, Any
 import json
 from functools import wraps
-from pydantic import BaseModel, Field, SecretStr, validator, validate_arguments
+import numpy as np
+from pydantic import field_validator, ConfigDict, BaseModel, Field, SecretStr
+from pydantic.v1 import validate_arguments
 
 from superpilot.core.configuration import UserConfigurable
 from superpilot.core.plugin.base import PluginLocation
@@ -159,18 +161,18 @@ class ModelProviderCredentials(ProviderCredentials):
     def unmasked(self) -> dict:
         return unmask(self)
 
-    class Config:
-        extra = "ignore"
+    model_config = ConfigDict(extra="ignore")
 
 
 def unmask(model: BaseModel):
     unmasked_fields = {}
     for field_name, field in model.__fields__.items():
         value = getattr(model, field_name)
-        if isinstance(value, SecretStr):
-            unmasked_fields[field_name] = value.get_secret_value()
-        else:
-            unmasked_fields[field_name] = value
+        if value:
+            if isinstance(value, SecretStr):
+                unmasked_fields[field_name] = value.get_secret_value()
+            else:
+                unmasked_fields[field_name] = value
     return unmasked_fields
 
 
@@ -193,9 +195,9 @@ class ModelProviderUsage(ProviderUsage):
 
 
 class ModelProviderBudget(ProviderBudget):
-    total_budget: float = UserConfigurable()
+    total_budget: Optional[float] = Field(default=np.inf)
     total_cost: float = 0
-    remaining_budget: float = 0
+    remaining_budget: Optional[float] = Field(default=0.0)
     usage: ModelProviderUsage
 
     def update_usage_and_cost(
@@ -220,7 +222,7 @@ class ModelProviderBudget(ProviderBudget):
 
 
 class ModelProviderSettings(ProviderSettings):
-    resource_type = ResourceType.MODEL
+    resource_type: ResourceType = ResourceType.MODEL
     credentials: ModelProviderCredentials
     budget: ModelProviderBudget
 
@@ -251,7 +253,7 @@ class ModelProvider(abc.ABC):
 class EmbeddingModelProviderModelInfo(ModelProviderModelInfo):
     """Struct for embedding model information."""
 
-    model_service = ModelProviderService.EMBEDDING
+    model_service: ModelProviderService = ModelProviderService.EMBEDDING
     embedding_dimensions: int
 
 
@@ -261,7 +263,8 @@ class EmbeddingModelProviderModelResponse(ModelProviderModelResponse):
     embedding: Embedding = Field(default_factory=list)
 
     @classmethod
-    @validator("completion_tokens_used")
+    @field_validator("completion_tokens_used")
+    @classmethod
     def _verify_no_completion_tokens_used(cls, v):
         if v > 0:
             raise ValueError("Embeddings should not have completion tokens used.")
@@ -288,7 +291,7 @@ class EmbeddingModelProvider(ModelProvider):
 class LanguageModelProviderModelInfo(ModelProviderModelInfo):
     """Struct for language model information."""
 
-    model_service = ModelProviderService.LANGUAGE
+    model_service: ModelProviderService = ModelProviderService.LANGUAGE
     max_tokens: int
 
 
@@ -324,7 +327,7 @@ class LanguageModelProvider(ModelProvider):
 class MediaModelProviderModelInfo(ModelProviderModelInfo):
     """Struct for language model information."""
 
-    model_service = ModelProviderService.IMAGE
+    model_service: ModelProviderService = ModelProviderService.IMAGE
     max_tokens: int
 
 

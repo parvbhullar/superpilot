@@ -7,6 +7,7 @@ from superpilot.core.planning.schema import (
     TaskStatus,
     TaskType,
 )
-from superpilot.core.planning.settings import PlannerSettings
-from superpilot.core.planning.simple import SimplePlanner
+from superpilot.core.planning.settings import PlannerSettingsLegacy
+from superpilot.core.planning.simple_legacy import SimplePlannerLegacy
 from superpilot.core.planning.base import PromptStrategy
+from superpilot.core.planning.simple import SimplePlanner

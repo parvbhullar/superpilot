@@ -14,10 +14,7 @@ from superpilot.examples.ed_tech.ag_question_solver_ability import (
 )
 from superpilot.core.pilot.task.super import SuperTaskPilot
 from superpilot.core.pilot.chain.simple import SimpleChain
-from superpilot.core.resource.model_providers import (
-    AnthropicModelName,
-    OpenAIModelName,
-)
+from superpilot.core.resource.model_providers import AnthropicModelName, OpenAIModelName
 
 
 class QuestionExecutor(BaseExecutor):
