@@ -202,7 +202,7 @@ result = ans
     # thread_id = "thread1234567891011121314151617"
     # calc = SuperDynamicPilot(thread_id=thread_id, json_config=json_data)
     # print(asyncio.run(calc.run("What is 3 plus 2 minus 5")))
-    ans = dynamic_run_llm("What is 3 plus 2 minus 5", json_data)
+    ans = asyncio.run(dynamic_run_llm("What is 3 plus 2 minus 5", json_data))
 
     print('we got', ans)
   
