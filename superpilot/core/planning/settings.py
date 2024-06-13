@@ -1,4 +1,4 @@
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 from superpilot.core.configuration.schema import (
     SystemConfiguration,
     SystemSettings,
@@ -15,6 +15,7 @@ class LanguageModelConfiguration(SystemConfiguration):
     model_name: str = UserConfigurable()
     provider_name: ModelProviderName = UserConfigurable()
     temperature: float = UserConfigurable()
+    seed: Optional[int] = UserConfigurable()
 
 
 class PromptStrategyConfiguration(SystemConfiguration):
