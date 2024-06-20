@@ -96,7 +96,7 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
         try:
             ability = self.get_ability(ability_name)
             # print("Perform Ability: ", ability_name, kwargs)
-            response = await ability(**ability_args, **kwargs)
+            response = await ability(ability_args=ability_args, **kwargs)
             print("Ability response", response)
             ability_action.success = True
             ability_action.message = str(response)

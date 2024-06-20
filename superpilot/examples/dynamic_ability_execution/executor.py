@@ -88,8 +88,8 @@ def create_class_from_json(ability_config):
 
         # Create a function dynamically
         def make_func(data):
-            async def func(*args, **kwargs):
-                loc = {**locals()}
+            async def func(*args, ability_args, **kwargs):
+                loc = {**locals(), **ability_args}
                 exec(data["body"], globals(), loc)
                 # exec(data["body"], globals(), locals())
                 result = loc['result']
@@ -153,7 +153,7 @@ if __name__ == "__main__":
             "methods": {
                 "__call__": {
                     "body": '''
-res = kwargs["num1"] + kwargs["num2"]
+res = ability_args["num1"] + ability_args["num2"]
 if res >= 0:
     ans = "greater"
 else:
@@ -178,7 +178,7 @@ result = ans
             "methods": {
                 "__call__": {
                     "body": '''
-res = kwargs["num1"] - kwargs["num2"]
+res = ability_args["num1"] - ability_args["num2"]
 if res >= 0:
     ans = "greater"
 else:
@@ -202,7 +202,14 @@ result = ans
     # thread_id = "thread1234567891011121314151617"
     # calc = SuperDynamicPilot(thread_id=thread_id, json_config=json_data)
     # print(asyncio.run(calc.run("What is 3 plus 2 minus 5")))
-    ans = asyncio.run(dynamic_run_llm("What is 3 plus 2 minus 5", json_data))
+    # ans = asyncio.run(dynamic_run_llm("What is 3 plus 2 minus 5", json_data))
+    # print(ans)
+    translation = asyncio.run( dynamic_run_llm("Translate 'How are you?' to Hindi", [
+        {'class_name': 'DynamicAbility', 'attributes': {'default_configuration': None},
+         'methods': {'__call__': {'body': 'print(original_string)\nresult = ability_args'},
+                     'arguments': {'original_string': {'type': 'string', 'description': 'source string'},
+                                   'translated_string': {'type': 'string', 'description': 'translated result string '}},
+                     'name': 'translate', 'description': 'Translate sentences as instructed by user'}}]))
 
-    print('we got', ans)
+    print('we got', translation)
   
