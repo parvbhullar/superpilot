@@ -8,6 +8,7 @@ from superpilot.core.workspace import Workspace
 
 class LLMBlock(Block):
     default_configuration = BlockConfiguration(
+        id=0,
         location=PluginLocation(
             storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
             storage_route=f"{__name__}.LLMBlock",
@@ -39,15 +40,17 @@ class LLMBlock(Block):
             },
         },
         body="",
+        seq_order=0
     )
 
     def __init__(
         self,
         logger: logging.Logger,
-        workspace: Workspace,
+        configuration: BlockConfiguration,
+
     ):
         self._logger = logger
-        self._workspace = workspace
+        self._configuration = configuration
 
     @property
     def description(self) -> str:

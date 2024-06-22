@@ -1,4 +1,4 @@
-from superpilot.core.block.base import BlockRegistry
+from superpilot.core.block.base import BlockRegistry, Block
 from superpilot.core.configuration import Configurable, SystemSettings
 import logging
 from typing import Dict, List
@@ -18,8 +18,8 @@ class SimpleBlockRegistry(BlockRegistry, Configurable):
 
     def __init__(
         self,
-        logger: logging.Logger,
         blocks: Dict[str, BlockConfiguration],
+        logger: logging.Logger = logging.getLogger("SimpleBlockRegistry"),
         settings: BlockRegistrySettings = default_settings,
     ):
         self._logger = logger
@@ -57,7 +57,7 @@ class SimpleBlockRegistry(BlockRegistry, Configurable):
                 return block
         raise ValueError(f"Block '{block_name}' not found.")
 
-    async def perform(self, block_name: str, **kwargs) -> BlockAction:
+    async def perform(self, block_name: str, **kwargs): # -> BlockAction:
         block = self.get_block(block_name)
         return await block(**kwargs)
 

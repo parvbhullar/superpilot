@@ -32,6 +32,7 @@ class BlockConfiguration(SystemConfiguration):
     input_schema: Dict = UserConfigurable()
     output_schema: Dict = UserConfigurable()
     body: str = UserConfigurable()
+    id:  int = UserConfigurable()
 
     @classmethod
     def factory(
@@ -39,6 +40,8 @@ class BlockConfiguration(SystemConfiguration):
             block_data: Dict[str, Any],
     ) -> "BlockConfiguration":
         return BlockConfiguration(
+            id=block_data['id'],
+            location=block_data['location'],
             block_type=block_data['block_type'],
             metadata=json.loads(block_data['metadata']),
             seq_order=block_data['seq_order'],
