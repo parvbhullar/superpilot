@@ -67,7 +67,7 @@ class Block(abc.ABC):
     @abc.abstractmethod
     def description(cls) -> str:
         """A detailed description of what the block does."""
-        ...
+        return ""
 
     @classmethod
     @abc.abstractmethod
@@ -99,10 +99,10 @@ class Block(abc.ABC):
     def dump(self) -> dict:
         return {
             "name": self.name(),
-            "description": self.description(),
+            # "description": self.description(),
             "parameters": {
                 "type": "object",
-                "properties": self.config(),
+                # "properties": self.config(),
             },
         }
 

@@ -1,14 +1,16 @@
 import os
 import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+from superpilot.core.block.execution.simple import SimpleExecutor
+from superpilot.core.logging.logging import get_logger
 
 from superpilot.core.block.simple import SimpleBlockRegistry
 from superpilot.core.block.types.llm_block import LLMBlock
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
-
 import datetime
 from superpilot.core.block.base import BlockConfiguration
-
+import asyncio
 
 json_data = [
         # {
@@ -112,14 +114,21 @@ json_data = [
         # }
     ]
 
-BLOCKS = {}
 
-for block in json_data:
-    b = BlockConfiguration.factory(block)
-    BLOCKS[str(b.id)] = b
+async def execution():
+    BLOCKS = {}
 
-    print("\n\n", b)
+    for block in json_data:
+        b = BlockConfiguration.factory(block)
+        BLOCKS[str(b.id)] = b
+        # print("\n\n", b)
 
-super_block_registry = SimpleBlockRegistry(BLOCKS)
-print('')
-# super_block_registry
+    block_registry = SimpleBlockRegistry(BLOCKS)
+    logger = get_logger(__name__)
+
+    executor = SimpleExecutor(block_registry, logger)
+    await executor.execute()
+
+
+if __name__ == "__main__":
+    asyncio.run(execution())

@@ -73,5 +73,6 @@ class LLMBlock(Block):
             },
         }
 
-    def __call__(self, args: dict) -> dict:
-        pass
+    async def __call__(self, **kwargs) -> dict:
+        print("LLM block called.", kwargs)
+        return {"output": "This is the output of the LLM block.", "metadata": kwargs}
