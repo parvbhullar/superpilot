@@ -34,7 +34,7 @@ class LLMBlock(Block):
             },
         },
         output_schema={
-            "output": {
+            "response": {
                 "type": "string",
                 "description": "The output of the block.",
             },
@@ -57,7 +57,11 @@ class LLMBlock(Block):
         return "LLM block."
 
     @property
-    def config(self) -> dict:
+    def config(self) -> str:
+        return self._configuration
+
+    @property
+    def arguments(self) -> dict:
         return {
             "model_name": {
                 "type": "string",
@@ -76,3 +80,4 @@ class LLMBlock(Block):
     async def __call__(self, **kwargs) -> dict:
         print("LLM block called.", kwargs)
         return {"output": "This is the output of the LLM block.", "metadata": kwargs}
+

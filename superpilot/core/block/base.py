@@ -71,12 +71,18 @@ class Block(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def config(cls) -> dict:
+    def arguments(cls) -> dict:
         """A dict of arguments in standard json schema format."""
         ...
 
+    @property
+    @abc.abstractmethod
+    def config(self) -> BlockConfiguration:
+        """A dict of config in standard json schema format."""
+        ...
+
     @classmethod
-    def required_config(cls) -> List[str]:
+    def required_arguments(cls) -> List[str]:
         """A list of required arguments."""
         return []
 

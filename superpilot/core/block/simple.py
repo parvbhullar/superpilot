@@ -1,7 +1,7 @@
 from superpilot.core.block.base import BlockRegistry, Block
 from superpilot.core.configuration import Configurable, SystemSettings
 import logging
-from typing import Dict, List
+from typing import Dict, List, Any
 from superpilot.core.block.base import BlockConfiguration
 from superpilot.core.plugin.simple import SimplePluginService
 

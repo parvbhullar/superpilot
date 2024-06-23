@@ -56,7 +56,7 @@ json_data = [
             'seq_order': 3,
             'block_visibility': 1,
             'result_visibility': 1,
-            'input_schema': '{"num1": {"type": "number", "description": "The first number."}, "num2": {"type": "number", "description": "The second number."}}',
+            'input_schema': '{"num1": {"type": "number", "description": "The first number.", "default_key": "block-id.sum_result"}, "num2": {"type": "number", "description": "The second number."}}',
             'output_schema': '{}',
             'body': 'res = kwargs["num1"] + kwargs["num2"]\r\nif res >= 0:\r\n    ans = "greater"\r\nelse:\r\n    ans = "less"\r\nprint(ans)\r\nresult = ans',
             'superbook_id': 21,
