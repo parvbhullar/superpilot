@@ -1,5 +1,8 @@
 import logging
 from typing import Dict, Any
+
+import requests
+
 from superpilot.core.block.base import Block, BlockConfiguration
 from superpilot.core.plugin.base import PluginLocation, PluginStorageFormat
 
@@ -41,34 +44,34 @@ class APIBlock(Block):
     ):
         self._logger = logger
         self._configuration = configuration
-        self._update_input_schema()
+        # self._update_input_schema()
 
-    def _update_input_schema(self):
-        config = self._configuration.metadata['config']
-        input_schema = {
-            "url": {
-                "type": "string",
-                "description": "The URL of the API endpoint.",
-            },
-            "method": {
-                "type": "string",
-                "description": "The HTTP method for the API request.",
-            }
-        }
-
-        for param in config.get('params_inputs', []):
-            input_schema[param] = {
-                "type": "string",
-                "description": f"Parameter: {param}",
-            }
-
-        for payload_item in config.get('payload_inputs', []):
-            input_schema[payload_item] = {
-                "type": "string",
-                "description": f"Payload item: {payload_item}",
-            }
-
-        self._configuration.input_schema = input_schema
+    # def _update_input_schema(self):
+    #     config = self._configuration.metadata['config']
+    #     input_schema = {
+    #         "url": {
+    #             "type": "string",
+    #             "description": "The URL of the API endpoint.",
+    #         },
+    #         "method": {
+    #             "type": "string",
+    #             "description": "The HTTP method for the API request.",
+    #         }
+    #     }
+    #
+    #     for param in config.get('params_inputs', []):
+    #         input_schema[param] = {
+    #             "type": "string",
+    #             "description": f"Parameter: {param}",
+    #         }
+    #
+    #     for payload_item in config.get('payload_inputs', []):
+    #         input_schema[payload_item] = {
+    #             "type": "string",
+    #             "description": f"Payload item: {payload_item}",
+    #         }
+    #
+    #     self._configuration.input_schema = input_schema
 
     @property
     def description(self) -> str:
@@ -82,39 +85,46 @@ class APIBlock(Block):
     def arguments(self) -> Dict[str, Any]:
         return self._configuration.input_schema
 
-    async def __call__(self, **kwargs) -> Dict[str, Any]:
+    async def __call__(self, **api_kwargs) -> Dict[str, Any]:
         self._logger.info("GST API Block called.")
 
         config = self._configuration.metadata['config']
 
         # Prepare the API request
-        url = kwargs.get('url', config['url'])
-        method = kwargs.get('method', config['method'])
-
-        params = {}
-        payload = {}
+        url = config['url']
+        method = config['method']
         headers = config.get('headers', {})
 
-        for param in config.get('params_inputs', []):
-            if param in kwargs:
-                params[param] = kwargs[param]
+        params = api_kwargs.get('query_params', {})
+        payload = api_kwargs.get('payload', {})
+        headers = headers.update(api_kwargs.get('headers', {}))
 
-        for payload_item in config.get('payload_inputs', []):
-            if payload_item in kwargs:
-                payload[payload_item] = kwargs[payload_item]
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, params=params)
+            elif method == 'POST':
+                response = requests.post(url, headers=headers, params=params, json=payload)
+            elif method == 'PUT':
+                response = requests.put(url, headers=headers, params=params, json=payload)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, params=params, json=payload)
+            else:
+                return {
+                    "response": {
+                        "status": "error",
+                        "message": "Invalid HTTP method"
+                    }
+                }
 
-        # Here you would typically make the actual API call using the prepared data
-        # For demonstration, we'll just return a mock response
-        return {
-            "response": {
-                "status": "success",
-                "data": {
-                    "url": url,
-                    "method": method,
-                    "params": params,
-                    "payload": payload,
-                    "headers": headers,
-                    "message": "API call prepared successfully"
+            # response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
+            return {
+                "response": response.json()
+            }
+        except requests.exceptions.RequestException as e:
+            self._logger.error(f"An error occurred: {e}")
+            return {
+                "response": {
+                    "status": "error",
+                    "message": str(e)
                 }
             }
-        }

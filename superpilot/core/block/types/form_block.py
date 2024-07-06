@@ -82,6 +82,7 @@ class FormBlock(Block):
         return self._configuration.input_schema
 
     async def __call__(self, **kwargs) -> Dict[str, Any]:
+        return kwargs
         self._logger.info("GST API Block called.")
 
         config = self._configuration.metadata['config']

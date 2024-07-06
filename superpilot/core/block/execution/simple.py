@@ -32,6 +32,7 @@ class SimpleExecutor(BaseExecutor):
         return await self.exec_blocks(**kwargs)
 
     async def exec_blocks(self, **kwargs) -> None:
+        self._execution_state = {"global": kwargs}
         # Execute for Sequential nature
         for block in self._block_registry.blocks():
             try:
@@ -44,24 +45,28 @@ class SimpleExecutor(BaseExecutor):
                     raise e
         return self._execution_state
 
+    def get_nested_val(self, object, nesting):
+        for key in nesting.split('.'):
+            if key in object:
+                object = object[key]
+            else:
+                return None
+        return object
+
     def _prepare_block_input(self, block: Block) -> Dict[str, Any]:
         block_input = {}
         for input_key, input_schema in block.config.input_schema.items():
-            # TODO fetch respective block's id and key.
-            reference_block_id = block.config.id
-            if input_key in self._execution_state:
-                block_input[input_key] = self._execution_state[reference_block_id][input_key]
-                # TODO fetch respective block's id and key.
-            elif input_schema[input_key].default_value in self._execution_state:
-                block_input[input_key] = self._execution_state[reference_block_id][input_schema[input_key].default_value]
+            if input_schema.get('reference'):
+                block_id, nesting = input_schema['reference'].split('@', 1)
+                block_input[input_key] = self.get_nested_val(self._execution_state[block_id], nesting)
             else:
-                self._logger.warning(f"Input '{input_key}' not found in execution state for block {block.name()}")
+                block_input[input_key] = input_schema['value']
         return block_input
 
     def _update_execution_state(self, block: Block, response: Dict[str, Any]) -> None:
         for output_key in block.config.output_schema.keys():
             if output_key in response:
-                self._execution_state[block.config.id][output_key] = response[output_key]
+                self._execution_state[f"block_{block.config.id}"][output_key] = response[output_key]
             else:
                 self._logger.warning(f"Expected output '{output_key}' not found in response from block {block.name()}")
 
