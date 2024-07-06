@@ -79,5 +79,13 @@ class LLMBlock(Block):
 
     async def __call__(self, **kwargs) -> dict:
         print("LLM block called.", kwargs)
+        # solver_pilot = SimpleTaskPilot.create(
+        #     SolutionValidatorPrompt.default_configuration,
+        #     model_providers=self.model_providers,
+        #     smart_model_name=AnthropicModelName.CLAUD_3_SONET,
+        #     fast_model_name=AnthropicModelName.CLAUD_3_HAIKU,
+        # )
+
         return {"output": "This is the output of the LLM block.", "metadata": kwargs}
+
 
