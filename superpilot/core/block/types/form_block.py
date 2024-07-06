@@ -40,7 +40,7 @@ class FormBlock(Block):
     ):
         self._logger = logger
         self._configuration = configuration
-        self._update_input_schema()
+        # self._update_input_schema()
 
     def _update_input_schema(self):
         config = self._configuration.metadata['config']
@@ -82,8 +82,9 @@ class FormBlock(Block):
         return self._configuration.input_schema
 
     async def __call__(self, **kwargs) -> Dict[str, Any]:
-        return kwargs
+        self._configuration.output_schema = kwargs
         self._logger.info("GST API Block called.")
+        return kwargs
 
         config = self._configuration.metadata['config']
 

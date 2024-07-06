@@ -5,6 +5,7 @@ import time
 from typing import List, Dict, Any
 import distro
 import inflection
+import json
 
 from superpilot.core.block.base import BlockRegistry, Block
 from superpilot.core.block.execution.base import BaseExecutor
@@ -36,10 +37,11 @@ class SimpleExecutor(BaseExecutor):
         # Execute for Sequential nature
         for block in self._block_registry.blocks():
             try:
-                block_input = self._prepare_block_input(block)
+                block_input = self._prepare_block_input(block, block.config.input_schema)
                 response = await self._block_registry.perform(block.name(), **block_input)
                 self._update_execution_state(block, response)
                 self._logger.debug(f"Response from block {block.name()}: {response}")
+                self._logger.debug(f"Execution State {self._execution_state}")
             except Exception as e:
                     self._logger.error(f"Error executing block {block.name()}: {e}")
                     raise e
@@ -53,23 +55,58 @@ class SimpleExecutor(BaseExecutor):
                 return None
         return object
 
-    def _prepare_block_input(self, block: Block) -> Dict[str, Any]:
+    def _prepare_block_input(self, block: Block, fields) -> Dict[str, Any]:
         block_input = {}
-        for input_key, input_schema in block.config.input_schema.items():
-            if input_schema.get('reference'):
-                block_id, nesting = input_schema['reference'].split('@', 1)
+        print("Block", block.name())
+        print("Schema", fields)
+        for input_key, input_schema in fields.items():
+            # if 'reference' in value:
+            #     reference_path = value['reference'].split('.')
+            #     value_from_previous = self.get_value_from_nested_dict(previous_input_schema, reference_path[1:])
+            print("Input key", input_key, input_schema)
+            if input_schema.get('fields'):
+                block_input[input_key] = self._prepare_block_input(block, input_schema.get('fields'))
+            elif input_schema.get('reference'):
+                block_id, nesting = input_schema['reference'].split('.', 1)
                 block_input[input_key] = self.get_nested_val(self._execution_state[block_id], nesting)
-            else:
+            elif input_schema.get('value'):
                 block_input[input_key] = input_schema['value']
+            else:
+                block_input[input_key] = None
+            print("Input Value", block_input[input_key])
+        print("Block Input", block_input)
         return block_input
 
     def _update_execution_state(self, block: Block, response: Dict[str, Any]) -> None:
-        for output_key in block.config.output_schema.keys():
-            if output_key in response:
-                self._execution_state[f"block_{block.config.id}"][output_key] = response[output_key]
-            else:
-                self._logger.warning(f"Expected output '{output_key}' not found in response from block {block.name()}")
+        self._execution_state[f"block_{block.config.id}"] = response
+        # for output_key in block.config.output_schema.keys():
+        #     if output_key in response:
+        #         self._execution_state[f"block_{block.config.id}"][output_key] = response[output_key]
+        #     else:
+        #         self._logger.warning(f"Expected output '{output_key}' not found in response from block {block.name()}")
 
+    def get_value_from_nested_dict(self, data, keys):
+        for key in keys:
+            data = data[key]
+        return data
+
+    def set_value_in_nested_dict(self, data, keys, value):
+        for key in keys[:-1]:
+            data = data.setdefault(key, {})
+        data[keys[-1]] = value
+
+    def load_values_from_previous_block(self, previous_block, next_block):
+
+        previous_input_schema = json.loads(previous_block['input_schema'])
+        next_input_schema = json.loads(next_block['input_schema'])
+
+        for key, value in next_input_schema['query_params'].items():
+            if 'reference' in value:
+                reference_path = value['reference'].split('.')
+                value_from_previous = self.get_value_from_nested_dict(previous_input_schema, reference_path[1:])
+                self.set_value_in_nested_dict(next_input_schema, ['query_params', key, 'value'], value_from_previous)
+
+        next_block['input_schema'] = json.dumps(next_input_schema)
     def __repr__(self):
         pass
 

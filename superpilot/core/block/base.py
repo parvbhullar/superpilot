@@ -43,10 +43,10 @@ class BlockConfiguration(SystemConfiguration):
             id=block_data['id'],
             location=block_data['location'],
             block_type=block_data['block_type'],
-            metadata=json.loads(block_data['metadata']),
+            metadata=block_data['metadata'],
             seq_order=block_data['seq_order'],
-            input_schema=json.loads(block_data['input_schema']),
-            output_schema=json.loads(block_data['output_schema']),
+            input_schema=block_data['input_schema'],
+            output_schema=block_data['output_schema'],
             body=block_data['body']
         )
 

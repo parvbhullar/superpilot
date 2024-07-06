@@ -1,8 +1,6 @@
 import os
 import sys
 
-
-
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from superpilot.core.block.types.api_block import APIBlock
@@ -22,19 +20,19 @@ json_data = [
         "id": 0,
         "location": FormBlock.default_configuration.location,
         "block_type": "form",
-        "metadata": """{
+        "metadata": {
             "name": "form Block",
             "description": "Form To get values",
             "config": {}
-        }""",
-        "input_schema": """{
+        },
+        "input_schema": {
             "gstin": {
                 "type": "string",
                 "description": "The GSTIN to search for.",
-                value: ""
+                "value": "09AAHCC6805B1ZW"
             }
-        }""",
-        "output_schema": """{}""",
+        },
+        "output_schema": {},
         "body": "",
         "seq_order": 0
     },
@@ -42,7 +40,7 @@ json_data = [
         "id": 1,
         "location": APIBlock.default_configuration.location,
         "block_type": "api",
-        "metadata": """{
+        "metadata": {
             "name": "API Block",
             "description": "A block that interacts with the API.",
             "config": {
@@ -53,25 +51,28 @@ json_data = [
                     "client_id": "JarZChUcsytSBbnkpt"
                 }
             }
-        }""",
-        "input_schema": """{
+        },
+        "input_schema": {
             "query_params": {
-                "gstin": {
-                    "type": "string",
-                    "description": "The GSTIN to search for.",
-                    "reference": "block_0@gstin",
-                    "value": "block_0@gstin"
+                "type": "object",
+                "fields": {
+                    "gstin": {
+                        "type": "string",
+                        "description": "The GSTIN to search for.",
+                        "reference": "block_0.gstin",
+                        "value": "block_0.gstin"
+                    }
                 }
             }, 
             "headers": {},
             "payload": {}
-        }""",
-        "output_schema": """{
+        },
+        "output_schema": {
             "response": {
                 "type": "object",
                 "description": "The response from the API."
             }
-        }""",
+        },
         "body": "",
         "seq_order": 0
     },
@@ -79,30 +80,30 @@ json_data = [
         "id": 2,
         "location": LLMBlock.default_configuration.location,
         "block_type": "llm",
-        "metadata": """{
+        "metadata": {
             "name": "llm",
             "description": "A block that uses a language model to generate text.",
             "config": {
                 "model_name": "gpt-3.5-turbo",
                 "model_temp": "0.5",
                 "model_provider": "OPEN_AI",
-                "system_prompt": "You are a smart AI agent which will create summary of a particular businesss gstin status from given response in json."
+                "system_prompt": "You are a smart AI agent which will create summary of a particular businesss gstin status from given response in json. Do not mention in this data or json, just response as simplistic manner."
             }
-        }""",
-        "input_schema": """{
+        },
+        "input_schema": {
             "gstin_data": {
                 "type": "object",
                 "description": "The response from the API.",
-                "reference": "block_1@response",
-                "value": "@block_1@response"
+                "reference": "block_1.response",
+                "value": "block_1.response"
             }
-        }""",
-        "output_schema": """{
+        },
+        "output_schema": {
             "response": {
                 "type": "string",
                 "description": "The output of the block."
             }
-        }""",
+        },
         "body": "",
         "seq_order": 0
     }

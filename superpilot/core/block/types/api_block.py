@@ -97,24 +97,14 @@ class APIBlock(Block):
 
         params = api_kwargs.get('query_params', {})
         payload = api_kwargs.get('payload', {})
-        headers = headers.update(api_kwargs.get('headers', {}))
-
+        # headers = headers.update(api_kwargs.get('headers', {}))
+        print("api_kwargs", api_kwargs)
+        print("params", params)
         try:
             if method == 'GET':
                 response = requests.get(url, headers=headers, params=params)
-            elif method == 'POST':
-                response = requests.post(url, headers=headers, params=params, json=payload)
-            elif method == 'PUT':
-                response = requests.put(url, headers=headers, params=params, json=payload)
-            elif method == 'DELETE':
-                response = requests.delete(url, headers=headers, params=params, json=payload)
             else:
-                return {
-                    "response": {
-                        "status": "error",
-                        "message": "Invalid HTTP method"
-                    }
-                }
+                response = requests.request(method, url, headers=headers, params=params, json=payload)
 
             # response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
             return {

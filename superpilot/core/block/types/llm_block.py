@@ -30,6 +30,7 @@ model_mapping = {
 
 model_provider_mapping = {'OPEN_AI': ModelProviderName.OPENAI}
 
+
 class LLMBlock(Block):
     default_configuration = BlockConfiguration(
         id=0,
@@ -106,51 +107,61 @@ class LLMBlock(Block):
         print("LLM block called.", block_args)
 
         model_provider = model_provider_mapping.get(self._configuration.metadata['config']['model_provider'], ModelProviderName.OPENAI)
-        model_name = model_mapping.get(model_provider).get(self._configuration.metadata['config']['model_name'], 'GPT4')
-        task_pilot = SimpleTaskPilot(
-            configuration=TaskPilotConfiguration(
-                location=PluginLocation(
-                    storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
-                    storage_route="superpilot.core.flow.simple.SuperTaskPilot",
-                ),
-                pilot=PilotConfiguration(
-                    name="simple_task_pilot",
-                    role=("An AI Pilot designed to complete simple tasks with "),
-                    goals=[
-                        "Complete simple tasks",
-                    ],
-                    cycle_count=0,
-                    max_task_cycle_count=3,
-                    creation_time="",
-                    execution_nature=ExecutionNature.AUTO,
-                ),
-                execution_nature=ExecutionNature.SIMPLE,
-                prompt_strategy=PromptStrategyConfiguration(
-                    model_classification=LanguageModelClassification.SMART_MODEL,
-                    system_prompt=self._configuration.metadata['config']['system_prompt'],
-                    user_prompt_template=SimplePrompt.DEFAULT_USER_PROMPT_TEMPLATE,
-                    parser_schema=SimplePrompt.DEFAULT_PARSER_SCHEMA,
-                ),
-                models={
-                    LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-                        model_name=OpenAIModelName.GPT3,
-                        provider_name=ModelProviderName.OPENAI,
-                        temperature=0.9,
-                    ),
-                    LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-                        model_name=model_name,
-                        provider_name=model_provider,
-                        temperature=self._configuration.metadata['config']['model_temp'],
-                    ),
-                },
-            )
+        model_name = model_mapping.get(self._configuration.metadata['config']['model_name'], OpenAIModelName.GPT4)
+
+        print("Model config", model_name, model_provider)
+
+        task_pilot = SimpleTaskPilot.create(
+            PromptStrategyConfiguration(
+                model_classification=LanguageModelClassification.SMART_MODEL,
+                system_prompt=self._configuration.metadata['config']['system_prompt'],
+                user_prompt_template=SimplePrompt.DEFAULT_USER_PROMPT_TEMPLATE,
+                parser_schema=SimplePrompt.DEFAULT_PARSER_SCHEMA,
+            ),
+            smart_model_name=OpenAIModelName.GPT4_VISION,
+            fast_model_name=OpenAIModelName.GPT3,
         )
 
-        res = await task_pilot.exec_task(
-            Task(
-                objective=str(block_args)
-            )
-        )
+        # task_pilot = SimpleTaskPilot(
+        #     configuration=TaskPilotConfiguration(
+        #         location=PluginLocation(
+        #             storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
+        #             storage_route="superpilot.core.flow.simple.SuperTaskPilot",
+        #         ),
+        #         pilot=PilotConfiguration(
+        #             name="simple_task_pilot",
+        #             role=("An AI Pilot designed to complete simple tasks with "),
+        #             goals=[
+        #                 "Complete simple tasks",
+        #             ],
+        #             cycle_count=0,
+        #             max_task_cycle_count=3,
+        #             creation_time="",
+        #             execution_nature=ExecutionNature.AUTO,
+        #         ),
+        #         execution_nature=ExecutionNature.SIMPLE,
+        #         prompt_strategy=PromptStrategyConfiguration(
+        #             model_classification=LanguageModelClassification.SMART_MODEL,
+        #             system_prompt=self._configuration.metadata['config']['system_prompt'],
+        #             user_prompt_template=SimplePrompt.DEFAULT_USER_PROMPT_TEMPLATE,
+        #             parser_schema=SimplePrompt.DEFAULT_PARSER_SCHEMA,
+        #         ),
+        #         models={
+        #             LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
+        #                 model_name=OpenAIModelName.GPT3,
+        #                 provider_name=ModelProviderName.OPENAI,
+        #                 temperature=0.9,
+        #             ),
+        #             LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
+        #                 model_name=OpenAIModelName.GPT4_O,
+        #                 provider_name=ModelProviderName.OPENAI,
+        #                 temperature=self._configuration.metadata['config']['model_temp'],
+        #             ),
+        #         },
+        #     )
+        # )
+
+        res = await task_pilot.execute(str(block_args))
 
         return res.content
 
