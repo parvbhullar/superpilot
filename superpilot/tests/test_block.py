@@ -95,7 +95,7 @@ json_data = [
                 "type": "object",
                 "description": "The response from the API.",
                 "reference": "block_1.response",
-                "value": "block_1.response"
+                "value": ""
             }
         },
         "output_schema": {
