@@ -70,6 +70,7 @@ blocks = [
                 "method": "GET",
                 "headers": {
                     "Authorization": "Bearer 9064e672f30ed03e2ac8e24d86279e7f36c2bd82",
+
                     "client_id": "JarZChUcsytSBbnkpt"
                 }
             }

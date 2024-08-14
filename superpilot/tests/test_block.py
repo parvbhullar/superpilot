@@ -30,6 +30,7 @@ json_data = [
                 "type": "string",
                 "description": "The GSTIN to search for.",
                 "value": "09AAHCC6805B1ZW"
+
             }
         },
         "output_schema": {},
@@ -55,7 +56,7 @@ json_data = [
         "input_schema": {
             "query_params": {
                 "type": "object",
-                "fields": {
+                "properties": {
                     "gstin": {
                         "type": "string",
                         "description": "The GSTIN to search for.",
@@ -123,6 +124,8 @@ async def execution():
 
     executor = SimpleExecutor(block_registry, logger)
     await executor.execute(**{"gstin": "09AAHCC6805B1ZW"})
+    # res = await executor.execute(**{"gstin": "09AAHCC6805B1ZW"})
+
 
 
 if __name__ == "__main__":

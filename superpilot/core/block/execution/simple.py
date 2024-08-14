@@ -37,7 +37,14 @@ class SimpleExecutor(BaseExecutor):
         # Execute for Sequential nature
         for block in self._block_registry.blocks():
             try:
-                block_input = self._prepare_block_input(block, block.config.input_schema)
+# <<<<<<< HEAD
+#                 block_input = self._prepare_block_input(block, block.config.input_schema)
+# =======
+                if block.config.block_type == 'form':
+                    block_input = kwargs
+                else:
+                    block_input = self._prepare_block_input(block, block.config.input_schema)
+# >>>>>>> 2cfbc95a52e5b79e1271f34c1ed45d591d1a5564
                 response = await self._block_registry.perform(block.name(), **block_input)
                 self._update_execution_state(block, response)
                 self._logger.debug(f"Response from block {block.name()}: {response}")
@@ -55,17 +62,30 @@ class SimpleExecutor(BaseExecutor):
                 return None
         return object
 
+# <<<<<<< HEAD
     def _prepare_block_input(self, block: Block, fields) -> Dict[str, Any]:
         block_input = {}
         print("Block", block.name())
         print("Schema", fields)
         for input_key, input_schema in fields.items():
+# =======
+#     def _prepare_block_input(self, block: Block, properties) -> Dict[str, Any]:
+#         block_input = {}
+#         print("Block", block.name())
+#         print("Schema", properties)
+#         for input_key, input_schema in properties.items():
+# >>>>>>> 2cfbc95a52e5b79e1271f34c1ed45d591d1a5564
             # if 'reference' in value:
             #     reference_path = value['reference'].split('.')
             #     value_from_previous = self.get_value_from_nested_dict(previous_input_schema, reference_path[1:])
             print("Input key", input_key, input_schema)
+# <<<<<<< HEAD
             if input_schema.get('fields'):
                 block_input[input_key] = self._prepare_block_input(block, input_schema.get('fields'))
+# =======
+#             if input_schema.get('properties'):
+#                 block_input[input_key] = self._prepare_block_input(block, input_schema.get('properties'))
+# >>>>>>> 2cfbc95a52e5b79e1271f34c1ed45d591d1a5564
             elif input_schema.get('reference'):
                 block_id, nesting = input_schema['reference'].split('.', 1)
                 block_input[input_key] = self.get_nested_val(self._execution_state[block_id], nesting)
