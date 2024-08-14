@@ -80,8 +80,8 @@ class SimpleExecutor(BaseExecutor):
             #     value_from_previous = self.get_value_from_nested_dict(previous_input_schema, reference_path[1:])
             print("Input key", input_key, input_schema)
 # <<<<<<< HEAD
-            if input_schema.get('fields'):
-                block_input[input_key] = self._prepare_block_input(block, input_schema.get('fields'))
+            if input_schema.get('properties'):
+                block_input[input_key] = self._prepare_block_input(block, input_schema.get('properties'))
 # =======
 #             if input_schema.get('properties'):
 #                 block_input[input_key] = self._prepare_block_input(block, input_schema.get('properties'))

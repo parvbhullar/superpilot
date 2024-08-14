@@ -123,8 +123,10 @@ async def execution():
     logger = get_logger(__name__)
 
     executor = SimpleExecutor(block_registry, logger)
-    await executor.execute(**{"gstin": "09AAHCC6805B1ZW"})
+    res = await executor.execute(**{"gstin": "09AAHCC6805B1ZW"})
     # res = await executor.execute(**{"gstin": "09AAHCC6805B1ZW"})
+
+    print(res)
 
 
 
