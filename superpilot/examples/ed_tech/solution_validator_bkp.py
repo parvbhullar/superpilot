@@ -1,21 +1,10 @@
 # flake8: noqa: F401
-from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.strategies.simple import SimplePrompt
-from superpilot.core.planning.schema import (
-    LanguageModelClassification,
-    LanguageModelPrompt,
-)
+from superpilot.core.planning.schema import LanguageModelClassification
 from superpilot.core.planning.strategies.utils import json_loads
 from superpilot.core.plugin.base import PluginLocation, PluginStorageFormat
-from superpilot.core.resource.model_providers import (
-    LanguageModelFunction,
-    LanguageModelMessage,
-    MessageRole,
-)
 from superpilot.core.planning.settings import PromptStrategyConfiguration
 from typing import Dict
-
-from superpilot.examples.ed_tech.question_solver import QuestionSolverPrompt
 
 
 class SolutionValidatorPrompt(SimplePrompt):

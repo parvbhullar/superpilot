@@ -1,23 +1,27 @@
 from typing import List
 from superpilot.core.context.schema import Context
 from superpilot.core.pilot.task.simple import SimpleTaskPilot
+from superpilot.core.resource.model_providers.deepinfra import DeepInfraModelName
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory
 from superpilot.examples.executor.base import BaseExecutor
 from superpilot.examples.ed_tech.question_solver import QuestionSolverPrompt
-from superpilot.examples.ed_tech.solution_validator import SolutionValidatorPrompt
+from superpilot.examples.ed_tech.solution_validator_bkp import SolutionValidatorPrompt
 from superpilot.framework.tools.latex import latex_to_text
 from superpilot.tests.test_env_simple import get_env
 from superpilot.core.configuration.config import get_config
-from superpilot.core.ability.super import SuperAbilityRegistry
+
+# from superpilot.core.ability.super import SuperAbilityRegistry
 from superpilot.examples.ed_tech.ag_question_solver_ability import (
     AGQuestionSolverAbility,
 )
-from superpilot.core.pilot.task.super import SuperTaskPilot
+
+# from superpilot.core.pilot.task.super import SuperTaskPilot
 from superpilot.core.pilot.chain.simple import SimpleChain
-from superpilot.core.resource.model_providers import (
-    AnthropicModelName,
-    OpenAIModelName,
-)
+
+# from superpilot.core.resource.model_providers import (
+#     AnthropicModelName,
+#     OpenAIModelName,
+# )
 
 
 class QuestionExecutor(BaseExecutor):
@@ -37,9 +41,9 @@ class QuestionExecutor(BaseExecutor):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        super_ability_registry = SuperAbilityRegistry.factory(
-            self.env, self.ALLOWED_ABILITY
-        )
+        # super_ability_registry = SuperAbilityRegistry.factory(
+        #     self.env, self.ALLOWED_ABILITY
+        # )
         self.super_prompt = QuestionSolverPrompt.factory()
 
         # vision_pilot = SimpleTaskPilot.create(
@@ -51,23 +55,23 @@ class QuestionExecutor(BaseExecutor):
         solver_pilot = SimpleTaskPilot.create(
             SolutionValidatorPrompt.default_configuration,
             model_providers=self.model_providers,
-            smart_model_name=AnthropicModelName.CLAUD_3_SONET,
-            fast_model_name=AnthropicModelName.CLAUD_3_HAIKU,
+            smart_model_name=DeepInfraModelName.WIZARD_LM_8_22B,
+            fast_model_name=DeepInfraModelName.WIZARD_LM_8_22B,
         )
-        format_pilot = SimpleTaskPilot.create(
-            SolutionValidatorPrompt.default_configuration,
-            model_providers=self.model_providers,
-            smart_model_name=OpenAIModelName.GPT4_TURBO,
-            fast_model_name=OpenAIModelName.GPT3,
-        )
-        auto_solver_pilot = SuperTaskPilot(super_ability_registry, self.model_providers)
+        # format_pilot = SimpleTaskPilot.create(
+        #     SolutionValidatorPrompt.default_configuration,
+        #     model_providers=self.model_providers,
+        #     smart_model_name=OpenAIModelName.GPT4_TURBO,
+        #     fast_model_name=OpenAIModelName.GPT3,
+        # )
+        # auto_solver_pilot = SuperTaskPilot(super_ability_registry, self.model_providers)
         # print("VISION", vision_pilot)
 
         # Initialize and add pilots to the chain here, for example:
         # self.chain.add_handler(vision_pilot, self.vision_transformer)
-        self.chain.add_handler(auto_solver_pilot, self.auto_solver_transformer)
+        # self.chain.add_handler(auto_solver_pilot, self.auto_solver_transformer)
         self.chain.add_handler(solver_pilot, self.solver_transformer)
-        self.chain.add_handler(format_pilot, self.format_transformer)
+        # self.chain.add_handler(format_pilot, self.format_transformer)
 
         # self.super_prompt = QuestionSolverPrompt.factory()
         # anthropic_pilot = SimpleTaskPilot.factory(
@@ -152,11 +156,13 @@ class QuestionExecutor(BaseExecutor):
         # print("Anthropic Solver Context ------- ", context)
         response = {
             "question": data,
-            "solution": response.get("content")[0]["text"],
+            # "solution": response.get("content")[0]["text"],
+            "solution": response.get("content", ""),
         }
-        task = self.PROMPT_TEMPLATE.format(**response)
-        # context.add_content(response.get("completion", ""))
-        return task, context
+        # task = self.PROMPT_TEMPLATE.format(**response)
+        # # context.add_content(response.get("completion", ""))
+        # return task, context
+        return response, context
 
     def format_transformer(self, data, response, context):
         # print("Task: ", data)
