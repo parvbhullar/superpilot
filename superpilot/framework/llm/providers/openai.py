@@ -356,7 +356,7 @@ class OpenAIFunctionSpec:
         return "\n".join(
             [
                 f"// {self.description}",
-                f"type {self.name} = (_ :{{",
+                f"type {self.name} = (_ :",
                 *[param_signature(p) for p in self.parameters.values()],
                 "}) => any;",
             ]
