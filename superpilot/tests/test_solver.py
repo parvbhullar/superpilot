@@ -23,6 +23,23 @@ def solve_question(image_path):
     t2 = time.time()
     print("Time Taken", round(t2 - t1, 2), "seconds")
 
+def add_two_numbers(a, b):
+    """
+    Add two numbers.
+
+    Parameters:
+    a (int or float): The first number.
+    b (int or float): The second number.
+
+    Returns:
+    int or float: The sum of the two numbers.
+    """
+    return a + b
+
+# Example usage
+result = add_two_numbers(5, 3)
+print(f"The sum is: {result}")
+
 
 def extract_latex_from_image(path):
     from PIL import Image

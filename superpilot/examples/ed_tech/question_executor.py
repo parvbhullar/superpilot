@@ -227,7 +227,7 @@ class QuestionExecutor(BaseExecutor):
         response["solution"] = response.get("solution", "").replace("&", " ")
         # print(response)
         return response
-
+    
     # Function to get base64 string from image file
     def image_to_base64(self, image_path):
         import base64
@@ -266,7 +266,9 @@ class QuestionExecutor(BaseExecutor):
         # Use Tesseract to do OCR on the image
         text = pytesseract.image_to_string(img)
         return text
-
+    
+    
+    
     def extract_text_from_image(self, path):
         # !/usr/bin/env python
         import requests
