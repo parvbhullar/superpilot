@@ -31,7 +31,7 @@ def write_csv(data, output_file):
         writer.writerows(data)
 
 if __name__ == "__main__":
-    root_directory = "/Users/zestgeek31/Desktop/super-pilot/superpilot"  # Replace with your project path
+    root_directory = "superpilot"  # Replace with your project path
     output_csv = "project_structure.csv"
     data = traverse_directory(root_directory)
     write_csv(data, output_csv)

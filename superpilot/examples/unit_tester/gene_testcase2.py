@@ -1,6 +1,6 @@
 import ast
 import os
-
+import ollama 
 def extract_functions_from_code(code):
     """Parse the given code and return a list of function names."""
     try:
@@ -36,6 +36,7 @@ def main():
         print("File does not exist.")
         return
 
+    # Read the code from the file
     with open(code_file, 'r') as file:
         code = file.read()
 
