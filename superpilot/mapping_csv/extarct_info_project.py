@@ -28,9 +28,6 @@ def extract_info_from_directory(directory_path):
         
         folder_name = os.path.relpath(root, directory_path)  # Get the relative path of the folder
         
-        # Add the folder and its contents to the data list
-        data.append({"Folder": folder_name, "File": "", "Functions": "", "Classes": ""})
-        
         # Process each file in the current directory
         for file in files:
             # Only consider Python files (ending with .py)
@@ -40,13 +37,23 @@ def extract_info_from_directory(directory_path):
                 # Extract function and class names from the file
                 functions, classes = extract_info_from_file(file_path)
                 
-                # Add the information to the data list
-                data.append({
-                    "Folder": folder_name,  # Folder name or path relative to the base directory
-                    "File": file,  # Name of the Python file
-                    "Functions": ", ".join(functions) if functions else "",  # Comma-separated list of functions
-                    "Classes": ", ".join(classes) if classes else ""  # Comma-separated list of classes
-                })
+                # Add each function as a separate row in the data list
+                for func in functions:
+                    data.append({
+                        "Folder": folder_name,  # Folder name or path relative to the base directory
+                        "File": file,  # Name of the Python file
+                        "Function": func,  # Function name
+                        "Class": ""  # Leave class blank as we're focusing on functions
+                    })
+                
+                # Add each class as a separate row in the data list
+                for cls in classes:
+                    data.append({
+                        "Folder": folder_name,  # Folder name or path relative to the base directory
+                        "File": file,  # Name of the Python file
+                        "Function": "",  # Leave function blank as we're focusing on classes
+                        "Class": cls  # Class name
+                    })
     
     return data
 
@@ -54,7 +61,7 @@ def extract_info_from_directory(directory_path):
 def save_to_csv(data, output_file):
     with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
         # Define the column headers for the CSV
-        fieldnames = ["Folder", "File", "Functions", "Classes"]
+        fieldnames = ["Folder", "File", "Function", "Class"]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
         writer.writeheader()  # Write the header row
