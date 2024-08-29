@@ -46,7 +46,6 @@ def extract_info_from_directory(directory_path):
                         "Class": ""  # Leave class blank as we're focusing on functions
                     })
                 
-                # Add each class as a separate row in the data list
                 for cls in classes:
                     data.append({
                         "Folder": folder_name,  # Folder name or path relative to the base directory
