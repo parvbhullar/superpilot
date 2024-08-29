@@ -8,13 +8,19 @@ def extract_info_from_file(file_path):
         # Parse the contents into an Abstract Syntax Tree (AST)
         tree = ast.parse(file.read(), filename=file_path)
     
-    # Extract all function names in the file
-    functions = [node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+    functions = []  # List to store (function_name, class_name) tuples
+    current_class = None  # Variable to keep track of the current class
+
+    # Walk through the AST nodes
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            # Update the current class name
+            current_class = node.name
+        elif isinstance(node, ast.FunctionDef):
+            # Associate function with the current class
+            functions.append((node.name, current_class))
     
-    # Extract all class names in the file
-    classes = [node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
-    
-    return functions, classes
+    return functions
 
 # Function to go through the project directory and collect information
 def extract_info_from_directory(directory_path):
@@ -35,23 +41,15 @@ def extract_info_from_directory(directory_path):
                 file_path = os.path.join(root, file)
                 
                 # Extract function and class names from the file
-                functions, classes = extract_info_from_file(file_path)
+                functions = extract_info_from_file(file_path)
                 
                 # Add each function as a separate row in the data list
-                for func in functions:
+                for func, cls in functions:
                     data.append({
                         "Folder": folder_name,  # Folder name or path relative to the base directory
                         "File": file,  # Name of the Python file
                         "Function": func,  # Function name
-                        "Class": ""  # Leave class blank as we're focusing on functions
-                    })
-                
-                for cls in classes:
-                    data.append({
-                        "Folder": folder_name,  # Folder name or path relative to the base directory
-                        "File": file,  # Name of the Python file
-                        "Function": "",  # Leave function blank as we're focusing on classes
-                        "Class": cls  # Class name
+                        "Class": cls if cls else ""  # Class name or empty if function is not in a class
                     })
     
     return data
