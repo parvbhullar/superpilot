@@ -46,6 +46,7 @@ class OpenAIModelName(str, enum.Enum):
     GPT4_32K_NEW = "gpt-4-32k-0613"
     GPT3_FINETUNE_MODEL = "ft:gpt-3.5-turbo-0613:recalll::8PE7I1IF"
     GPT4_O = "gpt-4o"
+    GPT4_O_MINI = "gpt-4o-mini"
 
 
 OPEN_AI_EMBEDDING_MODELS = {
@@ -124,6 +125,14 @@ OPEN_AI_LANGUAGE_MODELS = {
         provider_name=ModelProviderName.OPENAI,
         prompt_token_cost=0.0005,
         completion_token_cost=0.0015,
+        max_tokens=4096,
+    ),
+    OpenAIModelName.GPT4_O_MINI: LanguageModelProviderModelInfo(
+        name=OpenAIModelName.GPT4_O_MINI,
+        service=ModelProviderService.LANGUAGE,
+        provider_name=ModelProviderName.OPENAI,
+        prompt_token_cost=0.00015,
+        completion_token_cost=0.0005,
         max_tokens=16384,
     ),
 }
