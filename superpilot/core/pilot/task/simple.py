@@ -3,7 +3,6 @@ import platform
 import time
 from abc import ABC
 from typing import Dict
-
 from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
 from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
 import distro
