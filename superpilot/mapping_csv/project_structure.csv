@@ -1,148 +1,402 @@
-Folder,Number of Folders,Number of Files,Number of Functions
-/Users/zestgeek31/Desktop/super-pilot/superpilot,4,9,4
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot.egg-info,0,4,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/__pycache__,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot,7,2,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core,15,3,3
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/configuration,1,4,16
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/configuration/__pycache__,0,2,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/context,1,2,35
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/context/__pycache__,0,2,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/app,1,5,23
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/app/__pycache__,0,3,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/memory,0,4,3
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/workspace,0,3,11
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/embedding,0,4,1
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/plugin,1,5,19
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/plugin/__pycache__,0,2,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/planning,1,6,12
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/planning/strategies,0,12,47
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/agent,0,5,25
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/__pycache__,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/ability,2,5,29
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/ability/__pycache__,0,3,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/ability/builtins,0,6,34
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/environment,0,5,23
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/pilot,3,4,8
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/pilot/chain,0,3,5
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/pilot/__pycache__,0,3,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/pilot/task,0,6,24
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/resource,1,2,2
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/resource/model_providers,2,8,93
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/resource/model_providers/utils,0,3,10
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/resource/model_providers/__pycache__,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/_deprecated,1,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/core/_deprecated/messaging,0,3,19
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/app,3,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/app/cli_web_app,2,2,3
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/app/cli_web_app/server,1,3,1
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/app/cli_web_app/server/services,0,2,2
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/app/cli_web_app/client,0,2,1
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/app/client_lib,0,5,7
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/app/cli_app,0,3,5
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework,6,2,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/tools,4,2,11
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/tools/latex,1,1,1
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/tools/latex/pylatexenc,5,4,18
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/tools/latex/pylatexenc/latexnodes,1,14,230
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/tools/latex/pylatexenc/latexnodes/parsers,0,9,89
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/tools/latex/pylatexenc/latex2text,0,4,60
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/tools/latex/pylatexenc/latexwalker,0,7,46
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/tools/latex/pylatexenc/macrospec,1,7,71
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/tools/latex/pylatexenc/macrospec/_pyltxenc2_argparsers,0,3,16
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/tools/latex/pylatexenc/latexencode,0,8,36
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/tools/search_engine,0,10,40
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/tools/web_browser,0,6,13
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/tools/summarizer,0,2,2
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/llm,2,7,39
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/llm/providers,1,2,16
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/llm/providers/__pycache__,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/llm/utils,0,2,8
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/plugins,0,3,13
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/__pycache__,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/abilities,1,3,9
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/abilities/__pycache__,0,2,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/helpers,5,4,26
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/helpers/json_utils,0,5,16
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/helpers/processing,0,6,21
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/helpers/js,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/helpers/log_cycle,0,2,3
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/framework/helpers/math,0,1,13
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/tests,1,24,44
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/tests/__pycache__,0,4,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/__pycache__,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/docs,0,3,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples,11,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/unit_tester,0,2,5
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/solution_qc,0,8,23
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/ed_tech,1,10,58
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/ed_tech/__pycache__,0,6,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/thumbnail-genarator,0,4,11
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/tax,0,6,22
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/__pycache__,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/pilots,1,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/pilots/tasks,1,4,5
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/pilots/tasks/__pycache__,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/abilities,3,6,22
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/abilities/utlis,0,4,3
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/abilities/__pycache__,0,4,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/abilities/schema,0,2,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/executor,1,11,14
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/executor/__pycache__,0,2,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/prompt_generator,0,7,23
-/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/examples/voiceover,0,4,8
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git,5,8,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects,41,0,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/04,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/35,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/3d,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/94,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/5a,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/be,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/e2,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/c7,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/ca,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/fb,0,2,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/c1,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/18,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/27,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/pack,0,3,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/7d,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/87,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/7b,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/10,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/19,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/26,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/00,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/6e,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/info,0,0,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/62,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/98,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/53,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/3f,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/37,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/a0,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/a7,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/b7,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/de,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/c3,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/e0,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/46,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/40,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/2e,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/2b,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/7a,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/14,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/objects/8e,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/info,0,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/logs,1,1,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/logs/refs,2,0,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/logs/refs/heads,0,2,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/logs/refs/remotes,1,0,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/logs/refs/remotes/origin,0,2,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/hooks,0,14,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/refs,3,0,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/refs/heads,0,2,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/refs/tags,0,0,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/refs/remotes,1,0,0
-/Users/zestgeek31/Desktop/super-pilot/superpilot/.git/refs/remotes/origin,0,2,0
+Folder,File,Functions,Classes
+.,,,
+.,__init__.py,,
+.,setup.py,,
+.,mapping_data.py,"count_functions, traverse_directory, write_csv",
+.,check_file.py,checkMerge,
+superpilot.egg-info,,,
+superpilot,,,
+superpilot,__init__.py,,
+superpilot,main.py,,
+superpilot/core,,,
+superpilot/core,__init__.py,,
+superpilot/core,singleton.py,__call__,"Singleton, AbstractSingleton"
+superpilot/core,status.py,"print_status, display","ShortStatus, Status"
+superpilot/core/configuration,,,
+superpilot/core/configuration,config.py,"get_config, build_config_from_env, load_env","Config, ConfigBuilder"
+superpilot/core/configuration,__init__.py,,
+superpilot/core/configuration,goal.py,"config_to_goal, save_goal, fetch_goal",
+superpilot/core/configuration,schema.py,"UserConfigurable, _get_user_config_fields, deep_update, get_user_config, get_user_config, build_configuration, setup_workspace, load_environment_settings, load_environment_settings_goal, save_environment_settings_goal","SystemConfiguration, SystemSettings, Configurable, WorkspaceConfiguration, WorkspaceSettings, WorkspaceSetup, Config, Config"
+superpilot/core/context,,,
+superpilot/core/context,__init__.py,,
+superpilot/core/context,schema.py,"description, type, source, content, __str__, summary, source, content, description, source, content, description, __post_init__, description, source, content, type, description, add_content_item, create_model_class, __str__, __init__, extend, __bool__, add, add_content, close, clear, count, format_numbered, __str__, dict, to_file, check_name, check_missing_fields","ContentType, ContentItem, FileContentItem, ImageContentItem, FolderContentItem, Content, Context"
+superpilot/core/app,,,
+superpilot/core/app,plugin_loader.py,"__init__, __init__, search_plugin, factory","PluginSchema, PluginContainer"
+superpilot/core/app,thread_manager.py,"get_task, test_query_planner, process_block, manual_testing, main, __init__, start_executor, execute_goal, push_to_queue, pop_from_queue",ThreadManager
+superpilot/core/app,__init__.py,,
+superpilot/core/app,app_manager.py,"__init__, predict_query_type, get_content, generate_prompt, __init__, create_task, process_tasks, update_task_status","QueryProcessor, TaskManager"
+superpilot/core/app,executor.py,main,
+superpilot/core/memory,,,
+superpilot/core/memory,__init__.py,,
+superpilot/core/memory,settings.py,,"MemoryConfiguration, MemorySettings"
+superpilot/core/memory,simple.py,"__init__, __init__, _load_message_history","MessageHistory, SimpleMemory"
+superpilot/core/memory,base.py,,"Memory, MemoryItem, MessageHistory"
+superpilot/core/workspace,,,
+superpilot/core/workspace,__init__.py,,
+superpilot/core/workspace,simple.py,"__init__, root, debug_log_path, cycle_log_path, configuration_path, restrict_to_workspace, get_path, _sanitize_path",SimpleWorkspace
+superpilot/core/workspace,base.py,"root, restrict_to_workspace, get_path",Workspace
+superpilot/core/embedding,,,
+superpilot/core/embedding,__init__.py,,
+superpilot/core/embedding,settings.py,,"EmbeddingModelConfiguration, EmbeddingModelSettings"
+superpilot/core/embedding,simple.py,__init__,SimpleEmbeddingModel
+superpilot/core/embedding,base.py,,"EmbeddingModelResponse, EmbeddingModel"
+superpilot/core/plugin,,,
+superpilot/core/plugin,utlis.py,load_class,
+superpilot/core/plugin,research.py,"get_plugin, load_from_file_path, load_from_import_path, resolve_name_to_path, load_from_workspace, load_from_installed_package",ResearchPluginService
+superpilot/core/plugin,__init__.py,,
+superpilot/core/plugin,simple.py,"get_plugin, load_from_file_path, load_from_import_path, resolve_name_to_path, load_from_workspace, load_from_installed_package",SimplePluginService
+superpilot/core/plugin,base.py,"get_plugin, load_from_file_path, load_from_import_path, resolve_name_to_path, load_from_workspace, load_from_installed_package","PluginStorageFormat, PluginLocation, PluginMetadata, PluginService"
+superpilot/core/planning,,,
+superpilot/core/planning,__init__.py,,
+superpilot/core/planning,templates.py,,
+superpilot/core/planning,settings.py,,"LanguageModelConfiguration, PromptStrategyConfiguration, PromptStrategiesConfiguration, PlannerConfiguration, PlannerSettings"
+superpilot/core/planning,simple.py,"get_os_info, __init__, _make_template_kwargs_for_strategy",SimplePlanner
+superpilot/core/planning,base.py,"model_classification, build_prompt, parse_response_content",PromptStrategy
+superpilot/core/planning,schema.py,"get_messages, get_functions, get_function_call, __str__, factory, generate_kwargs","LanguageModelClassification, LanguageModelPrompt, LanguageModelResponse, TaskType, TaskStatus, TaskContext, Task, ExecutionNature, StepType"
+superpilot/core/planning/strategies,,,
+superpilot/core/planning/strategies,step_strategy.py,"__init__, model_classification, build_prompt, parse_response_content","StepStrategyConfiguration, StepStrategy"
+superpilot/core/planning/strategies,summarizer_strategy.py,"__init__, model_classification, build_prompt, parse_response_content","SummarizerConfiguration, SummarizerStrategy"
+superpilot/core/planning/strategies,next_ability.py,"__init__, model_classification, build_prompt, parse_response_content","NextAbilityConfiguration, NextAbility"
+superpilot/core/planning/strategies,__init__.py,,
+superpilot/core/planning/strategies,model.py,"__init__, model_classification, build_prompt, parse_response_content, get_config",ModelPromptStrategy
+superpilot/core/planning/strategies,utils.py,"to_numbered_list, json_loads",
+superpilot/core/planning/strategies,markdown.py,"__init__, model_classification, build_prompt, parse_response_content",MarkdownGeneratorStrategy
+superpilot/core/planning/strategies,initial_plan.py,"__init__, model_classification, build_prompt, parse_response_content","InitialPlanConfiguration, InitialPlan"
+superpilot/core/planning/strategies,name_and_goals.py,"__init__, model_classification, build_prompt, parse_response_content","NameAndGoalsConfiguration, NameAndGoals"
+superpilot/core/planning/strategies,simple.py,"__init__, model_classification, build_prompt, get_template_kwargs, _generate_content_list, parse_response_content, get_config, factory","BaseContent, SimplePrompt"
+superpilot/core/planning/strategies,step_execution.py,"__init__, model_classification, build_prompt, parse_response_content","StepExecutionConfiguration, StepExecution"
+superpilot/core/planning/strategies,step_flow.py,"__init__, model_classification, build_prompt, parse_response_content","StepFlowConfiguration, StepFlow"
+superpilot/core/agent,,,
+superpilot/core/agent,research.py,"_prune_empty_dicts, update_pilot_name_and_goals, __init__, load_pilot, from_workspace, from_goal, __repr__, build_user_configuration, compile_settings, provision_pilot, provision_pilot_goal, _get_system_instance","AgentSystems, AgentConfiguration, AgentSystemSettings, AgentSettings, ResearchAgent"
+superpilot/core/agent,__init__.py,,
+superpilot/core/agent,settings.py,update_pilot_name_and_goals,"AgentSystems, AgentConfiguration, AgentSystemSettings, AgentSettings"
+superpilot/core/agent,simple.py,"_prune_empty_dicts, __init__, from_workspace, __repr__, build_user_configuration, compile_settings, provision_pilot, _get_system_instance",SimpleAgent
+superpilot/core/agent,base.py,"__init__, from_workspace, __repr__, name",Agent
+superpilot/core/ability,,,
+superpilot/core/ability,__init__.py,,
+superpilot/core/ability,super.py,"__init__, register_ability, list_abilities, dump_abilities, get_ability, abilities, factory","AbilityRegistryConfiguration, AbilityRegistrySettings, SuperAbilityRegistry"
+superpilot/core/ability,simple.py,"__init__, register_ability, list_abilities, dump_abilities, get_ability, abilities","AbilityRegistryConfiguration, AbilityRegistrySettings, SimpleAbilityRegistry"
+superpilot/core/ability,base.py,"factory, name, description, arguments, required_arguments, __str__, _parse_response, dump, create_ability, register_ability, list_abilities, abilities, dump_abilities, get_ability","AbilityConfiguration, Ability, AbilityRegistry"
+superpilot/core/ability,schema.py,"add_knowledge, summary","AbilityAction, Config"
+superpilot/core/ability/builtins,,,
+superpilot/core/ability/builtins,__init__.py,,
+superpilot/core/ability/builtins,super.py,"__init__, description, arguments, required_arguments, create_new_ability",SuperAbility
+superpilot/core/ability/builtins,create_new_ability.py,"__init__, description, arguments, required_arguments, create_new_ability",CreateNewAbility
+superpilot/core/ability/builtins,image_operations.py,"__init__, description, arguments, required_arguments, _check_preconditions, __call__, _generate_huggingface_image, _generate_dalle_image, _generate_stablediffusion_image",GenerateImage
+superpilot/core/ability/builtins,file_operations.py,"__init__, description, arguments, _check_preconditions, __call__, __init__, description, arguments, _check_preconditions, __call__","ReadFile, WriteFile"
+superpilot/core/ability/builtins,query_language_model.py,"__init__, description, arguments, required_arguments, _parse_response",QueryLanguageModel
+superpilot/core/environment,,,
+superpilot/core/environment,__init__.py,,
+superpilot/core/environment,factory.py,"__init__, build_environment, build_ability_registry, build_memory, build_openai_provider, build_planning, build_workspace, export_json",EnvConfigBuilder
+superpilot/core/environment,settings.py,,"EnvSystems, EnvConfiguration, EnvSystemSettings, EnvSettings"
+superpilot/core/environment,simple.py,"_prune_empty_dicts, __init__, from_workspace, __repr__, factory, build_user_configuration, compile_settings, provision_environment, get, _get_system_instance",SimpleEnv
+superpilot/core/environment,base.py,"__init__, from_workspace, get, __repr__, name",Environment
+superpilot/core/pilot,,,
+superpilot/core/pilot,__init__.py,,
+superpilot/core/pilot,super.py,"_prune_empty_dicts, __init__, __repr__",SuperPilot
+superpilot/core/pilot,settings.py,update_pilot_name_and_goals,"PilotSystems, ExecutionAlgo, PilotConfiguration, PilotSystemSettings, PilotSettings"
+superpilot/core/pilot,base.py,"__init__, __repr__, name, __init__","Pilot, BasePilot"
+superpilot/core/pilot/chain,,,
+superpilot/core/pilot/chain,__init__.py,,
+superpilot/core/pilot/chain,simple.py,,SimpleChain
+superpilot/core/pilot/chain,base.py,"__init__, add_handler, default_transformer, remove_handler, update_cost",BaseChain
+superpilot/core/pilot/task,,,
+superpilot/core/pilot/task,__init__.py,,
+superpilot/core/pilot/task,super.py,"get_os_info, __init__, _make_template_kwargs_for_strategy, __repr__, create",SuperTaskPilot
+superpilot/core/pilot/task,model.py,"get_os_info, __init__, _make_template_kwargs_for_strategy, __repr__, __str__, name, dump, factory",ModelTaskPilot
+superpilot/core/pilot/task,settings.py,,"TaskPilotConfiguration, ModelTaskPilotConfiguration"
+superpilot/core/pilot/task,simple.py,"get_os_info, __init__, choose_model, _make_template_kwargs_for_strategy, __repr__, __str__, factory, create",SimpleTaskPilot
+superpilot/core/pilot/task,base.py,"name, __repr__, _parse_response",TaskPilot
+superpilot/core/resource,,,
+superpilot/core/resource,__init__.py,,
+superpilot/core/resource,schema.py,"update_usage, update_usage_and_cost","ResourceType, ProviderUsage, ProviderBudget, ProviderCredentials, ProviderSettings, Config"
+superpilot/core/resource/model_providers,,,
+superpilot/core/resource/model_providers,anthropic_api.py,"__init__, get_token_limit, get_remaining_budget, get_total_cost, combine_text_from_objects, _get_completion_kwargs, _get_embedding_kwargs, _wrap_prompt, __repr__, factory, init_settings, __init__, _log_rate_limit_error, _backoff, __call__","AnthropicModelName, AnthropicConfiguration, AnthropicModelProviderBudget, AnthropicSettings, AnthropicApiProvider, _AnthropicRetryHandler"
+superpilot/core/resource/model_providers,contants.py,,
+superpilot/core/resource/model_providers,ollama_api.py,"__init__, get_token_limit, get_remaining_budget, get_total_cost, combine_text_from_objects, _get_completion_kwargs, _get_embedding_kwargs, _wrap_prompt, __repr__, factory, init_settings, __init__, _log_rate_limit_error, _backoff, __call__","OllamaModelName, OllamaConfiguration, OllamaModelProviderBudget, OllamaSettings, OllamaApiProvider, _OllamaRetryHandler"
+superpilot/core/resource/model_providers,__init__.py,,
+superpilot/core/resource/model_providers,factory.py,"load_model_provider, __init__, factory, load_providers, _get_model_provider_instance, __init__, get_ai_models, get_ai_model, get_models_config","ModelProviderConfiguration, ProviderFactorySettings, ModelProviderFactory, ModelConfigFactory"
+superpilot/core/resource/model_providers,openai.py,"__init__, get_token_limit, get_remaining_budget, get_total_cost, _get_completion_kwargs, _get_embedding_kwargs, __repr__, factory, init_settings, __init__, _log_rate_limit_error, _backoff, __call__","OpenAIModelName, OpenAIConfiguration, OpenAIModelProviderBudget, OpenAISettings, OpenAIProvider, _OpenAIRetryHandler"
+superpilot/core/resource/model_providers,deepinfra.py,"__init__, get_token_limit, get_remaining_budget, get_total_cost, _get_completion_kwargs, _get_embedding_kwargs, __repr__, factory, init_settings, __init__, _log_rate_limit_error, _backoff, __call__","DeepInfraModelName, DeepInfraConfiguration, DeepInfraModelProviderBudget, DeepInfraSettings, DeepInfraProvider, _DeepInfraRetryHandler"
+superpilot/core/resource/model_providers,schema.py,"unmask, _remove_a_key, add_image, dict, add_text, add_image, to_dict, __str__, to_dict, __str__, unmasked, update_usage, update_usage_and_cost, get_token_limit, get_remaining_budget, get_total_cost, _verify_no_completion_tokens_used, get, __init__, __call__, from_response, _resolve_ref, function_schema, set_properties, name, multiple_args, from_response, wrapper","ModelProviderService, ModelProviderName, ModelProviderDetail, MessageRole, MessageContentType, MessageImage, MessageContent, LanguageModelMessage, LanguageModelFunction, ModelProviderModelInfo, ModelProviderModelResponse, ModelProviderCredentials, ModelProviderUsage, ModelProviderBudget, ModelProviderSettings, ModelProvider, EmbeddingModelProviderModelInfo, EmbeddingModelProviderModelResponse, EmbeddingModelProvider, LanguageModelProviderModelInfo, LanguageModelProviderModelResponse, LanguageModelProvider, MediaModelProviderModelInfo, MediaModelProviderModelResponse, MediaModelProvider, schema_function, SchemaModel, Config"
+superpilot/core/resource/model_providers/utils,,,
+superpilot/core/resource/model_providers/utils,token_counter.py,"count_message_tokens, count_message_tokens, count_message_tokens, count_string_tokens",
+superpilot/core/resource/model_providers/utils,__init__.py,,
+superpilot/core/resource/model_providers/utils,api_client.py,"__init__, _request, count_tokens, __init__, completion, count_tokens","BaseAPIClient, APIClient"
+superpilot/core/_deprecated,,,
+superpilot/core/_deprecated,__init__.py,,
+superpilot/core/_deprecated/messaging,,,
+superpilot/core/_deprecated/messaging,__init__.py,,
+superpilot/core/_deprecated/messaging,simple.py,"__init__, __repr__, __init__, add_listener, __repr__, __init__, create_message_channel, get_emitter, register_listener, __repr__","SimpleMessageEmitter, SimpleMessageChannel, SimpleMessageBroker"
+superpilot/core/_deprecated/messaging,base.py,"send_message, __repr__, add_listener, send_message, __repr__, create_message_channel, get_emitter, register_listener, __repr__","Role, Sender, MessageContent, Message, MessageEmitter, MessageChannel, MessageBroker"
+superpilot/app,,,
+superpilot/app,__init__.py,,
+superpilot/app/cli_web_app,,,
+superpilot/app/cli_web_app,__init__.py,,
+superpilot/app/cli_web_app,cli.py,"superpilot, server, superpilot_server",
+superpilot/app/cli_web_app/server,,,
+superpilot/app/cli_web_app/server,__init__.py,,
+superpilot/app/cli_web_app/server,api.py,,
+superpilot/app/cli_web_app/server,schema.py,only_objective_or_name_role_goals,"AgentInfo, AgentConfiguration, InteractRequestBody, InteractResponseBody"
+superpilot/app/cli_web_app/server/services,,,
+superpilot/app/cli_web_app/server/services,users.py,"__init__, get_user_id",UserService
+superpilot/app/cli_web_app/server/services,__init__.py,,
+superpilot/app/cli_web_app/client,,,
+superpilot/app/cli_web_app/client,client.py,run,
+superpilot/app/cli_web_app/client,__init__.py,,
+superpilot/app/client_lib,,,
+superpilot/app/client_lib,logging.py,get_client_logger,
+superpilot/app/client_lib,shared_click_commands.py,"make_settings, status",
+superpilot/app/client_lib,__init__.py,,
+superpilot/app/client_lib,utils.py,"handle_exceptions, coroutine, wrapper",
+superpilot/app/client_lib,settings.py,make_user_configuration,
+superpilot/app/cli_app,,,
+superpilot/app/cli_app,__init__.py,,
+superpilot/app/cli_app,cli.py,superpilot,
+superpilot/app/cli_app,main.py,"parse_pilot_name_and_goals, parse_pilot_plan, parse_next_ability, parse_ability_result",
+superpilot/framework,,,
+superpilot/framework,__init__.py,,
+superpilot/framework/tools,,,
+superpilot/framework/tools,__init__.py,,
+superpilot/framework/tools,prompt_writer.py,"__init__, gen_instruction_style, gen_chatbot_style, gen_query_style, gen, __init__, gen, __init__, gen, __init__, gen","GPTPromptGenerator, WikiHowTemplate, EnronTemplate, BEAGECTemplate"
+superpilot/framework/tools/latex,,,
+superpilot/framework/tools/latex,__init__.py,latex_to_text,
+superpilot/framework/tools/latex/pylatexenc,,,
+superpilot/framework/tools/latex/pylatexenc,_util_support.py,"pylatexenc_deprecated_ver, pylatexenc_deprecated_2, pylatexenc_deprecated_3, __init__, _ensure_instance, __getitem__, __setitem__, __delitem__, __iter__, __len__, copy, clear",LazyDict
+superpilot/framework/tools/latex/pylatexenc,version.py,,
+superpilot/framework/tools/latex/pylatexenc,__init__.py,,
+superpilot/framework/tools/latex/pylatexenc,_util.py,"__init__, pos_to_lineno_colno, __init__, __enter__, __exit__, find_all_new_lines","LineNumbersCalculator, PushPropOverride"
+superpilot/framework/tools/latex/pylatexenc/latexnodes,,,
+superpilot/framework/tools/latex/pylatexenc/latexnodes,_parsedargs.py,"_argspec_from_arguments_spec_list, __init__, __repr__, to_json_object, __eq__, __init__, argspec, legacy_nodeoptarg_nodeargs, accept_node_visitor, __eq__, to_json_object, __repr__, _argspec_char_for_arg","LatexArgumentSpec, ParsedArguments"
+superpilot/framework/tools/latex/pylatexenc/latexnodes,_callablespecbase.py,get_node_parser,CallableSpecBase
+superpilot/framework/tools/latex/pylatexenc/latexnodes,_exctypes.py,"format_pos, __init__, __str__, set_pos_or_add_open_context_from_node, __init__, format_open_blocks, format_pos, format_full_traceback, to_display_string, __init__, __init__, __init__","LatexWalkerError, LatexWalkerLocatedError, LatexWalkerParseError, LatexWalkerLocatedErrorFormatter, LatexWalkerTokenParseError, LatexWalkerNodesParseError, LatexWalkerEndOfStream"
+superpilot/framework/tools/latex/pylatexenc/latexnodes,_token.py,"__init__, len, __unicode__, __repr__, __str__, __eq__, __ne__",LatexToken
+superpilot/framework/tools/latex/pylatexenc/latexnodes,_parsedargsinfo.py,"__init__, was_provided, get_content_nodelist, get_content_as_chars, __repr__, __eq__, __init__, get_argument_info, get_all_arguments_info","SingleParsedArgumentInfo, ParsedArgumentsInfo"
+superpilot/framework/tools/latex/pylatexenc/latexnodes,_latexcontextdbbase.py,"get_macro_spec, get_environment_spec, get_specials_spec, test_for_specials",LatexContextDbBase
+superpilot/framework/tools/latex/pylatexenc/latexnodes,_parsingstatedelta.py,"get_updated_parsing_state_from_delta, __init__, __repr__, get_updated_parsing_state, __init__, get_updated_parsing_state, __init__, get_updated_parsing_state, __init__, get_updated_parsing_state, __init__, __init__","ParsingStateDelta, ParsingStateDeltaReplaceParsingState, ParsingStateDeltaChained, ParsingStateDeltaWalkerEvent, ParsingStateDeltaEnterMathMode, ParsingStateDeltaLeaveMathMode"
+superpilot/framework/tools/latex/pylatexenc/latexnodes,__init__.py,,
+superpilot/framework/tools/latex/pylatexenc/latexnodes,_nodescollector.py,"__init__, get_final_nodelist, get_parser_parsing_state_delta, pos_start, pos_end, stop_token_condition_met, stop_token_condition_met_token, stop_nodelist_condition_met, stop_condition_stop_data, reached_end_of_stream, is_finalized, finalize, push_pending_chars, flush_pending_chars, push_to_nodelist, update_state_from_parsing_state_delta, _check_nodelist_stop_condition, _check_token_stop_condition, process_tokens, process_one_token, make_child_parsing_state, parse_comment_node, parse_latex_group, parse_macro, parse_environment, parse_specials, parse_invocable_token_type, parse_math, __init__","LatexNodesCollector, ReachedEndOfStream, ReachedStoppingCondition"
+superpilot/framework/tools/latex/pylatexenc/latexnodes,_tokenreaderbase.py,"__init__, make_token, move_to_token, move_past_token, peek_token, peek_token_or_none, next_token, cur_pos, peek_space_chars, skip_space_chars, peek_chars, next_chars, move_to_pos_chars, __init__, peek_token, next_token, _find_tok_idx, move_to_token, move_past_token, cur_pos, final_pos","LatexTokenReaderBase, LatexTokenListTokenReader"
+superpilot/framework/tools/latex/pylatexenc/latexnodes,_parsingstate.py,"_safe_eq, __init__, set_fields, _finalize_state_latex_group_delimiters_info, _finalize_state_latex_math_delim_info, _finalize_state_inmathmode_info, finalize_state, sub_context, get_fields, __repr__, to_json_object",ParsingState
+superpilot/framework/tools/latex/pylatexenc/latexnodes,_tokenreader.py,"__init__, move_to_token, move_past_token, peek_chars, next_chars, cur_pos, move_to_pos_chars, _advance_to_pos, skip_space_chars, peek_space_chars, peek_token, impl_peek_token, impl_peek_space_chars, impl_char_token, impl_maybe_read_math_mode_delimiter, impl_read_macro, parse_latex_environment_name, impl_read_environment, impl_read_comment",LatexTokenReader
+superpilot/framework/tools/latex/pylatexenc/latexnodes,nodes.py,"_display_abbrev_str, _display_str_delimiters, _get_content_as_chars, _update_posposend_from_nodelist, __init__, nodeType, isNodeType, len, latex_verbatim, __eq__, __ne__, __unicode__, __str__, __repr__, display_str, accept_node_visitor, to_json_object_with_latexwalker, format_pos, __init__, nodeType, display_str, accept_node_visitor, __init__, nodeType, display_str, accept_node_visitor, __init__, nodeType, display_str, accept_node_visitor, __init__, nodeType, display_str, accept_node_visitor, nodeoptarg, nodeargs, __init__, envname, nodeType, display_str, accept_node_visitor, __init__, nodeType, display_str, accept_node_visitor, __init__, nodeType, display_str, accept_node_visitor, __init__, len, __iter__, __getitem__, __len__, latex_verbatim, display_str, accept_node_visitor, filter, split_at_node, split_at_chars, get_content_as_chars, __eq__, to_json_object, __repr__, visit, visit_chars_node, visit_group_node, visit_comment_node, visit_macro_node, visit_environment_node, visit_specials_node, visit_math_node, visit_node_list, visit_parsed_arguments, visit_unknown_node, start, filter_full_predicate_fn, get_split_match_start_end, get_next_split, chars_to_node, flush_nodes","LatexNode, LatexCharsNode, LatexGroupNode, LatexCommentNode, LatexMacroNode, LatexEnvironmentNode, LatexSpecialsNode, LatexMathNode, LatexNodeList, LatexNodesVisitor"
+superpilot/framework/tools/latex/pylatexenc/latexnodes,_walkerbase.py,"enter_math_mode, leave_math_mode, parsing_state_event_handler, parse_content, make_node, make_nodelist, make_nodes_collector, make_latex_group_parser, make_latex_math_parser, check_tolerant_parsing_ignore_error, format_node_pos","LatexWalkerParsingStateEventHandler, LatexWalkerBase"
+superpilot/framework/tools/latex/pylatexenc/latexnodes/parsers,,,
+superpilot/framework/tools/latex/pylatexenc/latexnodes/parsers,_base.py,"__init__, parse, contents_can_be_empty, __repr__",LatexParserBase
+superpilot/framework/tools/latex/pylatexenc/latexnodes/parsers,_math.py,"is_opening_delimiter, get_acceptable_open_delimiter_list, initialize, stop_token_condition, get_matching_delimiter, make_group_node_and_parsing_state_delta, __init__","LatexMathParserInfo, LatexMathParser"
+superpilot/framework/tools/latex/pylatexenc/latexnodes/parsers,__init__.py,,
+superpilot/framework/tools/latex/pylatexenc/latexnodes/parsers,_generalnodes.py,"__init__, make_nodes_collector, parse, __init__, _stop_nodelist_condition, contents_can_be_empty","LatexGeneralNodesParser, LatexSingleNodeParser"
+superpilot/framework/tools/latex/pylatexenc/latexnodes/parsers,_expression.py,"__init__, __init__, contents_can_be_empty, parse, _parse_single_token, _check_if_requires_args","_TryAgainWithSkippedCommentOrWhitespaceNodes, LatexExpressionParser"
+superpilot/framework/tools/latex/pylatexenc/latexnodes/parsers,_optionals.py,"__init__, __init__, contents_can_be_empty, get_following_arg_parser, parse, _return_none","LatexOptionalSquareBracketsParser, LatexOptionalCharsMarkerParser"
+superpilot/framework/tools/latex/pylatexenc/latexnodes/parsers,_stdarg.py,"get_standard_argument_parser, __init__, get_arg_parser_instance, parse, __init__, __init__, __init__, stop_token_condition, handle_stop_condition_token, parse, _parse_one_commasep_arg, __init__, contents_can_be_empty, get_macro_arg_parser, parse, initialize, make_child_parsing_state, stop_token_condition, initialize, make_child_parsing_state, make_content_parser","LatexStandardArgumentParser, LatexCharsGroupParser, LatexCharsCommaSeparatedListParser, _CommaSepContentCustomParser, LatexTackOnInformationFieldMacrosParser, CharsContentsParserInfo, CommaSepParserInfo"
+superpilot/framework/tools/latex/pylatexenc/latexnodes/parsers,_delimited.py,"__init__, get_group_parsing_state, get_acceptable_open_delimiter_list, parse_initial, is_opening_delimiter, check_opening_delimiter, __init__, initialize, stop_token_condition, handle_stop_condition_token, make_child_parsing_state, get_matching_delimiter, get_parsed_delimiters, make_content_parser, get_open_context_description, make_group_node_and_parsing_state_delta, __init__, contents_can_be_empty, parse, get_group_parsing_state, get_acceptable_open_delimiter_list, is_opening_delimiter, stop_token_condition, get_matching_delimiter, __init__","LatexDelimitedExpressionParserOpeningDelimiterNotFound, LatexDelimitedExpressionParserInfo, LatexDelimitedExpressionParser, LatexDelimitedGroupParserInfo, LatexDelimitedGroupParser"
+superpilot/framework/tools/latex/pylatexenc/latexnodes/parsers,_verbatim.py,"__init__, new_char_check_stop_condition, error_end_of_stream, finalize_verbatim_string, parse, read_verbatim_content, __init__, new_char_check_stop_condition, parse, __init__, new_char_check_stop_condition, finalize_verbatim_string, parse, __init__","LatexVerbatimBaseParser, LatexDelimitedVerbatimParser, LatexVerbatimEnvironmentContentsParser, VerbatimInfo"
+superpilot/framework/tools/latex/pylatexenc/latex2text,,,
+superpilot/framework/tools/latex/pylatexenc/latex2text,_inputlatexfile.py,read_latex_file,
+superpilot/framework/tools/latex/pylatexenc/latex2text,__init__.py,"EnvDef, MacroDef, fmt_equation_environment, fmt_input_macro, placeholder_node_formatter, _do_fmt_placeholder_node, fmt_placeholder_node, fmt_matrix_environment_node, _fmt_math_style_char, fmt_math_text_style, get_default_latex_context_db, _parse_strict_latex_spaces_dict, latex2text, latexnodes2text, __init__, __init__, __init__, __init__, set_tex_input_directory, read_input_file, _input_node_simplify_repl, latex_to_text, nodelist_to_text, node_to_text, chars_node_to_text, comment_node_to_text, group_node_to_text, macro_node_to_text, environment_node_to_text, specials_node_to_text, math_node_to_text, do_fill_text, apply_simplify_repl, _fmt_indented_block, _is_bare_macro_node, _groupnodecontents_to_text, node_arg_to_text, apply_text_replacements, __init__, __init__, add_content, new_column, new_row, get_macro_str_repl, get_specials_str_repl, fill_chunk","MacroTextSpec, EnvironmentTextSpec, SpecialsTextSpec, LatexNodes2Text, _PushEquationContext, StateType"
+superpilot/framework/tools/latex/pylatexenc/latex2text,_defaultspecs.py,"_format_uebung, _format_maketitle, _latex_today, _mathxx_formatter, _greekletters, make_accented_char, unicode, formatter, getaccented",
+superpilot/framework/tools/latex/pylatexenc/latex2text,__main__.py,"main, run_main, __init__, __contains__",ListWithHiddenItems
+superpilot/framework/tools/latex/pylatexenc/latexwalker,,,
+superpilot/framework/tools/latex/pylatexenc/latexwalker,_get_defaultspecs.py,get_default_latex_context_db,
+superpilot/framework/tools/latex/pylatexenc/latexwalker,__init__.py,,
+superpilot/framework/tools/latex/pylatexenc/latexwalker,_defaultspecs.py,,
+superpilot/framework/tools/latex/pylatexenc/latexwalker,_legacy_py1x.py,"MacrosDef, get_token, get_latex_expression, get_latex_maybe_optional_arg, get_latex_braced_group, get_latex_environment, get_latex_nodes",
+superpilot/framework/tools/latex/pylatexenc/latexwalker,_walker.py,"_legacy_pyltxenc1_LatexWalker_init_from_macro_dict, _pyltxenc2_LatexWalker_get_token, _pyltxenc2_LatexWalker_get_latex_nodes, _pyltxenc2_LatexWalker_get_latex_expression, _pyltxenc2_LatexWalker_get_latex_braced_group, _pyltxenc2_LatexWalker_get_latex_environment, _pyltxenc2_LatexWalker_get_latex_maybe_optional_arg, __init__, make_parsing_state, parse_flags, _report_ignore_parse_error, check_tolerant_parsing_ignore_error, new_parsing_open_context, make_token_reader, parse_content, make_nodes_collector, make_node, make_nodelist, format_pos, pos_to_lineno_colno, __repr__, stop_token_condition, stop_nodelist_condition, handle_stop_condition_token, __init__, __enter__, __exit__, perform_recovery_nodes_and_parsing_state_delta","LatexWalker, _ParsingContext"
+superpilot/framework/tools/latex/pylatexenc/latexwalker,__main__.py,"main, run_main",
+superpilot/framework/tools/latex/pylatexenc/latexwalker,_helpers.py,"nodelist_to_latex, put_in_braces, disp_node, make_json_encoder, add_args, add_args, __init__, default",LatexNodesJSONEncoder
+superpilot/framework/tools/latex/pylatexenc/macrospec,,,
+superpilot/framework/tools/latex/pylatexenc/macrospec,_environmentbodyparser.py,"parse_initial, initialize, get_open_context_description, stop_token_condition, make_group_node_and_parsing_state_delta, __init__, get_contents_parsing_state_delta, get_child_parsing_state_delta","LatexEnvironmentBodyContentsParserInfo, LatexEnvironmentBodyContentsParser"
+superpilot/framework/tools/latex/pylatexenc/macrospec,_spechelpers.py,"std_macro, std_environment, std_specials",
+superpilot/framework/tools/latex/pylatexenc/macrospec,__init__.py,,
+superpilot/framework/tools/latex/pylatexenc/macrospec,_specclasses.py,"_legacy_pyltxenc2_CallableSpec_init_from_args_parser, _legacy_pyltxenc2_CallableSpec_parse_args, __init__, get_node_parser, args_parser, finalize_node, make_arguments_parsing_state_delta, make_body_parsing_state_delta, make_after_parsing_state_delta, needs_arguments, make_body_parser, __repr__, __init__, __init__, __init__, _make_after_parsing_state_delta, _make_body_parsing_state_delta, _init_with_legacy_wrapper","_NotSpecified, CallableSpec, MacroSpec, EnvironmentSpec, SpecialsSpec"
+superpilot/framework/tools/latex/pylatexenc/macrospec,_latexcontextdb.py,"__init__, freeze, __repr__, add_context_category, set_unknown_macro_spec, set_unknown_environment_spec, set_unknown_specials_spec, categories, get_macro_spec, get_environment_spec, get_specials_spec, test_for_specials, iter_macro_specs, iter_environment_specs, iter_specials_specs, filter_context, filtered_context, _get_new_autogen_category, extended_with, __init__, get_updated_parsing_state","LatexContextDb, ParsingStateDeltaExtendLatexContextDb"
+superpilot/framework/tools/latex/pylatexenc/macrospec,_argumentsparser.py,"argspec, parse, __eq__, __init__, argspec, parse, __eq__, __init__, argspec, parse","LatexNoArgumentsParser, LatexArgumentsParser, _LegacyPyltxenc2MacroArgsParserWrapper"
+superpilot/framework/tools/latex/pylatexenc/macrospec,_macrocallparser.py,"__init__, parse_call_arguments, make_body_parser_and_parsing_state, parse_call_body, parse, __init__, __init__, make_body_parser_and_parsing_state, _handle_stop_condition_token, _parse_body_token_stop_condition, __init__","_LatexCallableParserBase, LatexMacroCallParser, LatexEnvironmentCallParser, LatexSpecialsCallParser"
+superpilot/framework/tools/latex/pylatexenc/macrospec/_pyltxenc2_argparsers,,,
+superpilot/framework/tools/latex/pylatexenc/macrospec/_pyltxenc2_argparsers,_base.py,"__init__, parse_args, __repr__, get_inner_parsing_state",MacroStandardArgsParser
+superpilot/framework/tools/latex/pylatexenc/macrospec/_pyltxenc2_argparsers,__init__.py,,
+superpilot/framework/tools/latex/pylatexenc/macrospec/_pyltxenc2_argparsers,_verbatimargsparser.py,"__init__, to_json_object, __repr__, __eq__, __init__, parse_args, __repr__, __init__, to_json_object, __repr__, __eq__, __init__","ParsedVerbatimArgs, VerbatimArgsParser, ParsedLstListingArgs, LstListingArgsParser"
+superpilot/framework/tools/latex/pylatexenc/latexencode,,,
+superpilot/framework/tools/latex/pylatexenc/latexencode,get_builtin_rules.py,"get_builtin_uni2latex_dict, get_builtin_conversion_rules",
+superpilot/framework/tools/latex/pylatexenc/latexencode,_unicode_to_latex_encoder.py,"unicode_str, _callable_accepts_u2lobj_arg, HexstrN, re_match_expand, regex_match_pos, __init__, _get_method_fn, _get_replacement_latex_fn, unicode_to_latex, _check_do_skip_ascii, _apply_rule_dict, _apply_rule_regex, _apply_rule_callable, _apply_replacement, _apply_protection_none, _apply_protection_braces, _apply_protection_braces_almost_all, _apply_protection_braces_all, _apply_protection_braces_after_macro, _do_unknown_char_keep, _do_unknown_char_replace, _do_unknown_char_ignore, _do_unknown_char_fail, _do_unknown_char_unihex, _do_warn_unknown_char_defaultimpl","UnicodeToLatexEncoder, _NS"
+superpilot/framework/tools/latex/pylatexenc/latexencode,_uni2latexmap_xml.py,,
+superpilot/framework/tools/latex/pylatexenc/latexencode,_partial_latex_encoder.py,"__init__, _do_partial_latex_encode_step",PartialLatexToLatexEncoder
+superpilot/framework/tools/latex/pylatexenc/latexencode,__init__.py,"unicode_to_latex, _get_deprecated_utf82latex, utf8tolatex",
+superpilot/framework/tools/latex/pylatexenc/latexencode,_rule.py,"__init__, __repr__",UnicodeToLatexConversionRule
+superpilot/framework/tools/latex/pylatexenc/latexencode,_uni2latexmap.py,,
+superpilot/framework/tools/latex/pylatexenc/latexencode,__main__.py,"main, run_main",
+superpilot/framework/tools/search_engine,,,
+superpilot/framework/tools/search_engine,search_engine_meilisearch.py,"__init__, __init__, set_index, add_documents, search","DataSource, MeilisearchEngine"
+superpilot/framework/tools/search_engine,search_engine_serpapi.py,"__init__, get_params, _process_response, construct_url_and_params","SerpAPIWrapper, Config"
+superpilot/framework/tools/search_engine,search_engine.py,"__init__, run_google, google_official_search, safe_google_results",SearchEngine
+superpilot/framework/tools/search_engine,search_engine_serper.py,"get_payloads, get_headers, _process_response, construct_url_and_payload_and_headers, get_focused","SerperWrapper, Config"
+superpilot/framework/tools/search_engine,search_engine_type.py,,SearchEngineType
+superpilot/framework/tools/search_engine,__init__.py,,
+superpilot/framework/tools/search_engine,sd_engine.py,"decode_base64_to_image, batch_decode_base64_to_image, __init__, construct_payload, _save",SDEngine
+superpilot/framework/tools/search_engine,ut_writer.py,"__init__, get_swagger_json, __para_to_str, _para_to_str, para_to_str, build_object_properties, get_tags_mapping, generate_ut, build_api_doc, _store, ask_gpt_and_save, _generate_ut, gpt_msgs_to_code, get_file_path, dive_into_object",UTGenerator
+superpilot/framework/tools/search_engine,translator.py,translate_prompt,Translator
+superpilot/framework/tools/search_engine,web_search.py,web_search,
+superpilot/framework/tools/web_browser,,,
+superpilot/framework/tools/web_browser,web_browser_engine_playwright.py,__init__,PlaywrightWrapper
+superpilot/framework/tools/web_browser,web_browser_engine.py,"get_page_content, __init__",WebBrowserEngine
+superpilot/framework/tools/web_browser,__init__.py,,
+superpilot/framework/tools/web_browser,web_browser_engine_selenium.py,"_gen_get_driver_func, __init__, _scrape_website, _get_driver",SeleniumWrapper
+superpilot/framework/tools/web_browser,web_scrape.py,"browse_website, scrape_text_with_selenium, get_text, scrape_links_with_selenium, close_browser, add_header",
+superpilot/framework/tools/web_browser,web_browser_engine_type.py,,WebBrowserEngineType
+superpilot/framework/tools/summarizer,,,
+superpilot/framework/tools/summarizer,__init__.py,,
+superpilot/framework/tools/summarizer,summarizer.py,"__init__, summarize_text",Summarizer
+superpilot/framework/llm,,,
+superpilot/framework/llm,token_counter.py,"count_message_tokens, count_string_tokens",
+superpilot/framework/llm,__init__.py,,
+superpilot/framework/llm,chat.py,"create_chat_message, generate_context, chat_with_ai",
+superpilot/framework/llm,llm_utils.py,"retry_openai_api, call_ai_function, create_chat_completion, batched, chunked_tokens, get_ada_embedding, create_embedding, check_model, _wrapper, _wrapped",
+superpilot/framework/llm,modelsinfo.py,,
+superpilot/framework/llm,api_manager.py,"__init__, reset, update_cost, set_total_budget, get_total_prompt_tokens, get_total_completion_tokens, get_total_cost, get_total_budget, get_models",ApiManager
+superpilot/framework/llm,base.py,"raw, __getitem__, __getitem__, __getitem__, __iter__, __len__, add, append, extend, insert, for_model, token_length, raw, dump, separator","MessageDict, ResponseMessageDict, FunctionCallDict, Message, ModelInfo, CompletionModelInfo, ChatModelInfo, TextModelInfo, EmbeddingModelInfo, ChatSequence, LLMResponse, EmbeddingModelResponse, ChatModelResponse"
+superpilot/framework/llm/providers,,,
+superpilot/framework/llm/providers,__init__.py,,
+superpilot/framework/llm/providers,openai.py,"meter_api, retry_api, create_chat_completion, create_text_completion, create_embedding, get_openai_command_specs, count_openai_functions_tokens, format_function_specs_as_typescript_ns, update_usage_with_response, metering_wrapper, metered_func, _wrapper, schema, prompt_format, _wrapped, param_signature","OpenAIFunctionCall, OpenAIFunctionSpec, ParameterSpec"
+superpilot/framework/llm/utils,,,
+superpilot/framework/llm/utils,token_counter.py,"count_message_tokens, count_message_tokens, count_message_tokens, count_string_tokens",
+superpilot/framework/llm/utils,__init__.py,"call_ai_function, create_text_completion, create_chat_completion, check_model",
+superpilot/framework/plugins,,,
+superpilot/framework/plugins,plugins_config.py,"__repr__, get, is_enabled, load_config, deserialize_config_file, create_empty_plugins_config",PluginsConfig
+superpilot/framework/plugins,__init__.py,"inspect_zip_for_modules, write_dict_to_json_file, fetch_openai_plugins_manifest_and_spec, create_directory_if_not_exists, initialize_openai_plugins, instantiate_openai_plugin_clients, scan_plugins",
+superpilot/framework/plugins,plugin_config.py,,PluginConfig
+superpilot/framework/abilities,,,
+superpilot/framework/abilities,search_summarise.py,"__init__, description, arguments, _parse_response",SearchAndSummarizeAbility
+superpilot/framework/abilities,__init__.py,,
+superpilot/framework/abilities,text_summarise.py,"__init__, description, arguments, required_arguments, _parse_response",TextSummarizeAbility
+superpilot/framework/helpers,,,
+superpilot/framework/helpers,system.py,get_os_info,
+superpilot/framework/helpers,__init__.py,,
+superpilot/framework/helpers,utils.py,"batch, clean_input, validate_yaml_file, readable_file_size, get_bulletin_from_web, get_current_git_branch, get_latest_bulletin, markdown_to_ansi_style, get_legal_warning",
+superpilot/framework/helpers,logs.py,"remove_color_codes, print_assistant_thoughts, __init__, typewriter_log, debug, info, warn, error, _log, set_level, double_check, log_json, get_log_directory, emit, emit, format","Logger, TypingConsoleHandler, ConsoleHandler, PilotFormatter"
+superpilot/framework/helpers/json_utils,,,
+superpilot/framework/helpers/json_utils,json_fix_llm.py,"auto_fix_json, fix_json_using_multiple_techniques, fix_and_parse_json, try_ai_fix, attempt_to_fix_json_by_finding_outermost_brackets",
+superpilot/framework/helpers/json_utils,__init__.py,,
+superpilot/framework/helpers/json_utils,json_fix_general.py,"extract_char_position, fix_invalid_escape, balance_braces, add_quotes_to_property_names, correct_json, replace_func",
+superpilot/framework/helpers/json_utils,utilities.py,"extract_json_from_response, extract_function_call_json_from_response, execute_function_from_json, llm_response_schema, validate_json",
+superpilot/framework/helpers/processing,,,
+superpilot/framework/helpers/processing,categories.py,predict_text_category,
+superpilot/framework/helpers/processing,html.py,"extract_hyperlinks, format_hyperlinks",
+superpilot/framework/helpers/processing,__init__.py,,
+superpilot/framework/helpers/processing,summarize.py,"summarize_text, fulltext",
+superpilot/framework/helpers/processing,text.py,"_max_chunk_length, must_chunk_content, chunk_content, summarize_text, split_text, summarize_text_web_driver, scroll_to_percentage, create_message, write_to_file, read_txt_files, md_to_pdf",
+superpilot/framework/helpers/processing,image.py,"remove_image, extract_text_from_image, image_to_text, image_to_base64, read_image",
+superpilot/framework/helpers/js,,,
+superpilot/framework/helpers/log_cycle,,,
+superpilot/framework/helpers/log_cycle,__init__.py,,
+superpilot/framework/helpers/log_cycle,json_handler.py,"__init__, emit, format","JsonFileHandler, JsonFormatter"
+superpilot/framework/helpers/math,,,
+superpilot/framework/helpers/math,math_utils.py,"solve_problem, remove_boxed, last_boxed_only_string, _fix_fracs, _fix_a_slash_b, _remove_right_units, _fix_sqrt, _strip_string, get_answer, is_equiv, is_equiv_chain_of_thought, voting_counts, eval_math_responses",
+superpilot/tests,,,
+superpilot/tests,test_deepinfra.py,,
+superpilot/tests,test_ag_mongo.py,"run_db_agent, query_vector_db, retrieve_docs, get_embedding, connect_db, find_similar_documents",MongoRetrieveUserProxyAgent
+superpilot/tests,test_model.py,,
+superpilot/tests,test_ability.py,,
+superpilot/tests,main_research.py,"parse_pilot_name_and_goals, parse_pilot_plan, parse_next_ability, parse_ability_result",
+superpilot/tests,test_ability_sd.py,,
+superpilot/tests,test_tax.py,call_open_ai,
+superpilot/tests,test_autogen.py,format_messages,
+superpilot/tests,test_superpilot.py,,
+superpilot/tests,run_file.py,"process_single_file, run_file_with_search",
+superpilot/tests,test_flow.py,"__init__, __init__, define_task, __init__","Step, TaskPlanner, Flow"
+superpilot/tests,__init__.py,,
+superpilot/tests,test_chegg_qc.py,,
+superpilot/tests,test_flow_dynamic.py,"get_os_info, __init__, __init__, define_task, __init__, __init__, _make_template_kwargs_for_strategy","Step, TaskPlanner, Flow, Ability, Step, FlowModel, SimpleFlow"
+superpilot/tests,test_env_simple.py,get_env,
+superpilot/tests,test_pilot.py,,
+superpilot/tests,test_college.py,,
+superpilot/tests,test_solver.py,"solve_question, add_two_numbers, extract_latex_from_image, extract_text_from_image, math_pics_ocr, process_directory_images",
+superpilot/tests,test_readme.py,parser,
+superpilot/tests,test_executor.py,"fix_question, run_file, search_question, run_file_with_search, get_page_content, latex_txt",
+superpilot/tests,main.py,"parse_pilot_name_and_goals, parse_pilot_plan, parse_next_ability, parse_ability_result",
+superpilot/tests,anthropic_test.py,,
+superpilot/tests,test_flow_simple.py,,
+superpilot/tests,open_ai.py,encode_image,
+superpilot/docs,,,
+superpilot/mapping_csv,,,
+superpilot/mapping_csv,extarct_info_project.py,"extract_info_from_file, extract_info_from_directory, save_to_csv",
+superpilot/examples,,,
+superpilot/examples,__init__.py,,
+superpilot/examples/unit_tester,,,
+superpilot/examples/unit_tester,gene_testcase2.py,"extract_functions_from_code, generate_test_case_file, main",
+superpilot/examples/unit_tester,generated_test_case.py,test_addition,TestSample
+superpilot/examples/unit_tester,test_code.py,"factorial_iterative, factorial_recursive, main",
+superpilot/examples/unit_tester,unittest_addition.py,"generate_test_case, test_func, save_test_case, main",
+superpilot/examples/unit_tester,ollama_test.py,,
+superpilot/examples/unit_tester,test_code_test_test.py,"test_test_factorial_iterative, test_test_factorial_recursive, test_test_main",TestTest_code_test_test
+superpilot/examples/solution_qc,,,
+superpilot/examples/solution_qc,chegg_scrap.py,"request_chegg, process_chegg_file",
+superpilot/examples/solution_qc,constants.py,,
+superpilot/examples/solution_qc,__init__.py,,
+superpilot/examples/solution_qc,utils.py,"convert_to_mathjax, generate_html_all, list_order_html, generate_html, list_item_html, create_mathjax_span",EmptyObject
+superpilot/examples/solution_qc,prompt.py,"__init__, model_classification, parse_response_content","QuestionAnswerAnalysis, QuestionAnswerAnalysisPrompt"
+superpilot/examples/solution_qc,executor.py,__init__,QuestionAnalysisExecutor
+superpilot/examples/solution_qc,scrap.py,"download_file, convert_to_mathjax, generate_html_all, list_order_html, generate_html, list_item_html, extract_text_from_image, image_to_text, run_img, image_to_base64, create_mathjax_span",
+superpilot/examples/ed_tech,,,
+superpilot/examples/ed_tech,wolfram_ability.py,"get_from_dict_or_env, __init__, description, arguments, get_content, format_messages, execute_one_wolfram_query, _parse_response, validate_environment, run","WolframAbility, WolframAlphaAPIWrapper, Config"
+superpilot/examples/ed_tech,figure_question_executor.py,"__init__, auto_solver_transformer, vision_transformer, solver_transformer, format_transformer, image_to_base64, image_to_text, extract_text_from_image, format_numbered",FigureQuestionExecutor
+superpilot/examples/ed_tech,__init__.py,,
+superpilot/examples/ed_tech,solution_validator.py,"__init__, model_classification, parse_response_content, get_config",SolutionValidatorPrompt
+superpilot/examples/ed_tech,ag_question_solver_ability.py,"__init__, description, arguments, get_content, format_messages, _parse_response",AGQuestionSolverAbility
+superpilot/examples/ed_tech,answer_categorizer.py,"__init__, model_classification, parse_response_content, get_config, build_prompt",AnswerCategorizerPrompt
+superpilot/examples/ed_tech,question_solver.py,"__init__, model_classification, build_prompt, get_template_kwargs, parse_response_content, get_config, factory","QuestionStatus, QuestionSubject, QuestionType, Question, QuestionSolverPrompt"
+superpilot/examples/ed_tech,question_executor.py,"__init__, auto_solver_transformer, vision_transformer, solver_transformer, format_transformer, image_to_base64, image_to_text, extract_text_from_image, format_numbered",QuestionExecutor
+superpilot/examples/ed_tech,solution_validator_bkp.py,"__init__, model_classification, parse_response_content, get_config",SolutionValidatorPrompt
+superpilot/examples/ed_tech,describe_image_question.py,"__init__, model_classification, parse_response_content, get_config",DescribeQFigurePrompt
+superpilot/examples/thumbnail-genarator,,,
+superpilot/examples/thumbnail-genarator,genarator.py,"__init__, calculate_pixels_to_add, check_host, uncrop, add_white_pixels_to_image, genarate_image, remove_background, background_fill, background_fill_photapi, text_fill, genarate",ThumbnailGenarator
+superpilot/examples/tax,,,
+superpilot/examples/tax,api_constant.py,,
+superpilot/examples/tax,ability.py,"__init__, description, arguments, __init__, description, arguments, name, __init__, name, description, arguments","Gstr1DataTransformAbility, HeaderSchema, ImportAbilityArguments, SalesDataImportAbility, GSRT1DataUploadAbility, ResMessage, ApiResponseSchema, ApiResponseObserverAbility"
+superpilot/examples/tax,gstr1_data_transformer_prompt.py,"__init__, model_classification, parse_response_content","InvoiceType, SupplyType, Item, Document, DataList, GSTR1DataTransformerPrompt"
+superpilot/examples/tax,gstr1_data_transformer.py,"__init__, model_classification, parse_response_content","InvoiceType, SupplyType, Item, Document, DataList, GSTR1DataTransformerPrompt"
+superpilot/examples/tax,test.py,run_executor,
+superpilot/examples/tax,executor.py,"__init__, sample_chain_function, data_transformer, format_transformer",Gstr1FillingExecutor
+superpilot/examples/pilots,,,
+superpilot/examples/pilots,__init__.py,,
+superpilot/examples/pilots/tasks,,,
+superpilot/examples/pilots/tasks,__init__.py,,
+superpilot/examples/pilots/tasks,super.py,__init__,SuperTaskPilot
+superpilot/examples/pilots/tasks,overview.py,__init__,CollegeOverViewTaskPilot
+superpilot/examples/pilots/tasks,base.py,"__init__, _make_template_kwargs_for_strategy, __repr__",BaseTaskPilot
+superpilot/examples/abilities,,,
+superpilot/examples/abilities,search_college_overview.py,"__init__, description, arguments, _parse_response",SearchCollegeOverview
+superpilot/examples/abilities,question_extractor.py,"__init__, description, arguments, get_page_content, _parse_response",QuestionExtractor
+superpilot/examples/abilities,__init__.py,,
+superpilot/examples/abilities,clipdrop.py,"__init__, description, arguments, _parse_response",ClipDropGenerator
+superpilot/examples/abilities,stable_diffusion.py,"__init__, description, arguments, generate_body, _parse_response",StableDiffusionGenerator
+superpilot/examples/abilities,generate_md.py,"__init__, description, arguments, _parse_response",GenerateMarkdownContent
+superpilot/examples/abilities/utlis,,,
+superpilot/examples/abilities/utlis,__init__.py,,
+superpilot/examples/abilities/utlis,clipdrop.py,generate_image_with_clip_drop,
+superpilot/examples/abilities/utlis,stable_diffusion.py,generate_image_with_sd,
+superpilot/examples/abilities/utlis,scraperapi.py,scrape_page,
+superpilot/examples/abilities/schema,,,
+superpilot/examples/abilities/schema,__init__.py,,
+superpilot/examples/abilities/schema,stable_diffusion.py,,"ArtStylePreset, TextPrompts"
+superpilot/examples/executor,,,
+superpilot/examples/executor,chegg_qc.py,__init__,CheggQCExecutor
+superpilot/examples/executor,question_extractor.py,__init__,QuestionExtractorExecutor
+superpilot/examples/executor,latex_code_generator.py,"__init__, format_numbered",LatexCodeGenExecutor
+superpilot/examples/executor,__init__.py,,
+superpilot/examples/executor,stabledifusion_prompt.py,__init__,StableDiffusionPromptExecutor
+superpilot/examples/executor,model.py,"__init__, prepare_model_provider",ModelPilotExecutor
+superpilot/examples/executor,stable_diffusion.py,__init__,StableDiffusionImageExecutor
+superpilot/examples/executor,question_identifier.py,"__init__, format_numbered",QuestionIdentifierPromptExecutor
+superpilot/examples/executor,midjourney_prompt.py,__init__,MidjourneyPromptPromptExecutor
+superpilot/examples/executor,clip_drop.py,__init__,ClipDropImageExecutor
+superpilot/examples/executor,base.py,"__init__, name",BaseExecutor
+superpilot/examples/prompt_generator,,,
+superpilot/examples/prompt_generator,__init__.py,,
+superpilot/examples/prompt_generator,stabledifusion_prompt.py,"__init__, text_generate","TextPrompt, ClipGuidancePreset, Sampler, StylePreset, StableDiffusionPromptModel, StableDiffusionPrompt, Config"
+superpilot/examples/prompt_generator,question_correct.py,"__init__, model_classification, build_prompt, get_template_kwargs, parse_response_content, get_config, factory","QuestionStatus, QuestionSubject, QuestionType, Question, QuestionIdentifierPrompt"
+superpilot/examples/prompt_generator,test_pilot.py,,
+superpilot/examples/prompt_generator,example_prompts.py,,
+superpilot/examples/prompt_generator,midjourney_prompt.py,"__init__, model_classification, build_prompt, get_template_kwargs, parse_response_content, get_config, factory","BasePromptModel, MidjourneyPrompt"
+superpilot/examples/prompt_generator,latex_code_gen.py,"__init__, model_classification, build_prompt, get_template_kwargs, parse_response_content, get_config, factory","QuestionStatus, QuestionSubject, QuestionType, Question, LatexCodeGenPrompt"
+superpilot/examples/voiceover,,,
+superpilot/examples/voiceover,dub.py,"__init__, initialize_speech_to_text, speech_to_text, translate_text, save_audio_bytes, text_to_audio, text_to_audio_clone, dub",VoiceDub
