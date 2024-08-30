@@ -7,7 +7,7 @@ import traceback
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 from superpilot.examples.executor import QuestionExtractorExecutor
-from check_file import checkMerge
+from superpilot.superpilot.mapping_csv.extractcsv.check_file import checkMerge
 
 import pandas as pd
 
