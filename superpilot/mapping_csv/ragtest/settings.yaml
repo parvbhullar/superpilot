@@ -2,13 +2,13 @@
 encoding_model: cl100k_base
 skip_workflows: []
 llm:
-  api_key: ${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}
+  api_key: ${GRAPHRAG_API_KEY}
   type: openai_chat # or azure_openai_chat
-  model: llama3
+  model: 7b-code
   model_supports_json: true # recommended if this is available for your model.
   # max_tokens: 4000
-  request_timeout: 600
-  api_base: http://localhost:11434/v1
+  # request_timeout: 180.0
+  api_base: https://localhost:18703/v1
   # api_version: 2024-02-15-preview
   # organization: <organization_id>
   # deployment_name: <azure_model_deployment_name>
@@ -35,9 +35,8 @@ embeddings:
   llm:
     api_key: ${GRAPHRAG_API_KEY}
     type: openai_embedding # or azure_openai_embedding
-    model: mxbai-embed-large
-    api_base: http://localhost:11434/v1
-    # api_base: https://<instance>.openai.azure.com
+    model: nomic_embed_text
+    api_base: https://localhost:18703/api
     # api_version: 2024-02-15-preview
     # organization: <organization_id>
     # deployment_name: <azure_model_deployment_name>
@@ -49,15 +48,14 @@ embeddings:
     # concurrent_requests: 25 # the number of parallel inflight requests that may be made
     # batch_size: 16 # the number of documents to send in a single request
     # batch_max_tokens: 8191 # the maximum number of tokens to send in a single request
-
-
-
+    
+  
 
 chunks:
   size: 1200
   overlap: 100
   group_by_columns: [id] # by default, we don't allow chunks to cross documents
-
+    
 input:
   type: file # or blob
   file_type: text # or csv
@@ -119,7 +117,7 @@ cluster_graph:
   max_cluster_size: 10
 
 embed_graph:
-  enabled: true # if true, will generate node2vec embeddings for nodes
+  enabled: false # if true, will generate node2vec embeddings for nodes
   # num_walks: 10
   # walk_length: 40
   # window_size: 2
