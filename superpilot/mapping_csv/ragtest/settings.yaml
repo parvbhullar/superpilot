@@ -33,10 +33,10 @@ embeddings:
   async_mode: threaded # or asyncio
   # target: required # or all
   llm:
-    api_key: ${GRAPHRAG_API_KEY}
-    type: openai_embedding # or azure_openai_embedding
-    model: nomic_embed_text
-    api_base: https://localhost:18703/api
+      api_key: ${GRAPHRAG_API_KEY}
+      type: openai_embedding # or azure_openai_embedding
+      model: nomic_embed_text
+      api_base: https://localhost:18703/api
     # api_version: 2024-02-15-preview
     # organization: <organization_id>
     # deployment_name: <azure_model_deployment_name>
