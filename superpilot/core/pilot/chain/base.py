@@ -69,20 +69,22 @@ class BaseChain(ABC):
         self.transformers[HandlerType.HANDLER].pop(handler_index)
 
     def update_cost(cls, response):
-        total_cost = response.total_cost
-        completion_tokens_used = response.completion_tokens_used
-        prompt_tokens_used = response.prompt_tokens_used
-        cls.total_cost["total_cost"] = cls.total_cost.get("total_cost", 0) + total_cost
-        cls.total_cost["completion_tokens_used"] = (
-            cls.total_cost.get("completion_tokens_used", 0) + completion_tokens_used
-        )
-        cls.total_cost["prompt_tokens_used"] = (
-            cls.total_cost.get("prompt_tokens_used", 0) + prompt_tokens_used
-        )
+        if hasattr(response, "total_cost"):
+            total_cost = response.total_cost
+            completion_tokens_used = response.completion_tokens_used
+            prompt_tokens_used = response.prompt_tokens_used
+            cls.total_cost["total_cost"] = (
+                    cls.total_cost.get("total_cost", 0) + total_cost
+            )
+            cls.total_cost["completion_tokens_used"] = (
+                    cls.total_cost.get("completion_tokens_used", 0) + completion_tokens_used
+            )
+            cls.total_cost["prompt_tokens_used"] = (
+                    cls.total_cost.get("prompt_tokens_used", 0) + prompt_tokens_used
+            )
 
     def dump_pilots(self):
         pilots_dict = []
         for pilot in self.pilots[HandlerType.HANDLER]:
             pilots_dict.append(pilot.dump())
-
         return pilots_dict
