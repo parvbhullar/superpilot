@@ -1,6 +1,8 @@
 import os
 import sys
 
+from superpilot.core.block.types.invoice_ocr_block import InvoiceOCRBlock
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from superpilot.core.block.types.api_block import APIBlock
@@ -17,7 +19,7 @@ import asyncio
 
 json_data = [
     {
-        "id": 0,
+        "id": 1,
         "location": FormBlock.default_configuration.location,
         "block_type": "form",
         "metadata": {
@@ -26,11 +28,10 @@ json_data = [
             "config": {}
         },
         "input_schema": {
-            "gstin": {
+            "document_type": {
                 "type": "string",
-                "description": "The GSTIN to search for.",
-                "value": "09AAHCC6805B1ZW"
-
+                "description": "Invoice type",
+                "value": "BOE"
             }
         },
         "output_schema": {},
@@ -38,76 +39,36 @@ json_data = [
         "seq_order": 0
     },
     {
-        "id": 1,
-        "location": APIBlock.default_configuration.location,
-        "block_type": "api",
-        "metadata": {
-            "name": "API Block",
-            "description": "A block that interacts with the API.",
-            "config": {
-                "url": "https://commonapi.mastersindia.co/commonapis/searchgstin",
-                "method": "GET",
-                "headers": {
-                    "Authorization": "Bearer 9064e672f30ed03e2ac8e24d86279e7f36c2bd82",
-                    "client_id": "JarZChUcsytSBbnkpt"
-                }
-            }
-        },
-        "input_schema": {
-            "query_params": {
-                "type": "object",
-                "properties": {
-                    "gstin": {
-                        "type": "string",
-                        "description": "The GSTIN to search for.",
-                        "reference": "block_0.gstin",
-                        "value": "block_0.gstin"
-                    }
-                }
-            }, 
-            "headers": {},
-            "payload": {}
-        },
-        "output_schema": {
-            "response": {
-                "type": "object",
-                "description": "The response from the API."
-            }
-        },
-        "body": "",
-        "seq_order": 0
-    },
-    {
         "id": 2,
-        "location": LLMBlock.default_configuration.location,
-        "block_type": "llm",
+        "location": InvoiceOCRBlock.default_configuration.location,
+        "block_type": "invoice_ocr_block",
         "metadata": {
-            "name": "llm",
+            "name": "invoice_ocr_block",
             "description": "A block that uses a language model to generate text.",
-            "config": {
-                "model_name": "gpt-3.5-turbo",
-                "model_temp": "0.5",
-                "model_provider": "OPEN_AI",
-                "system_prompt": "You are a smart AI agent which will create summary of a particular businesss gstin status from given response in json. Do not mention in this data or json, just response as simplistic manner."
-            }
+            "config": {}
         },
         "input_schema": {
-            "gstin_data": {
-                "type": "object",
-                "description": "The response from the API.",
-                "reference": "block_1.response",
-                "value": ""
+            "document_type": {
+                "type": "string",
+                "description": "document type",
+                "reference": "block_1.document_type"
+            },
+            "file_url": {
+                "type": "string",
+                "description": "file url",
+                "reference": "block_1.file_url"
             }
         },
         "output_schema": {
             "response": {
-                "type": "string",
-                "description": "The output of the block."
-            }
+                "type": "object",
+                "description": "The output of the block.",
+            },
         },
         "body": "",
-        "seq_order": 0
+        "seq_order": 1
     }
+
 ]
 
 
@@ -123,7 +84,7 @@ async def execution():
     logger = get_logger(__name__)
 
     executor = SimpleExecutor(block_registry, logger)
-    res = await executor.execute(**{"gstin": "09AAHCC6805B1ZW"})
+    res = await executor.execute(**{"document_type": "BOE", "file_url": "https://unpodbackend.s3.amazonaws.com/media/private/Charger-Bill.pdf"})
     # res = await executor.execute(**{"gstin": "09AAHCC6805B1ZW"})
 
     print(res)
