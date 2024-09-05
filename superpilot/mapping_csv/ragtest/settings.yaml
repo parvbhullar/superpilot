@@ -2,13 +2,13 @@
 encoding_model: cl100k_base
 skip_workflows: []
 llm:
-  api_key: ${GRAPHRAG_API_KEY}
+  api_key: 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
   type: openai_chat # or azure_openai_chat
-  model: 7b-code
+  model: llama3
   model_supports_json: true # recommended if this is available for your model.
   # max_tokens: 4000
-  request_timeout: 1000
-  api_base: https://localhost:18703/v1
+  # request_timeout: 180.0
+  api_base: https://localhost:11434/v1
   # api_version: 2024-02-15-preview
   # organization: <organization_id>
   # deployment_name: <azure_model_deployment_name>
@@ -32,11 +32,13 @@ embeddings:
   ## parallelization: override the global parallelization settings for embeddings
   async_mode: threaded # or asyncio
   # target: required # or all
+  # batch_size: 16 # the number of documents to send in a single request
+  # batch_max_tokens: 8191 # the maximum number of tokens to send in a single request
   llm:
-      api_key: ${GRAPHRAG_API_KEY}
-      type: openai_embedding # or azure_openai_embedding
-      model: nomic_embed_text
-      api_base: https://localhost:18703/api
+    api_key: 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
+    type: openai_embedding # or azure_openai_embedding
+    model: llama-2-7b
+    api_base: https://localhost:11434/api
     # api_version: 2024-02-15-preview
     # organization: <organization_id>
     # deployment_name: <azure_model_deployment_name>
@@ -46,10 +48,9 @@ embeddings:
     # max_retry_wait: 10.0
     # sleep_on_rate_limit_recommendation: true # whether to sleep when azure suggests wait-times
     # concurrent_requests: 25 # the number of parallel inflight requests that may be made
-    # batch_size: 16 # the number of documents to send in a single request
-    # batch_max_tokens: 8191 # the maximum number of tokens to send in a single request
     
   
+
 
 chunks:
   size: 1200
@@ -82,6 +83,8 @@ reporting:
   # container_name: <azure_blob_storage_container_name>
 
 entity_extraction:
+  ## strategy: fully override the entity extraction strategy.
+  ##   type: one of graph_intelligence, graph_intelligence_json and nltk
   ## llm: override the global llm settings for this task
   ## parallelization: override the global parallelization settings for this task
   ## async_mode: override the global async_mode settings for this task
