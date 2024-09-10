@@ -2,18 +2,19 @@ import openai
 import pandas as pd
 import uuid
 import os
+from io import StringIO
 
 # Set your API key
 openai.api_key = ""
 
-# Function to generate a new column value for each row
+#generate a new column for each row
 def generate_new_column_value(row, column_name):
     try:
         row_data = row.to_dict()
         prompt = f"Based on the following row data, generate a value for the column '{column_name}': {row_data}"
         
         response = openai.ChatCompletion.create(
-            model="gpt-4-0613",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": "You are a data generation assistant."},
                 {"role": "user", "content": prompt}
@@ -34,7 +35,54 @@ def generate_new_column_value(row, column_name):
         print(f"An error occurred while generating the new column value: {e}")
         return "N/A"
 
-# Function to generate dummy data
+def generate_more_rows(existing_data, num_rows=10):
+    try:
+        existing_data_csv = existing_data.to_csv(index=False)
+        
+        prompt = (f"Based on the following existing data, generate {num_rows} new unique rows of data. "
+                  f"Ensure that the new rows are unique and do not duplicate any existing rows. "
+                  f"Here is the existing data:\n{existing_data_csv}")
+        
+        response = openai.ChatCompletion.create(
+            model="gpt-4-0613",
+            messages=[
+                {"role": "system", "content": "You are a data generation assistant."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        message = response['choices'][0].get('message', None)
+        if not message:
+            raise ValueError("No message found in the response.")
+        
+        new_data = message.get('content', '').strip()
+        if not new_data:
+            raise ValueError("No content found in the message.")
+        
+        # Convert the response to a DataFrame
+        new_data_df = pd.read_csv(StringIO(new_data))
+        
+        return new_data_df
+
+    except Exception as e:
+        print(f"An error occurred while generating more rows: {e}")
+        return pd.DataFrame()
+    
+def save_to_excel(df, filename, sheet_name='Sheet1'):
+    if os.path.exists(filename):
+        try:
+            with pd.ExcelWriter(filename, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
+            print(f"Data saved to {filename} in sheet {sheet_name}.")
+        except Exception as e:
+            print(f"An error occurred while saving to Excel: {e}")
+    else:
+        try:
+            df.to_excel(filename, index=False)
+            print(f"Data saved to {filename}.")
+        except Exception as e:
+            print(f"An error occurred while creating the Excel file: {e}")
+
 def generate_dummy_data(topic, num_rows=10, existing_data=None):
     try:
         prompt = f"Generate a table with {num_rows} rows of dummy data related to the topic '{topic}'."
@@ -68,50 +116,31 @@ def generate_dummy_data(topic, num_rows=10, existing_data=None):
         print(f"An error occurred: {e}")
         return None
 
-# Function to save the data to an Excel file
-def save_to_excel(df, filename, sheet_name='Sheet1'):
-    if os.path.exists(filename):
-        try:
-            with pd.ExcelWriter(filename, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-                df.to_excel(writer, sheet_name=sheet_name, index=False)
-            print(f"Data saved to {filename} in sheet {sheet_name}.")
-        except Exception as e:
-            print(f"An error occurred while saving to Excel: {e}")
-    else:
-        try:
-            df.to_excel(filename, index=False)
-            print(f"Data saved to {filename}.")
-        except Exception as e:
-            print(f"An error occurred while creating the Excel file: {e}")
-
 # Main function
 def main():
     print("Welcome to the Data Generation Tool!")
-    
-    while True:
-        topic = input("Enter the topic: ")
-        num_rows = int(input("Enter the number of rows: "))
-        
-        use_existing = input("Do you want to use existing data? (yes/no): ").strip().lower()
-        excel_path = None
-        if use_existing == 'yes':
-            excel_path = input("Enter the path of the existing Excel file: ")
 
-        df = None
-        if excel_path and os.path.exists(excel_path):
-            try:
-                existing_df = pd.read_excel(excel_path)
-                # Ask user for the new column name
-                new_column_name = input("Enter the name of the new column: ")
-                # Generate values for the new column using the AI model
-                existing_df[new_column_name] = existing_df.apply(lambda row: generate_new_column_value(row, new_column_name), axis=1)
-                df = existing_df
-                dataset_name = f"{topic}_extended_data_{uuid.uuid4().hex}.xlsx"
-                save_to_excel(df, dataset_name, sheet_name='UpdatedData')
-            except Exception as e:
-                print(f"Failed to process existing data: {e}")
+    while True:
+        use_existing = input("Do you want to use existing data? (yes/no): ").strip().lower()
+
+        if use_existing == 'yes':
+            existing_data_input = input("Paste the existing data (in CSV format) here: ")
+            existing_data = pd.read_csv(StringIO(existing_data_input))
+
+            num_rows = int(input("Enter the number of new rows to generate: "))
+            new_data_df = generate_more_rows(existing_data, num_rows)
+            #new column added here
+            new_column_name = input("Enter the name of the new column (leave blank if not needed): ").strip()
+            if new_column_name:
+                new_data_df[new_column_name] = new_data_df.apply(lambda row: generate_new_column_value(row, new_column_name), axis=1)
+
+            dataset_name = f"extended_data_{uuid.uuid4().hex}.xlsx"
+            save_to_excel(new_data_df, dataset_name, sheet_name='ExtendedData')
         else:
+            topic = input("Enter the topic for generating dummy data: ")
+            num_rows = int(input("Enter the number of rows to generate: "))
             df = generate_dummy_data(topic, num_rows)
+
             dataset_name = f"{topic}_dummy_data_{uuid.uuid4().hex}.xlsx"
             save_to_excel(df, dataset_name)
 
