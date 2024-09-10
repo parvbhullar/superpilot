@@ -145,9 +145,13 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
-
+.vscode
 # Pyre type checker
 .pyre/
+__pycache__/
+testenv/
+.DS_Store
+README.md
 
 # pytype static type analyzer
 .pytype/
