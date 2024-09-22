@@ -44,12 +44,12 @@ class SimplePlanner(Configurable, Planner):
         configuration=PlannerConfiguration(
             models={
                 LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
-                    model_name=OpenAIModelName.GPT3,
+                    model_name=OpenAIModelName.GPT4_O_MINI,
                     provider_name=ModelProviderName.OPENAI,
                     temperature=0.9,
                 ),
                 LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
-                    model_name=OpenAIModelName.GPT4,
+                    model_name=OpenAIModelName.GPT4_O,
                     provider_name=ModelProviderName.OPENAI,
                     temperature=0.9,
                 ),

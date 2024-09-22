@@ -190,7 +190,7 @@ class TaskSchema(SchemaModel):
     status: TaskStatus = Field(
         default=TaskStatus.BACKLOG,
         description="The current status of the task from [backlog, in_progress, complete, on_hold].")
-    function_name: str = Field(..., description="Name of the pilot/function most suited for this task")
+    function_name: str = Field(..., description="Name of the handler/function most suited for this task")
     motivation: str = Field(..., description="Your justification for choosing this pilot instead of a different one.")
     self_criticism: str = Field(..., description="Thoughtful self-criticism that explains why this pilot may not be "
                                                  "the best choice.")

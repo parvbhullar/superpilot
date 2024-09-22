@@ -1,21 +1,20 @@
 import os
 import sys
-
-from superpilot.core.block.types.invoice_ocr_block import InvoiceOCRBlock
-
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
+import asyncio
+import logging
+
+from superpilot.core.block.types.invoice_ocr_block import InvoiceOCRBlock
 from superpilot.core.block.types.api_block import APIBlock
 from superpilot.core.block.types.form_block import FormBlock
-from superpilot.core.block.execution.simple import SimpleExecutor
-from superpilot.core.logging.logging import get_logger
-
-from superpilot.core.block.simple import SimpleBlockRegistry
 from superpilot.core.block.types.llm_block import LLMBlock
-
-import datetime
+from superpilot.core.block.execution.simple import SimpleExecutor
+from superpilot.core.block.execution.super import SuperExecutor
+from superpilot.core.logging.logging import get_logger
+from superpilot.core.block.simple import SimpleBlockRegistry
 from superpilot.core.block.base import BlockConfiguration
-import asyncio
+
 
 json_data = [
     {
@@ -68,28 +67,30 @@ json_data = [
         "body": "",
         "seq_order": 1
     }
-
 ]
 
-
-async def execution():
+async def execution(executor_class):
     BLOCKS = {}
 
     for block in json_data:
         b = BlockConfiguration.factory(block)
         BLOCKS[str(b.id)] = b
-        # print("\n\n", b)
 
     block_registry = SimpleBlockRegistry(BLOCKS)
     logger = get_logger(__name__)
 
-    executor = SimpleExecutor(block_registry, logger)
+    executor = executor_class(block_registry, logger)
     res = await executor.execute(**{"document_type": "BOE", "file_url": "https://unpodbackend.s3.amazonaws.com/media/private/Charger-Bill.pdf"})
-    # res = await executor.execute(**{"gstin": "09AAHCC6805B1ZW"})
 
     print(res)
+    return res
 
+def test_simple_executor():
+    asyncio.run(execution(SimpleExecutor))
 
+def test_super_executor():
+    asyncio.run(execution(SuperExecutor))
 
 if __name__ == "__main__":
-    asyncio.run(execution())
+    test_simple_executor()
+    # test_super_executor()

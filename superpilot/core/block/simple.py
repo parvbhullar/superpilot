@@ -63,3 +63,15 @@ class SimpleBlockRegistry(BlockRegistry, Configurable):
 
     def blocks(self) -> List[Block]:
         return self._blocks
+
+    @classmethod
+    def factory(cls, json_blocks: List[Dict[str, Any]]):
+        """
+        Loads blocks from JSON data and registers them in the block registry.
+        """
+        blocks = {}
+        for block in json_blocks:
+            b = BlockConfiguration.factory(block)
+            blocks[str(b.id)] = b
+
+        return cls(blocks)
