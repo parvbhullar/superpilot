@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any,List,Set
 
 from superpilot.core.store.schema import InferenceObject, Object
 
@@ -47,16 +47,42 @@ class Verifiable(ABC):
         raise NotImplementedError
 
 
+class DocumentIndexer(Indexable):
+    def index(self, chunks: List[Object]) -> Set[str]:
+        """
+        Indexes the provided chunks, overwriting existing chunks if necessary.
+        """
+        document_ids = set()
+
+        for chunk in chunks:
+            # Ensure the document gets reindexed (clear existing first)
+            if chunk.obj_id in self.primary_index:
+                del self.primary_index[chunk.obj_id]  # Clear existing entry
+
+            # Index the new chunk
+            self.primary_index[chunk.obj_id] = chunk
+
+            # Add document ID to the set
+            document_ids.add(chunk.obj_id)
+
+        return document_ids
+
 class Indexable(ABC):
     """
     Class must implement the ability to index document chunks
     """
+
+    def __init__(self):
+        self.primary_index={}
+
 
     @abstractmethod
     def index(
         self,
         chunks: list[Object],
     ) -> set[Object]:
+        
+
         """
         Takes a list of document chunks and indexes them in the document index
 

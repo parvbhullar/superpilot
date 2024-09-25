@@ -63,9 +63,9 @@ class MemoryBase(ABC):
         pass
 
 
-class MemoryItem(abc.ABC):
+class MemoryItem(ABC):
     pass
 
 
-class MessageHistory(abc.ABC):
+class MessageHistory(ABC):
     pass
