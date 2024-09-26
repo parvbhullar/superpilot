@@ -47,26 +47,6 @@ class Verifiable(ABC):
         raise NotImplementedError
 
 
-class DocumentIndexer(Indexable):
-    def index(self, chunks: List[Object]) -> Set[str]:
-        """
-        Indexes the provided chunks, overwriting existing chunks if necessary.
-        """
-        document_ids = set()
-
-        for chunk in chunks:
-            # Ensure the document gets reindexed (clear existing first)
-            if chunk.obj_id in self.primary_index:
-                del self.primary_index[chunk.obj_id]  # Clear existing entry
-
-            # Index the new chunk
-            self.primary_index[chunk.obj_id] = chunk
-
-            # Add document ID to the set
-            document_ids.add(chunk.obj_id)
-
-        return document_ids
-
 class Indexable(ABC):
     """
     Class must implement the ability to index document chunks
@@ -75,6 +55,15 @@ class Indexable(ABC):
     def __init__(self):
         self.primary_index={}
 
+    @abstractmethod
+    def create_index(
+            self,
+            **kwargs: Any,
+    ) -> set[Object]:
+        """
+
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def index(

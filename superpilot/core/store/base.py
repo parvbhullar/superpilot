@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+from typing import List, Set, Any
+
+from superpilot.core.store.schema import Object
 from superpilot.core.store.vectorstore.vespa.base import VespaStore
 from superpilot.core.store.interfaces import Indexable
 
@@ -75,3 +78,27 @@ class VectorStoreBase(StoreBase, Indexable,  ABC):
 
 class DBBase(StoreBase):
     pass
+
+
+class DocumentIndexer(Indexable):
+    def create_index(self, **kwargs: Any) -> set[Object]:
+        pass
+
+    def index(self, chunks: List[Object]) -> Set[str]:
+        """
+        Indexes the provided chunks, overwriting existing chunks if necessary.
+        """
+        document_ids = set()
+
+        for chunk in chunks:
+            # Ensure the document gets reindexed (clear existing first)
+            if chunk.obj_id in self.primary_index:
+                del self.primary_index[chunk.obj_id]  # Clear existing entry
+
+            # Index the new chunk
+            self.primary_index[chunk.obj_id] = chunk
+
+            # Add document ID to the set
+            document_ids.add(chunk.obj_id)
+
+        return document_ids
