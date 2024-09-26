@@ -52,8 +52,7 @@ class Indexable(ABC):
     Class must implement the ability to index document chunks
     """
 
-    def __init__(self):
-        self.primary_index={}
+    
 
     @abstractmethod
     def create_index(
