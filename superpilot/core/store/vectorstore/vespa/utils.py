@@ -1,4 +1,8 @@
 import re
+import zipfile
+from typing import BinaryIO
+import io
+import re
 
 # NOTE: This does not seem to be used in reality despite the Vespa Docs pointing to this code
 # See here for reference: https://docs.vespa.ai/en/documents.html
@@ -45,3 +49,41 @@ def remove_invalid_unicode_chars(text: str) -> str:
         "[\x00-\x08\x0b\x0c\x0e-\x1F\uD800-\uDFFF\uFFFE\uFFFF]"
     )
     return _illegal_xml_chars_RE.sub("", text)
+
+
+
+def fix_vespa_app_name(app_name):
+    # Convert to lowercase
+    app_name = app_name.lower()
+
+    # Remove invalid characters (keep only letters and digits)
+    app_name = re.sub(r'[^a-z0-9]', '', app_name)
+
+    # Ensure it starts with a letter
+    app_name = re.sub(r'^[^a-z]+', '', app_name)
+
+    # Trim to 20 characters
+    app_name = app_name[:20]
+
+    # If the string is empty after cleanup, default to 'a'
+    if not app_name:
+        app_name = 'a'
+
+    return app_name
+
+def in_memory_zip_from_file_bytes(file_contents: dict[str, bytes]) -> BinaryIO:
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for filename, content in file_contents.items():
+            zipf.writestr(filename, content)
+    zip_buffer.seek(0)
+    return zip_buffer
+
+
+def create_document_xml_lines(doc_names: list[str | None]) -> str:
+    doc_lines = [
+        f'<document type="{doc_name}" mode="index" />'
+        for doc_name in doc_names
+        if doc_name
+    ]
+    return "\n".join(doc_lines)

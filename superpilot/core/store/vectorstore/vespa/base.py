@@ -17,8 +17,7 @@ from typing import Any
 from typing import BinaryIO
 from typing import cast
 from datetime import datetime, timedelta
-from super_store.utils.logger import setup_logger
-from superpilot.superpilot.core.store.vectorstore.vespa.vespa_index import _clean_chunk_id_copy,_create_document_xml_lines, in_memory_zip_from_file_bytes,_clear_and_index_vespa_chunks
+from superpilot.core.store.vectorstore.vespa.vespa_index import _clean_chunk_id_copy,_create_document_xml_lines, in_memory_zip_from_file_bytes,_clear_and_index_vespa_chunks
 
 import httpx
 import requests
@@ -66,37 +65,9 @@ from superpilot.core.store.vectorstore.vespa.configs.model_configs import SEARCH
 import random
 #import setup_logger
 
-logger=setup_logger(__name__)
+logger=get_app_logger(__name__)
 
 
-VESPA_DIM_REPLACEMENT_PAT = "VARIABLE_DIM"
-CHUNK_REPLACEMENT_PAT = "CHUNK_NAME"
-DOCUMENT_REPLACEMENT_PAT = "DOCUMENT_REPLACEMENT"
-DATE_REPLACEMENT = "DATE_REPLACEMENT"
-DOC_VESPA_PORT = "DOC_VESPA_PORT"
-
-# config server
-VESPA_CONFIG_SERVER_URL = f"http://{VESPA_CONFIG_SERVER_HOST}:{VESPA_TENANT_PORT}"
-VESPA_APPLICATION_ENDPOINT = f"{VESPA_CONFIG_SERVER_URL}/application/v2"
-
-# main search application
-VESPA_APP_CONTAINER_URL = f"http://{VESPA_HOST}:{VESPA_PORT}"
-# unpod_chunk below is defined in vespa/app_configs/schemas/unpod_chunk.sd
-DOCUMENT_ID_ENDPOINT = (
-    f"{VESPA_APP_CONTAINER_URL}/document/v1/default/{{index_name}}/docid"
-)
-SEARCH_ENDPOINT = f"{VESPA_APP_CONTAINER_URL}/search/"
-
-_BATCH_SIZE = 128  # Specific to Vespa
-_NUM_THREADS = (
-    32  # since Vespa doesn't allow batching of inserts / updates, we use threads
-)
-# up from 500ms for now, since we've seen quite a few timeouts
-# in the long term, we are looking to improve the performance of Vespa
-# so that we can bring this back to default
-_VESPA_TIMEOUT = "3s"
-# Specific to Vespa, needed for highlighting matching keywords / section
-CONTENT_SUMMARY = "content_summary"
 
 class VespaStore(VectorStoreBase):
     yql_base = (

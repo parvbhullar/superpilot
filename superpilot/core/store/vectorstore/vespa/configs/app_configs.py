@@ -4,15 +4,6 @@ import urllib.parse
 from dotenv import load_dotenv
 load_dotenv()
 
-from super_store.configs.constants import AuthType
-from super_store.configs.constants import (
-    DocumentIndexType,
-)
-
-from super_store.file_processing.enums import (
-    HtmlBasedConnectorTransformLinksStrategy,
-)
-
 #####
 # App Configs
 #
@@ -44,12 +35,6 @@ DISABLE_GENERATIVE_AI = os.environ.get("DISABLE_GENERATIVE_AI", "").lower() == "
 # fixes it)
 WEB_DOMAIN = os.environ.get("WEB_DOMAIN") or "http://localhost:3000"
 
-
-#####
-# Auth Configs
-#####
-AUTH_TYPE = AuthType((os.environ.get("AUTH_TYPE") or AuthType.DISABLED.value).lower())
-DISABLE_AUTH = AUTH_TYPE == AuthType.DISABLED
 
 # Encryption key secret is used to encrypt connector credentials, api keys, and other sensitive
 # information. This provides an extra layer of security on top of Postgres access controls
@@ -106,9 +91,10 @@ EMAIL_FROM = os.environ.get("EMAIL_FROM") or SMTP_USER
 #####
 DOCUMENT_INDEX_NAME = "unpod_index"
 # Vespa is now the default document index store for both keyword and vector
-DOCUMENT_INDEX_TYPE = os.environ.get(
-    "DOCUMENT_INDEX_TYPE", DocumentIndexType.COMBINED.value
-)
+# DOCUMENT_INDEX_TYPE = os.environ.get(
+#     "DOCUMENT_INDEX_TYPE", DocumentIndexType.COMBINED.value
+# )
+
 VESPA_HOST = os.environ.get("VESPA_HOST") or "localhost"  # "localhost"
 # NOTE: this is used if and only if the vespa config server is accessible via a
 # different host than the main vespa application
@@ -188,10 +174,10 @@ WEB_CONNECTOR_VALIDATE_URLS = os.environ.get("WEB_CONNECTOR_VALIDATE_URLS")
 #     HtmlBasedConnectorTransformLinksStrategy.STRIP,
 # )
 
-HTML_BASED_CONNECTOR_TRANSFORM_LINKS_STRATEGY = os.environ.get(
-    "HTML_BASED_CONNECTOR_TRANSFORM_LINKS_STRATEGY",
-    HtmlBasedConnectorTransformLinksStrategy.STRIP,
-)
+# HTML_BASED_CONNECTOR_TRANSFORM_LINKS_STRATEGY = os.environ.get(
+#     "HTML_BASED_CONNECTOR_TRANSFORM_LINKS_STRATEGY",
+#     HtmlBasedConnectorTransformLinksStrategy.STRIP,
+# )
 
 NOTION_CONNECTOR_ENABLE_RECURSIVE_PAGE_LOOKUP = (
     os.environ.get("NOTION_CONNECTOR_ENABLE_RECURSIVE_PAGE_LOOKUP", "").lower()

@@ -16,82 +16,28 @@ from typing import cast
 
 import httpx
 import requests
-from retry import retry
 
-from super_store.configs.app_configs import LOG_VESPA_TIMING_INFORMATION
-from super_store.configs.app_configs import VESPA_CONFIG_SERVER_HOST
-from super_store.configs.app_configs import VESPA_HOST
-from super_store.configs.app_configs import VESPA_PORT
-from super_store.configs.app_configs import VESPA_TENANT_PORT
-from super_store.configs.app_configs import VESPA_SCHEMA_PATH 
-from super_store.configs.chat_configs import DOC_TIME_DECAY
-from super_store.configs.chat_configs import EDIT_KEYWORD_QUERY
-from super_store.configs.chat_configs import HYBRID_ALPHA
-from super_store.configs.chat_configs import NUM_RETURNED_HITS
-from super_store.configs.chat_configs import TITLE_CONTENT_RATIO
-from super_store.configs.constants import ACCESS_CONTROL_LIST
-from super_store.configs.constants import UNPOD_HUB_ID
-from super_store.configs.constants import UNPOD_KN_TOKEN
-from super_store.configs.constants import BLURB
-from super_store.configs.constants import BOOST
-from super_store.configs.constants import CHUNK_ID
-from super_store.configs.constants import CONTENT
-from super_store.configs.constants import DOC_UPDATED_AT
-from super_store.configs.constants import DOCUMENT_ID
-from super_store.configs.constants import DOCUMENT_SETS
-from super_store.configs.constants import EMBEDDINGS
-from super_store.configs.constants import HIDDEN
-from super_store.configs.constants import INDEX_SEPARATOR
-from super_store.configs.constants import METADATA
-from super_store.configs.constants import METADATA_LIST
-from super_store.configs.constants import PRIMARY_OWNERS
-from super_store.configs.constants import RECENCY_BIAS
-from super_store.configs.constants import SECONDARY_OWNERS
-from super_store.configs.constants import SECTION_CONTINUATION
-from super_store.configs.constants import SEMANTIC_IDENTIFIER
-from super_store.configs.constants import SKIP_TITLE_EMBEDDING
-from super_store.configs.constants import SOURCE_LINKS
-from super_store.configs.constants import SOURCE_TYPE
-from super_store.configs.constants import TITLE
-from super_store.configs.constants import TITLE_EMBEDDING
-from super_store.configs.constants import TITLE_SEPARATOR
-from super_store.configs.model_configs import SEARCH_DISTANCE_CUTOFF
-from super_store.connectors.cross_connector_utils.miscellaneous_utils import (
-    get_experts_stores_representations,
-)
-from super_store.document_index.document_index_utils import get_uuid_from_chunk
-from super_store.document_index.interfaces import DocumentIndex
-from super_store.document_index.interfaces import DocumentInsertionRecord
-from super_store.document_index.interfaces import UpdateRequest
-from super_store.document_index.vespa.utils import remove_invalid_unicode_chars
-from super_store.document_index.vespa.utils import replace_invalid_doc_id_characters
-from super_store.indexing.models import DocMetadataAwareIndexChunk
-from super_store.search.models import IndexFilters
-from super_store.search.models import InferenceChunk
-from super_store.search.retrieval.search_runner import query_processing
-from super_store.search.retrieval.search_runner import remove_stop_words_and_punctuation
-from super_store.utils.batching import batch_generator
-from super_store.utils.logger import setup_logger
+from superpilot.core.logging.logging import get_logger
 
-logger = setup_logger()
+logger = get_logger()
 
 VESPA_DIM_REPLACEMENT_PAT = "VARIABLE_DIM"
 UNPOD_CHUNK_REPLACEMENT_PAT = "UNPOD_CHUNK_NAME"
 DOCUMENT_REPLACEMENT_PAT = "DOCUMENT_REPLACEMENT"
 DATE_REPLACEMENT = "DATE_REPLACEMENT"
 DOC_VESPA_PORT = "DOC_VESPA_PORT"
-
-# config server
-VESPA_CONFIG_SERVER_URL = f"http://{VESPA_CONFIG_SERVER_HOST}:{VESPA_TENANT_PORT}"
-VESPA_APPLICATION_ENDPOINT = f"{VESPA_CONFIG_SERVER_URL}/application/v2"
-
-# main search application
-VESPA_APP_CONTAINER_URL = f"http://{VESPA_HOST}:{VESPA_PORT}"
-# unpod_chunk below is defined in vespa/app_configs/schemas/unpod_chunk.sd
-DOCUMENT_ID_ENDPOINT = (
-    f"{VESPA_APP_CONTAINER_URL}/document/v1/default/{{index_name}}/docid"
-)
-SEARCH_ENDPOINT = f"{VESPA_APP_CONTAINER_URL}/search/"
+# #
+# # # config server
+# # VESPA_CONFIG_SERVER_URL = f"http://{VESPA_CONFIG_SERVER_HOST}:{VESPA_TENANT_PORT}"
+# # VESPA_APPLICATION_ENDPOINT = f"{VESPA_CONFIG_SERVER_URL}/application/v2"
+# #
+# # # main search application
+# # VESPA_APP_CONTAINER_URL = f"http://{VESPA_HOST}:{VESPA_PORT}"
+# # unpod_chunk below is defined in vespa/app_configs/schemas/unpod_chunk.sd
+# DOCUMENT_ID_ENDPOINT = (
+#     f"{VESPA_APP_CONTAINER_URL}/document/v1/default/{{index_name}}/docid"
+# )
+# SEARCH_ENDPOINT = f"{VESPA_APP_CONTAINER_URL}/search/"
 
 _BATCH_SIZE = 128  # Specific to Vespa
 _NUM_THREADS = (
@@ -712,24 +658,6 @@ def _inference_chunk_by_vespa_id(vespa_id: str, index_name: str) -> InferenceChu
     res.raise_for_status()
 
     return _vespa_hit_to_inference_chunk(res.json())
-
-
-def in_memory_zip_from_file_bytes(file_contents: dict[str, bytes]) -> BinaryIO:
-    zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
-        for filename, content in file_contents.items():
-            zipf.writestr(filename, content)
-    zip_buffer.seek(0)
-    return zip_buffer
-
-
-def _create_document_xml_lines(doc_names: list[str | None]) -> str:
-    doc_lines = [
-        f'<document type="{doc_name}" mode="index" />'
-        for doc_name in doc_names
-        if doc_name
-    ]
-    return "\n".join(doc_lines)
 
 
 def _clean_chunk_id_copy(
