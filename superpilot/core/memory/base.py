@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class MemoryBase(ABC):
+class Memory(ABC):
     @abstractmethod
     def get(self, memory_id):
         """
