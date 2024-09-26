@@ -18,7 +18,7 @@ from typing import BinaryIO
 from typing import cast
 from datetime import datetime, timedelta
 from super_store.utils.logger import setup_logger
-from superpilot.core.store.vectorstore.vespa.index import _clean_chunk_id_copy,_create_document_xml_lines, in_memory_zip_from_file_bytes,_clear_and_index_vespa_chunks
+from superpilot.superpilot.core.store.vectorstore.vespa.vespa_index import _clean_chunk_id_copy,_create_document_xml_lines, in_memory_zip_from_file_bytes,_clear_and_index_vespa_chunks
 
 import httpx
 import requests
