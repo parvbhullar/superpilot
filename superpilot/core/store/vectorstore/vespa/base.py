@@ -1,5 +1,4 @@
 from typing import Any
-
 from superpilot.core.store.base import VectorStoreBase
 from superpilot.core.store.schema import Object
 import concurrent.futures

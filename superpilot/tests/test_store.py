@@ -1,5 +1,5 @@
 from superpilot.core.store.base import StoreBase
-from superpilot.core.store.vectorstore.vespa.base import VespaStore
+from superpilot.superpilot.core.store.vectorstore.vespa.vespa_base import VespaStore
 from superpilot.core.store.schema import Object, ObjectType, Privacy
 from datetime import datetime
 store = VespaStore()
