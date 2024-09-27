@@ -34,7 +34,7 @@ class AIPersona(SchemaModel):
     Model representing an AI persona with details about its identity, background, and knowledge base.
     """
 
-    name: str = Field(None, description="The name of the AI persona, representing its identity.")
+    persona_name: str = Field(None, description="The name of the AI persona, representing its identity.")
     handle: str = Field(None,
                         description="Unique identifier for the AI persona, typically in the format 'name-of-ais'.")
     # about: str = Field(None,
@@ -56,52 +56,20 @@ class AIPersona(SchemaModel):
 
 class PersonaGenPrompt(SimplePrompt, ABC):
     DEFAULT_SYSTEM_PROMPT = """
-       You are tasked with creating a detailed AI persona based on the following information. This persona will interact with users and provide expert knowledge. Please generate the following fields in a structured format:
+       You are tasked with creating a detailed AI Pilot config based on the persona_tagline and persona. Please generate the following fields in a structured format:
 
         1. **Name**: The name of the AI persona, representing its identity or role.
            
         2. **Handle**: A unique identifier for this AI persona, in the format 'name-of-ais'.
         
-        3. **About**: A concise description of the AI persona's role and purpose, based on the following input persona:  
-           "[Input persona description here]"
-        
         4. **Tags**: Keywords or tags related to the persona's expertise and characteristics. These should be derived from the input persona. Provide 3-5 tags.
-        
-        5. **Persona**: A detailed, synthesized explanation of the persona’s background, expertise, and activities. Use the following synthesized text as a base for the persona:  
-           "[Synthesized text here]"
-        
+
         6. **Questions**: Generate 4 questions that could help users interact with and better understand the AI persona, based on its synthesized text and expertise.
         
         7. **Knowledge Bases**: List at least one knowledge base that this persona draws information from. Each knowledge base should have:  
            - **Name**: The name of the knowledge base.  
            - **Data Source**: A brief description of the type of data or resources that this knowledge base uses to provide information.
         
-        Please provide your response in the following format:
-        
-        ```json
-        {
-          "name": "AI Name",
-          "handle": "name-of-ais",
-          "about": "A short description of the AI persona",
-          "tags": ["tag1", "tag2", "tag3"],
-          "persona": "A detailed explanation of the AI persona",
-          "questions": [
-            "What is question 1?",
-            "Why is question 2?",
-            "How is question 3?",
-            "When is question 4?"
-          ],
-          "knowledge_bases": [
-            {
-              "name": "Knowledge Base 1",
-              "datasource": "Description of the data source"
-            },
-            {
-              "name": "Knowledge Base 2",
-              "datasource": "Description of the data source"
-            }
-          ]
-        }
 
     """
 
@@ -164,7 +132,7 @@ class PersonaGenExecutor(BaseExecutor):
             setattr(self, key, value)
 
         self.persona_pilot = SimpleTaskPilot.create(
-            QuestionAnswerAnalysisPrompt.default_configuration,
+            PersonaGenPrompt.default_configuration,
             model_providers=self.model_providers,
             smart_model_name=OpenAIModelName.GPT4,
             fast_model_name=OpenAIModelName.GPT3,
@@ -182,8 +150,8 @@ class PersonaGenExecutor(BaseExecutor):
     """
 
     async def process_row(self, row):
-
-        response = await self.persona_pilot.execute(row["input_persona"]['text'])
+        objective = f"Create a detailed AI Pilot config based on the- persona_tagline: {row['input_persona']['text']}, persona: {row['synthesized_text']['text']}"
+        response = await self.persona_pilot.execute(objective)
         print(response.content)
         return response
 
