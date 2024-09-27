@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     # Application name
     application_name = "my_application"
-    app_generator = VespaAppGenerator.factory(index_name=application_name)
+    app_generator = VespaAppGenerator.factory(app_name=application_name)
     response = app_generator.deploy(json_schema, app_path="vespa")
     print(response)
 

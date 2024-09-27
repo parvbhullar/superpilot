@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import List, Set, Any
 
 from superpilot.core.store.schema import Object
-from superpilot.superpilot.core.store.vectorstore.vespa.vespa_base import VespaStore
 from superpilot.core.store.interfaces import Indexable
 
 
