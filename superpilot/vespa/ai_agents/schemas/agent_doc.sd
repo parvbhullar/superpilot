@@ -1,0 +1,192 @@
+schema UNPOD_CHUNK_NAME {
+    document UNPOD_CHUNK_NAME {
+        # Fields from the AIPersona model
+        field persona_name type string {
+            indexing: summary | index | attribute
+        }
+        field handle type string {
+            indexing: summary | attribute
+            rank: filter
+            attribute: fast-search
+        }
+        field about type string {
+            indexing: summary | index | attribute
+            match {
+                gram
+                gram-size: 3
+            }
+            index: enable-bm25
+        }
+        field persona type string {
+            indexing: summary | index | attribute
+            match {
+                gram
+                gram-size: 3
+            }
+            index: enable-bm25
+        }
+        field tags type array<string> {
+            indexing: summary | index | attribute
+            rank: filter
+            attribute: fast-search
+        }
+        field questions type array<string> {
+            indexing: summary | index | attribute
+            match {
+                gram
+                gram-size: 3
+            }
+            index: enable-bm25
+        }
+
+        # Flattened fields for knowledge_bases
+        field knowledge_bases type array<string> {
+            indexing: summary | index | attribute
+            rank: filter
+            attribute: fast-search
+        }
+        field knowledge_base_fields type array<string> {
+            indexing: summary | index | attribute
+            rank: filter
+            attribute: fast-search
+        }
+
+        field persona_embedding type tensor<float>(x[VARIABLE_DIM]) {
+            indexing: attribute
+            attribute {
+                distance-metric: angular
+            }
+        }
+        field questions_embedding type tensor<float>(x[VARIABLE_DIM]) {
+            indexing: attribute
+            attribute {
+                distance-metric: angular
+            }
+        }
+        field embeddings type tensor<float>(t{},x[VARIABLE_DIM]) {
+            indexing: attribute
+            attribute {
+                distance-metric: angular
+            }
+        }
+
+        field boost type float {
+            indexing: summary | attribute
+        }
+        field hidden type bool {
+            indexing: summary | attribute
+            rank: filter
+        }
+
+        field doc_updated_at type int {
+            indexing: summary | attribute
+        }
+        field owners type array<string> {
+            indexing: summary | attribute
+        }
+    }
+
+    fieldset default {
+        fields: about, persona, persona_name
+    }
+
+    rank-profile default_rank {
+        inputs {
+            query(decay_factor) double
+        }
+
+        function inline document_boost() {
+            expression: if(attribute(boost) < 0, 0.5 + (1 / (1 + exp(-attribute(boost) / 3))), 2 / (1 + exp(-attribute(boost) / 3)))
+        }
+
+        function inline document_age() {
+            expression: max(if(isNan(attribute(doc_updated_at)) == 1, 7890000, now() - attribute(doc_updated_at)) / 31536000, 0)
+        }
+
+        function inline recency_bias() {
+            expression: max(1 / (1 + query(decay_factor) * document_age), 0.75)
+        }
+
+        match-features: recency_bias
+    }
+
+    rank-profile hybrid_searchVARIABLE_DIM inherits default, default_rank {
+        inputs {
+            query(query_embedding) tensor<float>(x[VARIABLE_DIM])
+        }
+
+        function vector_score() {
+            expression {
+                (query(persona_about_ratio) * closeness(field, persona_embedding)) +
+                ((1 - query(persona_about_ratio)) * closeness(field, embeddings))
+            }
+        }
+
+        function keyword_score() {
+            expression{
+             (query(persona_about_ratio) * bm25(persona)) +
+             ((1 - query(persona_about_ratio)) * bm25(about))
+            }
+        }
+
+        first-phase {
+            expression: vector_score
+        }
+
+        global-phase {
+            expression {
+                (
+                    # Weighted Vector Similarity Score
+                    (query(alpha) * normalize_linear(vector_score)) +
+                    # Weighted Keyword Similarity Score
+                    ((1 - query(alpha)) * normalize_linear(keyword_score))
+                )
+                # Boost based on user feedback
+                * document_boost
+                # Decay factor based on time document was last updated
+                * recency_bias
+            }
+            rerank-count: 1000
+        }
+
+        match-features {
+            bm25(persona_name)
+            bm25(about)
+            bm25(knowledge_base_fields)
+            closeness(field, persona_embedding)
+            closeness(field, questions_embedding)
+            closeness(field, embeddings)
+            keyword_score
+            vector_score
+            document_boost
+            recency_bias
+            closest(embeddings)
+        }
+    }
+
+    rank-profile admin_search inherits default, default_rank {
+        first-phase {
+            expression: bm25(about) + (5 * bm25(persona_name))
+        }
+    }
+
+    rank-profile keyword_search inherits default, default_rank {
+        first-phase {
+            expression: bm25(tags) * document_boost * recency_bias
+        }
+
+        match-features: recency_bias document_boost bm25(tags)
+    }
+
+    rank-profile semantic_searchVARIABLE_DIM inherits default, default_rank {
+        inputs {
+            query(query_embedding) tensor<float>(x[VARIABLE_DIM])
+        }
+
+        first-phase {
+            expression: closeness(field, embeddings)
+        }
+
+        match-features: recency_bias document_boost closest(embeddings)
+    }
+}

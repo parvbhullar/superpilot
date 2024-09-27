@@ -33,8 +33,8 @@ if __name__ == "__main__":
 
     # Application name
     application_name = "my_application"
-    app_generator = VespaAppGenerator.factory(app_name=application_name)
-    response = app_generator.deploy(json_schema, app_path="vespa")
+    app_generator = VespaAppGenerator.factory(app_name=application_name, schema_name="agent_doc")
+    response = app_generator.deploy(app_path="vespa/ai_agents")
     print(response)
 
     # Sample data to feed into Vespa

@@ -37,8 +37,8 @@ class AIPersona(SchemaModel):
     persona_name: str = Field(None, description="The name of the AI persona, representing its identity.")
     handle: str = Field(None,
                         description="Unique identifier for the AI persona, typically in the format 'name-of-ais'.")
-    # about: str = Field(None,
-    #                    description="Description of the AI persona, based on the 'input_persona' from the dataset, explaining its purpose and area of expertise.")
+    about: str = Field(None,
+                       description="Description of the AI persona, based on the 'input_persona' from the dataset, explaining its purpose and area of expertise.")
     tags: List[str] = Field(None,
                             description="Tags associated with the AI persona, providing keywords based on its persona or areas of expertise.")
 
@@ -157,17 +157,24 @@ class PersonaGenExecutor(BaseExecutor):
 
     async def execute(self, dataset):
         df = pd.DataFrame(dataset)
-        output_file = "output.xlsx"
+        output_file = "docs/persona-data/output-persona.jsonl"
         count = 0
+        agents = []
         for index, row in df.iterrows():
             response = await self.process_row(row)
+            obj = {}
             for col_name, col_value in response.content.items():
-                df.at[index, col_name] = col_value
+                obj[col_name] = col_value
+            obj["about"] = row["input_persona"]
+            obj["persona"] = row["synthesized_text"]
+            agents.append(obj)
             if count > 10:
                 break
             count += 1
 
-        df.to_excel(output_file, index=False)
+        df = pd.DataFrame(agents)
+        df.to_json(output_file, orient='records', lines=True)  # 'records' format is more natural for list of JSON
+
         return output_file, len(df)
 
     async def run(self, dataset):
