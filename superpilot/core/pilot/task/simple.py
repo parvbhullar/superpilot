@@ -3,14 +3,16 @@ import platform
 import time
 from abc import ABC
 from typing import Dict
-from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
-from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
+
 import distro
+
+from superpilot.core.callback.manager.base import BaseCallbackManager
+from superpilot.core.pilot.settings import ExecutionNature
+from superpilot.core.pilot.settings import PilotConfiguration
+from superpilot.core.pilot.task.base import TaskPilot, TaskPilotConfiguration
 from superpilot.core.planning.base import PromptStrategy
-from superpilot.core.planning.strategies.simple import SimplePrompt
 from superpilot.core.planning.schema import (
     LanguageModelResponse,
-    ExecutionNature,
     Task,
 )
 from superpilot.core.planning.settings import (
@@ -18,6 +20,8 @@ from superpilot.core.planning.settings import (
     LanguageModelClassification,
     PromptStrategyConfiguration,
 )
+from superpilot.core.planning.strategies.simple import SimplePrompt
+from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
 from superpilot.core.plugin.utlis import load_class
 from superpilot.core.resource.model_providers import (
     LanguageModelProvider,
@@ -26,17 +30,17 @@ from superpilot.core.resource.model_providers import (
     OpenAIProvider,
     OPEN_AI_MODELS,
 )
-from superpilot.core.resource.model_providers.utils.token_counter import (
-    count_string_tokens,
-)
-from superpilot.core.pilot.settings import PilotConfiguration, ExecutionAlgo
 from superpilot.core.resource.model_providers.factory import (
     ModelProviderFactory,
     ModelConfigFactory,
 )
+from superpilot.core.resource.model_providers.utils.token_counter import (
+    count_string_tokens,
+)
+from superpilot.core.state.mixins import PickleStateMixin, DictStateMixin
 
 
-class SimpleTaskPilot(TaskPilot, ABC):
+class SimpleTaskPilot(TaskPilot, DictStateMixin, PickleStateMixin, ABC):
     """A class representing a pilot step."""
 
     default_configuration = TaskPilotConfiguration(
@@ -53,7 +57,7 @@ class SimpleTaskPilot(TaskPilot, ABC):
             cycle_count=0,
             max_task_cycle_count=3,
             creation_time="",
-            execution_algo=ExecutionAlgo.PLAN_AND_EXECUTE,
+            execution_nature=ExecutionNature.AUTO,
         ),
         execution_nature=ExecutionNature.SIMPLE,
         prompt_strategy=SimplePrompt.default_configuration,
@@ -61,12 +65,12 @@ class SimpleTaskPilot(TaskPilot, ABC):
             LanguageModelClassification.FAST_MODEL: LanguageModelConfiguration(
                 model_name=OpenAIModelName.GPT3,
                 provider_name=ModelProviderName.OPENAI,
-                temperature=0.2,
+                temperature=0.9,
             ),
             LanguageModelClassification.SMART_MODEL: LanguageModelConfiguration(
                 model_name=OpenAIModelName.GPT4,
                 provider_name=ModelProviderName.OPENAI,
-                temperature=0.2,
+                temperature=0.9,
             ),
         },
     )
@@ -76,30 +80,53 @@ class SimpleTaskPilot(TaskPilot, ABC):
         configuration: TaskPilotConfiguration = default_configuration,
         model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
         logger: logging.Logger = logging.getLogger(__name__),
+        callback: BaseCallbackManager = None,
+        thread_id: str = None,
     ) -> None:
+        self._thread_id = thread_id
         self._logger = logger
         self._configuration = configuration
         self._execution_nature = configuration.execution_nature
+        self._callback = callback
 
         self._providers: Dict[LanguageModelClassification, LanguageModelProvider] = {}
         for model, model_config in self._configuration.models.items():
             self._providers[model] = model_providers[model_config.provider_name]
 
         prompt_config = self._configuration.prompt_strategy.dict()
-        location = prompt_config.pop("location", {})
+        location = prompt_config.pop("location", None)
         if location is not None:
             self._prompt_strategy = load_class(location, prompt_config)
         else:
             self._prompt_strategy = SimplePrompt(**prompt_config)
 
-    async def execute(self, objective: str, *args, **kwargs) -> LanguageModelResponse:
+    async def execute(
+        self, objective: str | Task, *args, **kwargs
+    ) -> LanguageModelResponse:
         """Execute the task."""
         self._logger.debug(f"Executing task: {objective}")
-        task = Task.factory(objective, **kwargs)
+        if isinstance(objective, str):
+            # if task is not passed, one is created with default settings
+            task = Task.factory(objective)
+        else:
+            task = objective
         if len(args) > 0:
             kwargs["context"] = args[0]
         context_res = await self.exec_task(task, **kwargs)
         return context_res
+
+    # TODO: State may not be required in Simple Pilot, find a way to manage Cain flow without state
+    async def to_dict_state(self) -> dict:
+        pass
+
+    async def from_dict_state(self, state):
+        pass
+
+    async def to_pickle_state(self):
+        pass
+
+    async def from_pickle_state(self, state):
+        pass
 
     async def exec_task(self, task: Task, **kwargs) -> LanguageModelResponse:
         template_kwargs = task.generate_kwargs()
@@ -139,6 +166,9 @@ class SimpleTaskPilot(TaskPilot, ABC):
             model_prompt=prompt.messages,
             functions=prompt.functions,
             function_call=prompt.get_function_call(),
+            req_res_callback=(
+                self._callback.model_req_res_callback if self._callback else None
+            ),
             **model_configuration,
             completion_parser=prompt_strategy.parse_response_content,
         )
@@ -181,6 +211,19 @@ class SimpleTaskPilot(TaskPilot, ABC):
     def __str__(self):
         return self._configuration.__str__()
 
+    def name(self) -> str:
+        """The name of the ability."""
+        return self._configuration.pilot.name
+
+    def dump(self) -> dict:
+        pilot_config = self._configuration.pilot
+        dump = {
+            "name": pilot_config.name,
+            "role": pilot_config.role,
+            "goals": pilot_config.goals,
+        }
+        return dump
+
     @classmethod
     def factory(
         cls,
@@ -188,8 +231,11 @@ class SimpleTaskPilot(TaskPilot, ABC):
         model_providers: Dict[ModelProviderName, LanguageModelProvider] = None,
         execution_nature: ExecutionNature = None,
         models: Dict[LanguageModelClassification, LanguageModelConfiguration] = None,
+        pilot_config: PilotConfiguration = None,
         location: PluginLocation = None,
         logger: logging.Logger = None,
+        callback: BaseCallbackManager = None,
+        thread_id: str = None,
     ) -> "SimpleTaskPilot":
         # Initialize settings
         config = cls.default_configuration.copy()
@@ -199,6 +245,8 @@ class SimpleTaskPilot(TaskPilot, ABC):
             config.execution_nature = execution_nature
         if prompt_strategy is not None:
             config.prompt_strategy = prompt_strategy
+        if pilot_config is not None:
+            config.pilot = pilot_config
         if models is not None:
             config.models = models
 
@@ -213,7 +261,13 @@ class SimpleTaskPilot(TaskPilot, ABC):
             model_providers = {ModelProviderName.OPENAI: open_ai_provider}
 
         # Create and return SimpleTaskPilot instance
-        return cls(configuration=config, model_providers=model_providers, logger=logger)
+        return cls(
+            configuration=config,
+            model_providers=model_providers,
+            logger=logger,
+            callback=callback,
+            thread_id=thread_id,
+        )
 
     @classmethod
     def create(
@@ -221,9 +275,12 @@ class SimpleTaskPilot(TaskPilot, ABC):
         prompt_config,
         smart_model_name=OpenAIModelName.GPT4,
         fast_model_name=OpenAIModelName.GPT3,
-        smart_model_temp=0.2,
-        fast_model_temp=0.2,
+        smart_model_temp=0.9,
+        fast_model_temp=0.9,
         model_providers=None,
+        pilot_config=None,
+        callback: BaseCallbackManager = None,
+        thread_id: str = None,
     ):
         models_config = ModelConfigFactory.get_models_config(
             smart_model_name=smart_model_name,
@@ -238,6 +295,9 @@ class SimpleTaskPilot(TaskPilot, ABC):
             prompt_strategy=prompt_config,
             model_providers=model_providers,
             models=models_config,
+            pilot_config=pilot_config,
+            callback=callback,
+            thread_id=thread_id,
         )
         return pilot
 

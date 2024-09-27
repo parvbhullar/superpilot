@@ -1,10 +1,10 @@
 import logging
 
 
-def get_client_logger():
+def get_client_logger(logger_name: str = "application_logger"):
     # Configure logging before we do anything else.
     # Application logs need a place to live.
-    client_logger = logging.getLogger("superpilot_client_application")
+    client_logger = logging.getLogger(logger_name)
     client_logger.setLevel(logging.DEBUG)
 
     formatter = logging.Formatter(

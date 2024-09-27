@@ -2,6 +2,7 @@ from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
     LanguageModelPrompt,
+    ClarifyingQuestion,
 )
 from superpilot.core.planning.strategies.utils import json_loads
 from superpilot.core.resource.model_providers import (
@@ -110,10 +111,14 @@ class SimplePrompt(PromptStrategy):
                 json_schema=self._parser_schema,
             )
             functions.append(parser_function)
+
+        functions.append(
+            LanguageModelFunction(json_schema=ClarifyingQuestion.function_schema())
+        )
+
         prompt = LanguageModelPrompt(
             messages=[system_message, user_message],
             functions=functions,
-            function_call=None if not functions else functions[0],
             # TODO
             tokens_used=0,
         )
@@ -154,8 +159,10 @@ class SimplePrompt(PromptStrategy):
 
         """
         # print("Raw Model Response", response_content)
-        if "function_call" in response_content:
-            parsed_response = json_loads(response_content["function_call"]["arguments"])
+        if "function_call" in response_content and response_content["function_call"]:
+            parsed_response = json_loads(
+                response_content.get("function_call", {}).get("arguments", {})
+            )
         else:
             parsed_response = response_content
 

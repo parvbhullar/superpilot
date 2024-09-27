@@ -13,9 +13,9 @@ from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning import strategies
 from superpilot.core.planning.schema import (
     LanguageModelResponse,
-    ExecutionNature,
     Task,
 )
+from superpilot.core.pilot.settings import ExecutionNature
 from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
     LanguageModelClassification,
@@ -145,7 +145,7 @@ class BaseTaskPilot(TaskPilot):
             **model_configuration,
             completion_parser=prompt_strategy.parse_response_content,
         )
-        return LanguageModelResponse.parse_obj(response.dict())
+        return LanguageModelResponse.model_validate(response.model_dump())
 
     def _make_template_kwargs_for_strategy(self, strategy: PromptStrategy):
         provider = self._providers[strategy.model_classification]

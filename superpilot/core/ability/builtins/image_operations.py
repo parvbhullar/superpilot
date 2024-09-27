@@ -1,5 +1,7 @@
+# flake8: noqa
 import logging
 from typing import List
+from openai import OpenAIError
 
 from requests import RequestException
 
@@ -55,7 +57,9 @@ class GenerateImage(Ability):
         except ImportError:
             message = "Package requests is not installed."
         try:
-            import openai
+            from openai import OpenAI
+
+            client = OpenAI()
         except ImportError:
             message = "Package openai is not installed."
         try:
@@ -204,7 +208,11 @@ class GenerateImage(Ability):
     ) -> AbilityAction:
         from base64 import b64decode
 
-        import openai
+        from openai import OpenAI
+
+        client = OpenAI(
+            api_key=api_key,
+        )
 
         if size not in [256, 512, 1024]:
             closest = min([256, 512, 1024], key=lambda x: abs(x - size))
@@ -214,12 +222,8 @@ class GenerateImage(Ability):
             size = closest
 
         try:
-            response = openai.Image.create(
-                prompt=prompt,
-                n=1,
-                size=f"{size}x{size}",
-                response_format="b64_json",
-                api_key=api_key,
+            response = client.images.generate(
+                prompt=prompt, n=1, size=f"{size}x{size}", response_format="b64_json"
             )
 
             self._logger.info(f"Image Generated for prompt:{prompt}")
@@ -231,7 +235,7 @@ class GenerateImage(Ability):
                     png.write(image_data)
             except IOError:
                 return AbilityAction(success=False, message="Error while writing file.")
-        except openai.OpenAIError as e:
+        except OpenAIError as e:
             return AbilityAction(success=False, message=f"Error querying OpenAI. {e}")
 
         return AbilityAction(success=True, message=f"Saved to disk:{filename}")

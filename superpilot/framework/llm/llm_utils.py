@@ -1,3 +1,4 @@
+# flake8: noqa
 from __future__ import annotations
 
 import functools
@@ -6,10 +7,13 @@ from itertools import islice
 from typing import List, Literal, Optional
 
 import numpy as np
+from openai import OpenAI
 import openai
+
+client = OpenAI()
 import tiktoken
 from colorama import Fore, Style
-from openai.error import APIError, RateLimitError, Timeout
+from openai import APIError, RateLimitError, Timeout
 
 # from superpilot.core.configuration import Config
 from superpilot.framework.llm.api_manager import ApiManager
@@ -272,10 +276,8 @@ def create_embedding(
         tokenizer_name=cfg.embedding_tokenizer,
         chunk_length=cfg.embedding_token_limit,
     ):
-        embedding = openai.Embedding.create(
-            input=[chunk],
-            api_key=cfg.openai_api_key,
-            **kwargs,
+        embedding = client.embeddings.create(
+            input=[chunk], api_key=cfg.openai_api_key, **kwargs
         )
         api_manager = ApiManager()
         api_manager.update_cost(

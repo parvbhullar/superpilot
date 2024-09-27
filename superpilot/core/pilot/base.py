@@ -13,6 +13,10 @@ class Pilot(abc.ABC):
     async def execute(self, *args, **kwargs):
         ...
 
+    # @abc.abstractmethod
+    # async def observe(self, *args, **kwargs):
+    #     ...
+
     @abc.abstractmethod
     def __repr__(self):
         ...
@@ -21,6 +25,10 @@ class Pilot(abc.ABC):
     def name(cls) -> str:
         """The name of the ability."""
         return inflection.underscore(cls.__name__)
+
+    @abc.abstractmethod
+    def dump(self):
+        ...
 
 
 class BasePilot(Pilot):
@@ -40,7 +48,15 @@ class BasePilot(Pilot):
     async def execute(self, *args, **kwargs):
         ...
 
+    # @abc.abstractmethod
+    # async def observe(self, *args, **kwargs):
+    #     ...
+
     @abc.abstractmethod
-    async def watch(self, *args, **kwargs):
+    def dump(self):
         ...
 
+    @classmethod
+    def name(cls) -> str:
+        """The name of the ability."""
+        return inflection.underscore(cls.__name__)

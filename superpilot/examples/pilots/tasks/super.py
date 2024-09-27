@@ -5,7 +5,7 @@ from superpilot.core.pilot.task.base import TaskPilotConfiguration
 from superpilot.core.ability.base import AbilityRegistry
 from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
 from superpilot.core.planning import strategies
-from superpilot.core.planning.schema import ExecutionNature
+from superpilot.core.pilot.settings import ExecutionNature
 from superpilot.core.planning.settings import (
     LanguageModelConfiguration,
     LanguageModelClassification,

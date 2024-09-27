@@ -8,26 +8,22 @@ from pydantic import Field
 from superpilot.core.ability.schema import AbilityAction
 from superpilot.core.configuration import SystemConfiguration
 from superpilot.core.planning.settings import LanguageModelConfiguration
-from superpilot.core.planning.simple import PromptStrategy
 from superpilot.core.resource.model_providers import (
     LanguageModelMessage, LanguageModelFunction,
 )
-from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
+from superpilot.core.plugin.base import PluginLocation, PluginStorageFormat
 from superpilot.core.resource.model_providers import (
     ModelProviderName,
     OpenAIModelName,
 )
-from typing import Callable, ClassVar, List, Union
+from typing import ClassVar, List
 from superpilot.core.configuration.schema import (
     SystemConfiguration,
-    SystemSettings,
-    UserConfigurable,
 )
 
 
 class AbilityConfiguration(SystemConfiguration):
     """Struct for model configuration."""
-    from superpilot.core.plugin.base import PluginLocation
 
     location: PluginLocation
     packages_required: List[str] = Field(default_factory=list)
@@ -37,13 +33,13 @@ class AbilityConfiguration(SystemConfiguration):
 
     @classmethod
     def factory(
-            cls,
-            location_route: str = "superpilot.core.builtins.QueryLanguageModel",
-            model_name: str = OpenAIModelName.GPT3,
-            provider_name: str = ModelProviderName.OPENAI,
-            temperature: str = 0.9,
-            memory_provider_required: bool = False,
-            workspace_required: bool = False,
+        cls,
+        location_route: str = "superpilot.core.builtins.QueryLanguageModel",
+        model_name: str = OpenAIModelName.GPT3,
+        provider_name: str = ModelProviderName.OPENAI,
+        temperature: str = 0.9,
+        memory_provider_required: bool = False,
+        workspace_required: bool = False,
     ) -> "AbilityConfiguration":
         return AbilityConfiguration(
             location=PluginLocation(
@@ -64,6 +60,8 @@ class Ability(abc.ABC):
     """A class representing an pilot ability."""
 
     default_configuration: ClassVar[AbilityConfiguration]
+
+    _summary: str = None
 
     @classmethod
     def name(cls) -> str:
@@ -86,6 +84,11 @@ class Ability(abc.ABC):
     def required_arguments(cls) -> List[str]:
         """A list of required arguments."""
         return []
+
+    @property
+    def summary(self) -> str:
+        """A summary of the ability result."""
+        return self._summary
 
     @abc.abstractmethod
     async def __call__(self, *args, **kwargs) -> AbilityAction:
@@ -111,10 +114,10 @@ class Ability(abc.ABC):
 
     @classmethod
     def create_ability(
-            cls,
-            ability_type: type,  # Assuming you pass the Class itself
-            logger: logging.Logger,
-            configuration: AbilityConfiguration,
+        cls,
+        ability_type: type,  # Assuming you pass the Class itself
+        logger: logging.Logger,
+        configuration: AbilityConfiguration,
     ) -> "Ability":
         # Instantiate and return Ability
         return ability_type(logger=logger, configuration=configuration)
@@ -144,5 +147,10 @@ class AbilityRegistry(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def perform(self, ability_name: str, **kwargs) -> AbilityAction:
+    async def perform(self, ability_name: str, ability_args: dict, **kwargs) -> AbilityAction:
         ...
+
+
+class AbilityException(Exception):
+    """Base exception for the ability subsystem."""
+    pass

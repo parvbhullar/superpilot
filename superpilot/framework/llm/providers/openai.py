@@ -1,3 +1,4 @@
+# flake8: noqa
 from __future__ import annotations
 
 
@@ -7,11 +8,13 @@ from dataclasses import dataclass
 from typing import Callable, List, Optional
 from unittest.mock import patch
 
-import openai
+from openai import OpenAI
+
+client = OpenAI()
 import openai.api_resources.abstract.engine_api_resource as engine_api_resource
 from colorama import Fore, Style
-from openai.error import APIError, RateLimitError, ServiceUnavailableError, Timeout
-from openai.openai_object import OpenAIObject
+from openai import APIError, RateLimitError, ServiceUnavailableError, Timeout
+from openai import OpenAIObject
 
 from superpilot.framework.llm.base import (
     ChatModelInfo,
@@ -21,6 +24,7 @@ from superpilot.framework.llm.base import (
     TText,
 )
 from superpilot.framework.helpers.logs import logger
+
 # from superpilot.models.command_registry import CommandRegistry
 
 OPEN_AI_CHAT_MODELS = {
@@ -229,9 +233,8 @@ def create_chat_completion(
         OpenAIObject: The ChatCompletion response from OpenAI
 
     """
-    completion: OpenAIObject = openai.ChatCompletion.create(
-        messages=messages,
-        **kwargs,
+    completion: OpenAIObject = client.chat.completions.create(
+        messages=messages, **kwargs
     )
     if not hasattr(completion, "error"):
         logger.debug(f"Response: {completion}")
@@ -254,10 +257,7 @@ def create_text_completion(
         OpenAIObject: The Completion response from OpenAI
 
     """
-    return openai.Completion.create(
-        prompt=prompt,
-        **kwargs,
-    )
+    return client.completions.create(prompt=prompt, **kwargs)
 
 
 @meter_api
@@ -276,10 +276,7 @@ def create_embedding(
         OpenAIObject: The Embedding response from OpenAI
 
     """
-    return openai.Embedding.create(
-        input=input,
-        **kwargs,
-    )
+    return client.embeddings.create(input=input, **kwargs)
 
 
 @dataclass

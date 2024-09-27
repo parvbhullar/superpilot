@@ -6,7 +6,7 @@ import time
 from typing import Callable, List, TypeVar, Optional
 
 import openai
-from openai.error import APIError, RateLimitError
+from openai import APIError, RateLimitError
 
 from superpilot.core.configuration import (
     Configurable,
@@ -46,6 +46,7 @@ class OpenAIModelName(str, enum.Enum):
     GPT4_32K_NEW = "gpt-4-32k-0613"
     GPT3_FINETUNE_MODEL = "ft:gpt-3.5-turbo-0613:recalll::8PE7I1IF"
     GPT4_O = "gpt-4o"
+    GPT4_O_MINI = "gpt-4o-mini"
 
 
 OPEN_AI_EMBEDDING_MODELS = {
@@ -124,6 +125,14 @@ OPEN_AI_LANGUAGE_MODELS = {
         provider_name=ModelProviderName.OPENAI,
         prompt_token_cost=0.0005,
         completion_token_cost=0.0015,
+        max_tokens=4096,
+    ),
+    OpenAIModelName.GPT4_O_MINI: LanguageModelProviderModelInfo(
+        name=OpenAIModelName.GPT4_O_MINI,
+        service=ModelProviderService.LANGUAGE,
+        provider_name=ModelProviderName.OPENAI,
+        prompt_token_cost=0.00015,
+        completion_token_cost=0.0005,
         max_tokens=16384,
     ),
 }
@@ -213,6 +222,7 @@ class OpenAIProvider(
         functions: List[LanguageModelFunction],
         model_name: OpenAIModelName,
         completion_parser: Callable[[dict], dict],
+        req_res_callback: Callable = None,
         **kwargs,
     ) -> LanguageModelProviderModelResponse:
         """Create a completion using the OpenAI API."""
@@ -227,9 +237,16 @@ class OpenAIProvider(
             "completion_tokens_used": response.usage.completion_tokens,
         }
 
-        parsed_response = completion_parser(
-            response.choices[0].message.to_dict_recursive()
-        )
+        parsed_response = completion_parser(response.choices[0].message.dict())
+        if req_res_callback:
+            await req_res_callback(
+                model_prompt,
+                functions,
+                response,
+                parsed_response,
+                response_args,
+                **kwargs,
+            )
         response = LanguageModelProviderModelResponse(
             content=parsed_response, **response_args
         )
@@ -256,9 +273,7 @@ class OpenAIProvider(
             "completion_tokens_used": response.usage.completion_tokens,
         }
 
-        parsed_response = completion_parser(
-            response.choices[0].message.to_dict_recursive()
-        )
+        parsed_response = completion_parser(response.choices[0].message.dict())
         response = LanguageModelProviderModelResponse(
             content=parsed_response, **response_args
         )
@@ -308,7 +323,7 @@ class OpenAIProvider(
             "model": model_name,
             **kwargs,
             **self._credentials.unmasked(),
-            "request_timeout": 300,
+            "timeout": 300,
             # "max_tokens": self.get_token_limit(model_name),
         }
         if model_name in ["gpt-4-vision-preview"]:
@@ -399,15 +414,13 @@ async def _create_embedding(text: str, *_, **kwargs) -> openai.Embedding:
     Returns:
         str: The embedding.
     """
-    return await openai.Embedding.acreate(
-        input=[text],
-        **kwargs,
-    )
+    aclient = openai.AsyncClient(api_key=kwargs.pop("api_key", None))
+    return await aclient.embeddings.create(input=[text], **kwargs)
 
 
 async def _create_completion(
     messages: List[LanguageModelMessage], *_, **kwargs
-) -> openai.Completion:
+) -> openai.types.Completion:
     """Create a chat completion using the OpenAI API.
 
     Args:
@@ -423,10 +436,8 @@ async def _create_completion(
     else:
         del kwargs["function_call"]
     # print(messages)
-    return await openai.ChatCompletion.acreate(
-        messages=messages,
-        **kwargs,
-    )
+    aclient = openai.AsyncClient(api_key=kwargs.pop("api_key", None))
+    return await aclient.chat.completions.create(messages=messages, **kwargs)
 
 
 _T = TypeVar("_T")

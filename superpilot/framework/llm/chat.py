@@ -1,7 +1,6 @@
+# flake8: noqa
 import time
-from random import shuffle
-
-from openai.error import RateLimitError
+from openai import RateLimitError
 
 # from superpilot.core.configuration import Config
 from superpilot.framework.llm.api_manager import ApiManager
