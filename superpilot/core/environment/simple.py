@@ -61,10 +61,10 @@ class SimpleEnv(Environment, Configurable):
         settings: EnvSystemSettings,
         logger: logging.Logger,
         # ability_registry: SimpleAbilityRegistry,
-        memory: SimpleMemory,
-        openai_provider: OpenAIProvider,
-        planning: SimplePlannerLegacy,
-        workspace: SimpleWorkspace,
+        memory: SimpleMemory = None,
+        openai_provider: OpenAIProvider= None,
+        planning: SimplePlannerLegacy = None,
+        workspace: SimpleWorkspace= None,
     ):
         self.configuration = settings.configuration
         self.env_config = ConfigBuilder.build_config_from_env()
@@ -110,12 +110,12 @@ class SimpleEnv(Environment, Configurable):
             logger,
             model_providers={"openai": environment_args["openai_provider"]},
         )
-        environment_args["memory"] = cls._get_system_instance(
-            "memory",
-            environment_settings,
-            logger,
-            workspace=environment_args["workspace"],
-        )
+        # environment_args["memory"] = cls._get_system_instance(
+        #     "memory",
+        #     environment_settings,
+        #     logger,
+        #     workspace=environment_args["workspace"],
+        # )
 
         # environment_args["ability_registry"] = cls._get_system_instance(
         #     "ability_registry",
