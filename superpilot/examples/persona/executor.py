@@ -1,3 +1,4 @@
+import json
 from abc import ABC
 from typing import List, Dict
 
@@ -18,6 +19,8 @@ from superpilot.core.resource.model_providers.factory import ModelProviderFactor
 from superpilot.examples.executor.base import BaseExecutor
 from superpilot.examples.solution_qc.prompt import QuestionAnswerAnalysisPrompt
 from superpilot.tests.test_env_simple import get_env
+from datasets import load_dataset
+from tqdm import tqdm
 
 
 class KnowledgeBase(SchemaModel):
@@ -56,19 +59,14 @@ class AIPersona(SchemaModel):
 
 class PersonaGenPrompt(SimplePrompt, ABC):
     DEFAULT_SYSTEM_PROMPT = """
-       You are tasked with creating a detailed AI Pilot config based on the persona_tagline and persona. Please generate the following fields in a structured format:
-
-        1. **Name**: The name of the AI persona, representing its identity or role.
-           
-        2. **Handle**: A unique identifier for this AI persona, in the format 'name-of-ais'.
-        
-        4. **Tags**: Keywords or tags related to the persona's expertise and characteristics. These should be derived from the input persona. Provide 3-5 tags.
-
-        6. **Questions**: Generate 4 questions that could help users interact with and better understand the AI persona, based on its synthesized text and expertise.
-        
-        7. **Knowledge Bases**: List at least one knowledge base that this persona draws information from. Each knowledge base should have:  
-           - **Name**: The name of the knowledge base.  
-           - **Data Source**: A brief description of the type of data or resources that this knowledge base uses to provide information.
+    You are tasked with creating a detailed AI Pilot config based on the persona_tagline and persona. Please generate the following fields in a structured format:
+        Every response should be in json only. 
+        - persona_name: The name of the AI persona, representing its identity.
+        - handle: Unique identifier for the AI persona, typically in the format 'name-of-ais'.
+        - about: Description of the AI persona, explaining its purpose and area of expertise.
+        - tags: Tags associated with the AI persona, providing keywords based on its persona or areas of expertise.
+        - questions: A set of 6 key questions derived from the synthesized text, meant to help users understand and engage with the AI persona.
+        - knowledge_bases: A list of knowledge bases this AI persona relies on for expertise. Each knowledge base includes the name of the knowledge base and the data sources it draws from.
         
 
     """
@@ -97,30 +95,12 @@ class PersonaGenPrompt(SimplePrompt, ABC):
         self._system_prompt_message = system_prompt
         self._user_prompt_template = user_prompt_template
         self._parser_schema = parser_schema
+        print("parser_schema", parser_schema)
 
     @property
     def model_classification(self) -> LanguageModelClassification:
         return self._model_classification
 
-    def parse_response_content(
-        self,
-        response_content: dict,
-    ) -> dict:
-        """Parse the actual text response from the objective model.
-
-        Args:
-            response_content: The raw response content from the objective model.
-
-        Returns:
-            The parsed response.
-
-        """
-        # print(response_content)
-        parsed_response = json_loads(response_content["function_call"]["arguments"])
-        # print(response_content)
-        # parsed_response = json_loads(response_content["content"])
-        # parsed_response = self._parser_schema.from_response(response_content)
-        return parsed_response
 
 class PersonaGenExecutor(BaseExecutor):
     model_providers = ModelProviderFactory.load_providers()
@@ -134,8 +114,8 @@ class PersonaGenExecutor(BaseExecutor):
         self.persona_pilot = SimpleTaskPilot.create(
             PersonaGenPrompt.default_configuration,
             model_providers=self.model_providers,
-            smart_model_name=OpenAIModelName.GPT4,
-            fast_model_name=OpenAIModelName.GPT3,
+            smart_model_name=OpenAIModelName.GPT4_O_MINI,
+            fast_model_name=OpenAIModelName.GPT4_O_MINI,
         )
 
     PROMPT_TEMPLATE = """
@@ -149,37 +129,38 @@ class PersonaGenExecutor(BaseExecutor):
     Task: Perform a question answer analysis based on the SOP
     """
 
-    async def process_row(self, row):
-        objective = f"Create a detailed AI Pilot config based on the- persona_tagline: {row['input_persona']['text']}, persona: {row['synthesized_text']['text']}"
+    async def process_row(self, objective):
         response = await self.persona_pilot.execute(objective)
         print(response.content)
         return response
 
-    async def execute(self, dataset):
-        df = pd.DataFrame(dataset)
-        output_file = "docs/persona-data/output-persona.jsonl"
+    async def execute(self, args):
+        # Load the dataset
+        persona_dataset = load_dataset("proj-persona/PersonaHub", data_files=f"{args.template}.jsonl")['train']
+        if args.sample_size > 0:
+            persona_dataset = persona_dataset[:args.sample_size]
+        print(persona_dataset)
+        print(f"Total number of input {args.template}: {len(persona_dataset['input persona'])}")
         count = 0
-        agents = []
-        for index, row in df.iterrows():
-            response = await self.process_row(row)
-            obj = {}
-            for col_name, col_value in response.content.items():
-                obj[col_name] = col_value
-            obj["about"] = row["input_persona"]
-            obj["persona"] = row["synthesized_text"]
-            agents.append(obj)
-            if count > 10:
-                break
-            count += 1
+        with open(args.output_path, "w") as out:
+            for persona in tqdm(persona_dataset['input persona']):
+                persona = persona.strip()
+                print(f"Processing persona: {persona}")
+                o = {"input_persona": persona, "synthesized_text": persona_dataset['synthesized text'][count]}
+                objective = f"Create a detailed AI Pilot config based on the- persona_tagline: {o['input_persona']}, persona: {o['synthesized_text']}"
+                response = await self.process_row(objective)
+                print(response.content)
+                for col_name, col_value in response.content.get("content").items():
+                    o[col_name] = col_value
+                out.write(json.dumps(o, ensure_ascii=False) + '\n')
+                count += 1
 
-        df = pd.DataFrame(agents)
-        df.to_json(output_file, orient='records', lines=True)  # 'records' format is more natural for list of JSON
+        print(f"Outputted the results to: {args.output_path}")
+        return args.output_path, count
 
-        return output_file, len(df)
-
-    async def run(self, dataset):
-        output_file, count = await self.execute(dataset)
+    async def run(self, args):
+        output_file, count = await self.execute(args)
         return {
-            "message": f"file successfully processed",
+            "message": f"file successfully processed - {output_file}",
             "processed_count": count,
         }

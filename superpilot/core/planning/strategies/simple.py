@@ -112,9 +112,9 @@ class SimplePrompt(PromptStrategy):
             )
             functions.append(parser_function)
 
-        functions.append(
-            LanguageModelFunction(json_schema=ClarifyingQuestion.function_schema())
-        )
+        # functions.append(
+        #     LanguageModelFunction(json_schema=ClarifyingQuestion.function_schema())
+        # )
 
         prompt = LanguageModelPrompt(
             messages=[system_message, user_message],
