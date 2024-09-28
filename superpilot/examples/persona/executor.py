@@ -12,6 +12,7 @@ from superpilot.core.planning import LanguageModelClassification
 from superpilot.core.planning.settings import PromptStrategyConfiguration
 from superpilot.core.planning.strategies.simple import SimplePrompt
 from superpilot.core.planning.strategies.utils import json_loads
+from superpilot.core.plugin.base import PluginLocation, PluginStorageFormat
 from superpilot.core.resource.model_providers import (
     OpenAIModelName, SchemaModel,
 )
@@ -45,8 +46,8 @@ class AIPersona(SchemaModel):
     tags: List[str] = Field(None,
                             description="Tags associated with the AI persona, providing keywords based on its persona or areas of expertise.")
 
-    # persona: str = Field(None,
-    #                      description="Synthesized text from the dataset, providing a more detailed explanation of the AI persona's purpose, expertise, and activities.")
+    persona: str = Field(None,
+                         description="Synthesized text from the dataset, providing a more detailed explanation of the AI persona's purpose, expertise, and activities.")
     questions: List[str] = Field(None,
                                  description="A set of 4 key questions derived from the synthesized text, meant to help users understand and engage with the AI persona.")
 
@@ -59,16 +60,20 @@ class AIPersona(SchemaModel):
 
 class PersonaGenPrompt(SimplePrompt, ABC):
     DEFAULT_SYSTEM_PROMPT = """
-    You are tasked with creating a detailed AI Pilot config based on the persona_tagline and persona. Please generate the following fields in a structured format:
+    You are tasked with creating a detailed AI Agent config based on the persona_tagline and persona. 
+    to generate an autonomous AI Agent info to related to provide text.
+    The work of this function to generate the Agent info and create fields related to text
+    Response should contain name for the Agent, an informative description for what the pilot does, roles & responsibilities, related tags, and 1 to 5"
+    Please generate the following fields in a structured format:
         Every response should be in json only. 
-        - persona_name: The name of the AI persona, representing its identity.
+        - persona_name: The name of the AI Agent, representing its identity.
         - handle: Unique identifier for the AI persona, typically in the format 'name-of-ais'.
-        - about: Description of the AI persona, explaining its purpose and area of expertise.
+        - about: Description of the AI persona, explaining its purpose and area of expertise, does not mention AI Agent in text.
+        - persona: Synthesized text from the dataset, providing a more detailed explanation of the AI Agent's name, purpose, expertise, and activities.
         - tags: Tags associated with the AI persona, providing keywords based on its persona or areas of expertise.
-        - questions: A set of 6 key questions derived from the synthesized text, meant to help users understand and engage with the AI persona.
+        - questions: A set of 6 key questions derived from the synthesized text, meant to help users understand and engage with the AI Agent.
         - knowledge_bases: A list of knowledge bases this AI persona relies on for expertise. Each knowledge base includes the name of the knowledge base and the data sources it draws from.
         
-
     """
 
     DEFAULT_USER_PROMPT_TEMPLATE = """
@@ -82,6 +87,10 @@ class PersonaGenPrompt(SimplePrompt, ABC):
         system_prompt=DEFAULT_SYSTEM_PROMPT,
         user_prompt_template=DEFAULT_USER_PROMPT_TEMPLATE,
         parser_schema=DEFAULT_PARSER_SCHEMA,
+        location=PluginLocation(
+            storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
+            storage_route="superpilot.examples.persona.executor.PersonaGenPrompt",
+        ),
     )
 
     def __init__(
@@ -150,7 +159,7 @@ class PersonaGenExecutor(BaseExecutor):
                 objective = f"Create a detailed AI Pilot config based on the- persona_tagline: {o['input_persona']}, persona: {o['synthesized_text']}"
                 response = await self.process_row(objective)
                 print(response.content)
-                for col_name, col_value in response.content.get("content").items():
+                for col_name, col_value in response.content.items():
                     o[col_name] = col_value
                 out.write(json.dumps(o, ensure_ascii=False) + '\n')
                 count += 1

@@ -119,7 +119,7 @@ class SimplePrompt(PromptStrategy):
         prompt = LanguageModelPrompt(
             messages=[system_message, user_message],
             functions=functions,
-            # TODO
+            function_call=None if not functions else functions[0],
             tokens_used=0,
         )
         return prompt

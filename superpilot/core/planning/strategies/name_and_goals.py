@@ -25,7 +25,7 @@ class NameAndGoals(PromptStrategy):
     DEFAULT_SYSTEM_PROMPT = (
         "Your job is to respond to a user-defined query by invoking the `create_pilot` function "
         "to generate an autonomous pilot info to related to query. \n\n" 
-        "The work of this funtion to generate the pilot info and create goals related to query"
+        "The work of this function to generate the pilot info and create goals related to query"
         "Response should contain name for the pilot, an informative description for what the pilot does, and 1 to 5 "
         "goals that are optimally aligned with the successful completion of its assigned query.\n\n"
         "Example Input:\n"

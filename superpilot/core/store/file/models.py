@@ -4,9 +4,6 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from super_store.configs.constants import DocumentSource
-from super_store.configs.constants import INDEX_SEPARATOR
-from super_store.utils.text_processing import make_url_compatible
 
 
 class InputType(str, Enum):
