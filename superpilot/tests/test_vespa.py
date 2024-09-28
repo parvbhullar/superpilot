@@ -4,6 +4,8 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
+
+from superpilot.core.store.vectorstore.vespa.agents_search import AgentSearchSystem
 from superpilot.core.store.vectorstore.vespa.agent_chunker import AIAgentChunker
 from superpilot.core.store.vectorstore.vespa.app_generator import VespaAppGenerator
 
@@ -49,6 +51,9 @@ def index_jsonl_to_vespa(file_path: str):
     #vespa_docker.stop()
     #vespa_docker.stop()
 
+def search_vespa():
+    user_query = "What are the most important historical events?"
+    AgentSearchSystem.test(user_query)
 
 # Example Usage
 if __name__ == "__main__":
@@ -56,4 +61,7 @@ if __name__ == "__main__":
     # deploy_app()
 
     # Index JSONL file to Vespa
-    index_jsonl_to_vespa("persona_output.jsonl")
+    # index_jsonl_to_vespa("persona_output.jsonl")
+
+    # Search Vespa
+    search_vespa()
