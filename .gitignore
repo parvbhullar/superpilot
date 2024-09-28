@@ -16,4 +16,4 @@ final/*
 .idea
 .DS_store
 prompt.md
-superpilot/vespa
+persona_output.jsonl
