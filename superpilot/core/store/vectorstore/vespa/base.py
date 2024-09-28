@@ -17,7 +17,7 @@ from typing import Any
 from typing import BinaryIO
 from typing import cast
 from datetime import datetime, timedelta
-from superpilot.core.store.vectorstore.vespa.vespa_index import _clean_chunk_id_copy,_create_document_xml_lines, in_memory_zip_from_file_bytes,_clear_and_index_vespa_chunks
+from superpilot.core.store.vectorstore.vespa.index_utils import _clean_chunk_id_copy,_create_document_xml_lines, in_memory_zip_from_file_bytes,_clear_and_index_vespa_chunks
 
 import httpx
 import requests
@@ -64,7 +64,7 @@ from superpilot.core.store.vectorstore.vespa.configs.constants import TITLE_SEPA
 from superpilot.core.store.vectorstore.vespa.configs.model_configs import SEARCH_DISTANCE_CUTOFF
 import random
 #import setup_logger
-
+from superpilot.core.logging.logging import get_app_logger
 logger=get_app_logger(__name__)
 
 
@@ -193,15 +193,72 @@ class VespaStore(VectorStoreBase):
     def get_all(self):
         # Return all indexed objects
         return list(self.indexed_data)
+    
+
+    def _check_if_reindexing_needed(cleaned_chunks: list[Object]) -> bool:
+        """
+        Determines whether the index schema needs to be recreated based on the chunks' structure.
+
+        Args:
+        - cleaned_chunks: A list of cleaned document chunks.
+
+        Returns:
+        - A boolean indicating if reindexing is required.
+        """
+    
+    # Example criteria for reindexing: Checking if a new field exists in the chunk structure
+    # or if the chunk structure has missing fields or changed.
+    
+        required_fields = {"chunk_id", "content", "metadata", "embedding_dim"}
+        
+        for chunk in cleaned_chunks:
+            # Assuming `chunk` has a dictionary-like structure or attribute access
+            chunk_fields = set(chunk.__dict__.keys())  # Extract fields present in the chunk
+            
+            # Check if required fields are missing in this chunk or new fields are present
+            if not required_fields.issubset(chunk_fields):
+                # Required fields are missing, meaning reindexing might be needed
+                return True
+            
+            # Optional: Check for other conditions that could necessitate reindexing,
+            # such as changes in data structure, versioning, or content size.
+            if getattr(chunk, "schema_version", None) != EXPECTED_SCHEMA_VERSION:
+                return True
+
+        # If none of the conditions are met, return False (no reindexing needed)
+        return False
+
 
     def index(self, chunks: list[Object]) -> set[Object]:
         """
         Indexes a list of document chunks, ensuring no duplicates.
         """
         cleaned_chunks = [_clean_chunk_id_copy(chunk) for chunk in chunks]
-        return _clear_and_index_vespa_chunks(
-            chunks=cleaned_chunks, index_name=self.index_name
-        )
+
+        # Step 2: Define a set to hold all indexed objects (chunks and mini chunks)
+        indexed_objects = set()
+
+        # Step 3: Process each chunk to handle mini chunks and index them
+        for chunk in cleaned_chunks:
+            # Check if the chunk contains mini chunks
+            if hasattr(chunk, "mini_chunks"):
+                for mini_chunk in chunk.mini_chunks:
+                    # Index each mini chunk
+                    indexed_objects.add(_clear_and_index_vespa_chunks([mini_chunk], self.index_name))
+            else:
+                # Index the main chunk if no mini chunks are present
+                indexed_objects.add(_clear_and_index_vespa_chunks([chunk], self.index_name))
+        
+        # Step 4: Check if indexing schema needs to be updated (e.g., new document structure)
+        if _check_if_reindexing_needed(cleaned_chunks):
+            # Recreate or update the index by calling create_index
+            self.create_index(schema_file_path="path_to_schema", 
+                              services_file_path="path_to_services", 
+                              overrides_file_path="path_to_overrides")
+
+        # Step 5: Return the set of indexed objects
+        return indexed_objects
+
 
 
 

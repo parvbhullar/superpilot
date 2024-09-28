@@ -425,7 +425,8 @@ class VespaAppGenerator:
         # Read the overrides XML template
         if not os.path.exists(overrides_file):
             base_path = os.path.dirname(os.path.dirname(vespa_schema_path))
-            overrides_file = os.path.join(base_path, "core/store/vectorstore/vespa/app_config/validation-overrides.xml")
+            print("Base Path",base_path)
+            overrides_file = "/Users/zestgeek-29/Desktop/Work/superpilot/superpilot/core/store/vectorstore/vespa/app_config/validation-overrides.xml"
         with open(overrides_file, "r") as overrides_f:
             overrides_template = overrides_f.read()
 

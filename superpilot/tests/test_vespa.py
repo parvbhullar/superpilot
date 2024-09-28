@@ -106,4 +106,8 @@ if __name__ == "__main__":
     print(json.dumps(query_result.json, indent=2))
 
     # Stop the Vespa Docker container when done
-    # vespa_docker.stop()
+    #vespa_docker.stop()
+    #vespa_docker.stop()
+# Uncomment the following line to stop the Vespa Docker container
+    #import subprocess
+    #subprocess.run(["docker", "stop", "vespa_test"])
