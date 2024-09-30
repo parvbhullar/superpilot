@@ -1,0 +1,125 @@
+schema UNPOD_CHUNK_NAME {
+    document UNPOD_CHUNK_NAME {
+        # Unique identifier for each object (similar to `document_id` in the old schema)
+        field obj_id type string {
+            indexing: summary | attribute
+        }
+        field ref_id type string {
+            indexing: summary | attribute
+        }
+        field type type string {
+            indexing: summary | attribute
+        }
+        field source type string {
+            indexing: summary | attribute
+        }
+        # Content of the object
+        field content type string {
+            indexing: summary | index
+            match {
+                gram
+                gram-size: 3
+            }
+            index: enable-bm25
+        }
+        # Metadata of the object (converted to string or comma-separated values)
+        field metadata type array<string> {
+            indexing: summary | attribute
+            rank: filter
+            attribute: fast-search
+        }
+        field privacy type string {
+            indexing: summary | attribute
+            rank: filter
+            attribute: fast-search
+        }
+        # Blurb or first sentence of content
+        field blurb type string {
+            indexing: summary | attribute
+        }
+        # Embeddings for the object
+        field embeddings type tensor<float>(x[VARIABLE_DIM]) {
+            indexing: attribute
+            attribute {
+                distance-metric: angular
+            }
+        }
+        # Timestamp for when the object was created/updated
+        field timestamp type int {
+            indexing: summary | attribute
+        }
+    }
+
+    # Fieldset to define searchable fields
+    fieldset default {
+        fields: content
+    }
+
+    # Rank profile for default ranking
+    rank-profile default_rank {
+        inputs {
+            query(decay_factor) double
+        }
+
+        function inline document_age() {
+            # Time in years (91.3 days ~= 3 Months ~= 1 fiscal quarter if no age found)
+            expression: max(if(isNan(attribute(timestamp)) == 1, 7890000, now() - attribute(timestamp)) / 31536000, 0)
+        }
+
+        # Document score decays from 1 to 0.75 as age increases
+        function inline recency_bias() {
+            expression: max(1 / (1 + query(decay_factor) * document_age), 0.75)
+        }
+
+        match-features: recency_bias
+    }
+
+    # Rank profile for hybrid search combining embeddings and content
+    rank-profile hybrid_search inherits default_rank {
+        inputs {
+            query(query_embedding) tensor<float>(x[VARIABLE_DIM])
+        }
+
+        function vector_score() {
+            expression: closeness(field, embeddings)
+        }
+
+        function keyword_score() {
+            expression: bm25(content)
+        }
+
+        first-phase {
+            expression: vector_score
+        }
+
+        # Combining vector and keyword search results
+        global-phase {
+            expression {
+                (query(alpha) * normalize_linear(vector_score)) +
+                ((1 - query(alpha)) * normalize_linear(keyword_score))
+                * recency_bias
+            }
+            rerank-count: 1000
+        }
+
+        match-features {
+            bm25(content)
+            closeness(field, embeddings)
+            keyword_score
+            vector_score
+            recency_bias
+        }
+    }
+
+    # Rank profile for keyword-based search
+    rank-profile keyword_search inherits default_rank {
+        first-phase {
+            expression: bm25(content) * recency_bias
+        }
+
+        match-features {
+            bm25(content)
+            recency_bias
+        }
+    }
+}

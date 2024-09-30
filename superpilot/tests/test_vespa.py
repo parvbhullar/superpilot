@@ -36,10 +36,11 @@ def deploy_app():
     json_schema = json.loads(json_schema_str)
 
     # Application name
-    application_name = "my_application"
-    app_generator = VespaAppGenerator.factory(app_name=application_name, schema_name="agent_doc")
+    application_name = "object_store"
+    app_generator = VespaAppGenerator.factory(app_name=application_name, schema_name="object_schema")
     # app_generator.generate_app(json_schema=json_schema)
-    response = app_generator.deploy(app_path="vespa/ai_agents")
+    # response = app_generator.deploy(app_path="vespa/ai_agents")
+    response = app_generator.deploy(app_path="vespa/object_store")
 
 def index_jsonl_to_vespa(file_path: str):
 
