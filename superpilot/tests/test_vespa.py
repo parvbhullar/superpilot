@@ -58,10 +58,10 @@ def search_vespa():
 # Example Usage
 if __name__ == "__main__":
     # Deploy the Vespa application
-    # deploy_app()
+    deploy_app()
 
     # Index JSONL file to Vespa
     # index_jsonl_to_vespa("persona_output.jsonl")
 
     # Search Vespa
-    search_vespa()
+    # search_vespa()

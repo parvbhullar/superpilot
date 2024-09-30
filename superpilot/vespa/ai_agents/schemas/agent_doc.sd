@@ -1,5 +1,5 @@
-schema agent_doc {
-    document agent_doc {
+schema UNPOD_CHUNK_NAME {
+    document UNPOD_CHUNK_NAME {
         # Fields from the AIPersona model
         field persona_name type string {
             indexing: summary | index | attribute
