@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from typing import List, Dict
 from collections.abc import Callable
 
-# from llama_index import text_splitter
+from llama_index.core import text_splitter
 from transformers import AutoTokenizer
 # from super_store.search.search_nlp_models import get_default_tokenizer
 from superpilot.core.logging.logging import setup_logger
@@ -22,7 +22,7 @@ class AIAgentChunker:
     def __init__(self, embedding_model, vespa_client):
         self.embedding_model = embedding_model
         self.vespa_client = vespa_client
-        # self.tokenizer = get_default_tokenizer()
+        self.tokenizer = get_default_tokenizer()
 
     def chunk_text(self, text: str, chunk_size: int, overlap: int = CHUNK_OVERLAP) -> List[str]:
         """Chunks large text using a SentenceSplitter based on the chunk size."""
