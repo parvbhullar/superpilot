@@ -16,10 +16,54 @@ from typing import cast
 
 import httpx
 import requests
+from retrying import retry
+from superpilot.core.store.indexing.models import DocMetadataAwareIndexChunk
 
 from superpilot.core.logging.logging import get_logger
+from superpilot.core.store.interfaces import InferenceChunk
+from superpilot.core.store.vectorstore.vespa.configs.app_configs import LOG_VESPA_TIMING_INFORMATION
+from superpilot.core.store.vectorstore.vespa.configs.app_configs import VESPA_CONFIG_SERVER_HOST
+from superpilot.core.store.vectorstore.vespa.configs.app_configs import VESPA_HOST
+from superpilot.core.store.vectorstore.vespa.configs.app_configs import VESPA_PORT
+from superpilot.core.store.vectorstore.vespa.configs.app_configs import VESPA_TENANT_PORT
+from superpilot.core.store.vectorstore.vespa.configs.app_configs import VESPA_SCHEMA_PATH 
+from superpilot.core.store.vectorstore.vespa.configs.chat_configs import DOC_TIME_DECAY
+from superpilot.core.store.vectorstore.vespa.configs.chat_configs import EDIT_KEYWORD_QUERY
+from superpilot.core.store.vectorstore.vespa.configs.chat_configs import HYBRID_ALPHA
+from superpilot.core.store.vectorstore.vespa.configs.chat_configs import NUM_RETURNED_HITS
+from superpilot.core.store.vectorstore.vespa.configs.chat_configs import TITLE_CONTENT_RATIO
+from superpilot.core.store.vectorstore.vespa.configs.constants import ACCESS_CONTROL_LIST
+from superpilot.core.store.vectorstore.vespa.configs.constants import UNPOD_HUB_ID
+from superpilot.core.store.vectorstore.vespa.configs.constants import UNPOD_KN_TOKEN
+from superpilot.core.store.vectorstore.vespa.configs.constants import BLURB
+from superpilot.core.store.vectorstore.vespa.configs.constants import BOOST
+from superpilot.core.store.vectorstore.vespa.configs.constants import CHUNK_ID
+from superpilot.core.store.vectorstore.vespa.configs.constants import CONTENT
+from superpilot.core.store.vectorstore.vespa.configs.constants import DOC_UPDATED_AT
+from superpilot.core.store.vectorstore.vespa.configs.constants import DOCUMENT_ID
+from superpilot.core.store.vectorstore.vespa.configs.constants import DOCUMENT_SETS
+from superpilot.core.store.vectorstore.vespa.configs.constants import EMBEDDINGS
+from superpilot.core.store.vectorstore.vespa.configs.constants import HIDDEN
+from superpilot.core.store.vectorstore.vespa.configs.constants import INDEX_SEPARATOR
+from superpilot.core.store.vectorstore.vespa.configs.constants import METADATA
+from superpilot.core.store.vectorstore.vespa.configs.constants import METADATA_LIST
+from superpilot.core.store.vectorstore.vespa.configs.constants import PRIMARY_OWNERS
+from superpilot.core.store.vectorstore.vespa.configs.constants import RECENCY_BIAS
+from superpilot.core.store.vectorstore.vespa.configs.constants import SECONDARY_OWNERS
+from superpilot.core.store.vectorstore.vespa.configs.constants import SECTION_CONTINUATION
+from superpilot.core.store.vectorstore.vespa.configs.constants import SEMANTIC_IDENTIFIER
+from superpilot.core.store.vectorstore.vespa.configs.constants import SKIP_TITLE_EMBEDDING
+from superpilot.core.store.vectorstore.vespa.configs.constants import SOURCE_LINKS
+from superpilot.core.store.vectorstore.vespa.configs.constants import SOURCE_TYPE
+from superpilot.core.store.vectorstore.vespa.configs.constants import TITLE
+from superpilot.core.store.vectorstore.vespa.configs.constants import TITLE_EMBEDDING
+from superpilot.core.store.vectorstore.vespa.configs.constants import TITLE_SEPARATOR
+from superpilot.core.store.vectorstore.vespa.configs.model_configs import SEARCH_DISTANCE_CUTOFF
+import random
 
+from superpilot.core.store.vectorstore.vespa.utils import *
 logger = get_logger()
+
 
 VESPA_DIM_REPLACEMENT_PAT = "VARIABLE_DIM"
 UNPOD_CHUNK_REPLACEMENT_PAT = "UNPOD_CHUNK_NAME"
@@ -49,6 +93,47 @@ _NUM_THREADS = (
 _VESPA_TIMEOUT = "3s"
 # Specific to Vespa, needed for highlighting matching keywords / section
 CONTENT_SUMMARY = "content_summary"
+
+
+def _create_document_xml_lines(doc_names: list[str | None]) -> str:
+    doc_lines = [
+        f'<document type="{doc_name}" mode="index" />'
+        for doc_name in doc_names
+        if doc_name
+    ]
+    return "\n".join(doc_lines)
+
+def in_memory_zip_from_file_bytes(file_contents: dict[str, bytes]) -> BinaryIO:
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for filename, content in file_contents.items():
+            zipf.writestr(filename, content)
+    zip_buffer.seek(0)
+    return zip_buffer
+
+def _clean_chunk_id_copy(
+    chunk: DocMetadataAwareIndexChunk,
+) -> DocMetadataAwareIndexChunk:
+    clean_chunk = chunk.copy(
+        update={
+            "source_document": chunk.source_document.copy(
+                update={
+                    "id": replace_invalid_doc_id_characters(chunk.source_document.id)
+                }
+            )
+        }
+    )
+    return clean_chunk
+
+
+class DocumentInsertionRecord():
+    def __init__(
+        self,
+        doc_id: str,
+        
+        document_already_existed: dict[str, Any]):
+        self.doc_id = doc_id
+        self.document_already_existed = document_already_existed
 
 
 @dataclass
@@ -416,7 +501,8 @@ def _clear_and_index_vespa_chunks(
     }
 
 
-def _build_vespa_filters(filters: IndexFilters, include_hidden: bool = False) -> str:
+##filters: IndexFilters,  add in _build_index_filters function
+def _build_vespa_filters(include_hidden: bool = False) -> str:
     def _build_or_filters(key: str, vals: list[str] | None) -> str:
         if vals is None:
             return ""
@@ -528,6 +614,7 @@ def _process_dynamic_summary(
     return processed_summary
 
 
+
 def _vespa_hit_to_inference_chunk(hit: dict[str, Any]) -> InferenceChunk:
     fields = cast(dict[str, Any], hit["fields"])
 
@@ -572,7 +659,7 @@ def _vespa_hit_to_inference_chunk(hit: dict[str, Any]) -> InferenceChunk:
         int(k): v
         for k, v in cast(dict[str, str], source_links_dict_unprocessed).items()
     }
-
+    from .base import InferenceChunk
     return InferenceChunk(
         chunk_id=fields[CHUNK_ID],
         blurb=blurb,
@@ -674,8 +761,8 @@ def _clean_chunk_id_copy(
     )
     return clean_chunk
 
-
-class VespaIndex(DocumentIndex):
+from superpilot.core.store.base import DocumentIndexer
+class VespaIndex(DocumentIndexer):
     yql_base = (
         f"select "
         f"documentid, "
@@ -826,6 +913,7 @@ class VespaIndex(DocumentIndex):
                         failure_msg = f"Failed to update document: {future_to_document_id[future]}"
                         raise requests.HTTPError(failure_msg) from e
 
+    '''
     def update(self, update_requests: list[UpdateRequest]) -> None:
         logger.info(f"Updating {len(update_requests)} documents in Vespa")
 
@@ -915,7 +1003,7 @@ class VespaIndex(DocumentIndex):
             "Finished updating Vespa documents in %.2f seconds",
             time.monotonic() - update_start,
         )
-
+    
     def delete(self, doc_ids: list[str]) -> None:
         logger.info(f"Deleting {len(doc_ids)} documents from Vespa")
 
@@ -932,7 +1020,7 @@ class VespaIndex(DocumentIndex):
                 _delete_vespa_docs(
                     document_ids=doc_ids, index_name=index_name, http_client=http_client
                 )
-
+    '''
     def id_based_retrieval(
         self,
         document_id: str,
@@ -962,7 +1050,7 @@ class VespaIndex(DocumentIndex):
     def keyword_retrieval(
         self,
         query: str,
-        filters: IndexFilters,
+        ##filters: IndexFilters,
         time_decay_multiplier: float,
         num_to_retrieve: int = NUM_RETURNED_HITS,
         offset: int = 0,
@@ -998,7 +1086,7 @@ class VespaIndex(DocumentIndex):
         self,
         query: str,
         query_embedding: list[float],
-        filters: IndexFilters,
+        ##filters: IndexFilters,
         time_decay_multiplier: float,
         num_to_retrieve: int = NUM_RETURNED_HITS,
         offset: int = 0,
@@ -1040,7 +1128,7 @@ class VespaIndex(DocumentIndex):
         self,
         query: str,
         query_embedding: list[float],
-        filters: IndexFilters,
+        ##filters: IndexFilters,
         time_decay_multiplier: float,
         num_to_retrieve: int,
         offset: int = 0,
@@ -1089,7 +1177,7 @@ class VespaIndex(DocumentIndex):
     def admin_retrieval(
         self,
         query: str,
-        filters: IndexFilters,
+        #filters: IndexFilters,
         num_to_retrieve: int = NUM_RETURNED_HITS,
         offset: int = 0,
     ) -> list[InferenceChunk]:

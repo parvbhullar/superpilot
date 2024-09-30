@@ -1,7 +1,13 @@
 import abc
 from collections.abc import Callable
 from typing import TYPE_CHECKING
+import os
+import openai
+import gc
+#from langchain.schema import BaseChatMessageHistory, ConversationBufferMemory
 
+# from llama_index.text_splitter import SentenceSplitter
+from llama_index.core.node_parser import SentenceSplitter
 from superpilot.core.store.vectorstore.vespa.configs.app_configs import BLURB_SIZE
 from superpilot.core.store.vectorstore.vespa.configs.app_configs import CHUNK_OVERLAP
 from superpilot.core.store.vectorstore.vespa.configs.app_configs import MINI_CHUNK_SIZE
@@ -11,22 +17,54 @@ from superpilot.core.store.vectorstore.vespa.configs.constants import TITLE_SEPA
 from superpilot.core.store.vectorstore.vespa.configs.model_configs import DOC_EMBEDDING_CONTEXT_SIZE
 from superpilot.core.store.file.models import Document
 from superpilot.core.store.indexing.models import DocAwareChunk
-from super_store.search.search_nlp_models import get_default_tokenizer
+#from superpilot.core.store.indexing.search_nlp_models import get_default_tokenizer
 from superpilot.core.logging.logging import setup_logger
-from super_store.utils.text_processing import shared_precompare_cleanup
-from llama_index import text_splitter
-
+#from super_store.utils.text_processing import shared_precompare_cleanup
+#from llama_index import text_splitter
+from typing import Optional
 if TYPE_CHECKING:
     from transformers import AutoTokenizer  # type:ignore
-
+from superpilot.core.store.vectorstore.vespa.configs.model_configs import (
+    DOC_EMBEDDING_CONTEXT_SIZE,
+)
+from superpilot.core.store.vectorstore.vespa.configs.model_configs import (
+    DOCUMENT_ENCODER_MODEL,
+)
 
 logger = setup_logger()
 
 ChunkFunc = Callable[[Document], list[DocAwareChunk]]
 
+_TOKENIZER: tuple[Optional["AutoTokenizer"], str | None] = (None, None)
+
+def get_default_tokenizer(model_name: str | None = None) -> "AutoTokenizer":
+    # NOTE: doing a local import here to avoid reduce memory usage caused by
+    # processes importing this file despite not using any of this
+    from transformers import AutoTokenizer  # type: ignore
+
+    global _TOKENIZER
+    if _TOKENIZER[0] is None or (
+        _TOKENIZER[1] is not None and _TOKENIZER[1] != model_name
+    ):
+        if _TOKENIZER[0] is not None:
+            del _TOKENIZER
+            gc.collect()
+
+        if model_name is None:
+            # This could be inaccurate
+            model_name = DOCUMENT_ENCODER_MODEL
+
+        _TOKENIZER = (AutoTokenizer.from_pretrained(model_name), model_name)
+
+        if hasattr(_TOKENIZER[0], "is_fast") and _TOKENIZER[0].is_fast:
+            os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+    return _TOKENIZER[0]
+
+
 
 def extract_blurb(text: str, blurb_size: int) -> str:
-    from llama_index.text_splitter import SentenceSplitter
+    #from llama_index.text_splitter import SentenceSplitter
 
     token_count_func = get_default_tokenizer().tokenize
     blurb_splitter = SentenceSplitter(
@@ -46,7 +84,7 @@ def chunk_large_section(
     chunk_overlap: int = CHUNK_OVERLAP,
     blurb_size: int = BLURB_SIZE,
 ) -> list[DocAwareChunk]:
-    from llama_index.text_splitter import SentenceSplitter
+    #from llama_index.text_splitter import SentenceSplitter
 
     blurb = extract_blurb(section_text, blurb_size)
 
@@ -89,7 +127,8 @@ def chunk_document(
 
         section_tok_length = len(tokenizer.tokenize(section_text))
         current_tok_length = len(tokenizer.tokenize(chunk_text))
-        curr_offset_len = len(shared_precompare_cleanup(chunk_text))
+        #curr_offset_len = len(shared_precompare_cleanup(chunk_text))
+        curr_offset_len = current_tok_length
 
         # Large sections are considered self-contained/unique therefore they start a new chunk and are not concatenated
         # at the end by other sections

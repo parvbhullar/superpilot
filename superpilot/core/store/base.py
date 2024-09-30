@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Set, Any
 
 from superpilot.core.store.schema import Object
+#from superpilot.core.store.vectorstore.vespa.base import VespaStore
 from superpilot.core.store.interfaces import Indexable
 
 
@@ -68,9 +69,8 @@ class StoreBase(ABC):
 
 
 class VectorStoreBase(StoreBase, Indexable,  ABC):
+    pass
 
-    storebase=StoreBase()
-    indexable=Indexable()
     
 
     

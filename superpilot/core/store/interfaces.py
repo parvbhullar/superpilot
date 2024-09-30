@@ -330,3 +330,47 @@ class AdminCapable(ABC):
             list of best matching chunks for the explorer page query
         """
         raise NotImplementedError
+
+
+from typing import List, Optional, Dict, Any
+from datetime import datetime
+
+class InferenceChunk:
+    def __init__(self,
+                 chunk_id: str,
+                 blurb: str,
+                 content: str,
+                 source_links: Dict[str, str],
+                 section_continuation: bool,
+                 document_id: str,
+                 source_type: str,
+                 semantic_identifier: str,
+                 boost: float = 1.0,
+                 recency_bias: float = 1.0,
+                 score: float = 0.0,
+                 hidden: bool = False,
+                 primary_owners: Optional[List[str]] = None,
+                 secondary_owners: Optional[List[str]] = None,
+                 metadata: Optional[Dict[str, Any]] = None,
+                 match_highlights: Optional[List[str]] = None,
+                 updated_at: Optional[datetime] = None):
+        self.chunk_id = chunk_id
+        self.blurb = blurb
+        self.content = content
+        self.source_links = source_links
+        self.section_continuation = section_continuation
+        self.document_id = document_id
+        self.source_type = source_type
+        self.semantic_identifier = semantic_identifier
+        self.boost = boost
+        self.recency_bias = recency_bias
+        self.score = score
+        self.hidden = hidden
+        self.primary_owners = primary_owners
+        self.secondary_owners = secondary_owners
+        self.metadata = metadata
+        self.match_highlights = match_highlights
+        self.updated_at = updated_at
+
+    def __repr__(self):
+        return f"<InferenceChunk(chunk_id={self.chunk_id}, score={self.score})>"

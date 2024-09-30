@@ -7,14 +7,14 @@ from typing import TYPE_CHECKING
 import requests
 from transformers import logging as transformer_logging  # type:ignore
 
-from super_store.configs.model_configs import (
+from superpilot.core.store.vectorstore.vespa.configs.model_configs import (
     DOC_EMBEDDING_CONTEXT_SIZE,
 )
-from super_store.configs.model_configs import (
+from superpilot.core.store.vectorstore.vespa.configs.model_configs import (
     DOCUMENT_ENCODER_MODEL,
 )
-from super_store.search.enums import EmbedTextType
-from super_store.utils.logger import setup_logger
+#from super_store.search.enums import EmbedTextType
+from superpilot.core.logging.logging import setup_logger
 from shared_configs.configs import MODEL_SERVER_HOST
 from shared_configs.configs import MODEL_SERVER_PORT
 from shared_configs.model_server_models import EmbedRequest

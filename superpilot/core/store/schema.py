@@ -1,9 +1,9 @@
 import enum
 from abc import abstractmethod, ABC
 from datetime import datetime
-from typing import Optional, Any
+from typing import Optional, Any,Dict,List,Set,Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 
 
 class ObjectType(str, enum.Enum):
@@ -48,17 +48,16 @@ class BaseObject(ABC):
 
 class Object(BaseModel):
     """Struct for a message and its metadata."""
-    blurb: str  # The first sentence(s) of the first Section of the chunk
-    content: str # Content of object
-    source: str
-    type: ObjectType
-    metadata: dict[str, str | list[str]]
-    ref_id: str
-    obj_id: str
-    privacy: Privacy
-    embeddings: dict # Embedding of an chunk of text
-    timestamp: datetime = datetime.now()
-
+    blurb: str = Field(..., description="The first sentence(s) of the chunk")
+    content: str = Field(..., description="Content of object")
+    source: str = Field(..., description="Source of the object")
+    type: ObjectType = Field(..., description="Type of the object")
+    metadata: Dict[str, Union[str, List[str]]] = Field(default_factory=dict, description="Metadata of the object")
+    ref_id: str = Field(..., description="Reference ID of the object")
+    obj_id: str = Field(..., description="Object ID")
+    privacy: Privacy = Field(..., description="Privacy settings of the object")
+    embeddings: Dict[str, Any] = Field(default_factory=dict, description="Embeddings of the object text")
+    timestamp: Optional[datetime] = None
 
 
 class InferenceObject(Object):

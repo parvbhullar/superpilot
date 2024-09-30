@@ -1,6 +1,5 @@
 import json
 import os.path
-import time
 from datetime import datetime, timedelta
 
 import requests
@@ -28,7 +27,7 @@ from superpilot.core.store.vectorstore.vespa.utils import create_document_xml_li
     fix_vespa_app_name
 
 VESPA_DIM_REPLACEMENT_PAT = "VARIABLE_DIM"
-CHUNK_REPLACEMENT_PAT = "UNPOD_CHUNK_NAME"
+CHUNK_REPLACEMENT_PAT = "CHUNK_NAME"
 DOCUMENT_REPLACEMENT_PAT = "DOCUMENT_REPLACEMENT"
 DATE_REPLACEMENT = "DATE_REPLACEMENT"
 DOC_VESPA_PORT = "DOC_VESPA_PORT"
@@ -41,7 +40,7 @@ DOC_VESPA_PORT = "DOC_VESPA_PORT"
 # VESPA_APP_CONTAINER_URL = f"http://{VESPA_HOST}:{VESPA_PORT}"
 # # unpod_chunk below is defined in vespa/app_configs/schemas/unpod_chunk.sd
 # DOCUMENT_ID_ENDPOINT = (
-#     f"{VESPA_APP_CONTAINER_URL}/document/v1/default/{{app_name}}/docid"
+#     f"{VESPA_APP_CONTAINER_URL}/document/v1/default/{{index_name}}/docid"
 # )
 # SEARCH_ENDPOINT = f"{VESPA_APP_CONTAINER_URL}/search/"
 
@@ -59,8 +58,8 @@ CONTENT_SUMMARY = "content_summary"
 class VespaAppGenerator:
     def __init__(
         self,
-        app_name: str,
-        schema_name: str = "default_doc",
+        index_name: str,
+        schema_name: str = "doc",
         embedder_id: str = "default-embedder",
         embedder_type: str = "hugging-face-embedder",
         transformer_model_url: Optional[str] = None,
@@ -69,16 +68,16 @@ class VespaAppGenerator:
         """
         Initializes the Vespa Application Generator.
 
-        :param app_name: Name of the Vespa application.
+        :param index_name: Name of the Vespa application.
         :param schema_name: Name of the document schema.
         :param embedder_id: ID for the embedding component.
         :param embedder_type: Type of the embedding component.
         :param transformer_model_url: URL to the transformer model.
         :param tokenizer_model_url: URL to the tokenizer model.
         """
-        self.app_name = app_name
+        self.index_name = index_name
+        self.secondary_index_name = f"{index_name}_s3c04d0ry"
         self.schema_name = schema_name
-        self.secondary_schema_name = f"{schema_name}_s3c04d0ry"
         self.embedder_id = embedder_id
         self.embedder_type = embedder_type
         self.transformer_model_url = transformer_model_url or ""
@@ -161,7 +160,7 @@ class VespaAppGenerator:
                 indexing.append("summary")
 
             # Special handling for specific fields if needed
-            if field_name.lower() in ["title", "body", "name", "content", "text", "description", "summary"]:
+            if field_name.lower() in ["title", "body"]:
                 indexing.append("enable-bm25")
 
             # Add the field
@@ -192,13 +191,12 @@ class VespaAppGenerator:
         :param distance_metric: Distance metric for ANN.
         """
         if not self.embedding_field_added:
-            input_text_line = self.generate_input_text()
             self.fields.append(
                 Field(
                     name=name,
                     type=f"tensor<float>({tensor_dimensions})",
                     indexing=[
-                        input_text_line,
+                        "input title . \" \" . input body",
                         "embed",
                         "index",
                         "attribute",
@@ -209,51 +207,16 @@ class VespaAppGenerator:
             )
             self.embedding_field_added = True
 
-    def get_text_fields(self, max_fields: int = 3) -> List[str]:
-        """
-        Get a list of field names that are of type 'string'.
-
-        :return: List of string field names.
-        """
-        text_fields = [f.name for f in self.fields if f.type == "string"]
-        return text_fields[:max_fields]
-
-    def generate_input_text(self, max_fields: int = 3) -> str:
-        """
-        Generate a concatenation of up to 3 text-based fields.
-
-        :param fields: List of available fields.
-        :param max_fields: Maximum number of text fields to concatenate.
-        :return: A string representing the concatenated fields.
-        """
-        selected_fields = self.get_text_fields(max_fields)
-        # Generate the concatenated input
-        input_text = " . \" \" . ".join([f"input {field}" for field in selected_fields])
-
-        return input_text
-
-    def bm25_fields(self, max_fields: int = 3) -> str:
-        """
-        Generate BM25 fields from a list of fields.
-
-        :param max_fields:
-        :return: A string representing the BM25 fields.
-        """
-        selected_fields = self.get_text_fields(max_fields)
-        bm25_fields = " + ".join([f"bm25({field})" for field in selected_fields])
-        return bm25_fields
-
     def add_rank_profiles(self):
         """
         Adds default rank profiles: bm25, semantic, and fusion.
         """
-        bm25_fields = self.bm25_fields()
         # BM25 Rank Profile
         bm25_profile = RankProfile(
             name="bm25",
             inputs=[("query(q)", "tensor<float>(x[384])")],
             functions=[
-                Function(name="bm25sum", expression=bm25_fields)
+                Function(name="bm25sum", expression="bm25(title) + bm25(body)")
             ],
             first_phase="bm25sum",
         )
@@ -341,7 +304,7 @@ class VespaAppGenerator:
             rank_profiles=self.rank_profiles,
         )
 
-        app_name = fix_vespa_app_name(self.app_name)
+        app_name = fix_vespa_app_name(self.index_name)
         # Create the application package
         package = ApplicationPackage(
             name=app_name,
@@ -351,50 +314,9 @@ class VespaAppGenerator:
 
         return package
 
-    def deploy_app_zip(self,
-                   host: Optional[str] = "localhost",
-                   port: Optional[int] = 19071,
-                   app_zip_content: Optional[bytes] = None,
-                   **kwargs) -> Any:
-        """
-        Creates and deploys the index schema on Vespa.ai engine.
-
-        Args:
-        - schema_file_path: Path to the schema file.
-        - services_file_path: Path to the services file.
-        - overrides_file_path: Path to the validation-overrides file.
-        - kwargs: Additional arguments.
-
-        Returns:
-        - Set of Object that represents the indexed data.
-        """
-        # # config server
-        VESPA_CONFIG_SERVER_URL = f"http://{host}:{port}"
-        VESPA_APPLICATION_ENDPOINT = f"{VESPA_CONFIG_SERVER_URL}/application/v2"
-        # Define deployment URL for Vespa.ai
-        deploy_url = f"{VESPA_APPLICATION_ENDPOINT}/tenant/default/prepareandactivate"
-        print("deploy_url", deploy_url)
-        self.logger.debug(f"Sending Vespa zip to {deploy_url}")
-
-        # Prepare in-memory ZIP file containing the files for deployment
-        # zip_file = in_memory_zip_from_file_bytes(app_zip_content)
-
-        # Set headers and make the POST request to deploy to Vespa.ai
-        headers = {"Content-Type": "application/zip"}
-        response = requests.post(deploy_url, headers=headers, data=app_zip_content)
-
-        # Check for a successful response, otherwise raise an error
-        if response.status_code != 200:
-            raise RuntimeError(
-                f"Failed to prepare Vespa index. Response: {response.text}"
-            )
-
-        # Assuming the response contains indexed objects, we return them as a set
-        return True
-
     def deploy_app(self,
                    host: Optional[str] = "localhost",
-                   port: Optional[int] = 19071,
+                   port: Optional[int] = 8082,
                    app_path: Optional[str] = VESPA_SCHEMA_PATH,
                    **kwargs) -> Any:
         """
@@ -419,7 +341,7 @@ class VespaAppGenerator:
 
         # Prepare paths for necessary Vespa schema and configuration files
         vespa_schema_path = app_path
-        schema_file = os.path.join(vespa_schema_path, "schemas", f"{self.schema_name}.sd")
+        schema_file = os.path.join(vespa_schema_path, "schemas", "doc.sd")
         services_file = os.path.join(vespa_schema_path, "services.xml")
         overrides_file = os.path.join(vespa_schema_path, "validation-overrides.xml")
 
@@ -428,7 +350,7 @@ class VespaAppGenerator:
             services_template = services_f.read()
 
         # Create document lines based on schema names
-        schema_names = [self.schema_name, self.secondary_schema_name]
+        schema_names = [self.index_name, self.secondary_index_name]
         doc_lines = create_document_xml_lines(schema_names)
 
         # Replace placeholders in the services template with the document schema
@@ -462,15 +384,15 @@ class VespaAppGenerator:
 
         # Replace placeholders in the schema template
         schema = schema_template.replace(
-            CHUNK_REPLACEMENT_PAT, self.schema_name
+            CHUNK_REPLACEMENT_PAT, self.index_name
         ).replace(VESPA_DIM_REPLACEMENT_PAT, str(kwargs.get("index_embedding_dim", 128)))  # Default embedding dimension is 128
 
         zip_dict[f"schemas/{schema_names[0]}.sd"] = schema.encode("utf-8")
 
         # If there's a secondary index, process that schema too
-        if self.secondary_schema_name:
+        if self.secondary_index_name:
             upcoming_schema = schema_template.replace(
-                CHUNK_REPLACEMENT_PAT, self.secondary_schema_name
+                CHUNK_REPLACEMENT_PAT, self.secondary_index_name
             ).replace(VESPA_DIM_REPLACEMENT_PAT, str(kwargs.get("secondary_index_embedding_dim", 128)))
             zip_dict[f"schemas/{schema_names[1]}.sd"] = upcoming_schema.encode("utf-8")
 
@@ -513,38 +435,20 @@ class VespaAppGenerator:
 
         return app
 
-    def generate_app(self, json_schema, app_path="vespa"):
+    def deploy(self, json_schema, app_path="vespa"):
         app_package = self.generate_application_package(json_schema)
-        app_path = os.path.join(app_path, self.app_name)
+        print(app_package)
+        app_path = os.path.join(app_path, self.index_name)
         app_package.to_files(app_path)
-        return app_package
 
-    def deploy(self, app_path="vespa"):
-        # ZIP Deployment
-        # zip_file = app_package.to_zip()
-        # self.deploy_app_zip(app_zip_content=zip_file)
-        wait_time = 5
-        for attempt in range(5):
-            try:
-                deployment_result = self.deploy_app(app_path=app_path)
-                break
-            except Exception as ex:
-                self.logger.info(f"Waiting on Vespa, retrying in {wait_time} seconds...", ex)
-                time.sleep(wait_time)
-                deployment_result = None
-        print("Done!")
+        deployment_result = self.deploy_app(app_path=app_path)
+
         return deployment_result
 
-
     @classmethod
-    def factory(cls,
-                app_name,
-                schema_name="default_doc",
-                transformer_model_url=None,
-                tokenizer_model_url=None):
+    def factory(cls, index_name, transformer_model_url=None, tokenizer_model_url=None):
         generator = cls(
-            app_name=app_name,
-            schema_name=schema_name,
+            index_name=index_name,
             transformer_model_url=transformer_model_url or "https://github.com/vespa-engine/sample-apps/raw/master/simple-semantic-search/model/e5-small-v2-int8.onnx",
             tokenizer_model_url=tokenizer_model_url or "https://raw.githubusercontent.com/vespa-engine/sample-apps/master/simple-semantic-search/model/tokenizer.json"
         )

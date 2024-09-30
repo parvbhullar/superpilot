@@ -2,9 +2,9 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from super_store.access.models import DocumentAccess
-from super_store.connectors.models import Document
-from super_store.utils.logger import setup_logger
+#from super_store.access.models import DocumentAccess
+from superpilot.core.store.file.models import Document
+from superpilot.core.logging.logging import setup_logger
 
 if TYPE_CHECKING:
     from super_store.db.models import EmbeddingModel

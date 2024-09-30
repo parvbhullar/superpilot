@@ -7,13 +7,13 @@ from typing import Any
 from typing import IO
 import io
 from sqlalchemy.orm import Session
-
+'''
 from services.store_service.schemas.collection import CollectionFile
 from services.store_service.views.collection import get_collection
 from super_store.db_store.mongo import MongoStore
 from super_store.processor import StoreProcessor
 from super_store.schema import SchemaCreator
-from super_store.configs.app_configs import INDEX_BATCH_SIZE
+from superpilot.core.store.vectorstore.vespa import INDEX_BATCH_SIZE
 from super_store.configs.constants import DocumentSource
 from super_store.connectors.cross_connector_utils.miscellaneous_utils import time_str_to_utc
 from super_store.connectors.interfaces import GenerateDocumentsOutput
@@ -22,18 +22,18 @@ from super_store.connectors.models import BasicExpertInfo
 from super_store.connectors.models import Document
 from super_store.connectors.models import Section
 from super_store.db.engine import get_sqlalchemy_engine
-from super_store.file_processing.extract_file_text import check_file_ext_is_valid, \
-    is_tabular_file_extension
-from super_store.file_processing.extract_file_text import detect_encoding
-from super_store.file_processing.extract_file_text import extract_file_text
-from super_store.file_processing.extract_file_text import get_file_ext
-from super_store.file_processing.extract_file_text import is_text_file_extension
-from super_store.file_processing.extract_file_text import load_files_from_zip
-from super_store.file_processing.extract_file_text import pdf_to_text
-from super_store.file_processing.extract_file_text import read_text_file
-from super_store.file_processing.extract_tabular_text import read_tabular_file
-from super_store.utils.logger import setup_logger
-from services.store_service.core.string import string_to_int
+'''
+from superpilot.core.store.file_processing.extract_file_text import check_file_ext_is_valid #is_perpilot.core.store.le_extension
+from superpilot.core.store.file_processing.extract_file_text import detect_encoding
+from superpilot.core.store.file_processing.extract_file_text import extract_file_text
+from superpilot.core.store.file_processing.extract_file_text import get_file_ext
+from superpilot.core.store.file_processing.extract_file_text import is_text_file_extension,is_tabular_file_extension
+from superpilot.core.store.file_processing.extract_file_text import load_files_from_zip
+from superpilot.core.store.file_processing.extract_file_text import pdf_to_text
+from superpilot.core.store.file_processing.extract_file_text import read_text_file
+from superpilot.core.store.file_processing.extract_tabular_text import read_tabular_file
+from superpilot.core.logging.logging import setup_logger
+#from services.store_service.core.string import string_to_int
 
 logger = setup_logger()
 

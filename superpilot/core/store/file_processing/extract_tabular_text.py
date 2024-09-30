@@ -2,7 +2,7 @@ import json
 
 from super_store.parser import FileParser
 from super_store.schema import SchemaCreator
-from super_store.file_processing.extract_file_text import _extract_unpod_metadata
+from superpilot.core.store.file_processing.extract_file_text import _extract_unpod_metadata
 import asyncio
 
 
