@@ -141,11 +141,8 @@ def _process_file(
     return document  # Return a single Document object
 
 
-
-
-
 async def main():
-    pdf_file_path = "/Users/zestgeek-29/Desktop/Work/superpilot/superpilot/tests/final_data-and-ai-governance.6sept2023.pdf"
+    pdf_file_path = "/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/tests/final_data-and-ai-governance.6sept2023.pdf"
     file_name = os.path.basename(pdf_file_path)
 
     # Process the PDF document
@@ -178,10 +175,13 @@ async def main():
             content=chunk.content, 
             source='path', 
             privacy='public',
-            embeddings={},
+            embeddings={},#work
             metadata= {},
             type='text' # Set chunk content
         )
+        #number of words in a chunk
+        #extract mini chunks 
+        
         object_list.append(obj)
 
     # Print the list of Object instances
@@ -194,8 +194,9 @@ async def main():
 
     # Print the final indexed objects
     print("Final indexed objects:")
-    for obj in indexed_objects:
-        print(obj)
+    # for obj in indexed_objects:
+    #     print(obj)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
