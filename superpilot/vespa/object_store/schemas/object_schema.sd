@@ -1,19 +1,26 @@
-schema UNPOD_CHUNK_NAME {
-    document UNPOD_CHUNK_NAME {
-        # Unique identifier for each object (similar to `document_id` in the old schema)
+schema OBJECT_SCHEMA {
+    document OBJECT_SCHEMA {
+        # Unique identifier for each object (similar to `obj_id` in the Python model)
         field obj_id type string {
             indexing: summary | attribute
         }
+
+        # Reference ID for linking the object to other data (similar to `ref_id` in the Python model)
         field ref_id type string {
             indexing: summary | attribute
         }
+
+        # Type of the object (e.g., text, image, etc.)
         field type type string {
             indexing: summary | attribute
         }
+
+        # Source of the object (where the content came from)
         field source type string {
             indexing: summary | attribute
         }
-        # Content of the object
+
+        # Content of the object (the primary text data)
         field content type string {
             indexing: summary | index
             match {
@@ -22,51 +29,56 @@ schema UNPOD_CHUNK_NAME {
             }
             index: enable-bm25
         }
-        # Metadata of the object (converted to string or comma-separated values)
+
+        # Metadata of the object stored as an array of strings (to match multiple key-value pairs)
         field metadata type array<string> {
             indexing: summary | attribute
             rank: filter
             attribute: fast-search
         }
+
+        # Privacy settings of the object (public/private)
         field privacy type string {
             indexing: summary | attribute
             rank: filter
             attribute: fast-search
         }
-        # Blurb or first sentence of content
+
+        # The blurb or first sentence of the content, typically used for summaries
         field blurb type string {
             indexing: summary | attribute
         }
-        # Embeddings for the object
+
+        # Embeddings for the object stored as a tensor
         field embeddings type tensor<float>(x[VARIABLE_DIM]) {
             indexing: attribute
             attribute {
                 distance-metric: angular
             }
         }
-        # Timestamp for when the object was created/updated
+
+        # Timestamp for when the object was created or updated
         field timestamp type int {
             indexing: summary | attribute
         }
     }
 
-    # Fieldset to define searchable fields
+    # Fieldset that defines searchable fields
     fieldset default {
         fields: content
     }
 
-    # Rank profile for default ranking
+    # Rank profile for the default ranking system (handling document age and recency bias)
     rank-profile default_rank {
         inputs {
             query(decay_factor) double
         }
 
         function inline document_age() {
-            # Time in years (91.3 days ~= 3 Months ~= 1 fiscal quarter if no age found)
             expression: max(if(isNan(attribute(timestamp)) == 1, 7890000, now() - attribute(timestamp)) / 31536000, 0)
         }
 
-        # Document score decays from 1 to 0.75 as age increases
+        # Recency bias that decays document score based on age
         function inline recency_bias() {
             expression: max(1 / (1 + query(decay_factor) * document_age), 0.75)
         }
@@ -74,7 +86,7 @@ schema UNPOD_CHUNK_NAME {
         match-features: recency_bias
     }
 
-    # Rank profile for hybrid search combining embeddings and content
+    # Rank profile for hybrid search (combines embeddings and keyword-based search)
     rank-profile hybrid_search inherits default_rank {
         inputs {
             query(query_embedding) tensor<float>(x[VARIABLE_DIM])
@@ -92,7 +104,6 @@ schema UNPOD_CHUNK_NAME {
             expression: vector_score
         }
 
-        # Combining vector and keyword search results
         global-phase {
             expression {
                 (query(alpha) * normalize_linear(vector_score)) +
@@ -111,7 +122,7 @@ schema UNPOD_CHUNK_NAME {
         }
     }
 
-    # Rank profile for keyword-based search
+    # Rank profile for keyword-only search (uses BM25 ranking model)
     rank-profile keyword_search inherits default_rank {
         first-phase {
             expression: bm25(content) * recency_bias
