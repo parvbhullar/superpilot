@@ -145,7 +145,7 @@ def _process_file(
 
 
 async def main():
-    pdf_file_path = "/Users/zestgeek-29/Desktop/Work/superpilot/superpilot/tests/final_data-and-ai-governance.6sept2023.pdf"
+    pdf_file_path = "tests/RCA.pdf"
     file_name = os.path.basename(pdf_file_path)
 
     # Process the PDF document
