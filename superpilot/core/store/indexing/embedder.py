@@ -3,21 +3,21 @@ from abc import abstractmethod
 
 from sqlalchemy.orm import Session
 
-from super_store.configs.app_configs import ENABLE_MINI_CHUNK
-from super_store.configs.model_configs import BATCH_SIZE_ENCODE_CHUNKS
-from super_store.configs.model_configs import DOC_EMBEDDING_CONTEXT_SIZE
+from superpilot.core.store.vectorstore.vespa.configs.app_configs import ENABLE_MINI_CHUNK
+from superpilot.core.store.vectorstore.vespa.configs.model_configs import BATCH_SIZE_ENCODE_CHUNKS
+from superpilot.core.store.vectorstore.vespa.configs.model_configs import DOC_EMBEDDING_CONTEXT_SIZE
 from super_store.db.embedding_model import get_current_db_embedding_model
 from super_store.db.embedding_model import get_secondary_db_embedding_model
 from super_store.db.models import EmbeddingModel as DbEmbeddingModel
 from super_store.db.models import IndexModelStatus
-from super_store.indexing.chunker import split_chunk_text_into_mini_chunks
-from super_store.indexing.models import ChunkEmbedding
-from super_store.indexing.models import DocAwareChunk
-from super_store.indexing.models import IndexChunk
+from superpilot.core.store.indexing.chunker import split_chunk_text_into_mini_chunks
+from superpilot.core.store.indexing.chunker import ChunkEmbedding
+from superpilot.core.store.indexing.chunker import DocAwareChunk
+from superpilot.core.store.indexing.chunker import IndexChunk
 from super_store.search.enums import EmbedTextType
-from super_store.search.search_nlp_models import EmbeddingModel
+from superpilot.core.store.indexing.search_nlp_models import EmbeddingModel
 from super_store.utils.batching import batch_list
-from super_store.utils.logger import setup_logger
+from superpilot.core.logging.logging import setup_logger
 from shared_configs.configs import INDEXING_MODEL_SERVER_HOST
 from shared_configs.configs import INDEXING_MODEL_SERVER_PORT
 

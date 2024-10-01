@@ -43,8 +43,9 @@ from superpilot.core.store.file_processing.extract_file_text import pdf_to_text
 from superpilot.core.store.file_processing.extract_file_text import read_text_file
 #from superpilot.core.store.file_processing.extract_tabular_text import read_tabular_file
 from superpilot.core.logging.logging import setup_logger
+from superpilot.core.store.indexing.models import ChunkEmbedding
 from superpilot.core.store.vectorstore.vespa.configs.constants import DocumentSource
-
+import numpy as np
 #from super_store.connectors.cross_connector_utils.miscellaneous_utils import time_str_to_utcx
 
 logger = setup_logger()
@@ -88,6 +89,7 @@ def _process_file(
     title = all_metadata.get("title") or file_display_name
 
     time_updated = all_metadata.get("time_updated", datetime.now(timezone.utc))
+    
     if isinstance(time_updated, str):
         time_updated = time_str_to_utc(time_updated)
 
@@ -138,10 +140,11 @@ def _process_file(
         kn_token=str(kwargs.get("kn_token")) if kwargs.get("kn_token") else None,
     )
 
-    return document  # Return a single Document object
+    return document 
 
 
 async def main():
+    #pdf_file_path = "tests/RCA.pdf"
     pdf_file_path = "/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/tests/final_data-and-ai-governance.6sept2023.pdf"
     file_name = os.path.basename(pdf_file_path)
 
@@ -158,8 +161,8 @@ async def main():
     )
     print(f"Number of chunks: {len(chunks)}")
     
-    for ch in chunks:
-        print(str(ch) + "\n")
+    # for ch in chunks:
+        # print(str(ch) + "\n")
 
     t2 = time.time()
     print("Time Taken", round(t2 - t1))
@@ -167,6 +170,7 @@ async def main():
     # Create Object class instances from chunks
     object_list = []
     for i, chunk in enumerate(chunks):
+        embeddings = generate_embeddings(chunk.content)
         obj = Object(
             blurb=blurb,
             id=f"{document.id}_{i}",  # Unique object ID
@@ -175,7 +179,7 @@ async def main():
             content=chunk.content, 
             source='path', 
             privacy='public',
-            embeddings={},#work
+            embeddings={"embedding": generate_embeddings(chunk.content)},
             metadata= {},
             type='text' # Set chunk content
         )
@@ -183,20 +187,36 @@ async def main():
         #extract mini chunks 
         
         object_list.append(obj)
+    print("Number of chunks:", len(object_list))
 
     # Print the list of Object instances
-    for obj in object_list:
-        print(obj)
+    # for obj in object_list:
+        # print(obj)
 
+    content_list = [str(obj.content) for obj in object_list]
+    
+
+    def word_count(sentences):
+        word_counts = [len(sentence.split()) for sentence in sentences]  # Count words in each sentence
+        total_words = sum(word_counts)  # Sum the word counts
+        average_words = total_words / len(sentences) if sentences else 0  # Compute average, handling empty list case
+        return average_words
+    average_words=word_count(content_list)
+    print("Average Words of Chunks",average_words)
+
+
+    
     # Initialize the VespaStore and index the objects
     vespa_store = VespaStore(index_name="sample_index", secondary_index_name=None)
     indexed_objects = vespa_store.index(chunks=object_list)
+    print("Number of indexed objects:",len(indexed_objects))
+    print("indexed objects:",indexed_objects)
+    
+def generate_embeddings(text: str) -> dict:
+    
+    return np.random.rand(300).tolist()
 
-    # Print the final indexed objects
-    print("Final indexed objects:")
-    # for obj in indexed_objects:
-    #     print(obj)
-
+    
 
 if __name__ == "__main__":
     asyncio.run(main())

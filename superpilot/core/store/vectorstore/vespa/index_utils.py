@@ -16,7 +16,7 @@ from typing import cast
 
 import httpx
 import requests
-from retrying import retry
+from retry import retry
 from superpilot.core.store.indexing.models import DocMetadataAwareIndexChunk
 
 from superpilot.core.logging.logging import get_logger
