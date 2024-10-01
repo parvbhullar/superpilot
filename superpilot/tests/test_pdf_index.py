@@ -170,12 +170,12 @@ async def main():
     # Create Object class instances from chunks
     object_list = []
     for i, chunk in enumerate(chunks):
-        embeddings = generate_embeddings(chunk.content)
+        # embeddings = generate_embeddings(chunk.content)
         obj = Object(
             blurb=blurb,
-            id=f"{document.id}_{i}",  # Unique object ID
-            ref_id=document.id,       # Document reference ID
-            obj_id=str(i),                 # Chunk index as object ID
+            id=f"{document.id}_{i}",  
+            ref_id=document.id,       
+            obj_id=str(i),                
             content=chunk.content, 
             source='path', 
             privacy='public',
