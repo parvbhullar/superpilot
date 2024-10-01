@@ -1,5 +1,5 @@
-schema OBJECT_SCHEMA {
-    document OBJECT_SCHEMA {
+schema UNPOD_CHUNK_NAME {
+    document UNPOD_CHUNK_NAME {
         # Unique identifier for each object (similar to `obj_id` in the Python model)
         field obj_id type string {
             indexing: summary | attribute

@@ -44,7 +44,7 @@ class BaseObject(ABC):
             f"{self.content}\n"
             "```"
         )
-
+from datetime import datetime
 
 class Object(BaseModel):
     """Struct for a message and its metadata."""
@@ -57,7 +57,7 @@ class Object(BaseModel):
     obj_id: str = Field(..., description="Object ID")
     privacy: Privacy = Field(..., description="Privacy settings of the object")
     embeddings: Dict[str, Any] = Field(default_factory=dict, description="Embeddings of the object text")
-    timestamp: Optional[datetime] = None
+    timestamp: Optional[datetime] = datetime.now()
 
 
 class InferenceObject(Object):

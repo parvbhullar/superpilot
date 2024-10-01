@@ -47,10 +47,29 @@ from superpilot.core.store.indexing.models import ChunkEmbedding
 from superpilot.core.store.vectorstore.vespa.configs.constants import DocumentSource
 import numpy as np
 #from super_store.connectors.cross_connector_utils.miscellaneous_utils import time_str_to_utcx
-from PyPDF2 import PdfFileReader
+from PyPDF2 import PdfReader
+
 import json
 
 logger = setup_logger()
+import re
+
+def get_first_sentence(content):
+    # Split content by sentence-ending punctuation marks
+    sentence = re.split(r'[.!?]', content)[0].strip()  # Get first sentence
+    return sentence if sentence else content
+
+
+def remove_duplicates(object_list):
+    unique_objects = []
+    seen_contents = set()  # A set to keep track of unique content
+
+    for obj in object_list:
+        if obj.content not in seen_contents:  # Check if content is already seen
+            unique_objects.append(obj)  # Add object to unique list
+            seen_contents.add(obj.content)  # Mark this content as seen
+    
+    return unique_objects
 
 def _process_file(
     file_name: str,
@@ -151,7 +170,8 @@ def _process_file(
 
 
 async def main():
-    pdf_file_path = "/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/tests/final_data-and-ai-governance.6sept2023.pdf"
+    #pdf_file_path = "tests/RCA.pd"
+    pdf_file_path='tests/test_file.pdf'
     file_name = os.path.basename(pdf_file_path)
 
     # Process the PDF document
@@ -165,7 +185,7 @@ async def main():
     # Save extracted metadata to a JSON file
     json_file_path = f"{file_name}.json"  # Define the path for the JSON file
     save_metadata_to_json(extracted_metadata, json_file_path)  # Save the metadata to a JSON file
-    print(f"Metadata saved to {json_file_path}")
+    #print(f"Metadata saved to {json_file_path}")
 
     # Use extracted metadata in the object creation
     object_list = []
@@ -184,19 +204,22 @@ async def main():
     blurb = 'blurb'
     object_list = []
     for i, chunk in enumerate(chunks):
+        first_sentence = get_first_sentence(chunk.content)
         obj = Object(
-            blurb=blurb,
-            id=f"{document.id}_{i}",
+            blurb=first_sentence,
+            #id=f"{document.id}_{i}",
             ref_id=document.id,
             obj_id=str(i),
             content=chunk.content,
-            source='path',
+            source=file_name,
             privacy='public',
             embeddings={"embedding":generate_embeddings(chunk.content)},
             metadata=extract_metadata(pdf_file_path),
             type='text'
         )
         object_list.append(obj)
+    
+    object_list=remove_duplicates(object_list)
 
     print("Number of chunks:", len(object_list))
 
@@ -213,9 +236,12 @@ async def main():
     vespa_store = VespaStore(index_name="sample_index", secondary_index_name=None)
     indexed_objects = vespa_store.index(chunks=object_list)
     print("Number of indexed objects:",len(indexed_objects))
-    print("indexed objects:",indexed_objects)
+
+    print(indexed_objects[0][1])
+    #print("indexed objects:",indexed_objects)
   
 def generate_embeddings(text: str) -> dict:
+    #print("indexed objects:",indexed_objects)
     
     return np.random.rand(300).tolist()
 
@@ -237,8 +263,8 @@ def extract_metadata(file: IO[Any]) -> Dict[str, str]:
     }
 
     # Read the PDF file
-    reader = PdfFileReader(file)
-    info = reader.getDocumentInfo()
+    reader = PdfReader(file)
+    info = reader.metadata
 
     # Merge dummy data into metadata
     metadata.update(dummy_data)
