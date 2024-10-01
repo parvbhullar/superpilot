@@ -47,6 +47,8 @@ from superpilot.core.store.indexing.models import ChunkEmbedding
 from superpilot.core.store.vectorstore.vespa.configs.constants import DocumentSource
 import numpy as np
 #from super_store.connectors.cross_connector_utils.miscellaneous_utils import time_str_to_utcx
+from PyPDF2 import PdfFileReader
+import json
 
 logger = setup_logger()
 
@@ -83,6 +85,9 @@ def _process_file(
     all_metadata = {**metadata, **file_metadata} if metadata else file_metadata
     if all_metadata is None:
         all_metadata = {}
+        
+    logger.info(f"Extracted Metadata for {file_name}: {all_metadata}")
+
 
     # Extract file metadata and assign default values
     file_display_name = all_metadata.get("file_display_name") or os.path.basename(file_name)
@@ -126,8 +131,10 @@ def _process_file(
     )
 
     # Construct and return the Document object
+    extracted_metadata = extract_metadata(file)
+
     document = Document(
-        id=f"FILE_CONNECTOR__{file_name if document_id is None else document_id}",  # Document ID
+        id=f"FILE_CONNECTOR__{file_name if document_id is None else document_id}",  
         sections=[Section(link=all_metadata.get("link"), text=file_content_raw.strip())],
         source=DocumentSource.FILE,
         semantic_identifier=file_display_name,
@@ -135,7 +142,7 @@ def _process_file(
         doc_updated_at=final_time_updated,
         primary_owners=p_owners,
         secondary_owners=s_owners,
-        metadata=metadata_tags,
+        metadata=extracted_metadata,
         hub_id=str(kwargs.get("hub_id")) if kwargs.get("hub_id") else None,
         kn_token=str(kwargs.get("kn_token")) if kwargs.get("kn_token") else None,
     )
@@ -144,7 +151,6 @@ def _process_file(
 
 
 async def main():
-    #pdf_file_path = "tests/RCA.pdf"
     pdf_file_path = "/Users/zestgeek31/Desktop/super-pilot/superpilot/superpilot/tests/final_data-and-ai-governance.6sept2023.pdf"
     file_name = os.path.basename(pdf_file_path)
 
@@ -152,8 +158,17 @@ async def main():
     with open(pdf_file_path, "rb") as pdf_file:
         document = _process_file(file_name=file_name, file=pdf_file, pdf_pass=None)
 
-    # Initialize the chunker and start chunking the document
-    print("Document Type:",type(document))
+    # Extract PDF metadata properly
+    with open(pdf_file_path, "rb") as pdf_file:  # Ensure file is opened for metadata extraction
+        extracted_metadata = extract_metadata(pdf_file)
+
+    # Save extracted metadata to a JSON file
+    json_file_path = f"{file_name}.json"  # Define the path for the JSON file
+    save_metadata_to_json(extracted_metadata, json_file_path)  # Save the metadata to a JSON file
+    print(f"Metadata saved to {json_file_path}")
+
+    # Use extracted metadata in the object creation
+    object_list = []
     chunker = DefaultChunker()
     t1 = time.time()
     chunks: list[DocAwareChunk] = list(
@@ -166,57 +181,80 @@ async def main():
 
     t2 = time.time()
     print("Time Taken", round(t2 - t1))
-    blurb='blurb'
-    # Create Object class instances from chunks
+    blurb = 'blurb'
     object_list = []
     for i, chunk in enumerate(chunks):
-        # embeddings = generate_embeddings(chunk.content)
         obj = Object(
             blurb=blurb,
-            id=f"{document.id}_{i}",  
-            ref_id=document.id,       
-            obj_id=str(i),                
-            content=chunk.content, 
-            source='path', 
+            id=f"{document.id}_{i}",
+            ref_id=document.id,
+            obj_id=str(i),
+            content=chunk.content,
+            source='path',
             privacy='public',
-            embeddings={"embedding": generate_embeddings(chunk.content)},
-            metadata= {},
-            type='text' # Set chunk content
+            embeddings={"embedding":generate_embeddings(chunk.content)},
+            metadata=extract_metadata(pdf_file_path),
+            type='text'
         )
-        #number of words in a chunk
-        #extract mini chunks 
-        
         object_list.append(obj)
-    print("Number of chunks:", len(object_list))
 
-    # Print the list of Object instances
-    # for obj in object_list:
-        # print(obj)
+    print("Number of chunks:", len(object_list))
 
     content_list = [str(obj.content) for obj in object_list]
     
-
     def word_count(sentences):
-        word_counts = [len(sentence.split()) for sentence in sentences]  # Count words in each sentence
+        word_counts = [len(sentence.split()) for sentence in sentences]  
         total_words = sum(word_counts)  # Sum the word counts
-        average_words = total_words / len(sentences) if sentences else 0  # Compute average, handling empty list case
+        average_words = total_words / len(sentences) if sentences else 0  
         return average_words
     average_words=word_count(content_list)
     print("Average Words of Chunks",average_words)
-
-
     
-    # Initialize the VespaStore and index the objects
     vespa_store = VespaStore(index_name="sample_index", secondary_index_name=None)
     indexed_objects = vespa_store.index(chunks=object_list)
     print("Number of indexed objects:",len(indexed_objects))
     print("indexed objects:",indexed_objects)
-    
+  
 def generate_embeddings(text: str) -> dict:
     
     return np.random.rand(300).tolist()
 
-    
+from typing import IO, Any, Dict
 
+def extract_metadata(file: IO[Any]) -> Dict[str, str]:
+    """Extract metadata from the provided PDF file."""
+    metadata = {}
+
+    # Dummy data initialization
+    dummy_data = {
+        "user_name": "John Doe",
+        "user_id": "123",  # Changed to a string
+        "file_path": "/path/to/your/pdf_file.pdf",
+        "space_id": "space_001",
+        "organization": "My Organization",
+        "_id": "file_001",
+        "file_upload_date": "2024-10-01",
+    }
+
+    # Read the PDF file
+    reader = PdfFileReader(file)
+    info = reader.getDocumentInfo()
+
+    # Merge dummy data into metadata
+    metadata.update(dummy_data)
+
+    if info:
+        # Include PDF metadata
+        metadata.update({key: str(info[key]) for key in info if key})
+
+    return metadata
+
+
+
+def save_metadata_to_json(metadata: dict, file_path: str) -> None:
+    """Saves metadata to a JSON file."""
+    with open(file_path, 'w') as json_file:
+        json.dump(metadata, json_file, indent=4) 
+        
 if __name__ == "__main__":
     asyncio.run(main())
