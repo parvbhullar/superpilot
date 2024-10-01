@@ -161,8 +161,8 @@ async def main():
     )
     print(f"Number of chunks: {len(chunks)}")
     
-    for ch in chunks:
-        print(str(ch) + "\n")
+    # for ch in chunks:
+        # print(str(ch) + "\n")
 
     t2 = time.time()
     print("Time Taken", round(t2 - t1))
@@ -185,17 +185,31 @@ async def main():
         object_list.append(obj)
 
     # Print the list of Object instances
-    for obj in object_list:
-        print(obj)
+    # for obj in object_list:
+        # print(obj)
+    print("Number of chunks:",len(object_list))
 
+    content_list = [str(obj.content) for obj in object_list]
+
+    def word_count(sentences):
+        word_counts = [len(sentence.split()) for sentence in sentences]  # Count words in each sentence
+        total_words = sum(word_counts)  # Sum the word counts
+        average_words = total_words / len(sentences) if sentences else 0  # Compute average, handling empty list case
+        return average_words
+    average_words=word_count(content_list)
+    print("Average Words of Chunks",average_words)
+
+
+    
     # Initialize the VespaStore and index the objects
     vespa_store = VespaStore(index_name="sample_index", secondary_index_name=None)
     indexed_objects = vespa_store.index(chunks=object_list)
+    print("Number of indexed objects:",len(indexed_objects))
+    print("indexed objects:",indexed_objects)
+    
 
     # Print the final indexed objects
-    print("Final indexed objects:")
-    for obj in indexed_objects:
-        print(obj)
+    
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -229,11 +229,11 @@ class VespaStore(VectorStoreBase):
         # If none of the conditions are met, return False (no reindexing needed)
         return False
 
-
+    """
     def index(self, chunks: list[Object]) -> set[Object]:
-        """
-        Indexes a list of document chunks, ensuring no duplicates.
-        """
+        
+        # Indexes a list of document chunks, ensuring no duplicates.
+        
         cleaned_chunks = [_clean_chunk_id_copy(chunk) for chunk in chunks]
 
         # Step 2: Define a set to hold all indexed objects (chunks and mini chunks)
@@ -260,6 +260,77 @@ class VespaStore(VectorStoreBase):
         # Step 5: Return the set of indexed objects
         return indexed_objects
 
+    
+
+    def index(self, chunks: list[Object]) -> dict:
+    # Initialize the result dictionary
+        result = {}
+
+        # Iterate through the list of Object instances
+          # Second half of words
+
+            # Add the mini objects to the result dictionary
+        result[idx] = {
+                1: mini_obj1,  # Mini object 01
+                2: mini_obj2   # Mini object 02
+            }
+        
+        # Return the resulting dictionary
+        return result
+    """
+
+    def index(self, chunks: list[Object]) -> dict:
+    # Initialize the result dictionary
+        result = {}
+
+        # Iterate through the list of Object instances
+        for idx, obj in enumerate(chunks):
+            # Split the content of the object into words
+            words = obj.content.split()
+            
+            # Determine the midpoint to split the words into two halves
+            mid_point = len(words) // 2
+            
+            # Create two mini objects based on word count
+            mini_obj1 = ' '.join(words[:mid_point])  # First half of words
+            mini_obj2 = ' '.join(words[mid_point:])
+
+            # Create two new Object instances with the same properties, but different content
+            mini_obj1 = Object(
+                blurb=obj.blurb,
+                #id=f"{obj.id}_1",  # Unique ID for mini object 1
+                ref_id=obj.ref_id,
+                obj_id=obj.obj_id + "_1",  # Add suffix to distinguish mini objects
+                content=mini_obj1,
+                source=obj.source,
+                privacy=obj.privacy,
+                embeddings=obj.embeddings,
+                metadata=obj.metadata,
+                type=obj.type
+            )
+
+            mini_obj2 = Object(
+                blurb=obj.blurb,
+                #id=f"{obj.id}_2",  # Unique ID for mini object 2
+                ref_id=obj.ref_id,
+                obj_id=obj.obj_id + "_2",  # Add suffix to distinguish mini objects
+                content=mini_obj2,
+                source=obj.source,
+                privacy=obj.privacy,
+                embeddings=obj.embeddings,
+                metadata=obj.metadata,
+                type=obj.type
+            )
+
+            # Add the mini objects to the result dictionary
+            result[idx] = {
+                1: mini_obj1,  # Mini object 01
+                2: mini_obj2   # Mini object 02
+            }
+
+        # Return the resulting dictionary
+        return result
+
 
 
 
@@ -273,8 +344,7 @@ class VespaStore(VectorStoreBase):
     def history(self, object_id):
         pass
 
-    def index(self, chunks: list[Object]) -> set[Object]:
-        pass
+    
 
 
 
