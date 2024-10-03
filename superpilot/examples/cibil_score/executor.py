@@ -185,7 +185,9 @@ class CibilScoreExecutor(BaseExecutor):
             print("Consumer DataFrame:\n", df_consumer)
             print("Loans DataFrame:\n", df_loans)
 
-            excel_filename = "cibil_score.xlsx"
+
+            excel_filename = io.BytesIO()
+            # excel_filename = "cibil_score.xlsx"
 
             with pd.ExcelWriter(excel_filename, engine='xlsxwriter') as writer:
                 df_consumer.to_excel(writer, sheet_name='Consumer Details', index=False)
