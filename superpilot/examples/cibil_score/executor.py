@@ -2,196 +2,230 @@ import asyncio
 import io
 import json
 import os
-
-import PyPDF2
 import boto3
+import random
+import pdfplumber  
 import requests
 import openai
-
-
-
 import pandas as pd
-
 from superpilot.examples.executor.base import BaseExecutor
-
-
 # client = OpenAI(
 #     api_key=os.environ.get('OPENAI_API_KEY')
 #     # other configurations...
 # )
-
 openai.api_key = os.environ.get('OPENAI_API_KEY')
+
 
 class CibilScoreExecutor(BaseExecutor):
 
-    def __init__(self, **kwargs):
-        for key, value in kwargs.items():
-            setattr(self, key, value)
+    def __init__(self, randomness=0.1, **kwargs):
+        super().__init__(**kwargs)
+        self.randomness = randomness
 
-    def extract_pdf_content(self, pdf_binary_content,):
-        pdf_file = io.BytesIO(pdf_binary_content)  # Convert binary to a file-like object
-        reader = PyPDF2.PdfReader(pdf_file)
-        content = ""
-
-        # Iterate through each page and extract text
-        for page in reader.pages:
-            content += page.extract_text()
-
-        return content
+    def extract_pdf_content(self, pdf_binary_content):
+        page_contents = []  # Array to hold content from each page
+        try:
+            with pdfplumber.open(io.BytesIO(pdf_binary_content)) as pdf:
+                for i, page in enumerate(pdf.pages):
+                    text = page.extract_text()
+                    if text:
+                        page_contents.append(text)  # Append page text to the array
+                        print(f"Extracted from page {i + 1}: {text[:100]}...")  # Print first 100 chars for inspection
+            return page_contents  # Return the array of page contents
+        except Exception as e:
+            print(f"Error extracting PDF content: {e}")
+            return []
 
     async def execute(self, files):
-        # remove dumy data
-        # files = [
-        #             {
-        #                 "object_type": "post",
-        #                 "object_id": None,
-        #                 "size": 114143,
-        #                 "media_id": "873b6364791a11ef9b3266ac95333f55",
-        #                 "media_type": "pdf",
-        #                 "media_relation": "attachment",
-        #                 "name": "KUMAR_M_CIBIL_BC_EVATE.pdf",
-        #                 "media_url": "https://unpodbackend.s3.amazonaws.com/media/private/ASIF_SHARIFF_CIBIL_BC_EVATE_Gd5fw8r.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAUVZCV34QRNMNXSNO%2F20240925%2Fap-south-1%2Fs3%2Faws4_request&X-Amz-Date=20240925T125407Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=63570e11e5174ca5784be717f4309002ec32e6dae219f487af0000975a31ae38",
-        #                  "url": "https://unpodbackend.s3.amazonaws.com/media/private/KUMAR_M_CIBIL_BC_EVATE.pdf",
-        #                 "sequence_number": 0
-        #             }
-        #         ],
+        if not files:
+            print("No files provided")
+            return None
 
         s3_url = files[0]['media_url']
-        # Step 1: Download file from S3 URL
-        file_content = requests.get(s3_url).content
 
-        pdf_text = self.extract_pdf_content(file_content)
+        try:
+            print("Downloading file from S3...")
+            response = requests.get(s3_url)
+            response.raise_for_status()
+            file_content = response.content
 
-        query = """
-        PDF CONTENT: %s
-        
-        Please extract all available loan information and present it in JSON format. Ensure that no details are omitted, including but not limited to the following fields: loan ID, borrower name, loan amount, interest rate, loan term, start date, payment schedule, status, and any other relevant information. If there are nested structures or related entities, include them appropriately within the JSON.
-        """ % pdf_text
+            print("Extracting PDF content...")
+            pdf_text_array = self.extract_pdf_content(file_content)
 
-        # Define the function schema based on the required structure
-        function_definitions = [
-            {
-                "name": "extract_loan_info",
-                "description": "Extracts loan and consumer credit information from the uploaded document",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "Consumer": {
+            if not pdf_text_array:
+                print("No text extracted from PDF.")
+                return None
+
+            print("Extracted PDF text successfully.")  # Log successful extraction
+
+            # Create a list to hold all loan information
+            all_loans_info = []
+
+            # Iterate over each page's text to extract loan information
+            for page_text in pdf_text_array:
+                # Enhanced query for each page
+                query = f"""
+                PDF CONTENT: {page_text}
+                
+                Please extract **all** loan information, including all credit card details, 
+                and present it in JSON format. Include details like:
+                - Loan Type
+                - Borrower Name
+                - Loan Amount
+                - Interest Rate
+                - Loan Term
+                - Start Date
+                - Payment Schedule
+                - Status
+                - Any other relevant information for each loan.
+
+                Make sure to include every single loan entry in the output.
+                """
+
+                function_definitions = [
+                    {
+                        "name": "extract_loan_info",
+                        "description": "Extracts loan and consumer credit information from the uploaded document",
+                        "parameters": {
                             "type": "object",
                             "properties": {
-                                "Name": {"type": "string"},
-                                "Date of Birth": {"type": "string"},
-                                "Gender": {"type": "string"},
-                                "PAN": {"type": "string"},
-                                "Driver's License": {"type": "string"},
-                                "UID": {"type": "string"},
-                                "CKYC": {"type": "string"},
-                                "Mobile Phones": {
-                                    "type": "array",
-                                    "items": {"type": "string"}
+                                "Consumer": {
+                                    "type": "object",
+                                    "properties": {
+                                        "Name": {"type": "string"},
+                                        "Date of Birth": {"type": "string"},
+                                        "Gender": {"type": "string"},
+                                        "PAN": {"type": "string"},
+                                        "Driver's License": {"type": "string"},
+                                        "UID": {"type": "string"},
+                                        "CKYC": {"type": "string"},
+                                        "Mobile Phones": {
+                                            "type": "array",
+                                            "items": {"type": "string"}
+                                        },
+                                        "Emails": {
+                                            "type": "array",
+                                            "items": {"type": "string"}
+                                        },
+                                        "Addresses": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "Type": {"type": "string"},
+                                                    "Address": {"type": "string"},
+                                                    "Reported Date": {"type": "string"},
+                                                    "Residence Code": {"type": "string"}
+                                                }
+                                            }
+                                        }
+                                    }
                                 },
-                                "Emails": {
-                                    "type": "array",
-                                    "items": {"type": "string"}
-                                },
-                                "Addresses": {
+                                "Loans": {
                                     "type": "array",
                                     "items": {
                                         "type": "object",
                                         "properties": {
                                             "Type": {"type": "string"},
-                                            "Address": {"type": "string"},
-                                            "Reported Date": {"type": "string"},
-                                            "Residence Code": {"type": "string"}
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        "Loans": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "Type": {"type": "string"},
-                                    "Ownership": {"type": "string"},
-                                    "Opened": {"type": "string"},
-                                    "Last Payment": {"type": "string"},
-                                    "Closed": {"type": "string"},
-                                    "Sanctioned": {"type": "number"},
-                                    "Current Balance": {"type": "number"},
-                                    "Credit Limit": {"type": "number"},
-                                    "Cash Limit": {"type": "number"},
-                                    "Actual Payment": {"type": "number"},
-                                    "EMI": {"type": "number"},
-                                    "Payment History": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "object",
-                                            "properties": {
-                                                "Date": {"type": "string"},
-                                                "Days Past Due": {"type": "string"}
+                                            "Ownership": {"type": "string"},
+                                            "Opened": {"type": "string"},
+                                            "Last Payment": {"type": "string"},
+                                            "Closed": {"type": "string"},
+                                            "Sanctioned": {"type": "number"},
+                                            "Current Balance": {"type": "number"},
+                                            "Credit Limit": {"type": "number"},
+                                            "Cash Limit": {"type": "number"},
+                                            "Actual Payment": {"type": "number"},
+                                            "EMI": {"type": "number"},
+                                            "Payment History": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "Date": {"type": "string"},
+                                                        "Days Past Due": {"type": "string"}
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
+                            },
+                            "required": ["Consumer", "Loans"]
                         }
-                    },
-                    "required": ["Consumer", "Loans"]
-                }
+                    }
+                ]
+
+                response = openai.ChatCompletion.create(
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": query,
+                        }
+                    ],
+                    functions=function_definitions,
+                    function_call="auto",
+                    model="gpt-4o-mini",
+                    temperature=self.randomness,
+                )
+
+                print("OpenAI Response:", response)  
+                function_response = json.loads(response.choices[0].message.function_call.arguments)
+
+                if "Loans" in function_response and function_response["Loans"]:
+                    all_loans_info.extend(function_response["Loans"])  # Add loans to the main list
+                else:
+                    print("Warning: No loans extracted from this page.")
+
+            df_loans = pd.json_normalize(all_loans_info)
+
+            consumer_info = function_response.get('Consumer', {})
+            df_consumer = pd.json_normalize(consumer_info)
+
+            print("Consumer DataFrame:\n", df_consumer)
+            print("Loans DataFrame:\n", df_loans)
+
+            excel_filename = "cibil_score.xlsx"
+
+            with pd.ExcelWriter(excel_filename, engine='xlsxwriter') as writer:
+                df_consumer.to_excel(writer, sheet_name='Consumer Details', index=False)
+                df_loans.to_excel(writer, sheet_name='Loans', index=False)
+
+            return {
+                'file_content': excel_filename,
+                'file_type': 'xlsx',
+                'file_name': f"{files[0]['name']}_processed_{files[0]['media_id']}.xlsx"
             }
-        ]
 
-        # Call OpenAI with the file ID and use function calling capabilities
-        # response = client.ChatCompletion.create(
-        #     model="gpt-4-0613",  # You can use a specific GPT model that supports function calls
-        #     prompt=query,
-        #     functions=function_definitions,
-        #     function_call="auto",  # Automatically call the defined function
-        #     max_tokens=1500
-        # )
-
-        response = openai.ChatCompletion.create(
-            messages=[
-                {
-                    "role": "user",
-                    "content": query,
-                }
-            ],
-            functions=function_definitions,
-            function_call="auto",
-            model="gpt-4o-mini",
-            response_format={"type": "json_object"},
-            # max_tokens=100000,
-        )
-
-        function_response = json.loads(response.choices[0].message.function_call.arguments)
-
-        # Convert the extracted info to a DataFrame
-        df_consumer = pd.json_normalize(function_response['Consumer'])
-        df_loans = pd.json_normalize(function_response['Loans'])
-
-        print(df_loans, df_consumer)
-
-        # Save the DataFrame to Excel
-        excel_filename = io.BytesIO()
-        # excel_filename = "cibil_score.xlsx"
-
-        with pd.ExcelWriter(excel_filename, engine='xlsxwriter') as writer:
-            df_consumer.to_excel(writer, sheet_name='Consumer Details', index=False)
-            df_loans.to_excel(writer, sheet_name='Loans', index=False)
-        excel_filename.seek(0)
-        return {
-            'file_content': excel_filename,
-            'file_type': 'xlsx',
-            'file_name': f"{files[0]['name']}_processed_{files[0]['media_id']}.xlsx"
-        }
+        except requests.RequestException as e:
+            print(f"Error downloading file: {e}")
+            return None
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON response: {e}")
+            return None
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return None
 
     async def run(self, query):
         return await self.execute(query)
 
 
 if __name__ == '__main__':
-    executor = CibilScoreExecutor()
-    asyncio.run(executor.execute())
+    executor = CibilScoreExecutor(randomness=random.uniform(0.0, 1.0))
+    asyncio.run(executor.execute([
+        
+    {
+        "object_type": "post",
+        "object_id": None,
+        "size": 114143,
+        "media_id": "00d2a8c6818211ef9b3266ac95333f55",
+        "media_type": "pdf",
+        "media_relation": "attachment",
+        "name": "KUMAR_M_CIBIL_BC_EVATE.pdf",
+        "media_url": "https://unpodbackend.s3.amazonaws.com/media/private/KUMAR_M_CIBIL_BC_EVATE_Ydtc4h9.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAUVZCV34QRNMNXSNO%2F20241003%2Fap-south-1%2Fs3%2Faws4_request&X-Amz-Date=20241003T122124Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=7b27919b77481fd825023f5dee865fe7b61bfae96e00d08c4ec9e496edd4397a",
+        "url": "https://unpodbackend.s3.amazonaws.com/media/private/KUMAR_M_CIBIL_BC_EVATE_Ydtc4h9.pdf",
+        "sequence_number": 0
+    }
+
+    ]))
