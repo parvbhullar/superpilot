@@ -193,6 +193,8 @@ class CibilScoreExecutor(BaseExecutor):
                 df_consumer.to_excel(writer, sheet_name='Consumer Details', index=False)
                 df_loans.to_excel(writer, sheet_name='Loans', index=False)
 
+            excel_filename.seek(0)
+
             return {
                 'file_content': excel_filename,
                 'file_type': 'xlsx',
