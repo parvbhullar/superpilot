@@ -5,6 +5,7 @@
         <search/>
         <http>
             <server id="default" port="8081"/>
+            
         </http>
         <nodes>
             <node hostalias="up-ai-agents-node" />

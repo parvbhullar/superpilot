@@ -1,0 +1,75 @@
+schema doc {
+    document doc {
+        field id type string {
+            indexing: summary
+        }
+        field title type string {
+            indexing: index | summary
+            index: enable-bm25
+        }
+        field body type string {
+            indexing: index | summary
+            index: enable-bm25
+            bolding: on
+        }
+    }
+    field embedding type tensor<float>(x[384]) {
+        indexing: input title . " " . input body | embed | index | attribute
+        attribute {
+            distance-metric: angular
+        }
+        index {
+            hnsw {
+                max-links-per-node: 16
+                neighbors-to-explore-at-insert: 200
+            }
+        }
+    }
+    fieldset default {
+        fields: title, body
+    }
+    rank-profile bm25 {
+        inputs {
+            query(q) tensor<float>(x[384])             
+        
+        }
+        function bm25sum() {
+            expression {
+                bm25(title) + bm25(body)
+            }
+        }
+        first-phase {
+            expression {
+                bm25sum
+            }
+        }
+    }
+    rank-profile semantic {
+        inputs {
+            query(q) tensor<float>(x[384])             
+        
+        }
+        first-phase {
+            expression {
+                closeness(field, embedding)
+            }
+        }
+    }
+    rank-profile fusion inherits bm25 {
+        inputs {
+            query(q) tensor<float>(x[384])             
+        
+        }
+        first-phase {
+            expression {
+                closeness(field, embedding)
+            }
+        }
+        global-phase {
+            rerank-count: 1000
+            expression {
+                reciprocal_rank_fusion(bm25sum, closeness(field, embedding))
+            }
+        }
+    }
+}

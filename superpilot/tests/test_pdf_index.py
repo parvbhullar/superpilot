@@ -171,7 +171,7 @@ def _process_file(
 
 async def main():
     #pdf_file_path = "tests/RCA.pd"
-    pdf_file_path='tests/test_file.pdf'
+    pdf_file_path='superpilot/superpilot/tests/test_file.pdf'
     file_name = os.path.basename(pdf_file_path)
 
     # Process the PDF document
