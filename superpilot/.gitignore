@@ -13,12 +13,5 @@ original/*
 Final/*
 final/*
 .cache
-.DS_Store
-.vscode/
-myenv/
-superpilot/.DS_Store.DS_Store
-examples/.DS_Store
-examples/__pycache__/
-.DS_Store
-*.pyc
-__pycache__/
+.DS_Store/
+../.DS_Store/
