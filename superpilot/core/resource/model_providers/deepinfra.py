@@ -6,7 +6,7 @@ import time
 from typing import Callable, List, TypeVar, Optional
 
 import openai
-from openai import APIError, RateLimitError
+from openai.error import APIError, RateLimitError
 
 from superpilot.core.configuration import (
     Configurable,
@@ -16,7 +16,6 @@ from superpilot.core.configuration import (
 from superpilot.core.resource.model_providers.schema import (
     Embedding,
     EmbeddingModelProvider,
-    EmbeddingModelProviderModelInfo,
     EmbeddingModelProviderModelResponse,
     LanguageModelFunction,
     LanguageModelMessage,
@@ -31,147 +30,72 @@ from superpilot.core.resource.model_providers.schema import (
     ModelProviderUsage,
 )
 
-OpenAIEmbeddingParser = Callable[[Embedding], Embedding]
-OpenAIChatParser = Callable[[str], dict]
+DeepInfraEmbeddingParser = Callable[[Embedding], Embedding]
+DeepInfraChatParser = Callable[[str], dict]
 
 
-class OpenAIModelName(str, enum.Enum):
-    ADA = "text-embedding-ada-002"
-    GPT3 = "gpt-3.5-turbo-0613"
-    GPT3_16K = "gpt-3.5-turbo-16k-0613"
-    GPT4 = "gpt-4-0613"
-    GPT4_32K = "gpt-4-32k-0314"
-    GPT4_TURBO = "gpt-4-1106-preview"
-    GPT4_VISION = "gpt-4-vision-preview"
-    GPT4_32K_NEW = "gpt-4-32k-0613"
-    GPT3_FINETUNE_MODEL = "ft:gpt-3.5-turbo-0613:recalll::8PE7I1IF"
-    GPT4_O = "gpt-4o"
-    GPT4_O_MINI = "gpt-4o-mini"
+class DeepInfraModelName(str, enum.Enum):
+    OPENCHAT_3_5 = "openchat/openchat_3.5"
+    WIZARD_LM_8_22B = "microsoft/WizardLM-2-8x22B"
 
 
-OPEN_AI_EMBEDDING_MODELS = {
-    OpenAIModelName.ADA: EmbeddingModelProviderModelInfo(
-        name=OpenAIModelName.ADA,
-        service=ModelProviderService.EMBEDDING,
-        provider_name=ModelProviderName.OPENAI,
-        prompt_token_cost=0.0004,
-        completion_token_cost=0.0,
-        max_tokens=8191,
-        embedding_dimensions=1536,
-    ),
-}
+DEEP_INFRA_EMBEDDING_MODELS = {}
 
 
-OPEN_AI_LANGUAGE_MODELS = {
-    OpenAIModelName.GPT3: LanguageModelProviderModelInfo(
-        name=OpenAIModelName.GPT3,
+DEEP_INFRA_LANGUAGE_MODELS = {
+    DeepInfraModelName.OPENCHAT_3_5: LanguageModelProviderModelInfo(
+        name=DeepInfraModelName.OPENCHAT_3_5,
         service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.OPENAI,
-        prompt_token_cost=0.0015,
-        completion_token_cost=0.002,
-        max_tokens=4096,
-    ),
-    OpenAIModelName.GPT3_FINETUNE_MODEL: LanguageModelProviderModelInfo(
-        name=OpenAIModelName.GPT3_FINETUNE_MODEL,
-        service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.OPENAI,
-        prompt_token_cost=0.0015,
-        completion_token_cost=0.002,
-        max_tokens=4096,
-    ),
-    OpenAIModelName.GPT3_16K: LanguageModelProviderModelInfo(
-        name=OpenAIModelName.GPT3,
-        service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.OPENAI,
+        provider_name=ModelProviderName.DEEPINFRA,
         prompt_token_cost=0.003,
         completion_token_cost=0.002,
-        max_tokens=16384,
+        max_tokens=8132,
     ),
-    OpenAIModelName.GPT4: LanguageModelProviderModelInfo(
-        name=OpenAIModelName.GPT4,
+    DeepInfraModelName.WIZARD_LM_8_22B: LanguageModelProviderModelInfo(
+        name=DeepInfraModelName.WIZARD_LM_8_22B,
         service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.OPENAI,
-        prompt_token_cost=0.03,
-        completion_token_cost=0.06,
-        max_tokens=8192,
-    ),
-    OpenAIModelName.GPT4_32K: LanguageModelProviderModelInfo(
-        name=OpenAIModelName.GPT4_32K,
-        service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.OPENAI,
-        prompt_token_cost=0.06,
-        completion_token_cost=0.12,
-        max_tokens=32768,
-    ),
-    OpenAIModelName.GPT4_TURBO: LanguageModelProviderModelInfo(
-        name=OpenAIModelName.GPT4_TURBO,
-        service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.OPENAI,
-        prompt_token_cost=0.06,
-        completion_token_cost=0.12,
-        max_tokens=4096,
-    ),
-    OpenAIModelName.GPT4_VISION: LanguageModelProviderModelInfo(
-        name=OpenAIModelName.GPT4_VISION,
-        service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.OPENAI,
+        provider_name=ModelProviderName.DEEPINFRA,
         prompt_token_cost=0.0006,
-        completion_token_cost=0.0012,
-        max_tokens=4096,
-    ),
-    OpenAIModelName.GPT4_O: LanguageModelProviderModelInfo(
-        name=OpenAIModelName.GPT4_O,
-        service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.OPENAI,
-        prompt_token_cost=0.0005,
-        completion_token_cost=0.0015,
-        max_tokens=4096,
-    ),
-    OpenAIModelName.GPT4_O_MINI: LanguageModelProviderModelInfo(
-        name=OpenAIModelName.GPT4_O_MINI,
-        service=ModelProviderService.LANGUAGE,
-        provider_name=ModelProviderName.OPENAI,
-        prompt_token_cost=0.00015,
-        completion_token_cost=0.0005,
-        max_tokens=16384,
+        completion_token_cost=0.0006,
+        max_tokens=65536,
     ),
 }
 
 
-OPEN_AI_MODELS = {
-    **OPEN_AI_LANGUAGE_MODELS,
-    **OPEN_AI_EMBEDDING_MODELS,
+DEEP_INFRA_MODELS = {
+    **DEEP_INFRA_LANGUAGE_MODELS,
+    **DEEP_INFRA_EMBEDDING_MODELS,
 }
 
 
-class OpenAIConfiguration(SystemConfiguration):
+class DeepInfraConfiguration(SystemConfiguration):
     retries_per_request: int = UserConfigurable()
 
 
-class OpenAIModelProviderBudget(ModelProviderBudget):
+class DeepInfraModelProviderBudget(ModelProviderBudget):
     graceful_shutdown_threshold: float = UserConfigurable()
     warning_threshold: float = UserConfigurable()
 
 
-class OpenAISettings(ModelProviderSettings):
-    configuration: OpenAIConfiguration
+class DeepInfraSettings(ModelProviderSettings):
+    configuration: DeepInfraConfiguration
     credentials: ModelProviderCredentials()
-    budget: OpenAIModelProviderBudget
+    budget: DeepInfraModelProviderBudget
 
 
-class OpenAIProvider(
+class DeepInfraProvider(
     Configurable,
     LanguageModelProvider,
     EmbeddingModelProvider,
 ):
-    default_settings = OpenAISettings(
-        name="openai_provider",
-        description="Provides access to OpenAI's API.",
-        configuration=OpenAIConfiguration(
+    default_settings = DeepInfraSettings(
+        name="deepinfra_provider",
+        description="Provides access to DeepInfra's API.",
+        configuration=DeepInfraConfiguration(
             retries_per_request=10,
         ),
         credentials=ModelProviderCredentials(),
-        budget=OpenAIModelProviderBudget(
+        budget=DeepInfraModelProviderBudget(
             total_budget=math.inf,
             total_cost=0.0,
             remaining_budget=math.inf,
@@ -187,7 +111,7 @@ class OpenAIProvider(
 
     def __init__(
         self,
-        settings: OpenAISettings = default_settings,
+        settings: DeepInfraSettings = default_settings,
         logger: logging.Logger = logging.getLogger(__name__),
     ):
         self._configuration = settings.configuration
@@ -196,17 +120,16 @@ class OpenAIProvider(
 
         self._logger = logger
 
-        retry_handler = _OpenAIRetryHandler(
+        retry_handler = _DeepInfraRetryHandler(
             logger=self._logger,
             num_retries=self._configuration.retries_per_request,
         )
-
         self._create_completion = retry_handler(_create_completion)
         self._create_embedding = retry_handler(_create_embedding)
 
     def get_token_limit(self, model_name: str) -> int:
         """Get the token limit for a given model."""
-        return OPEN_AI_MODELS[model_name].max_tokens
+        return DEEP_INFRA_MODELS[model_name].max_tokens
 
     def get_remaining_budget(self) -> float:
         """Get the remaining budget."""
@@ -220,23 +143,25 @@ class OpenAIProvider(
         self,
         model_prompt: List[LanguageModelMessage],
         functions: List[LanguageModelFunction],
-        model_name: OpenAIModelName,
+        model_name: DeepInfraModelName,
         completion_parser: Callable[[dict], dict],
         **kwargs,
     ) -> LanguageModelProviderModelResponse:
-        """Create a completion using the OpenAI API."""
+        """Create a completion using the DeepInfra API."""
         completion_kwargs = self._get_completion_kwargs(model_name, functions, **kwargs)
         response = await self._create_completion(
             messages=model_prompt,
             **completion_kwargs,
         )
         response_args = {
-            "model_info": OPEN_AI_LANGUAGE_MODELS[model_name],
+            "model_info": DEEP_INFRA_LANGUAGE_MODELS[model_name],
             "prompt_tokens_used": response.usage.prompt_tokens,
             "completion_tokens_used": response.usage.completion_tokens,
         }
 
-        parsed_response = completion_parser(response.choices[0].message.dict())
+        parsed_response = completion_parser(
+            response.choices[0].message.to_dict_recursive()
+        )
         response = LanguageModelProviderModelResponse(
             content=parsed_response, **response_args
         )
@@ -247,23 +172,25 @@ class OpenAIProvider(
         self,
         model_prompt: List[LanguageModelMessage],
         functions: List[LanguageModelFunction],
-        model_name: OpenAIModelName,
+        model_name: DeepInfraModelName,
         completion_parser: Callable[[dict], dict],
         **kwargs,
     ) -> LanguageModelProviderModelResponse:
-        """Create a completion using the OpenAI API."""
+        """Create a completion using the DeepInfra API."""
         completion_kwargs = self._get_completion_kwargs(model_name, functions, **kwargs)
         response = await self._create_completion(
             messages=model_prompt,
             **completion_kwargs,
         )
         response_args = {
-            "model_info": OPEN_AI_LANGUAGE_MODELS[model_name],
+            "model_info": DEEP_INFRA_LANGUAGE_MODELS[model_name],
             "prompt_tokens_used": response.usage.prompt_tokens,
             "completion_tokens_used": response.usage.completion_tokens,
         }
 
-        parsed_response = completion_parser(response.choices[0].message.dict())
+        parsed_response = completion_parser(
+            response.choices[0].message.to_dict_recursive()
+        )
         response = LanguageModelProviderModelResponse(
             content=parsed_response, **response_args
         )
@@ -273,16 +200,16 @@ class OpenAIProvider(
     async def create_embedding(
         self,
         text: str,
-        model_name: OpenAIModelName,
+        model_name: DeepInfraModelName,
         embedding_parser: Callable[[Embedding], Embedding],
         **kwargs,
     ) -> EmbeddingModelProviderModelResponse:
-        """Create an embedding using the OpenAI API."""
+        """Create an embedding using the DeepInfra API."""
         embedding_kwargs = self._get_embedding_kwargs(model_name, **kwargs)
         response = await self._create_embedding(text=text, **embedding_kwargs)
 
         response_args = {
-            "model_info": OPEN_AI_EMBEDDING_MODELS[model_name],
+            "model_info": DEEP_INFRA_EMBEDDING_MODELS[model_name],
             "prompt_tokens_used": response.usage.prompt_tokens,
             "completion_tokens_used": response.usage.completion_tokens,
         }
@@ -295,7 +222,7 @@ class OpenAIProvider(
 
     def _get_completion_kwargs(
         self,
-        model_name: OpenAIModelName,
+        model_name: DeepInfraModelName,
         functions: List[LanguageModelFunction],
         **kwargs,
     ) -> dict:
@@ -313,11 +240,10 @@ class OpenAIProvider(
             "model": model_name,
             **kwargs,
             **self._credentials.unmasked(),
-            "timeout": 300,
-            # "max_tokens": self.get_token_limit(model_name),
+            "request_timeout": 300,
+            "api_base": "https://api.deepinfra.com/v1/openai",
         }
-        if model_name in ["gpt-4-vision-preview"]:
-            completion_kwargs["max_tokens"] = self.get_token_limit(model_name)
+        completion_kwargs["max_tokens"] = self.get_token_limit(model_name)
         if functions:
             completion_kwargs["functions"] = functions
 
@@ -325,7 +251,7 @@ class OpenAIProvider(
 
     def _get_embedding_kwargs(
         self,
-        model_name: OpenAIModelName,
+        model_name: DeepInfraModelName,
         **kwargs,
     ) -> dict:
         """Get kwargs for embedding API call.
@@ -347,7 +273,7 @@ class OpenAIProvider(
         return embedding_kwargs
 
     def __repr__(self):
-        return "OpenAIProvider()"
+        return "DeepInfraProvider()"
 
     @classmethod
     def factory(
@@ -358,7 +284,7 @@ class OpenAIProvider(
         graceful_shutdown_threshold: float = 0.005,
         warning_threshold: float = 0.01,
         logger: Optional[logging.Logger] = None,
-    ) -> "OpenAIProvider":
+    ) -> "DeepInfraProvider":
         # Configure logger
         if logger is None:
             logger = logging.getLogger(__name__)
@@ -371,8 +297,8 @@ class OpenAIProvider(
             warning_threshold,
         )
 
-        # Instantiate and return OpenAIProvider
-        return OpenAIProvider(settings=settings, logger=logger)
+        # Instantiate and return DeepInfraProvider
+        return DeepInfraProvider(settings=settings, logger=logger)
 
     @classmethod
     def init_settings(
@@ -395,7 +321,7 @@ class OpenAIProvider(
 
 
 async def _create_embedding(text: str, *_, **kwargs) -> openai.Embedding:
-    """Embed text using the OpenAI API.
+    """Embed text using the DeepInfra API.
 
     Args:
         text str: The text to embed.
@@ -404,14 +330,16 @@ async def _create_embedding(text: str, *_, **kwargs) -> openai.Embedding:
     Returns:
         str: The embedding.
     """
-    aclient = openai.AsyncClient(api_key=kwargs.pop("api_key", None))
-    return await aclient.embeddings.create(input=[text], **kwargs)
+    return await openai.Embedding.acreate(
+        input=[text],
+        **kwargs,
+    )
 
 
 async def _create_completion(
     messages: List[LanguageModelMessage], *_, **kwargs
-) -> openai.types.Completion:
-    """Create a chat completion using the OpenAI API.
+) -> openai.Completion:
+    """Create a chat completion using the DeepInfra API.
 
     Args:
         messages: The prompt to use.
@@ -426,16 +354,18 @@ async def _create_completion(
     else:
         del kwargs["function_call"]
     # print(messages)
-    aclient = openai.AsyncClient(api_key=kwargs.pop("api_key", None))
-    return await aclient.chat.completions.create(messages=messages, **kwargs)
+    return await openai.ChatCompletion.acreate(
+        messages=messages,
+        **kwargs,
+    )
 
 
 _T = TypeVar("_T")
 # _P = TypeVar("_P")
 
 
-class _OpenAIRetryHandler:
-    """Retry Handler for OpenAI API call.
+class _DeepInfraRetryHandler:
+    """Retry Handler for DeepInfra API call.
 
     Args:
         num_retries int: Number of retries. Defaults to 10.
@@ -445,7 +375,7 @@ class _OpenAIRetryHandler:
 
     _retry_limit_msg = "Error: Reached rate limit, passing..."
     _api_key_error_msg = (
-        "Please double check that you have setup a PAID OpenAI API Account. You can "
+        "Please double check that you have setup a PAID DeepInfra API Account. You can "
         "read more here: https://docs.agpt.co/setup/#getting-an-api-key"
     )
     _backoff_msg = "Error: API Bad gateway. Waiting {backoff} seconds..."

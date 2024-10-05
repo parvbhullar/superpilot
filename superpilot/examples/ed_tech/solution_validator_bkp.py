@@ -1,20 +1,31 @@
+# flake8: noqa: F401
+from superpilot.core.planning.base import PromptStrategy
 from superpilot.core.planning.strategies.simple import SimplePrompt
-from superpilot.core.planning.schema import LanguageModelClassification
+from superpilot.core.planning.schema import (
+    LanguageModelClassification,
+    LanguageModelPrompt,
+)
 from superpilot.core.planning.strategies.utils import json_loads
 from superpilot.core.plugin.base import PluginLocation, PluginStorageFormat
+from superpilot.core.resource.model_providers import (
+    LanguageModelFunction,
+    LanguageModelMessage,
+    MessageRole,
+)
 from superpilot.core.planning.settings import PromptStrategyConfiguration
 from typing import Dict
+
+from superpilot.examples.ed_tech.question_solver import QuestionSolverPrompt
 
 
 class SolutionValidatorPrompt(SimplePrompt):
     DEFAULT_SYSTEM_PROMPT = """
         Solve question based on conversation of user and assistant for given Question, also fix the inaccuracies in solution:
-        Provide the answer of the question in the correct format in starting of the answer
-        then in next lines, provide the explantion and logic of the answer.
-
+        Solve the question in 3-4 steps, brief about question, step by step solution(use latex) and explanation of each step.
+        make sure to answer the question on given conversation. Follow the below instructions.
 
         Instructions:
-        - Solve the problem in simple manner.
+        - Solve the problem step by step (do not over-divide the steps).
         - Solve each and every equation in the solution.
         - Write a complete solution without loosing symbols, equations, options, tables etc.
         - Write solution and equations in correct latex format.
@@ -22,21 +33,41 @@ class SolutionValidatorPrompt(SimplePrompt):
         - Please do not mention here is the formatted solution or here is the formatted answer, format answer as teacher answer a question.
         - Don't respond in json format, only text format is allowed as described below
 
+        Step1:
+            Brief with latex code
+            Explanation
+        Step2:
+            Brief with latex code
+            Explanation
+
+        Final solution:
+
         Example:
-        Question:
-        A resident is supposed to have 240 milliliters of juice every 2 hours. Which one of these choices would be the most convenient to meet this requirement? a.5 oz. can of juice. b.4 oz. can of juice. c.12 oz. can of juice. d.8 oz. can of juice.
+        Step1:
+        Marked price is known as the original price of the product which is decided by the manufacturer on the basis of the cost incurred to produce the product.
+        It is given that the saving is of $180 on a laptop by getting 10% discount
+        To find the original cost of the laptop.
 
-        Answer:
-        The correct option is d. 8 oz. can of juice is most convenient to meet this requirement.
+        Explanation:
+        Discount is the price equal to the difference between the original price and the amount paid by the customer.
 
-        First, let's convert 240 milliliters to ounces because the answer choices are in ounces.
-        1 milliliter is approximately equal to 0.0338 ounces.
-        So, 240 milliliters is approximately  240 \times 0.0338  ounces, which is about 8.112 ounces.
-        Now, let's examine the options:
-        a. 5 oz. can of juice: Not enough juice. It's less than the required 8.112 ounces.
-        b. 4 oz. can of juice: Not enough juice. It's less than the required 8.112 ounces.
-        c. 12 oz. can of juice: More than enough juice. It's more than the required 8.112 ounces.
-        d. 8 oz. can of juice: Exactly the amount needed. It matches the required 8.112 ounces.
+        Step2:
+        Discount is offered by the shopkeeper to the customers to increase the sales in lean seasons.
+        Consider the original cost of the laptop be x
+        Discount percentage = 10%
+        Discount amount = 180
+        Relation between percentage, amount and original value:
+        Percentage * Original value = Discount amount
+        Substituting the values:
+        10% of x = 180
+        0.1x = 180
+        x = 180/0.1 = $1800
+
+        Explanation:
+        To find the original cost of the laptop, multiply the discount percentage by original price and equate it to the discounted price.
+
+        Final answer:
+        The original cost of the laptop was $boxed $1800$.
 
         """
 

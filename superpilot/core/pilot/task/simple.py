@@ -132,6 +132,8 @@ class SimpleTaskPilot(TaskPilot, ABC):
         self._logger.debug(f"Using model configuration: {model_configuration}")
         del model_configuration["provider_name"]
         provider = self._providers[model_classification]
+        if "response_format" in kwargs:
+            model_configuration["response_format"] = kwargs["response_format"]
 
         self._logger.debug(f"Using prompt:\n{prompt}\n\n")
         response = await provider.create_language_completion(
