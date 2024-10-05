@@ -6,9 +6,6 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 import logging
 from superpilot.core.configuration.config import get_config
-from superpilot.framework.abilities import (
-    TextSummarizeAbility,
-)
 
 from superpilot.examples.abilities.search_college_overview import SearchCollegeOverview
 from superpilot.examples.abilities.generate_md import GenerateMarkdownContent

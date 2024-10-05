@@ -41,7 +41,7 @@ async def test_pilot():
     config = get_config()
     env = get_env({})
 
-    print(config.openai_api_key)
+    print(config.deepinfra_api_key)
     together_provider = DeepInfraProvider.factory(config.deepinfra_api_key)
     model_providers = {ModelProviderName.DEEPINFRA: together_provider}
 
@@ -67,7 +67,7 @@ async def test_pilot():
 
     print("***************** Executing SimplePilot ******************************\n")
     response = await task_pilot.execute(query, context)
-    print(response)
+    print(response.content.get("content"))
     print(
         "***************** Executing SimplePilot Completed ******************************\n"
     )
