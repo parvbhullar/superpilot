@@ -38,6 +38,9 @@ AnthropicChatParser = Callable[[str], dict]
 
 
 class AnthropicModelName(str, enum.Enum):
+    CLAUD_3_SONET = "claude-3-sonnet-20240229"
+    CLAUD_3_OPUS = "claude-3-opus-20240229"
+    CLAUD_3_HAIKU = "claude-3-sonnet-20240229"
     CLAUD_2 = "claude-2"
     CLAUD_2_1 = "claude-2.1"
     CLAUD_2_FULL = "claude-2.0"
@@ -59,6 +62,30 @@ ANTHROPIC_EMBEDDING_MODELS = {
 
 
 ANTHROPIC_LANGUAGE_MODELS = {
+    AnthropicModelName.CLAUD_3_SONET: LanguageModelProviderModelInfo(
+        name=AnthropicModelName.CLAUD_3_SONET,
+        service=ModelProviderService.LANGUAGE,
+        provider_name=ModelProviderName.ANTHROPIC,
+        prompt_token_cost=0.00015,
+        completion_token_cost=0.002,
+        max_tokens=200000,
+    ),
+    AnthropicModelName.CLAUD_3_OPUS: LanguageModelProviderModelInfo(
+        name=AnthropicModelName.CLAUD_3_OPUS,
+        service=ModelProviderService.LANGUAGE,
+        provider_name=ModelProviderName.ANTHROPIC,
+        prompt_token_cost=0.00015,
+        completion_token_cost=0.002,
+        max_tokens=200000,
+    ),
+    AnthropicModelName.CLAUD_3_HAIKU: LanguageModelProviderModelInfo(
+        name=AnthropicModelName.CLAUD_3_HAIKU,
+        service=ModelProviderService.LANGUAGE,
+        provider_name=ModelProviderName.ANTHROPIC,
+        prompt_token_cost=0.00015,
+        completion_token_cost=0.002,
+        max_tokens=200000,
+    ),
     AnthropicModelName.CLAUD_2_1: LanguageModelProviderModelInfo(
         name=AnthropicModelName.CLAUD_2_1,
         service=ModelProviderService.LANGUAGE,
@@ -166,7 +193,7 @@ class AnthropicApiProvider(
         )
         self._client = Anthropic(api_key=self._credentials.api_key)
 
-        self._create_completion = retry_handler(_create_completion)
+        self._create_completion = retry_handler(_create_message_completion)
         # self._create_embedding = retry_handler(_create_embedding) ## TODO: Enable embedding as well.
 
     def get_token_limit(self, model_name: str) -> int:
@@ -198,10 +225,8 @@ class AnthropicApiProvider(
         )
         response_args = {
             "model_info": ANTHROPIC_LANGUAGE_MODELS[model_name],
-            "prompt_tokens_used": self._client.count_tokens(
-                self.combine_text_from_objects(model_prompt, functions)
-            ),
-            "completion_tokens_used": self._client.count_tokens(response.completion),
+            "prompt_tokens_used": response.usage.input_tokens,
+            "completion_tokens_used": response.usage.output_tokens,
         }
 
         parsed_response = completion_parser(response.dict())
@@ -407,6 +432,43 @@ async def _create_completion(
     res = client.completions.create(
         prompt=f"{anthropic.HUMAN_PROMPT} {prompt} {anthropic.AI_PROMPT}",
         max_tokens_to_sample=1000,
+        **kwargs,
+    )
+    return res
+
+
+async def _create_message_completion(
+    messages: List[LanguageModelMessage], client: Anthropic, *_, **kwargs
+) -> anthropic.types.Completion:
+    """Create a chat completion using the Anthropic API.
+
+    Args:
+        messages: The prompt to use.
+
+    Returns:
+        The completion.
+
+    """
+    input_messages = []
+    system = ""
+    for message in messages:
+        if message.role == "system":
+            system = message.content
+        else:
+            input_messages.append(message)
+    if "functions" in kwargs:
+        kwargs["functions"] = [function.json_schema for function in kwargs["functions"]]
+    else:
+        del kwargs["function_call"]
+    if "function_call" in kwargs:
+        del kwargs["function_call"]
+    if "functions" in kwargs:
+        del kwargs["functions"]
+    if system:
+        kwargs["system"] = system
+    res = client.messages.create(
+        messages=input_messages,
+        max_tokens=1000,
         **kwargs,
     )
     return res

@@ -14,7 +14,10 @@ from superpilot.examples.ed_tech.ag_question_solver_ability import (
 )
 from superpilot.core.pilot.task.super import SuperTaskPilot
 from superpilot.core.pilot.chain.simple import SimpleChain
-from superpilot.core.resource.model_providers import AnthropicModelName, OpenAIModelName
+from superpilot.core.resource.model_providers import (
+    AnthropicModelName,
+    OpenAIModelName,
+)
 
 
 class QuestionExecutor(BaseExecutor):
@@ -48,8 +51,8 @@ class QuestionExecutor(BaseExecutor):
         solver_pilot = SimpleTaskPilot.create(
             SolutionValidatorPrompt.default_configuration,
             model_providers=self.model_providers,
-            smart_model_name=AnthropicModelName.CLAUD_2_1,
-            fast_model_name=AnthropicModelName.CLAUD_2_1,
+            smart_model_name=AnthropicModelName.CLAUD_3_SONET,
+            fast_model_name=AnthropicModelName.CLAUD_3_HAIKU,
         )
         format_pilot = SimpleTaskPilot.create(
             SolutionValidatorPrompt.default_configuration,
@@ -128,7 +131,7 @@ class QuestionExecutor(BaseExecutor):
             """
 
     def auto_solver_transformer(self, data, response, context):
-        print("Auto solver transformer", data, response)
+        # print("Auto solver transformer", data, response)
         response = {
             "question": data,
             "solution": response.format_numbered(),
@@ -145,11 +148,11 @@ class QuestionExecutor(BaseExecutor):
         return task, context
 
     def solver_transformer(self, data, response, context):
-        print("Anthropic Solver", data, response)
-        print("Anthropic Solver Context ------- ", context)
+        # print("Anthropic Solver", data, response)
+        # print("Anthropic Solver Context ------- ", context)
         response = {
             "question": data,
-            "solution": response.get("completion", ""),
+            "solution": response.get("content")[0]["text"],
         }
         task = self.PROMPT_TEMPLATE.format(**response)
         # context.add_content(response.get("completion", ""))

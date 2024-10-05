@@ -8,6 +8,7 @@ from pydantic import field_validator, ConfigDict, BaseModel, Field, SecretStr
 from pydantic.v1 import validate_arguments
 
 from superpilot.core.configuration import UserConfigurable
+from superpilot.core.plugin.base import PluginLocation
 from superpilot.core.resource.schema import (
     Embedding,
     ProviderBudget,
@@ -33,6 +34,13 @@ class ModelProviderName(str, enum.Enum):
     ANTHROPIC: str = "anthropic"
     HUGGINGFACE: str = "huggingface"
     OLLAMA: str = "ollama"
+    TOGETHER: str = "together"
+    DEEPINFRA: str = "deepinfra"
+
+
+class ModelProviderDetail(BaseModel):
+    name: ModelProviderName
+    location: PluginLocation
 
 
 class MessageRole(str, enum.Enum):
@@ -398,17 +406,32 @@ class schema_function:
 
 class SchemaModel(BaseModel):
     @classmethod
+    def _resolve_ref(cls, ref, definitions):
+        # Extract the key from the reference string and return the corresponding definition
+        ref_key = ref.split("/")[-1]
+        return definitions.get(ref_key)
+
+    @classmethod
     def function_schema(cls, arguments_format=False) -> dict:
         schema = cls.schema()
+        definitions = schema.get("definitions", {})
+
+        # Process the properties to replace $ref with actual definitions
+        properties = schema.get("properties", {})
+        cls.set_properties(definitions, properties)
+
+        # Prepare the final parameters excluding certain keys
         parameters = {
             k: v for k, v in schema.items() if k not in ("title", "description")
         }
-        parameters["required"] = sorted(parameters["properties"])
+        parameters["properties"] = properties
+        parameters["required"] = sorted(parameters.get("properties", {}))
+        # parameters["definitions"] = definitions
         _remove_a_key(parameters, "title")
         if arguments_format:
             name = schema["title"]
-            parameters.pop("required", None)
-            parameters.pop("definitions", None)
+            # parameters.pop("required", None)
+            # parameters.pop("definitions", None)
             multiple_args = cls.multiple_args()
             if multiple_args:
                 return parameters
@@ -421,6 +444,38 @@ class SchemaModel(BaseModel):
             "description": schema["description"],
             "parameters": parameters,
         }
+
+    @classmethod
+    def set_properties(cls, definitions, properties):
+        for prop, details in properties.items():
+            if (
+                "allOf" in details
+                and len(details["allOf"]) == 1
+                and "$ref" in details["allOf"][0]
+            ):
+                ref = details["allOf"][0]["$ref"]
+                resolved_ref = cls._resolve_ref(ref, definitions)
+                if resolved_ref:
+                    properties[prop] = resolved_ref
+                    if resolved_ref.get("type") == "object":
+                        cls.set_properties(
+                            definitions, resolved_ref.get("properties", {})
+                        )
+            if "type" in details:
+                if (
+                    details["type"] == "array"
+                    and "items" in details
+                    and "$ref" in details["items"]
+                ):
+                    ref = details["items"]["$ref"]
+                    resolved_ref = cls._resolve_ref(ref, definitions)
+                    if resolved_ref:
+                        properties[prop]["items"] = resolved_ref
+                        if resolved_ref.get("type") == "object":
+                            cls.set_properties(
+                                definitions, resolved_ref.get("properties", {})
+                            )
+        return properties
 
     @classmethod
     def name(cls) -> str:

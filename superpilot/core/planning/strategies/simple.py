@@ -87,7 +87,11 @@ class SimplePrompt(PromptStrategy):
             content=self._system_prompt_message.format(**template_kwargs),
         )
 
-        if model_name == OpenAIModelName.GPT4_VISION and "images" in template_kwargs:
+        if (
+            model_name == OpenAIModelName.GPT4_VISION
+            and "images" in template_kwargs
+            and template_kwargs.get("images", [])
+        ):
             user_message = LanguageModelMessage(
                 role=MessageRole.USER,
             )
