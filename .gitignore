@@ -13,3 +13,7 @@ original/*
 Final/*
 final/*
 .cache
+.DS_Store
+.vscode/
+myenv/
+superpilot/.DS_Store
