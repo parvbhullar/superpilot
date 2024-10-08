@@ -13,16 +13,16 @@ from superpilot.core.store.vectorstore.vespa.configs.model_configs import (
 from superpilot.core.store.vectorstore.vespa.configs.model_configs import (
     DOCUMENT_ENCODER_MODEL,
 )
-#from super_store.search.enums import EmbedTextType
+from superpilot.core.store.search.enums import EmbedTextType
 from superpilot.core.logging.logging import setup_logger
-# from shared_configs.configs import MODEL_SERVER_HOST
-# from shared_configs.configs import MODEL_SERVER_PORT
-from shared_configs.model_server_models import EmbedRequest
-from shared_configs.model_server_models import EmbedResponse
-from shared_configs.model_server_models import IntentRequest
-from shared_configs.model_server_models import IntentResponse
-from shared_configs.model_server_models import RerankRequest
-from shared_configs.model_server_models import RerankResponse
+from superpilot.core.store.shared_configs.configs import MODEL_SERVER_HOST
+from superpilot.core.store.shared_configs.configs import MODEL_SERVER_PORT
+from superpilot.core.store.shared_configs.model_server_models import EmbedRequest
+from superpilot.core.store.shared_configs.model_server_models import EmbedResponse
+from superpilot.core.store.shared_configs.model_server_models import IntentRequest
+from superpilot.core.store.shared_configs.model_server_models import IntentResponse
+from superpilot.core.store.shared_configs.model_server_models import RerankRequest
+from superpilot.core.store.shared_configs.model_server_models import RerankResponse
 
 transformer_logging.set_verbosity_error()
 

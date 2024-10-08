@@ -13,6 +13,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from requests.exceptions import Timeout, ConnectionError
 
+from superpilot.core.store.schema import *
+
 #vespa_url="http://localhost:8080/document/v1/<namespace>/<document-type>/"
 
 
@@ -35,6 +37,68 @@ def truncation(embedding, chunk_size=100):
         raise ValueError("Unexpected number of chunks created. Expected 3 chunks of size 100.")
     
     return chunks
+file_path='/Users/zestgeek-29/Desktop/Work/superpilot/superpilot/core/memory/reference_object.txt'
+def append_to_file(file_path, obj):
+    # Open the file in read mode to get existing lines
+    with open(file_path, 'r') as file:
+        # Read all lines and strip whitespace
+        lines = file.readlines()
+        
+    # Create a set of unique lines
+    unique_lines = set(line.strip() for line in lines)
+
+    # Format the new entry
+    new_entry = f'{str(obj.source.replace(".pdf", ""))}_{str(obj.obj_id)}'
+    
+    # Check if the new entry is already in unique lines
+    if new_entry not in unique_lines:
+        # Open the file in append mode to add the new entry
+        with open(file_path, 'a') as file:
+            file.write(f'{new_entry}\n')
+
+
+
+def read_lines_from_file(file_path):
+    # Open the file in read mode
+    with open(file_path, 'r') as file:
+        # Read all lines and strip any surrounding whitespace/newline characters
+        lines = [line.strip() for line in file.readlines()]
+    
+    # Remove duplicates by converting the list to a set, then back to a list
+    unique_lines = list(set(lines))
+    
+    return unique_lines
+
+
+
+def map_response_to_object(response_data: dict) -> Object:
+    """Maps JSON response data to an Object instance."""
+    
+    # Extract fields from response data
+    fields = response_data.get('fields', {})
+    
+    # Extract embeddings separately from fields
+    embeddings = fields.get('embeddings', {})
+    
+    # Process metadata into a dictionary from the 'metadata' field
+    metadata_list = fields.get('metadata', [])
+    metadata_dict = {item.split(': ')[0]: item.split(': ')[1] for item in metadata_list if ': ' in item}
+    
+    # Create an instance of Object using the extracted data
+    obj_instance = Object(
+        blurb=fields.get('blurb', ''),
+        content=fields.get('content', ''),  # 'content' is within 'fields'
+        source=response_data.get('source', ''),
+        type=ObjectType(fields.get('type', 'text')),
+        metadata=metadata_dict,
+        ref_id=fields.get('ref_id', ''),
+        obj_id=fields.get('obj_id', ''),
+        privacy=Privacy(fields.get('privacy', 'public')),
+        embeddings=embeddings,  # Will include both 'type' and 'values' as-is
+        timestamp=datetime.now()  # You can customize this if you have a specific timestamp
+    )
+    
+    return obj_instance
 
 class MemoryManager:
     def __init__(self, store_url: str, ref_id: str, schema_name: str=None):
@@ -52,7 +116,7 @@ class MemoryManager:
         
         return {
             "fields":{
-            "blurb": obj.blurb,
+            "blurb": str(obj.blurb),
             "ref_id": obj.ref_id,
             "obj_id": obj.obj_id,
             "content": obj.content,
@@ -103,13 +167,17 @@ class MemoryManager:
         for cluster_id, cluster in results.items():
             for doc_id, document in cluster.items():
                 # Generate the document URL
-                print("Document Type", type(document))
-                doc_id = document.obj_id
-                print(len(document.embeddings['embedding']))
+                #print("Document Content", document.content)
+                doc_id = str(document.source.replace(".pdf", ""))+'_'+str(document.obj_id)
+                #print(len(document.embeddings['embedding']))
                 print(doc_id)
+                append_to_file(file_path,document)
+                document.obj_id=doc_id
+                
 
                 # Convert the document to JSON format using the to_dict() method
                 json_data = self.to_dict(document)
+                #print('JSON data',json_data)
 
                 # Check embeddings size and truncate if necessary
                 
@@ -141,37 +209,87 @@ class MemoryManager:
                         print(f"Request failed: {e}. Retrying in {retry_delay} seconds...")
                         time.sleep(retry_delay)
 
-     
-    
-    
-    
-    
-    
-
-# Example usage would go here, initializing YourClass and calling add_memory2 with input data.
-                
-                
-                
-    
-
-
-    
-
-    def get_all_memories(self) -> List[Object]:
+    def get_memory(self,id:str) -> Object:
         """Retrieve all memories from Vespa AI engine."""
-        response = requests.get(f"{self.vespa_url}/docid/{self.ref_id}")
+        url=self.store_url + f'{self.schema_name}/{self.schema_name}/docid/{id}'
+        '''
+        response = requests.get(url)
         if response.status_code == 200:
-            return [Object(**item) for item in response.json()]
+            print(response.json())
+            return(map_response_to_object(response.json()))
         else:
             print(f"Error retrieving memories: {response.text}")
-            return []
+            return None
+        '''
+        
 
-    def get_memory(self, query: str) -> Union[Object, None]:
-        """Retrieve a specific object by querying its blurb."""
-        all_memories = self.get_all_memories()
-        for memory in all_memories:
-            if query.lower() in memory.blurb.lower():
-                return memory
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            #print('Respaone.Json:',response.json()) 
+            #print() # Raise an error for bad responses
+            return (map_response_to_object(response.json()))  # Return the JSON response as a dictionary
+        except requests.exceptions.HTTPError as err:
+            print(f"HTTP error occurred: {err}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        
         return None
-    
+
+    def get_all_memory(self) ->List[Object]:
+        """Retrieve a specific object by querying its blurb."""
+        chunks=[]
+        lines=read_lines_from_file(file_path)
+        for line in lines:
+            chunks.append(self.get_memory(line))
+        
+        return chunks
+
+
+
+
+    def get_all_doc_ids(self):
+        """
+        Retrieves a list of all document IDs from the Vespa.ai endpoint.
+
+        Returns:
+            list: A list of all document IDs.
+        """
+        url =self.store_url + f'{self.schema_name}/{self.schema_name}/docid/'
+        print('Url',url)
+        
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Raise an error for bad responses
+            
+            # Log the raw response to understand its structure
+            print("Raw response:", response.text)
+            
+            # Check if the response is a JSON object
+            documents = response.json()
+            
+            # Ensure that we are dealing with a list or dict
+            doc_ids = []
+            if isinstance(documents, dict):
+                if 'documents' in documents:
+                    # Extract IDs from the documents list
+                    doc_ids = [doc['id'].split('::')[1] for doc in documents['documents']]
+                else:
+                    print("No 'documents' key found in the response.")
+            elif isinstance(documents, list):
+                # If it's a list, process each item
+                doc_ids = [doc['id'].split('::')[1] for doc in documents]
+            
+            return doc_ids
+            
+        except requests.exceptions.HTTPError as err:
+            print(f"HTTP error occurred: {err}")
+        except ValueError as e:
+            print(f"Error parsing JSON: {e}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        
+        return []
+        
+
     

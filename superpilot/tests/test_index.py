@@ -23,9 +23,43 @@ file_path = '/Users/zestgeek-29/Desktop/Work/superpilot/superpilot/tests/test_fi
 #print(type(results))
 vespa_url='http://localhost:8081/document/v1/'
 memory=MemoryManager(store_url=vespa_url,ref_id='test_memory')
-#memory.add_memory2(input_data=file_path)
-memory.add_memory(input_data=file_path)
 
+
+import os
+
+def add_all_files_to_memory(folder_path):
+    # Loop through all files in the folder
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            file_path = os.path.join(root, file)  # Get the full file path
+            # Assuming memory.add_memory() takes file path as input
+            memory.add_memory(input_data=file_path)
+            print(f"Added to memory: {file_path}")
+
+# Specify the folder where the files are stored
+folder_path = '/Users/zestgeek-29/Desktop/Work/samples'
+
+# Call the function
+add_all_files_to_memory(folder_path)
+
+
+
+#memory.add_memory2(input_data=file_path)
+'''
+memory.add_memory(input_data=file_path)
+print("Added")
+print()
+print()
+print("Retrieved")
+print(memory.get_memory('test_file_1_2'))
+#chunks=memory.get_all_memory()
+#c=1
+#for chunk in chunks:
+    #print(c,chunk.content)
+    #c=c+1
+
+#print(memory.get_all_doc_ids())
+'''
     # Initialize the Vespa application connection
 
 
