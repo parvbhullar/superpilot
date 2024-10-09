@@ -14,6 +14,7 @@ from urllib3.util.retry import Retry
 from requests.exceptions import Timeout, ConnectionError
 
 from superpilot.core.store.schema import *
+from superpilot.core.store.search.retrieval.query_escalator import generate_keywords_and_sentences
 
 #vespa_url="http://localhost:8080/document/v1/<namespace>/<document-type>/"
 
@@ -100,6 +101,19 @@ def map_response_to_object(response_data: dict) -> Object:
     
     return obj_instance
 
+
+import requests
+#from superpilot.core.memory.vespa_memory import map_response_to_object
+
+def convert_response_to_objects(response: List[Dict[str, Any]]) -> List[Object]:
+    """Converts a JSON response into a list of Object instances."""
+    objects_list = []
+    
+    for item in response:
+        obj_instance = map_response_to_object(item)
+        objects_list.append(obj_instance)
+    
+    return objects_list
 class MemoryManager:
     def __init__(self, store_url: str, ref_id: str, schema_name: str=None):
         self.store_url = store_url
@@ -155,7 +169,7 @@ class MemoryManager:
         namespace = "testing"
         document_type = "unpod_chunk"
         
-        url = self.store_url + f'{self.schema_name}/{self.schema_name}/docid/'
+        url = self.store_url + f'document/v1/{self.schema_name}/{self.schema_name}/docid/'
         print('Url', url)
 
         headers = {
@@ -255,7 +269,7 @@ class MemoryManager:
         Returns:
             list: A list of all document IDs.
         """
-        url =self.store_url + f'{self.schema_name}/{self.schema_name}/docid/'
+        url =self.store_url + f'document/v1/{self.schema_name}/{self.schema_name}/docid/'
         print('Url',url)
         
         try:
@@ -292,4 +306,131 @@ class MemoryManager:
         return []
         
 
+
+
+
+
+
+    def execute_query(self,query: str) -> List[Object]:
+        """Executes a search query against the Vespa endpoint and returns a list of Object instances."""
+        try:
+            response = requests.get(self.store_url+f'search/', params={'yql': query}, timeout=20)  # Set a timeout
+            response.raise_for_status()  # Raise an error for bad responses
+            
+            results = response.json().get('root', {}).get('children', [])
+            #print("Response")
+            #print(results)
+            objects=convert_response_to_objects(results)
+
+            
+            
+            # Map results back to Object instances
+            return objects
+        
+        except requests.exceptions.Timeout:
+            print("The request timed out.")
+            return []
+        
+        except requests.exceptions.HTTPError as e:
+            print(f"HTTP error occurred: {e}")
+            return []
+
+    def search(self,query: str, filters: Optional[Dict[str, Union[str, List[str]]]] = None) -> List[Object]:
+        """Searches for objects in Vespa based on a query string and optional filters."""
+        
+        # Base query construction
+        base_query = f"SELECT * FROM object_schema WHERE content MATCHES '{query}'"
+        
+        # Adding filters if available
+        if filters:
+            filter_conditions = []
+            
+            if 'type' in filters:
+                filter_conditions.append(f"type == '{filters['type']}'")
+            
+            if 'metadata' in filters:
+                metadata_conditions = [f"metadata CONTAINS '{meta}'" for meta in filters['metadata']]
+                filter_conditions.append(' OR '.join(metadata_conditions))
+            
+            if 'blurb' in filters:
+                filter_conditions.append(f"blurb MATCHES '{filters['blurb']}'")
+            
+            if 'source' in filters:
+                filter_conditions.append(f"source == '{filters['source']}'")
+            
+            if filter_conditions:
+                base_query += " AND " + " AND ".join(filter_conditions)
+        
+        # Execute the constructed query
+        return self.execute_query(base_query)
+
+
     
+    def search_objects(self,query: str, filters: Optional[Dict[str, Union[str, List[str]]]] = None,iterations:int = 1) -> List[Object]:
+        """Searches for objects in Vespa based on a query string and optional filters."""
+        
+        # Generate keywords from the main query
+        print('In Search Objects')
+        keywords_and_sentences = generate_keywords_and_sentences(query)
+        #print("Keywords:",keywords_and_sentences)
+        # Extract only the keywords from the response
+        keywords = list(set(keywords_and_sentences))  # Adjust if needed
+        #print("Keywords:",keywords)
+        # Iteratively generate additional keywords
+        for _ in range(iterations):
+            new_keywords = []
+            for keyword in keywords:
+                generated_keywords = generate_keywords_and_sentences(keyword)  # Generate keywords from existing keywords
+                new_keywords.extend(list(set(generated_keywords)))  # Avoid duplicates
+            keywords.extend(new_keywords)
+            #print("Keywords:",keywords)
+            print()
+            print()
+
+        print("Keywords Generation Complete")
+
+        
+        #return keywords
+        print('Keywords',keywords)
+        
+        all_results = []
+
+        # Iterate over each keyword and perform a search
+        for keyword in keywords:
+            #print(f"Searching for keyword: {keyword}")
+            
+            # Base query construction
+            base_query = f"SELECT * FROM object_schema WHERE content MATCHES '{keyword}'"
+            
+            # Adding filters if available
+            if filters:
+                filter_conditions = []
+                
+                if 'type' in filters:
+                    filter_conditions.append(f"type == '{filters['type']}'")
+                
+                if 'metadata' in filters:
+                    metadata_conditions = [f"metadata CONTAINS '{meta}'" for meta in filters['metadata']]
+                    filter_conditions.append(' OR '.join(metadata_conditions))
+                
+                if 'blurb' in filters:
+                    filter_conditions.append(f"blurb MATCHES '{filters['blurb']}'")
+                
+                if 'source' in filters:
+                    filter_conditions.append(f"source == '{filters['source']}'")
+                
+                if filter_conditions:
+                    base_query += " AND " + " AND ".join(filter_conditions)
+
+            # Execute the constructed query
+            results = self.execute_query(base_query)
+            all_results.extend(results)  # Combine results from each keyword
+        
+        return all_results
+    
+
+
+
+
+    # def ingest(self,souce:str,ingest_type:str,ingest_config:dict):-> List[Object]:
+    #     pass
