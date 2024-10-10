@@ -2,7 +2,7 @@
 from superpilot.core.store.schema import Object
 
 import requests
-import time
+from datetime import datetime
 import json
 from typing import List, Union
 import asyncio
@@ -15,11 +15,71 @@ from requests.exceptions import Timeout, ConnectionError
 
 from superpilot.core.store.schema import *
 from superpilot.core.store.search.retrieval.query_escalator import generate_keywords_and_sentences
-
+from superpilot.core.memory.documentation import _process_file
 #vespa_url="http://localhost:8080/document/v1/<namespace>/<document-type>/"
 
 
 import numpy as np
+
+import os
+#import datetime
+from sentence_transformers import SentenceTransformer
+from sklearn.decomposition import PCA
+import PyPDF2
+
+# Load a pre-trained sentence transformer model for embedding generation
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
+def generate_embeddings(text):
+    """
+    Generate a 128-dimensional embedding for the given text using a pre-trained model.
+    """
+    embedding = model.encode(text)
+    # Trim or pad the embedding to be exactly 128 dimensions (if necessary)
+    if len(embedding) > 128:
+        embedding = embedding[:128]
+    elif len(embedding) < 128:
+        embedding = list(embedding) + [0.0] * (128 - len(embedding))
+    
+    return embedding.tolist()
+    
+
+    
+    # Generate the initial embedding
+    
+    
+
+def extract_metadata(file_path):
+    """
+    Extract metadata from the file such as file size, creation date, last modified date,
+    and, for PDFs, the number of pages.
+    """
+    metadata = {
+        "file_name": os.path.basename(file_path),
+        "file_size": str(os.path.getsize(file_path)),  # Convert file size to string
+        "file_path": file_path,
+        "creation_date": datetime.fromtimestamp(os.path.getctime(file_path)).strftime('%Y-%m-%d %H:%M:%S'),
+        "last_modified": datetime.fromtimestamp(os.path.getmtime(file_path)).strftime('%Y-%m-%d %H:%M:%S')
+    }
+    
+    # If the file is a PDF, we can also extract the number of pages
+    if file_path.lower().endswith('.pdf'):
+        try:
+            with open(file_path, 'rb') as f:
+                reader = PyPDF2.PdfReader(f)
+                metadata["num_pages"] = str(len(reader.pages))  # Convert number of pages to string
+        except Exception as e:
+            metadata["num_pages"] = "Error reading PDF: " + str(e)
+    
+    return metadata
+
+
+def first_sentence(text):
+    """
+    Extract the first sentence from the text.
+    """
+    sentences = text.split('.')
+    return sentences[0].strip() + '.' if sentences else text
 
 def truncation(embedding, chunk_size=100):
     """Truncate the embedding into chunks of specified size."""
@@ -114,6 +174,12 @@ def convert_response_to_objects(response: List[Dict[str, Any]]) -> List[Object]:
         objects_list.append(obj_instance)
     
     return objects_list
+
+
+
+from unstructured.partition.auto import partition
+
+import time
 class MemoryManager:
     def __init__(self, store_url: str, ref_id: str, schema_name: str=None):
         self.store_url = store_url
@@ -124,6 +190,28 @@ class MemoryManager:
     def convert_to_objects(self,input_data: Union[str, dict]):
         results=asyncio.run(call_main_function(input_data))
         return(results)
+    
+    def process_file(self,file_path: Union[str, dict]):
+        elements = partition(file_path)
+        print("Elements Created")  # Partition the file into elements
+        ref_id = os.path.splitext(os.path.basename(file_path))[0] # Use the file base name as ref_id
+        objects = []  # List to store generated objects
+        
+        for i, element in enumerate(elements, start=1):
+            obj = Object(
+                blurb=first_sentence(element.text),
+                ref_id=ref_id,
+                obj_id=f"{ref_id}_{i}",
+                content=str(element.text),
+                source=file_path,
+                privacy='public',
+                embeddings={"embedding": generate_embeddings(element.text)},
+                metadata=extract_metadata(file_path),
+                type='text'
+            )
+            objects.append(obj)
+        print('Objects Created')
+        return objects
     
     def to_dict(self,obj):
         """Converts an Object type to a dictionary."""
@@ -141,13 +229,12 @@ class MemoryManager:
             #"embeddings2": obj.embeddings['embedding'][101:200],
             #"embeddings3": obj.embeddings['embedding'][201:300],
             "metadata": [
-                f"user_name: {obj.metadata['user_name']}",
-                f"user_id: {obj.metadata['user_id']}",
+                f"file_name: {obj.metadata['file_name']}",
+                f"file_size: {obj.metadata['file_size']}",
                 f"file_path: {obj.metadata['file_path']}",
-                f"space_id: {obj.metadata['space_id']}",
-                f"organization: {obj.metadata['organization']}",
-                f"_id: {obj.metadata['_id']}",
-                f"file_upload_date: {obj.metadata['file_upload_date']}"
+                f"creation_date: {obj.metadata['creation_date']}",
+                f"last_modified: {obj.metadata['last_modified']}",
+                
             ],
             "type": obj.type
             }
@@ -161,7 +248,7 @@ class MemoryManager:
 
     def add_memory(self, input_data):
         """Add memory to Vespa AI engine."""
-        results = self.convert_to_objects(input_data)
+        results = self.process_file(input_data)
         print('Result Type', type(results))
         
         max_retries = 5
@@ -178,153 +265,65 @@ class MemoryManager:
         }       
 
         # Retry logic for sending POST requests to Vespa
-        for cluster_id, cluster in results.items():
-            for doc_id, document in cluster.items():
-                # Generate the document URL
-                #print("Document Content", document.content)
-                doc_id = str(document.source.replace(".pdf", ""))+'_'+str(document.obj_id)
-                #print(len(document.embeddings['embedding']))
-                print(doc_id)
-                append_to_file(file_path,document)
-                document.obj_id=doc_id
+        
+        for document in results:
+            
                 
-
-                # Convert the document to JSON format using the to_dict() method
-                json_data = self.to_dict(document)
-                #print('JSON data',json_data)
-
-                # Check embeddings size and truncate if necessary
-                
-                if isinstance(json_data['fields']['embeddings']['embedding'], list):
-                    embeddings = json_data['fields']['embeddings']['embedding']
-                    if len(embeddings) > 128:
-                        #print("Truncating embeddings to first 128 elements.")
-                        json_data['fields']['embeddings']['embedding'] = embeddings[:128]
-                
-
-                # Attempt to send the request with retry logic
-                for attempt in range(max_retries):
-                    try:
-                        response = requests.post(url + str(doc_id), headers=headers, json=json_data)
-                        
-                        # Check response status and print result
-                        if response.status_code == 200:
-                            print("Document successfully inserted:", response.json())
-                            break  # Exit retry loop on success
-                        else:
-                            print("Failed to insert document.")
-                            print("Status code:", response.status_code)
-                            print("Response:", response.json())
-                            if response.status_code >= 500:
-                                print("Server error encountered. Not retrying.")
-                                break  # Exit on server error
-
-                    except requests.exceptions.RequestException as e:
-                        print(f"Request failed: {e}. Retrying in {retry_delay} seconds...")
-                        time.sleep(retry_delay)
-
-    def get_memory(self,id:str) -> Object:
-        """Retrieve all memories from Vespa AI engine."""
-        url=self.store_url + f'{self.schema_name}/{self.schema_name}/docid/{id}'
-        '''
-        response = requests.get(url)
-        if response.status_code == 200:
-            print(response.json())
-            return(map_response_to_object(response.json()))
-        else:
-            print(f"Error retrieving memories: {response.text}")
-            return None
-        '''
-        
-
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            #print('Respaone.Json:',response.json()) 
-            #print() # Raise an error for bad responses
-            return (map_response_to_object(response.json()))  # Return the JSON response as a dictionary
-        except requests.exceptions.HTTPError as err:
-            print(f"HTTP error occurred: {err}")
-        except Exception as e:
-            print(f"An error occurred: {e}")
-        
-        return None
-
-    def get_all_memory(self) ->List[Object]:
-        """Retrieve a specific object by querying its blurb."""
-        chunks=[]
-        lines=read_lines_from_file(file_path)
-        for line in lines:
-            chunks.append(self.get_memory(line))
-        
-        return chunks
-
-
-
-
-    def get_all_doc_ids(self):
-        """
-        Retrieves a list of all document IDs from the Vespa.ai endpoint.
-
-        Returns:
-            list: A list of all document IDs.
-        """
-        url =self.store_url + f'document/v1/{self.schema_name}/{self.schema_name}/docid/'
-        print('Url',url)
-        
-        try:
-            response = requests.get(url)
-            response.raise_for_status()  # Raise an error for bad responses
+            # Generate the document URL
+            #print("Document Content", document.content)
+            doc_id = str(document.obj_id)
+            print('Emeddings Length',len(document.embeddings['embedding']))
+            print(doc_id)
+            append_to_file(file_path,document)
+            #document.obj_id=doc_id
             
-            # Log the raw response to understand its structure
-            print("Raw response:", response.text)
+            # Convert the document to JSON format using the to_dict() method
+            json_data = self.to_dict(document)
+            #print('JSON data',json_data)
+            # Check embeddings size and truncate if necessary
             
-            # Check if the response is a JSON object
-            documents = response.json()
+            if isinstance(json_data['fields']['embeddings']['embedding'], list):
+                embeddings = json_data['fields']['embeddings']['embedding']
+                if len(embeddings) > 128:
+                    #print("Truncating embeddings to first 128 elements.")
+                    json_data['fields']['embeddings']['embedding'] = embeddings[:128]
             
-            # Ensure that we are dealing with a list or dict
-            doc_ids = []
-            if isinstance(documents, dict):
-                if 'documents' in documents:
-                    # Extract IDs from the documents list
-                    doc_ids = [doc['id'].split('::')[1] for doc in documents['documents']]
-                else:
-                    print("No 'documents' key found in the response.")
-            elif isinstance(documents, list):
-                # If it's a list, process each item
-                doc_ids = [doc['id'].split('::')[1] for doc in documents]
-            
-            return doc_ids
-            
-        except requests.exceptions.HTTPError as err:
-            print(f"HTTP error occurred: {err}")
-        except ValueError as e:
-            print(f"Error parsing JSON: {e}")
-        except Exception as e:
-            print(f"An error occurred: {e}")
-        
-        return []
-        
+            # Attempt to send the request with retry logic
+            for attempt in range(max_retries):
+                try:
+                    response = requests.post(url + str(doc_id), headers=headers, json=json_data)
+                    
+                    # Check response status and print result
+                    if response.status_code == 200:
+                        print("Document successfully inserted:", response.json())
+                        break  # Exit retry loop on success
+                    else:
+                        print("Failed to insert document.")
+                        print("Status code:", response.status_code)
+                        print("Response:", response.json())
+                        if response.status_code >= 500:
+                            print("Server error encountered. Not retrying.")
+                            break  # Exit on server error
+                except requests.exceptions.RequestException as e:
+                    print(f"Request failed: {e}. Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
 
+                  
+    
 
-
-
-
-
-    def execute_query(self,query: str) -> List[Object]:
+    def execute_query(self, query: str, embedding: Optional[List[float]] = None) -> List[Object]:
         """Executes a search query against the Vespa endpoint and returns a list of Object instances."""
         try:
-            response = requests.get(self.store_url+f'search/', params={'yql': query}, timeout=20)  # Set a timeout
+            params = {'yql': query}
+            if embedding is not None:
+                params['embedding'] = embedding  # Pass the embedding if provided
+            
+            response = requests.get(self.store_url + 'search/', params=params, timeout=20)  # Set a timeout
             response.raise_for_status()  # Raise an error for bad responses
             
             results = response.json().get('root', {}).get('children', [])
-            #print("Response")
-            #print(results)
-            objects=convert_response_to_objects(results)
+            objects = convert_response_to_objects(results)
 
-            
-            
-            # Map results back to Object instances
             return objects
         
         except requests.exceptions.Timeout:
@@ -335,9 +334,12 @@ class MemoryManager:
             print(f"HTTP error occurred: {e}")
             return []
 
-    def search(self,query: str, filters: Optional[Dict[str, Union[str, List[str]]]] = None) -> List[Object]:
+    def search(self, query: str, filters: Optional[Dict[str, Union[str, List[str]]]] = None) -> List[Object]:
         """Searches for objects in Vespa based on a query string and optional filters."""
         
+        # Generate embeddings for the query
+        embedding = generate_embeddings(query)
+
         # Base query construction
         base_query = f"SELECT * FROM object_schema WHERE content MATCHES '{query}'"
         
@@ -361,8 +363,9 @@ class MemoryManager:
             if filter_conditions:
                 base_query += " AND " + " AND ".join(filter_conditions)
         
-        # Execute the constructed query
-        return self.execute_query(base_query)
+        # Execute the constructed query with optional embedding
+        return self.execute_query(base_query, embedding)
+
 
 
     
@@ -432,5 +435,41 @@ class MemoryManager:
 
 
 
-    # def ingest(self,souce:str,ingest_type:str,ingest_config:dict):-> List[Object]:
-    #     pass
+    def ingest(self,source:str,ingest_type:str,ingest_config:dict,save:bool) -> List[Object]:
+        
+        file_name=os.path.basename(source)
+        document=_process_file(file_name=file_name,file=source,pdf_pass=None)
+        print('Document Created')
+        if save:
+            self.add_memory(input_data=source)
+            print('Memory added successfully')
+        
+        query=str(input('Enter Query:'))
+        filter_dict={}
+
+        top_chunks=self.search(query=query,filters=filter_dict)
+        printed_ids=set()
+        for obj in top_chunks:
+                    if obj.obj_id not in printed_ids:  # Check if the obj_id has not been printed
+                        print(f"- {obj.obj_id}")  # Print the obj_id
+                        printed_ids.add(obj.obj_id)
+
+        print('Query Done')
+
+        return document
+
+    
+        
+
+
+
+        
+
+
+
+
+
+
+
+
+
