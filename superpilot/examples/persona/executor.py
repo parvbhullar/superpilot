@@ -5,6 +5,10 @@ from typing import List, Dict
 from pydantic import Field
 
 import pandas as pd
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from superpilot.core.configuration.config import get_config
 from superpilot.core.pilot.task.simple import SimpleTaskPilot
@@ -54,6 +58,11 @@ class AIPersona(SchemaModel):
     knowledge_bases: List[KnowledgeBase] = Field(None, description="""
         A list of knowledge bases this AI persona relies on for expertise.
         Each knowledge base includes the name of the knowledge base and the data sources it draws from.
+    """)
+
+class AIPersonaList(SchemaModel):
+    PersonaList:List[AIPersona] = Field(None, description="""
+        A list of AI Pesonas
     """)
 
 
