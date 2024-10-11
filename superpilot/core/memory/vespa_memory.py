@@ -191,10 +191,10 @@ class MemoryManager:
         results=asyncio.run(call_main_function(input_data))
         return(results)
     
-    def process_file(self,file_path: Union[str, dict]):
-        elements = partition(file_path)
+    def process_document(self,document):
+        elements = document.elements
         print("Elements Created")  # Partition the file into elements
-        ref_id = os.path.splitext(os.path.basename(file_path))[0] # Use the file base name as ref_id
+        ref_id = document.id # Use the file base name as ref_id
         objects = []  # List to store generated objects
         
         for i, element in enumerate(elements, start=1):
@@ -203,10 +203,10 @@ class MemoryManager:
                 ref_id=ref_id,
                 obj_id=f"{ref_id}_{i}",
                 content=str(element.text),
-                source=file_path,
+                source=str(document.source),
                 privacy='public',
                 embeddings={"embedding": generate_embeddings(element.text)},
-                metadata=extract_metadata(file_path),
+                metadata=document.metadata,
                 type='text'
             )
             objects.append(obj)
@@ -248,7 +248,7 @@ class MemoryManager:
 
     def add_memory(self, input_data):
         """Add memory to Vespa AI engine."""
-        results = self.process_file(input_data)
+        results = self.process_document(input_data)
         print('Result Type', type(results))
         
         max_retries = 5
@@ -435,26 +435,12 @@ class MemoryManager:
 
 
 
-    def ingest(self,source:str,ingest_type:str,ingest_config:dict,save:bool) -> List[Object]:
+    def ingest(self,source:str,ingest_type:str,ingest_config:dict,save:bool):
         
         file_name=os.path.basename(source)
         document=_process_file(file_name=file_name,file=source,pdf_pass=None)
         print('Document Created')
-        if save:
-            self.add_memory(input_data=source)
-            print('Memory added successfully')
         
-        query=str(input('Enter Query:'))
-        filter_dict={}
-
-        top_chunks=self.search(query=query,filters=filter_dict)
-        printed_ids=set()
-        for obj in top_chunks:
-                    if obj.obj_id not in printed_ids:  # Check if the obj_id has not been printed
-                        print(f"- {obj.obj_id}")  # Print the obj_id
-                        printed_ids.add(obj.obj_id)
-
-        print('Query Done')
 
         return document
 
@@ -464,12 +450,6 @@ class MemoryManager:
 
 
         
-
-
-
-
-
-
 
 
 

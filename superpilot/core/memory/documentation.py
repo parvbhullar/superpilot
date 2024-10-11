@@ -103,7 +103,8 @@ def _process_file(
     *args, **kwargs
 ) -> Document:
     document_id = kwargs.get("document_id", None)
-    extension = get_file_ext(file_name)
+    extension = get_file_ext(file)
+    elements = partition(filename=file)
     
     if not check_file_ext_is_valid(extension):
         logger.warning(f"Skipping file '{file_name}' with extension '{extension}'")
@@ -112,7 +113,7 @@ def _process_file(
     file_metadata: dict[str, Any] = {}
     file_content_raw = ""
 
-    if is_text_file_extension(file_name):
+    if is_text_file_extension(file):
         encoding = detect_encoding(file)
         file_content_raw, file_metadata = read_text_file(
             file, encoding=encoding, ignore_unpod_metadata=False

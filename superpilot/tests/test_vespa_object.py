@@ -10,12 +10,14 @@ from superpilot.core.store.search.retrieval.query_escalator import *
 from superpilot.core.store.search.retrieval.search_runner import query_processing
 from superpilot.core.memory.vespa_memory import MemoryManager
 
+#vespa_url='https://fb73ae7d.baed2213.z.vespa-app.cloud/'
 vespa_url='http://localhost:8081/'
 memory=MemoryManager(store_url=vespa_url,ref_id='test_memory')
 
 #file_path=input('File path:')
 
-file_path='/Users/zestgeek-29/Desktop/Work/superpilot/superpilot/tests/test_file.pdf'
+file_path='/Users/zestgeek-29/Desktop/Work/samples/MGI-Artificial-Intelligence-Discussion-paper.pdf'
+
 '''
 #memory.add_memory(input_data=file_path)
 print('Added to memory')
@@ -43,3 +45,31 @@ for obj in top_chunks:
 
 document=memory.ingest(source=file_path,ingest_type='file_path',ingest_config={},save=True)
 print(document)
+memory.add_memory(document)
+print('Data Added') 
+
+query_string = input('Enter Query: ')
+query_string = query_processing(query_string)
+
+
+
+filter_dict = {
+        'blurb':'Artificial Intelligence'
+}
+
+
+
+top_chunks=memory.search(query=query_string,filters=filter_dict)
+if len(top_chunks)>0:
+
+        printed_ids=set()
+        for obj in top_chunks:
+                if obj.obj_id not in printed_ids:  # Check if the obj_id has not been printed
+                        print(f"- {obj.obj_id}")  # Print the obj_id
+                        printed_ids.add(obj.obj_id)
+
+else:
+
+        print('No Matches Found')
+
+

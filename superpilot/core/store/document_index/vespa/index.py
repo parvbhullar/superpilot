@@ -83,6 +83,7 @@ DOC_VESPA_PORT = "DOC_VESPA_PORT"
 
 # config server
 VESPA_CONFIG_SERVER_URL = f"http://{VESPA_CONFIG_SERVER_HOST}:{VESPA_TENANT_PORT}"
+#VESPA_CONFIG_SERVER_URL = f"https://fb73ae7d.baed2213.z.vespa-app.cloud:443"
 VESPA_APPLICATION_ENDPOINT = f"{VESPA_CONFIG_SERVER_URL}/application/v2"
 
 # main search application
