@@ -7,7 +7,7 @@ from superpilot.core.configuration.schema import (
 from superpilot.core.planning import strategies
 from superpilot.core.planning.schema import LanguageModelClassification
 from superpilot.core.resource.model_providers.schema import ModelProviderName
-
+from pydantic import BaseModel
 
 class LanguageModelConfiguration(SystemConfiguration):
     """Struct for model configuration."""
