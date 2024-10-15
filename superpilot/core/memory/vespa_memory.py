@@ -14,7 +14,7 @@ from urllib3.util.retry import Retry
 from requests.exceptions import Timeout, ConnectionError
 
 from superpilot.core.store.schema import *
-from superpilot.core.store.search.retrieval.query_escalator import generate_keywords_and_sentences
+#from superpilot.core.store.search.retrieval.query_escalator import generate_keywords_and_sentences
 from superpilot.core.memory.documentation import _process_file
 #vespa_url="http://localhost:8080/document/v1/<namespace>/<document-type>/"
 
@@ -369,67 +369,67 @@ class MemoryManager:
 
 
     
-    def search_objects(self,query: str, filters: Optional[Dict[str, Union[str, List[str]]]] = None,iterations:int = 1) -> List[Object]:
-        """Searches for objects in Vespa based on a query string and optional filters."""
+    # def search_objects(self,query: str, filters: Optional[Dict[str, Union[str, List[str]]]] = None,iterations:int = 1) -> List[Object]:
+    #     """Searches for objects in Vespa based on a query string and optional filters."""
         
-        # Generate keywords from the main query
-        print('In Search Objects')
-        keywords_and_sentences = generate_keywords_and_sentences(query)
-        #print("Keywords:",keywords_and_sentences)
-        # Extract only the keywords from the response
-        keywords = list(set(keywords_and_sentences))  # Adjust if needed
-        #print("Keywords:",keywords)
-        # Iteratively generate additional keywords
-        for _ in range(iterations):
-            new_keywords = []
-            for keyword in keywords:
-                generated_keywords = generate_keywords_and_sentences(keyword)  # Generate keywords from existing keywords
-                new_keywords.extend(list(set(generated_keywords)))  # Avoid duplicates
-            keywords.extend(new_keywords)
-            #print("Keywords:",keywords)
-            print()
-            print()
+    #     # Generate keywords from the main query
+    #     print('In Search Objects')
+    #     keywords_and_sentences = generate_keywords_and_sentences(query)
+    #     #print("Keywords:",keywords_and_sentences)
+    #     # Extract only the keywords from the response
+    #     keywords = list(set(keywords_and_sentences))  # Adjust if needed
+    #     #print("Keywords:",keywords)
+    #     # Iteratively generate additional keywords
+    #     for _ in range(iterations):
+    #         new_keywords = []
+    #         for keyword in keywords:
+    #             generated_keywords = generate_keywords_and_sentences(keyword)  # Generate keywords from existing keywords
+    #             new_keywords.extend(list(set(generated_keywords)))  # Avoid duplicates
+    #         keywords.extend(new_keywords)
+    #         #print("Keywords:",keywords)
+    #         print()
+    #         print()
 
-        print("Keywords Generation Complete")
+    #     print("Keywords Generation Complete")
 
         
-        #return keywords
-        print('Keywords',keywords)
+    #     #return keywords
+    #     print('Keywords',keywords)
         
-        all_results = []
+    #     all_results = []
 
-        # Iterate over each keyword and perform a search
-        for keyword in keywords:
-            #print(f"Searching for keyword: {keyword}")
+    #     # Iterate over each keyword and perform a search
+    #     for keyword in keywords:
+    #         #print(f"Searching for keyword: {keyword}")
             
-            # Base query construction
-            base_query = f"SELECT * FROM object_schema WHERE content MATCHES '{keyword}'"
+    #         # Base query construction
+    #         base_query = f"SELECT * FROM object_schema WHERE content MATCHES '{keyword}'"
             
-            # Adding filters if available
-            if filters:
-                filter_conditions = []
+    #         # Adding filters if available
+    #         if filters:
+    #             filter_conditions = []
                 
-                if 'type' in filters:
-                    filter_conditions.append(f"type == '{filters['type']}'")
+    #             if 'type' in filters:
+    #                 filter_conditions.append(f"type == '{filters['type']}'")
                 
-                if 'metadata' in filters:
-                    metadata_conditions = [f"metadata CONTAINS '{meta}'" for meta in filters['metadata']]
-                    filter_conditions.append(' OR '.join(metadata_conditions))
+    #             if 'metadata' in filters:
+    #                 metadata_conditions = [f"metadata CONTAINS '{meta}'" for meta in filters['metadata']]
+    #                 filter_conditions.append(' OR '.join(metadata_conditions))
                 
-                if 'blurb' in filters:
-                    filter_conditions.append(f"blurb MATCHES '{filters['blurb']}'")
+    #             if 'blurb' in filters:
+    #                 filter_conditions.append(f"blurb MATCHES '{filters['blurb']}'")
                 
-                if 'source' in filters:
-                    filter_conditions.append(f"source == '{filters['source']}'")
+    #             if 'source' in filters:
+    #                 filter_conditions.append(f"source == '{filters['source']}'")
                 
-                if filter_conditions:
-                    base_query += " AND " + " AND ".join(filter_conditions)
+    #             if filter_conditions:
+    #                 base_query += " AND " + " AND ".join(filter_conditions)
 
-            # Execute the constructed query
-            results = self.execute_query(base_query)
-            all_results.extend(results)  # Combine results from each keyword
+    #         # Execute the constructed query
+    #         results = self.execute_query(base_query)
+    #         all_results.extend(results)  # Combine results from each keyword
         
-        return all_results
+    #     return all_results
     
 
 
