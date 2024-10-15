@@ -5,21 +5,14 @@ import asyncio
 # Add the parent directory to the system path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-
-from superpilot.core.memory.vespa_memory import MemoryManager
-
-from datasets import Dataset 
-from ragas.metrics import answer_relevancy,faithfulness, answer_correctness
-from ragas import evaluate
-import pandas as pd
 #Doc api evaluation
+
+from superpilot.core.evals.doc_eval import doc_eval_value
 
 
 # Add the parent directory to the system path for imports
 #openai_api_key=os.getenv('OPENAI_API_KEY')
 
-import requests
-import time
 
 questions=['Global digital remittance market growth','Key players in digital remittance?','What drives digital remittance growth?','Cultural tourism growth in India','Impact of movies on travel','Heritage tourism market booking channels','Electronic warfare market growth forecast','Key players in electronic warfare','Driving factors of electronic warfare']
 
@@ -90,11 +83,12 @@ Asia-Pacific region is expected to expand at the fastest CAGR between 2023 and 2
 By Domain, the electronic support segment captured the largest revenue share in 2022.
 
 """
+
 result=[]
 ground_truth=[truth1,truth1,truth1,truth2,truth2,truth2,truth3,truth3,truth3]
 
 
-
+"""
 def get_response(query):
     
     # Define the URL and the payload
@@ -147,4 +141,13 @@ for i in range(9):
 final_result = pd.concat(result, ignore_index=True)
 final_result.to_csv('docs_eval.csv',index=False)
 
+"""
 
+
+for i in range(9):
+    sc=doc_eval_value(questions[i],ground_truth[i])
+    result.append(sc)
+
+print(result)
+
+    
