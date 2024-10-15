@@ -16,48 +16,12 @@ import pandas as pd
 
 
 # Add the parent directory to the system path for imports
-openai_api_key=os.getenv('OPENAI_API_KEY')
+#openai_api_key=os.getenv('OPENAI_API_KEY')
 
 import requests
 import time
 
-def get_response(query):
-    time_taken
-    # Define the URL and the payload
-    url = "http://qa-search-service.co/api/v1/search/query/docs/?page=1&page_size=1"
-    payload = {
-        "query": query,
-        "kn_token": []
-    }
-
-    # Measure the time taken for the request
-    start_time = time.time()
-    response = requests.post(url, json=payload)
-    end_time = time.time()
-
-    # Calculate the response time
-    response_time = end_time - start_time
-
-    # Print the response status code, time taken, and the response data
-    print(f"Response Status Code: {response.status_code}")
-    print(f"Response Time: {response_time:.4f} seconds")
-    result=response.json()
-    main_content=str(result["data"][0]["content"])
-
-    #print (main_content)
-    print()
-    return main_content,response_time
-
-
 questions=['Global digital remittance market growth','Key players in digital remittance?','What drives digital remittance growth?','Cultural tourism growth in India','Impact of movies on travel','Heritage tourism market booking channels','Electronic warfare market growth forecast','Key players in electronic warfare','Driving factors of electronic warfare']
-
-answers=[]
-time_taken=[]
-eval_time=[]
-for question in questions:
-    answer,times=get_response(question)
-    answers.append(answer)
-    time_taken.append(times)
 
 truth1="""
 The sheer magnitude of the global migrant labor force, coupled with the frequency and magnitude of their financial transactions, positions them as a dominant and influential user category, cementing their role as a primary driving factor within the digital remittance market.
@@ -126,24 +90,61 @@ Asia-Pacific region is expected to expand at the fastest CAGR between 2023 and 2
 By Domain, the electronic support segment captured the largest revenue share in 2022.
 
 """
-
+result=[]
 ground_truth=[truth1,truth1,truth1,truth2,truth2,truth2,truth3,truth3,truth3]
 
-data_samples={
-            'question':questions,
-            'answer':answers,
-            'ground_truth':ground_truth,
-        }
-dataset = Dataset.from_dict(data_samples)
-start_time = time.time()
-score = evaluate(dataset,metrics=[answer_correctness])
-end_time=time.time()
-response_time=end_time-start_time
-eval_time.append(response_time)
-sc=score.to_pandas()
-sc['api_time']=time_taken
-sc['eval_time']=response_time
 
-print(sc['answer_correctness'])
 
-sc.to_csv('docs_eval.csv',index=False)
+def get_response(query):
+    
+    # Define the URL and the payload
+    url = "http://qa-search-service.co/api/v1/search/query/docs/?page=1&page_size=1"
+    payload = {
+        "query": query,
+        "kn_token": []
+    }
+
+    # Measure the time taken for the request
+    start_time = time.time()
+    response = requests.post(url, json=payload,timeout=5)
+    end_time = time.time()
+
+    # Calculate the response time
+    response_time = end_time - start_time
+
+    # Print the response status code, time taken, and the response data
+    print(f"Response Status Code: {response.status_code}")
+    print(f"Response Time: {response_time:.4f} seconds")
+    result=response.json()
+    main_content=str(result["data"][0]["content"])
+
+    #print (main_content)
+    print()
+    return main_content,response_time
+
+
+for i in range(9):
+    answer,times=get_response(questions[i])
+    data_samples={
+                'question':[questions[i]],
+                'answer':[answer],
+                'ground_truth':[ground_truth[i]],
+            }
+    dataset = Dataset.from_dict(data_samples)
+    start_time = time.time()
+    score = evaluate(dataset,metrics=[answer_correctness])
+    end_time=time.time()
+    response_time=end_time-start_time
+    #eval_time.append(response_time)
+    sc=score.to_pandas()
+    sc['api_time']=times
+    sc['eval_time']=response_time
+    result.append(sc)
+
+    print(sc['answer_correctness'])
+
+
+final_result = pd.concat(result, ignore_index=True)
+final_result.to_csv('docs_eval.csv',index=False)
+
+
