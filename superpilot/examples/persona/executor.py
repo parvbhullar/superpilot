@@ -1,6 +1,6 @@
 import json
 from abc import ABC
-from typing import List, Dict
+from typing import List, Dict, Any
 
 from pydantic import Field
 
@@ -61,35 +61,29 @@ class AIPersona(SchemaModel):
     """)
 
 class AIPersonaList(SchemaModel):
-    PersonaList:List[AIPersona] = Field(None, description="""
-        A list of AI Pesonas
+    """
+    Model representing a list of AI personas with details about their identity, background, and knowledge base.
+    """
+    personas:List[AIPersona] = Field(None, description="""
+        A list of AI personas with details about their identity, background, and knowledge base.
     """)
-
 
 
 class PersonaGenPrompt(SimplePrompt, ABC):
     DEFAULT_SYSTEM_PROMPT = """
-    You are tasked with creating a detailed AI Agent config based on the persona_tagline and persona. 
-    to generate an autonomous AI Agent info to related to provide text.
-    The work of this function to generate the Agent info and create fields related to text
+    You are tasked with creating 6 detailed AI Agents persona based on the given user_query. 
+    Create AI persons with different perspectives and areas of expertise, which helps user to understand different dimensions of the topic.
+    These agents can have conflicting views, but should be informative and engaging.
     Response should contain name for the Agent, an informative description for what the pilot does, roles & responsibilities, related tags, and 1 to 5"
-    Please generate the following fields in a structured format:
-        Every response should be in json only. 
-        - persona_name: The name of the AI Agent, representing its identity.
-        - handle: Unique identifier for the AI persona, typically in the format 'name-of-ais'.
-        - about: Description of the AI persona, explaining its purpose and area of expertise, does not mention AI Agent in text.
-        - persona: Synthesized text from the dataset, providing a more detailed explanation of the AI Agent's name, purpose, expertise, and activities.
-        - tags: Tags associated with the AI persona, providing keywords based on its persona or areas of expertise.
-        - questions: A set of 6 key questions derived from the synthesized text, meant to help users understand and engage with the AI Agent.
-        - knowledge_bases: A list of knowledge bases this AI persona relies on for expertise. Each knowledge base includes the name of the knowledge base and the data sources it draws from.
-        
+    Please generate the following fields in a structured json format:
+    Every response should be in json only. 
     """
 
     DEFAULT_USER_PROMPT_TEMPLATE = """
         {task_objective}
     """
 
-    DEFAULT_PARSER_SCHEMA = AIPersona.function_schema()
+    DEFAULT_PARSER_SCHEMA = AIPersonaList.function_schema()
 
     default_configuration = PromptStrategyConfiguration(
         model_classification=LanguageModelClassification.SMART_MODEL,
@@ -107,7 +101,7 @@ class PersonaGenPrompt(SimplePrompt, ABC):
         model_classification: LanguageModelClassification = default_configuration.model_classification,
         system_prompt: str = default_configuration.system_prompt,
         user_prompt_template: str = default_configuration.user_prompt_template,
-        parser_schema: Dict = None,
+        parser_schema: Any = None,
     ):
         self._model_classification = model_classification
         self._system_prompt_message = system_prompt
