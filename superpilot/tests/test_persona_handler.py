@@ -11,7 +11,7 @@ from superpilot.examples.persona.schema import Message, User, Role, Context
 from superpilot.examples.persona.handler import PersonaHandler
 from superpilot.examples.persona.query_process import query_process_agent
 
-
+""""
 agent_json = {
                 "persona_name": "HeritageReviver",
                 "tags": [
@@ -32,9 +32,9 @@ agent_json = {
             }
 
 async def call_agent(agent: dict, message: Message) -> Any:
-    """
-    Call a single agent asynchronously.
-    """
+    
+    #Call a single agent asynchronously.
+    
     try:
         agent = agent.get("metadata", agent)
         if not agent.get("persona", None):
@@ -53,6 +53,8 @@ async def call_agent(agent: dict, message: Message) -> Any:
     except Exception as e:
         print(f"Error calling agent {agent}: {str(e)}")
         return None
+    
+"""
 
 if __name__ == "__main__":
     ground_truth="""

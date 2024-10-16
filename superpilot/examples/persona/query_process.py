@@ -15,6 +15,7 @@ from superpilot.examples.persona.schema import Message, User, Role, Context
 from superpilot.examples.persona.handler import PersonaHandler
 from superpilot.core.evals.doc_eval import get_eval
 from superpilot.examples.persona.citation_processing import get_citation
+from superpilot.examples.persona.followup_gen import FollowUpGenExecutor
 async def get_agent_response(query):
     
     # Define the URL and the payload
@@ -42,6 +43,8 @@ async def get_agent_response(query):
 
 
 async def get_docs(query,ground_truth):
+    citations={}
+    citation_num={}
     eval_docs=[]
     url = "http://qa-search-service.co/api/v1/search/query/docs/"
     payload = {
@@ -82,25 +85,45 @@ async def get_docs(query,ground_truth):
     score=get_eval(question=question,ground_truth=ground_truths,answer=answers)
     print("Score List",score)
     
-    for doc, score_value in zip(result["data"], score):
+    for idx, (doc, score_value) in enumerate(zip(result["data"], score), start=1):
         if score_value > 0.20:
             eval_docs.append(doc)
+            citations[str(idx)] = len(str(doc["content"]))  # Assuming 'id' is a unique identifier in doc
+            citation_num[str(idx)] = doc["document_id"]  # Create a citation reference
+
 
     #print (main_content)
     print("Len of Eval Docs")
     print(len(eval_docs))
     #print(eval_docs[0])
-    return eval_docs
+    return eval_docs,citations,citation_num
 
 
 
 
 
 async def query_process_agent(query:str,ground_truth):
-    agent, data = await asyncio.gather(
-        get_agent_response(query),
-        get_docs(query, ground_truth)
-    )
+    agent= {
+                "persona_name": "HeritageReviver",
+                "tags": [
+                    "preservation architecture",
+                    "adaptive reuse",
+                    "historic buildings",
+                    "community development",
+                    "Midwestern towns"
+                ],
+                "handle": "heritage-reviver",
+                "about": "An expert in preservation architecture focusing on revitalizing historic commercial buildings in Midwestern communities, ensuring the balance between historical integrity and modern utility.",
+                "persona": "HeritageReviver is dedicated to the adaptive reuse of historic commercial buildings, emphasizing the importance of preserving the architectural heritage of Midwestern towns. By revitalizing Main Street USA, HeritageReviver explores how these efforts positively affect community identity and economic development. With a focus on sustainability and resilience, this persona highlights how careful preservation can foster a sense of place while addressing contemporary needs. Through thoughtful integration of old structures into modern uses, HeritageReviver aims to inspire communities to cherish their history while embracing future growth.",
+                "knowledge_bases": [
+                    "Preservation Architecture Resources",
+                    "Midwestern Heritage Studies",
+                    "Community Development Initiatives"
+                ]
+            }
+
+    data,citations,citation_num = await get_docs(query, ground_truth)
+    
     message = Message.create(message=query,data=data)
 
     #citations=get_citation(data)
@@ -119,25 +142,40 @@ async def query_process_agent(query:str,ground_truth):
 
         pilot = PersonaHandler.from_json(agent)
         response = await pilot.execute(message, Context.factory("Session1"), None)
-        print(response)
+        #print(response)
         msg = Message.from_model_response(response, message.session_id,
                                           User.add_user(pilot.name(), Role.ASSISTANT, data=pilot.dump()))
         print('Msg Generated')
 
 
-        citations=get_citation(docs=data,msg=str(msg.message))
+        #citations=get_citation(docs=data,msg=str(msg.message))
 
+        followup=FollowUpGenExecutor()
+        followup_response=await followup.execute(query=query,response=str(msg.message))
 
+        print('Followup Generated')
+        #print(followup_response)
         
-
+        docs = [
+            {k: v for k, v in doc.items() if k != "content" and k != "metadata"}
+            for doc in data
+                    ]
+        for doc in docs:
+            if "metadata" in doc and "main_content" in doc["metadata"]:
+                del doc["metadata"]["main_content"]
+        
         response={
             'message':msg.message,
-            'citations':citations
+            'ref_docs':docs,
+            'citations':citations,
+            "citation_num":citation_num,
+            'followup_questions':followup_response['followup_questions']
+            
         }
         return response
         
     except Exception as e:
-        print(f"Error calling agent {agent}: {str(e)}")
+        print(f"Error calling agent :{str(e)}")
         return None
 
 
