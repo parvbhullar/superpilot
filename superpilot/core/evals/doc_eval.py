@@ -49,13 +49,29 @@ def get_response(query):
     return main_content,response_time
 
 
-def doc_eval_value(question,ground_truth):
+def doc_eval_value(question:str,ground_truth:str):
     answer,times=get_response(question)
 
     data_samples={
                 'question':[question],
                 'answer':[answer],
                 'ground_truth':[ground_truth],
+            }
+    
+    dataset = Dataset.from_dict(data_samples)
+    score = evaluate(dataset,metrics=[answer_correctness])
+    sc=score.to_pandas()
+
+    eval_value=sc['answer_correctness']
+
+    return eval_value   
+
+
+def get_eval(question:list,ground_truth:list,answer:list):
+    data_samples={
+                'question':question,
+                'answer':answer,
+                'ground_truth':ground_truth,
             }
     
     dataset = Dataset.from_dict(data_samples)

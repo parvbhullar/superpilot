@@ -144,10 +144,12 @@ final_result.to_csv('docs_eval.csv',index=False)
 """
 
 
-for i in range(9):
-    sc=doc_eval_value(questions[i],ground_truth[i])
-    result.append(sc)
+# for i in range(9):
+#     sc=doc_eval_value(questions[i],ground_truth[i])
 
-print(result)
+#     result.append(sc)
+
+sc=doc_eval_value(questions[0],ground_truth[0])
+print(sc.iloc[0])
 
     
