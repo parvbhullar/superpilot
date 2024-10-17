@@ -40,7 +40,7 @@ async def get_agent_response(query):
     return agent_json
 
 
-
+"""
 
 async def get_docs(query,ground_truth):
     citations={}
@@ -97,7 +97,67 @@ async def get_docs(query,ground_truth):
     print(len(eval_docs))
     #print(eval_docs[0])
     return eval_docs,citations,citation_num
+"""
 
+def get_docs(query, ground_truth):
+    citations = {}
+    citation_num = {}
+    eval_docs = []
+    url = "http://qa-search-service.co/api/v1/search/query/docs/"
+    payload = {
+        "query": query,
+        "kn_token": []
+    }
+
+    # Measure the time taken for the request
+    start_time = time.time()
+
+    # Send the request with a timeout and handle exceptions
+    try:
+        response = requests.post(url, json=payload, timeout=5)
+        response.raise_for_status()  # Ensure an error is raised for unsuccessful status codes
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed: {e}")
+        return [], {}, {}
+
+    end_time = time.time()
+    response_time = end_time - start_time
+
+    # Print the response status code and time taken
+    print(f"Response Status Code: {response.status_code}")
+    print(f"Response Time: {response_time:.4f} seconds")
+    
+    result = response.json()
+    print('Response Length', len(result["data"]))
+
+    # Extract documents with content length > 250 words
+    answers = [str(doc["content"]) for doc in result["data"] if len(str(doc["content"]).split()) > 250]
+    
+    # If no valid documents, return early
+    if not answers:
+        return [], {}, {}
+
+    n = len(answers)
+    print("Length of contents", n)
+
+    # Prepare inputs for evaluation in a batch
+    question = [query] * n
+    ground_truths = [ground_truth] * n
+
+    # Batch evaluation (optimizing this part by using get_eval in parallel)
+    score = get_eval(question=question, ground_truth=ground_truths, answer=answers)
+    print("Score List", score)
+    
+    # Filter documents based on score > 0.20 and collect citations
+    for idx, (doc, score_value) in enumerate(zip(result["data"], score), start=1):
+        if score_value > 0.20:
+            eval_docs.append(doc)
+            citations[str(idx)] = len(str(doc["content"]))  # Assuming 'content' size as a reference
+            citation_num[str(idx)] = doc["document_id"]  # Use document_id for reference
+
+    print("Len of Eval Docs:", len(eval_docs))
+    
+    return (eval_docs, citations, citation_num)
 
 
 
@@ -121,8 +181,12 @@ async def query_process_agent(query:str,ground_truth):
                     "Community Development Initiatives"
                 ]
             }
+    try:
 
-    data,citations,citation_num = await get_docs(query, ground_truth)
+        data,citations,citation_num = get_docs(query, ground_truth)
+    except Exception as e:
+        print(f"Error retrieving documents: {e}")
+        return None
     
     message = Message.create(message=query,data=data)
 

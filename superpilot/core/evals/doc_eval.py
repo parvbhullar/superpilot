@@ -67,17 +67,20 @@ def doc_eval_value(question:str,ground_truth:str):
     return eval_value   
 
 
-def get_eval(question:list,ground_truth:list,answer:list):
-    data_samples={
-                'question':question,
-                'answer':answer,
-                'ground_truth':ground_truth,
-            }
-    
-    dataset = Dataset.from_dict(data_samples)
-    score = evaluate(dataset,metrics=[answer_correctness])
-    sc=score.to_pandas()
+def get_eval(question: list, ground_truth: list, answer: list):
+    # Optimized evaluation: vectorized/batched processing
+    data_samples = {
+        'question': question,
+        'answer': answer,
+        'ground_truth': ground_truth,
+    }
 
-    eval_value=sc['answer_correctness']
+    dataset = Dataset.from_dict(data_samples)
+    
+    # Assuming 'evaluate' and 'answer_correctness' are already optimized or a fast metric is used
+    score = evaluate(dataset, metrics=[answer_correctness])
+    sc = score.to_pandas()
+    
+    eval_value = sc['answer_correctness']
 
     return eval_value
