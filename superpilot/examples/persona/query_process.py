@@ -11,9 +11,9 @@ from ragas.metrics import answer_relevancy,faithfulness, answer_correctness
 from ragas import evaluate
 import pandas as pd
 
+from superpilot.examples.evals.doc_eval import get_eval
 from superpilot.examples.persona.schema import Message, User, Role, Context
 from superpilot.examples.persona.handler import PersonaHandler
-from superpilot.core.evals.doc_eval import get_eval
 from superpilot.examples.persona.citation_processing import get_citation
 from superpilot.examples.persona.followup_gen import FollowUpGenExecutor
 async def get_agent_response(query):
