@@ -61,4 +61,5 @@ if __name__ == "__main__":
     # persona()
     #test_persona()
     query='Top historical events of the world'
+    print("Ranked Personas")
     rank_personas(query)

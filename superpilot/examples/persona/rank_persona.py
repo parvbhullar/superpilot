@@ -209,7 +209,7 @@ def rank_personas(query:str):
     print("Number of Personas",len(personas))
     print("Tags")
     for i, persona in enumerate(personas, start=1):
-        print(f"{i}. {persona['tags']}")
+        print(f"{i}.{persona['persona_name']} - {persona['tags']}")
 
 
     keywords = {
