@@ -72,4 +72,9 @@ if __name__ == "__main__":
     """
     query="Most important Historical Event of 21st Century"
     response = asyncio.run(query_process_agent(query=query,ground_truth=ground_truth))
+    print("Final Response")
     print(response)
+
+
+
+

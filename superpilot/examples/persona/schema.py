@@ -335,15 +335,24 @@ class Message(BaseModel):
     @classmethod
     def from_block(cls, block_json: dict, **kwargs):
         """Create a Message instance from a JSON dictionary."""
-        message_content = block_json.get("data", {}).get("content", "")
-        data = block_json.get("data", {})
+        message_content = block_json.get("content", "")
         attachments = []
+        for item in block_json.get('data', []):
+            content = item.get('content', "")
+            content_type = item.get('source_type', ContentType.TEXT)
+            source = item.get('document_id', None)
+            content_metadata = item.get('metadata', {})
+            
+            # Create a Content instance using add_content_item
+            content_instance = Content.add_content_item(
+                content=content,
+                content_type=content_type,
+                source=source,
+                content_metadata=content_metadata
+            )
+            attachments.append(content_instance)
 
-        # files = data.get('files', [])
-        # for file_dict in files:
-        #     # Assuming ContentItem can be initialized from a dictionary
-        #     attachment = ContentItem(**file_dict)
-        #     attachments.append(attachment)
+        data=block_json
         history = []
         for message_dict in data.get('history', []):
             message = Message.from_block(message_dict)

@@ -258,13 +258,28 @@ class PersonaHandler(BaseHandler, ABC):
             smart_model_temp=fields.get('smart_model_temp', 0.2),
             fast_model_temp=fields.get('fast_model_temp', 0.2),
         )
+        combined_content = "\n".join([clean_content(d['content']) for d in data['data']])
+
+        print("Combined Content")
+        #print(combined_content)
+        query=data['query']
+        user_prompt = ("user query:"+query+"\n"+"gathered information:"+combined_content+"\n")
+
+
+
+        # user_prompt={
+        #             'gathered_information':data["data"],
+        #             'user_query':data["query"]}
+        
 
         system_prompt = (PersonaPrompt.DEFAULT_SYSTEM_PROMPT + "\\n"
                          + fields.get('about', '')
                          + "\\n" + fields.get('persona', ''))
+        
         prompt_strategy = PersonaPrompt.factory(
             system_prompt=system_prompt,
-            user_prompt_template=PersonaPrompt.DEFAULT_USER_PROMPT_TEMPLATE,
+            #user_prompt_template=PersonaPrompt.DEFAULT_USER_PROMPT_TEMPLATE
+            user_prompt_template=user_prompt
         )
 
         configuration = HandlerConfiguration(
@@ -297,3 +312,12 @@ def get_os_info() -> str:
         else distro.name(pretty=True)
     )
     return os_info
+
+
+
+def clean_content(content):
+    # Remove extra spaces
+    cleaned = content.strip()
+    # Replace '{' and '}' with empty strings
+    cleaned = cleaned.replace('{', '').replace('}', '')
+    return cleaned

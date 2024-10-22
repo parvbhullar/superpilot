@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 
 #Doc api evaluation
 
-from superpilot.core.evals.doc_eval import doc_eval_value
+from superpilot.examples.persona.doc_eval import doc_eval_value
 
 
 # Add the parent directory to the system path for imports
@@ -149,7 +149,35 @@ final_result.to_csv('docs_eval.csv',index=False)
 
 #     result.append(sc)
 
-sc=doc_eval_value(questions[0],ground_truth[0])
-print(sc.iloc[0])
+# sc=doc_eval_value(questions[0],ground_truth[0])
+# print(sc.iloc[0])
 
+import openai
+import os
+from openai.error import AuthenticationError, RateLimitError, APIError
+
+# Set your API key
+api_key = os.getenv('OPEN_API_KEY')
+openai.api_key = api_key
+
+try:
+    # Simple test: make a request to the OpenAI API
+    response = openai.Completion.create(
+      model="text-davinci-003",
+      prompt="Say hello!",
+      max_tokens=5
+    )
+    
+    # If successful, print a success message and part of the response
+    print("API key is functional!")
+    print(f"Response: {response.choices[0].text.strip()}")
+
+except AuthenticationError:
+    print("Invalid API key or authentication failed.")
+except RateLimitError:
+    print("Rate limit exceeded or out of credits.")
+except APIError as e:
+    print(f"OpenAI API error: {e}")
+except Exception as e:
+    print(f"An error occurred: {e}")
     

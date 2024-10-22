@@ -75,98 +75,98 @@ class Citation(BaseModel):
             extracted_id=extracted_id
         )
 
-# def extract_citations_from_stream(
-#     tokens: Iterator[str],
-#     context_docs: List[LlmDoc],
-#     doc_id_to_rank_map: Dict[str, int],
-#     stop_stream: Optional[str] = STOP_STREAM_PAT,
-# ) -> Iterator[Union[UnpodAnswerPiece, CitationInfo]]:
-#     """
-#     Extract citations from the token stream.
-#     """
-#     llm_out = ""
-#     max_citation_num = len(context_docs)
-#     curr_segment = ""
-#     prepend_bracket = False
-#     cited_inds = set()
-#     hold = ""
+def extract_citations_from_stream(
+    tokens: Iterator[str],
+    context_docs: List[LlmDoc],
+    doc_id_to_rank_map: Dict[str, int],
+    stop_stream: Optional[str] = STOP_STREAM_PAT,
+) -> Iterator[Union[UnpodAnswerPiece, CitationInfo]]:
+    """
+    Extract citations from the token stream.
+    """
+    llm_out = ""
+    max_citation_num = len(context_docs)
+    curr_segment = ""
+    prepend_bracket = False
+    cited_inds = set()
+    hold = ""
     
-#     for raw_token in tokens:
-#         if stop_stream:
-#             next_hold = hold + raw_token
+    for raw_token in tokens:
+        if stop_stream:
+            next_hold = hold + raw_token
 
-#             if stop_stream in next_hold:
-#                 break
+            if stop_stream in next_hold:
+                break
 
-#             if next_hold == stop_stream[: len(next_hold)]:
-#                 hold = next_hold
-#                 continue
+            if next_hold == stop_stream[: len(next_hold)]:
+                hold = next_hold
+                continue
 
-#             token = next_hold
-#             hold = ""
-#         else:
-#             token = raw_token
+            token = next_hold
+            hold = ""
+        else:
+            token = raw_token
 
-#         curr_segment += token
-#         llm_out += token
+        curr_segment += token
+        llm_out += token
 
-#         possible_citation_pattern = r"(\[\d*$)"
-#         citation_pattern = r"\[(\d+)\]"
-#         citation_found = re.search(citation_pattern, curr_segment)
+        possible_citation_pattern = r"(\[\d*$)"
+        citation_pattern = r"\[(\d+)\]"
+        citation_found = re.search(citation_pattern, curr_segment)
 
-#         if citation_found and not in_code_block(llm_out):
-#             numerical_value = int(citation_found.group(1))
-#             if 1 <= numerical_value <= max_citation_num:
-#                 context_llm_doc = context_docs[numerical_value - 1]
+        if citation_found and not in_code_block(llm_out):
+            numerical_value = int(citation_found.group(1))
+            if 1 <= numerical_value <= max_citation_num:
+                context_llm_doc = context_docs[numerical_value - 1]
 
-#                 link = context_llm_doc.link
-#                 target_citation_num = doc_id_to_rank_map[context_llm_doc.document_id]
+                link = context_llm_doc.link
+                target_citation_num = doc_id_to_rank_map[context_llm_doc.document_id]
 
-#                 curr_segment = re.sub(
-#                     rf"\[{numerical_value}\]", f"[{target_citation_num}]", curr_segment
-#                 )
+                curr_segment = re.sub(
+                    rf"\[{numerical_value}\]", f"[{target_citation_num}]", curr_segment
+                )
 
-#                 if target_citation_num not in cited_inds:
-#                     cited_inds.add(target_citation_num)
-#                     yield CitationInfo(
-#                         citation_num=target_citation_num,
-#                         document_id=context_llm_doc.document_id,
-#                     )
+                if target_citation_num not in cited_inds:
+                    cited_inds.add(target_citation_num)
+                    yield CitationInfo(
+                        citation_num=target_citation_num,
+                        document_id=context_llm_doc.document_id,
+                    )
 
-#                 if link:
-#                     curr_segment = re.sub(r"\[", "[[", curr_segment, count=1)
-#                     curr_segment = re.sub("]", f"]]({link})", curr_segment, count=1)
+                if link:
+                    curr_segment = re.sub(r"\[", "[[", curr_segment, count=1)
+                    curr_segment = re.sub("]", f"]]({link})", curr_segment, count=1)
 
-#         if re.search(possible_citation_pattern, curr_segment):
-#             continue
+        if re.search(possible_citation_pattern, curr_segment):
+            continue
 
-#         if curr_segment and curr_segment[-1] == "[":
-#             curr_segment = curr_segment[:-1]
-#             prepend_bracket = True
+        if curr_segment and curr_segment[-1] == "[":
+            curr_segment = curr_segment[:-1]
+            prepend_bracket = True
 
-#         yield UnpodAnswerPiece(answer_piece=curr_segment)
-#         curr_segment = ""
+        yield UnpodAnswerPiece(answer_piece=curr_segment)
+        curr_segment = ""
 
-#     if curr_segment:
-#         if prepend_bracket:
-#             yield UnpodAnswerPiece(answer_piece="[" + curr_segment)
-#         else:
-#             yield UnpodAnswerPiece(answer_piece=curr_segment)
+    if curr_segment:
+        if prepend_bracket:
+            yield UnpodAnswerPiece(answer_piece="[" + curr_segment)
+        else:
+            yield UnpodAnswerPiece(answer_piece=curr_segment)
 
-# def build_citation_processor(
-#     context_docs: List[LlmDoc], search_order_docs: List[LlmDoc]
-# ) -> StreamProcessor:
-#     """
-#     Build a citation processor to handle token streams.
-#     """
-#     def stream_processor(tokens: Iterator[str]) -> AnswerQuestionStreamReturn:
-#         yield from extract_citations_from_stream(
-#             tokens=tokens,
-#             context_docs=context_docs,
-#             doc_id_to_rank_map=map_document_id_order(search_order_docs),
-#         )
+def build_citation_processor(
+    context_docs: List[LlmDoc], search_order_docs: List[LlmDoc]
+) -> StreamProcessor:
+    """
+    Build a citation processor to handle token streams.
+    """
+    def stream_processor(tokens: Iterator[str]) -> AnswerQuestionStreamReturn:
+        yield from extract_citations_from_stream(
+            tokens=tokens,
+            context_docs=context_docs,
+            doc_id_to_rank_map=map_document_id_order(search_order_docs),
+        )
 
-#     return stream_processor
+    return stream_processor
 
 def get_citation(docs: List[Dict[str, Union[str, dict]]], msg: str) -> Citation:
     """

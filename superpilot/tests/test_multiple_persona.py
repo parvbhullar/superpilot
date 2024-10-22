@@ -5,6 +5,7 @@ import argparse
 import json
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 from superpilot.examples.persona.executor import PersonaGenExecutor
+from superpilot.examples.persona.rank_persona import rank_personas
 def persona():
 
     query='Top traders of the world'
@@ -33,16 +34,31 @@ def persona():
 
     # print('AI Personas')
     # print(response)
+
+
+
 async def generate_personas(query):
     process = PersonaGenExecutor()
-    objective = f"Create 6 detailed AI agent persona based on the- user_query: {query}"
+    objective = f"Create 10 detailed AI agent persona based on the- user_query: {query}"
     response = await (process.process_row(objective))
-    print(response)
+    #print(response)
     return response.content
+
+
+
+
+
+    
 def test_persona():
+
     asyncio.run(generate_personas('Top inventions of the world'))
+
+
+
 
 
 if __name__ == "__main__":
     # persona()
-    test_persona()
+    #test_persona()
+    query='Top historical events of the world'
+    rank_personas(query)

@@ -13,8 +13,8 @@ import pandas as pd
 
 from superpilot.examples.persona.schema import Message, User, Role, Context
 from superpilot.examples.persona.handler import PersonaHandler
-from superpilot.core.evals.doc_eval import get_eval
-from superpilot.examples.persona.citation_processing import get_citation
+from superpilot.examples.persona.doc_eval import get_eval
+#from superpilot.examples.persona.citation_processing import get_citation
 from superpilot.examples.persona.followup_gen import FollowUpGenExecutor
 async def get_agent_response(query):
     
@@ -40,64 +40,7 @@ async def get_agent_response(query):
     return agent_json
 
 
-"""
 
-async def get_docs(query,ground_truth):
-    citations={}
-    citation_num={}
-    eval_docs=[]
-    url = "http://qa-search-service.co/api/v1/search/query/docs/"
-    payload = {
-        "query": query,
-        "kn_token": []
-    }
-
-    # Measure the time taken for the request
-    start_time = time.time()
-    response = requests.post(url, json=payload,timeout=5)
-    end_time = time.time()
-
-    # Calculate the response time
-    response_time = end_time - start_time
-
-    # Print the response status code, time taken, and the response data
-    print(f"Response Status Code: {response.status_code}")
-    print(f"Response Time: {response_time:.4f} seconds")
-    result=response.json()
-    answers=[]
-    print('Response Length',len(result["data"]))
-    # for doc in result["data"]:
-    #     main_content=str(doc["content"])
-    #     if len(main_content.split())>300:
-    #         score=get_eval(question=main_content,ground_truth=ground_truth,answer=main_content)
-    #         if (score.iloc[0])>0.7:
-    #             eval_docs.append(doc)
-
-    for doc in result["data"]:
-        main_content=str(doc["content"])
-        if len(main_content.split())>250:
-            answers.append(main_content)
-    
-    n=len(answers)
-    print("Length of contents",n)
-    question=[query]*n
-    ground_truths=[ground_truth]*n
-    score=get_eval(question=question,ground_truth=ground_truths,answer=answers)
-    print("Score List",score)
-    
-    for idx, (doc, score_value) in enumerate(zip(result["data"], score), start=1):
-        if score_value > 0.20:
-            eval_docs.append(doc)
-            citations[str(idx)] = len(str(doc["content"]))  # Assuming 'id' is a unique identifier in doc
-            citation_num[str(idx)] = doc["document_id"]  # Create a citation reference
-
-
-    #print (main_content)
-    print("Len of Eval Docs")
-    print(len(eval_docs))
-    #print(eval_docs[0])
-    return eval_docs,citations,citation_num
-"""
 
 def get_docs(query, ground_truth):
     citations = {}
@@ -143,7 +86,7 @@ def get_docs(query, ground_truth):
     # Prepare inputs for evaluation in a batch
     question = [query] * n
     ground_truths = [ground_truth] * n
-
+    
     # Batch evaluation (optimizing this part by using get_eval in parallel)
     score = get_eval(question=question, ground_truth=ground_truths, answer=answers)
     print("Score List", score)
@@ -157,12 +100,42 @@ def get_docs(query, ground_truth):
 
     print("Len of Eval Docs:", len(eval_docs))
     
-    return (eval_docs, citations, citation_num)
+    return (eval_docs)
+
+
+def add_citations(response, docs):
+    citations = {}
+    citation_num = {}
+    citation_index = 1
+    for i, doc in enumerate(docs):
+        doc_content = doc["content"]
+        doc_id = doc["document_id"]
+        
+        # Find if doc_content appears in response text
+        if doc_content in response:
+            # Count the length of characters used
+            content_length = len(doc_content)
+            
+            # Add citation number in response text
+            citation_placeholder = f"{citation_index}"
+            response = response.replace(doc_content, doc_content + citation_placeholder)
+            
+            # Update the citations and citation_num dictionaries
+            citations[str(citation_index)] = content_length
+            citation_num[str(citation_index)] = doc_id
+            
+            # Increment citation index for next document
+            citation_index += 1
+            
+    return response, citations, citation_num
 
 
 
 
 async def query_process_agent(query:str,ground_truth):
+    
+    
+    
     agent= {
                 "persona_name": "HeritageReviver",
                 "tags": [
@@ -183,12 +156,27 @@ async def query_process_agent(query:str,ground_truth):
             }
     try:
 
-        data,citations,citation_num = get_docs(query, ground_truth)
+        data= get_docs(query, ground_truth)
     except Exception as e:
         print(f"Error retrieving documents: {e}")
         return None
     
-    message = Message.create(message=query,data=data)
+    block_json={
+        'content':query,
+        'data':data
+    }
+    agent["data"]=data
+    agent["query"]=query
+    
+
+    #msg=Message.from_block(block_json)
+    
+    message = Message.create(message=query)
+    message=message.from_block(block_json)
+    print("Message")
+    #print(message)
+    print("Message Complete")
+    
 
     #citations=get_citation(data)
 
@@ -205,13 +193,16 @@ async def query_process_agent(query:str,ground_truth):
         print()
 
         pilot = PersonaHandler.from_json(agent)
-        response = await pilot.execute(message, Context.factory("Session1"), None)
+        pilot._agent_data={"data":data}
+
+        response = await pilot.execute(message, Context.factory("Session1"),None)
         #print(response)
         msg = Message.from_model_response(response, message.session_id,
                                           User.add_user(pilot.name(), Role.ASSISTANT, data=pilot.dump()))
         print('Msg Generated')
+        #print(msg)
 
-
+        new_msg,citations,citation_num=add_citations(str(msg.message),data)
         #citations=get_citation(docs=data,msg=str(msg.message))
 
         followup=FollowUpGenExecutor()
@@ -229,7 +220,7 @@ async def query_process_agent(query:str,ground_truth):
                 del doc["metadata"]["main_content"]
         
         response={
-            'message':msg.message,
+            'message':new_msg,
             'ref_docs':docs,
             'citations':citations,
             "citation_num":citation_num,

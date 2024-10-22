@@ -71,7 +71,7 @@ class AIPersonaList(SchemaModel):
 
 class PersonaGenPrompt(SimplePrompt, ABC):
     DEFAULT_SYSTEM_PROMPT = """
-    You are tasked with creating 6 detailed AI Agents persona based on the given user_query. 
+    You are tasked with creating 10 detailed AI Agents persona based on the given user_query. 
     Create AI persons with different perspectives and areas of expertise, which helps user to understand different dimensions of the topic.
     These agents can have conflicting views, but should be informative and engaging.
     Response should contain name for the Agent, an informative description for what the pilot does, roles & responsibilities, related tags, and 1 to 5"
