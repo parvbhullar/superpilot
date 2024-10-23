@@ -38,6 +38,49 @@ from datasets import load_dataset
 from tqdm import tqdm
 
 
+
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer
+
+def get_embeddings(sentences):
+    model = SentenceTransformer('all-MiniLM-L6-v2')  # You can choose a different model if needed
+    return model.encode(sentences)
+
+def calculate_cosine_similarity(arr1, arr2):
+    # Validation: Check if either array is empty
+    if not arr1 or not arr2:
+        return 0
+
+    # Extend the shorter array by duplicating elements
+    len1, len2 = len(arr1), len(arr2)
+    if len1 < len2:
+        arr1 = arr1 * (len2 // len1) + arr1[:len2 % len1]
+    elif len2 < len1:
+        arr2 = arr2 * (len1 // len2) + arr2[:len1 % len2]
+
+    # Get embeddings for both arrays
+    embeddings1 = get_embeddings(arr1)
+    embeddings2 = get_embeddings(arr2)
+
+    # Calculate cosine similarity
+    similarity = cosine_similarity(embeddings1, embeddings2)
+    
+    # Return the average similarity score
+    return np.mean(similarity)
+
+
+
+
+
+
+
+
+
+
+
+
+
 class KnowledgeBase(SchemaModel):
     """
     Model representing a single knowledge base with its relevant data source information.
@@ -50,16 +93,16 @@ class Keywords(SchemaModel):
     """
     Class representing the data structure for follow-up questions based on a user query and response.
     """
-    keuwords: Dict = Field(None, 
+    keuwords: List[str] = Field(None, 
                                           description="List of keywords to follow revolving around query")
 
 
 class PersonaGenPrompt(SimplePrompt, ABC):
     DEFAULT_SYSTEM_PROMPT = """
-    You are tasked with creating 20 one words keywords based on the given user_query and give a relevancy score between 1-5 for each keyword according to its relevancy ith query. 
+    You are tasked with creating 5 one words keywords based on the given user_query. 
     These keywords should encourage deeper exploration of the user_query, covering different aspects. 
-    Each keyword should have a relevancy score which will  be relevant to user_query.
-    Please generate the following fields in a structured dict format:
+    Each keyword should have a relevancy  which will  be relevant to user_query.
+    Please generate the following fields in a list of strings format:
     
     """
 
@@ -133,7 +176,7 @@ class KeywordsGenExecutor(BaseExecutor):
     async def execute(self, query:str):
         # Load the dataset
         
-            objective = f"Create a 20 one word keywords based on {query} revolving around context of {query} and give a relevant score between 1-5 for each keyword according {query}"
+            objective = f"Create a 5 one word keywords based on {query} revolving around context of {query}"
             response = await self.process_row(objective)
             return(response.content)
         #         for col_name, col_value in response.content.items():
@@ -179,8 +222,8 @@ def calculate_relevancy(persona, query, keywords):
     for key, score in keywords.items():
         if key in persona['tags']:
             relevancy_score += score
-        if any(key in question for question in persona['questions']):
-            relevancy_score += score
+        # if any(key in question for question in persona['questions']):
+        #     relevancy_score += score
         if key in persona['about'].lower() or key in persona['persona'].lower():
             relevancy_score += score
 
@@ -200,50 +243,123 @@ async def generate_personas(query):
     #print(response)
     return response.content
 
+import openai
+# from datasets import Dataset 
+# from ragas.metrics import answer_relevancy,faithfulness, answer_correctness
+# from ragas import evaluate
+def generate_tags(input_text, model="gpt-3.5-turbo", num_tags=3):
+    try:
+        print()
+        keyword=asyncio.run(generate_keyword_scores(input_text))
+        print("Keywords",keyword)
+        print()
+        tags=keyword['keuwords']
+        return tags
+    
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return []
+
+
+
+# def filtered_agents(query,personas):
+#     result=[]
+#     answers='history'
+#     for persona in personas:
+#         data_samples={
+#                 'question':[query],
+#                 'answer':' '.join(map(str, answers)),
+#                 'ground_truth':' '.join(map(str, persona["tags"])),
+#             }
+#         dataset = Dataset.from_dict(data_samples)
+#         score = evaluate(dataset,metrics=[answer_correctness])
+#         sc=score.to_pandas()
+#         sc['metrics']='correctness'
+#         result.append(sc)
+#         #print(truth[0])
+#         print(persona["name"],sc['answer_correctness'].iloc(0))
+
+def filtered_agents(query, personas):
+    tags = generate_tags(query)
+    ranked_personas = []
+
+    for persona in personas:
+        cos = calculate_cosine_similarity(persona["tags"], tags)
+        print(cos)
+        # Only append if cosine similarity is greater than 0
+        if cos > 0.20:
+            ranked_personas.append((persona, cos))
+
+    # Sort the ranked_personas list by cosine similarity in descending order
+    ranked_personas.sort(key=lambda x: x[1], reverse=True)
+
+    # Extract only the persona objects in sorted order
+    ranked_persona_list = [persona[0] for persona in ranked_personas]
+
+    return ranked_persona_list
+
+import requests
+def generate_agent_response(query):
+    url = "http://qa-search-service.co/api/v1/search/query/agents/"
+    payload = {
+        "query": query,
+        }
+    response = requests.post(url, json=payload,timeout=5)
+    result=response.json()
+    data=result["data"]
+    agents=[item["metadata"] for item in data]
+
+    return agents
+
+
 
 
 def rank_personas(query:str):
-    personas=asyncio.run(generate_personas(query))
+    #personas=asyncio.run(generate_personas(query))
+    personas=generate_agent_response(query)
+    
+    ranked_personas=filtered_agents(query=query,personas=personas)
     print("PERSONAS")
-    personas=personas['personas']
+    #personas=personas['personas']
     print("Number of Personas",len(personas))
     print("Tags")
     for i, persona in enumerate(personas, start=1):
         print(f"{i}.{persona['persona_name']} - {persona['tags']}")
 
+    print()
 
-    keywords = {
-    'inventions': 5,
-    'history': 4,
-    'technology': 3,
-    'innovation': 3,
-    'impact': 2,
-    'future': 2,
-    'events':2,
-    'economics': 2,
-    'society': 1,
-    'environment': 1,
-    'science': 3,
-    'analysis':2,
-    'research':2,
-    'data':3,
-    'politics':2,
-    }
-    keyword=asyncio.run(generate_keyword_scores(query))
-    print("Keywords",keyword)
+
+    # keywords = {
+    # 'inventions': 5,
+    # 'history': 4,
+    # 'technology': 3,
+    # 'innovation': 3,
+    # 'impact': 2,
+    # 'future': 2,
+    # 'events':2,
+    # 'economics': 2,
+    # 'society': 1,
+    # 'environment': 1,
+    # 'science': 3,
+    # 'analysis':2,
+    # 'research':2,
+    # 'data':3,
+    # 'politics':2,
+    # }
+    
 
     #query = "Top inventions of the world"
 
 # Rank personas by relevancy score, updating keywords dynamically if necessary
-    ranked_personas = sorted(personas, key=lambda p: calculate_relevancy(p, query, keywords), reverse=True)
+    #ranked_personas = sorted(personas, key=lambda p: calculate_relevancy(p, query, keywords), reverse=True)
 
     # Display ranked personas from top to bottom
     for i, persona in enumerate(ranked_personas, start=1):
         print(f"{i}. {persona['persona_name']}")
 
     # Display updated keywords for reference
-    print("\nUpdated Keywords:")
-    for key, score in keywords.items():
-        print(f"{key}: {score}")
+    # print("\nUpdated Keywords:")
+    # for key, score in keywords.items():
+    #     print(f"{key}: {score}")
 
     return ranked_personas
