@@ -25,9 +25,9 @@ from superpilot.examples.answering.models import(
     build_content_with_imgs,
 )
 
-if TYPE_CHECKING:
-    from super_store.db.models import ChatMessage
-    from super_store.db.models import Prompt
+# if TYPE_CHECKING:
+#     from super_store.db.models import ChatMessage
+#     from super_store.db.models import Prompt
 
 
 StreamProcessor = Callable[[Iterator[str]], AnswerQuestionStreamReturn]

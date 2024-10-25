@@ -476,6 +476,7 @@ class Message(BaseModel):
         return {
             "message": self.message,
             "data": json.dumps(self.data),
+            #"data": self.data,
             "attachments": [c.summary for c in self.attachments],
             "event": self.event,
             "session_id": self.session_id,

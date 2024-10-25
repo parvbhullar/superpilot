@@ -30,35 +30,35 @@ from superpilot.examples.answering.stream_processing.citation_processing import 
 )
 from superpilot.examples.answering.stream_processing.quotes_processing import (
     build_quotes_processor,
-)
-from super_store.llm.interfaces import LLM
-from super_store.llm.utils import get_default_llm_tokenizer
-from super_store.llm.utils import message_generator_to_string_generator
-from super_store.tools.custom.custom_tool_prompt_builder import (
-    build_user_message_for_custom_tool_for_non_tool_calling_llm,
-)
-from super_store.tools.force import filter_tools_for_force_tool_use
-from super_store.tools.force import ForceUseTool
-from super_store.tools.images.image_generation_tool import IMAGE_GENERATION_RESPONSE_ID
-from super_store.tools.images.image_generation_tool import ImageGenerationResponse
-from super_store.tools.images.image_generation_tool import ImageGenerationTool
-from super_store.tools.images.prompt import build_image_generation_user_prompt
-from super_store.tools.message import build_tool_message
-from super_store.tools.message import ToolCallSummary
-from super_store.tools.search.search_tool import FINAL_CONTEXT_DOCUMENTS
-from super_store.tools.search.search_tool import SEARCH_DOC_CONTENT_ID
-from super_store.tools.search.search_tool import SEARCH_RESPONSE_SUMMARY_ID
-from super_store.tools.search.search_tool import SearchResponseSummary
-from super_store.tools.search.search_tool import SearchTool
-from super_store.tools.tool import Tool
-from super_store.tools.tool import ToolResponse
-from super_store.tools.tool_runner import (
-    check_which_tools_should_run_for_non_tool_calling_llm,
-)
-from super_store.tools.tool_runner import ToolCallFinalResult
-from super_store.tools.tool_runner import ToolCallKickoff
-from super_store.tools.tool_runner import ToolRunner
-from super_store.tools.utils import explicit_tool_calling_supported
+ )
+# from super_store.llm.interfaces import LLM
+# from super_store.llm.utils import get_default_llm_tokenizer
+# from super_store.llm.utils import message_generator_to_string_generator
+# from super_store.tools.custom.custom_tool_prompt_builder import (
+#     build_user_message_for_custom_tool_for_non_tool_calling_llm,
+# )
+# from super_store.tools.force import filter_tools_for_force_tool_use
+# from super_store.tools.force import ForceUseTool
+# from super_store.tools.images.image_generation_tool import IMAGE_GENERATION_RESPONSE_ID
+# from super_store.tools.images.image_generation_tool import ImageGenerationResponse
+# from super_store.tools.images.image_generation_tool import ImageGenerationTool
+# from super_store.tools.images.prompt import build_image_generation_user_prompt
+# from super_store.tools.message import build_tool_message
+# from super_store.tools.message import ToolCallSummary
+# from super_store.tools.search.search_tool import FINAL_CONTEXT_DOCUMENTS
+# from super_store.tools.search.search_tool import SEARCH_DOC_CONTENT_ID
+# from super_store.tools.search.search_tool import SEARCH_RESPONSE_SUMMARY_ID
+# from super_store.tools.search.search_tool import SearchResponseSummary
+# from super_store.tools.search.search_tool import SearchTool
+# from super_store.tools.tool import Tool
+# from super_store.tools.tool import ToolResponse
+# from super_store.tools.tool_runner import (
+#     check_which_tools_should_run_for_non_tool_calling_llm,
+# )
+# from super_store.tools.tool_runner import ToolCallFinalResult
+# from super_store.tools.tool_runner import ToolCallKickoff
+# from super_store.tools.tool_runner import ToolRunner
+# from super_store.tools.utils import explicit_tool_calling_supported
 
 
 def _get_answer_stream_processor(
@@ -78,7 +78,7 @@ def _get_answer_stream_processor(
     raise RuntimeError("Not implemented yet")
 
 
-AnswerStream = Iterator[AnswerQuestionPossibleReturn | ToolCallKickoff | ToolResponse]
+AnswerStream = Iterator[AnswerQuestionPossibleReturn]
 
 
 class Answer:
@@ -93,13 +93,13 @@ class Answer:
         single_message_history: str | None = None,
         # newly passed in files to include as part of this question
         # TODO THIS NEEDS TO BE HANDLED
-        latest_query_files: list[InMemoryChatFile] | None = None,
-        files: list[InMemoryChatFile] | None = None,
-        tools: list[Tool] | None = None,
+        #latest_query_files: list[InMemoryChatFile] | None = None,
+        files: list[LlmDoc] | None = None,
+        #tools: list[Tool] | None = None,
         # if specified, tells the LLM to always this tool
         # NOTE: for native tool-calling, this is only supported by OpenAI atm,
         #       but we only support them anyways
-        force_use_tool: ForceUseTool | None = None,
+        #force_use_tool: ForceUseTool | None = None,
         # if set to True, then never use the LLMs provided tool-calling functonality
         skip_explicit_tool_calling: bool = False,
         # Returns the full document sections text from the search tool
@@ -112,11 +112,11 @@ class Answer:
 
         self.question = question
 
-        self.latest_query_files = latest_query_files or []
+        #self.latest_query_files = latest_query_files or []
         self.file_id_to_file = {file.file_id: file for file in (files or [])}
 
-        self.tools = tools or []
-        self.force_use_tool = force_use_tool
+        self.tools = []
+        self.force_use_tool = None
         self.skip_explicit_tool_calling = skip_explicit_tool_calling
 
         self.message_history = message_history or []
@@ -127,14 +127,13 @@ class Answer:
         self.prompt_config = prompt_config
 
         self.llm = llm
-        self.llm_tokenizer = get_default_llm_tokenizer()
+        #self.llm_tokenizer = get_default_llm_tokenizer()
 
         self._final_prompt: list[BaseMessage] | None = None
 
         self._streamed_output: list[str] | None = None
         self._processed_stream: list[
-            AnswerQuestionPossibleReturn | ToolResponse | ToolCallKickoff
-        ] | None = None
+            AnswerQuestionPossibleReturn] | None = None
 
         self._return_contexts = return_contexts
 
@@ -475,3 +474,6 @@ class Answer:
                 citations.append(packet)
 
         return citations
+
+
+
