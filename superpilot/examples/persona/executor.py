@@ -143,7 +143,7 @@ class PersonaGenExecutor(BaseExecutor):
 
     async def process_row(self, objective):
         response = await self.persona_pilot.execute(objective)
-        print(response.content)
+        #print(response.content)
         return response
 
     async def execute(self, args):
