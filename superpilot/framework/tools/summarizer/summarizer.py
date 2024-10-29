@@ -34,7 +34,7 @@ class Summarizer:
         try:
             summary_text = await loop.run_in_executor(executor, self.summarize_text, content, question, url)
 
-            return f"Information gathered from url {url}: {summary_text}"
+            return f"SearchDoc gathered from url {url}: {summary_text}"
         except Exception as e:
             print(f"An error occurred while processing the url {url}: {e}")
             raise e

@@ -59,9 +59,9 @@ async def async_browse(url: str, question: str, websocket: WebSocket = None) -> 
 
         if websocket:
             await websocket.send_json(
-                {"type": "logs", "output": f"📝 Information gathered from url {url}: {summary_text}"})
+                {"type": "logs", "output": f"📝 SearchDoc gathered from url {url}: {summary_text}"})
 
-        return f"Information gathered from url {url}: {summary_text}"
+        return f"SearchDoc gathered from url {url}: {summary_text}"
     except Exception as e:
         print(f"An error occurred while processing the url {url}: {e}")
         raise e
