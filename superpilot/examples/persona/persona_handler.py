@@ -24,8 +24,7 @@ from superpilot.examples.persona.schema import Message, Context
 from superpilot.examples.persona.vector_service import Retriever, ServiceRM
 from superpilot.framework.llm import count_string_tokens
 import inflection
-from superpilot.examples.persona.answering.simple_answer import SimpleAnswer
-# from superpilot.examples.persona.answering.new_answer import Answer
+
 SEARCH_SERVICE_URL = os.getenv("SEARCH_SERVICE_URL")
 
 class RoleConfiguration(SystemConfiguration):
@@ -40,7 +39,7 @@ class HandlerConfiguration(SystemConfiguration):
     location: PluginLocation
     role: RoleConfiguration = None
     execution_nature: ExecutionNature = ExecutionNature.AUTO
-    models: Dict[LanguageModelClassification, LanguageModelConfiguration] = {}
+    models: Dict[LanguageModelClassification, LanguageModelConfiguration] = None
     callbacks: List[PluginLocation] = None
     prompt_strategy: SystemConfiguration = None
     memory_provider_required: bool = False
@@ -72,7 +71,7 @@ class BaseHandler(abc.ABC):
     @abc.abstractmethod
     def dump(self):
         ...
-class PersonaAgent(BaseHandler, ABC):
+class PersonaHandler(BaseHandler, ABC):
     """A class representing a handler step."""
 
     default_configuration = HandlerConfiguration(
@@ -81,8 +80,8 @@ class PersonaAgent(BaseHandler, ABC):
             storage_route="super.apps.ais_app.agents.base.PersonaHandler",
         ),
         role=RoleConfiguration(
-            name="persona_agent",
-            role="A agent to handle user queries based on given persona.",
+            name="persona_handler",
+            role="A handler to handle user queries based on given persona.",
             cycle_count=0,
             max_task_cycle_count=3,
             creation_time=datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
@@ -96,7 +95,6 @@ class PersonaAgent(BaseHandler, ABC):
             logger: logging.Logger = logging.getLogger(__name__),
             model_providers: Dict[str, LanguageModelProvider] = None,
             session_id: str = None,
-            
     ) -> None:
         self._session_id = session_id
         self._logger = logger
@@ -118,7 +116,6 @@ class PersonaAgent(BaseHandler, ABC):
             self._prompt_strategy = PersonaPrompt(**prompt_config)
 
         self.retriever = Retriever(rm=ServiceRM(SEARCH_SERVICE_URL))
-        self.simple_answer = None
 
 
     async def execute(
@@ -128,7 +125,7 @@ class PersonaAgent(BaseHandler, ABC):
         self._logger.debug(f"Executing task: {objective}")
         if not isinstance(objective, Message):
             # if task is not passed, one is created with default settings
-            task = Message.create(message=objective)
+            task = Message.create(objective)
         else:
             task = objective
         context = kwargs.get('context', None)
@@ -141,39 +138,22 @@ class PersonaAgent(BaseHandler, ABC):
         return context_res
 
 
-    async def exec_task(self, message: Message, context: Context, **kwargs) -> LanguageModelResponse:
-        kn_bases = self._agent_data.get('knowledge_bases', ['U83Y7PIIL1CICBT6LTVKNXRA'])
+    async def exec_task(self, message: Message, context:Context, **kwargs) -> LanguageModelResponse:
+        ## TODO fetch data from store service from those knowledge bases and update the template_kwargs
+        # Call the retriever on a particular query.
+        kn_bases = self._agent_data.get('knowledge_bases',
+                                        ['U83Y7PIIL1CICBT6LTVKNXRA'])  # TODO remove hardcoded knowledge base
         info = self.retriever.search(message.message, kn_bases=[])
-        info=message.data
-        # Prepare to use SimpleAnswer
+
+        template_kwargs = message.generate_kwargs()
+        template_kwargs.update(kwargs)
+        template_kwargs['gathered_information'] = info
+        template_kwargs['context'] = context.summary()
         
-        persona_info = {
-            'persona': self._configuration.role.role  # Assuming role contains persona information
-        }
-        print("Persona Info",persona_info)
-        
-        simple_answer_instance = SimpleAnswer(
-            question=message.message,
-            docs=info,
-            persona=persona_info,
-            message_history=[]
+        return await self.chat_with_model(
+            self._prompt_strategy,
+            **template_kwargs,
         )
-
-        # Collect responses from SimpleAnswer
-        responses = []
-        async for answer in simple_answer_instance.llm_answer:
-            responses.append(answer)
-
-        # Process or format the responses as needed before returning
-        combined_response = "\n".join(responses)
-        
-        return LanguageModelResponse.parse_obj({"content": combined_response})
-
-
-        # return await self.chat_with_model(
-        #     self._prompt_strategy,
-        #     **template_kwargs,
-        # )
 
     async def chat_with_model(
         self,
@@ -260,13 +240,12 @@ class PersonaAgent(BaseHandler, ABC):
             "name": role_config.name,
             "role": role_config.role,
             "agent_data": self._agent_data,
-            #"docs":docs,
             # "prompt_strategy": self._prompt_strategy.get_config().__dict__
         }
         return dump
 
     @classmethod
-    def from_json(cls, json_data: str|dict) -> "PersonaAgent":
+    def from_json(cls, json_data: str|dict) -> "PersonaHandler":
         if isinstance(json_data, dict):
             data = json_data
         else:
@@ -279,12 +258,12 @@ class PersonaAgent(BaseHandler, ABC):
             smart_model_temp=fields.get('smart_model_temp', 0.2),
             fast_model_temp=fields.get('fast_model_temp', 0.2),
         )
-        #combined_content = "\n".join([clean_content(d['content']) for d in data['data']])
+        combined_content = "\n".join([clean_content(d['content']) for d in data['data']])
 
-        #print("Combined Content")
+        print("Combined Content")
         #print(combined_content)
-        #query=data['query']
-        #user_prompt = ("user query:"+query+"\n"+"gathered information:"+combined_content+"\n")
+        query=data['query']
+        user_prompt = ("user query:"+query+"\n"+"gathered information:"+combined_content+"\n")
 
 
 
@@ -299,8 +278,8 @@ class PersonaAgent(BaseHandler, ABC):
         
         prompt_strategy = PersonaPrompt.factory(
             system_prompt=system_prompt,
-            user_prompt_template=PersonaPrompt.DEFAULT_USER_PROMPT_TEMPLATE
-            #user_prompt_template=user_prompt
+            #user_prompt_template=PersonaPrompt.DEFAULT_USER_PROMPT_TEMPLATE
+            user_prompt_template=user_prompt
         )
 
         configuration = HandlerConfiguration(
@@ -311,7 +290,6 @@ class PersonaAgent(BaseHandler, ABC):
             role=RoleConfiguration(
                 name=fields.get('persona_name', ''),
                 role=fields.get('about', ''),
-                persona=fields.get('persona', ''),
                 cycle_count=0,
                 max_task_cycle_count=3,
                 creation_time=datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
@@ -343,5 +321,3 @@ def clean_content(content):
     # Replace '{' and '}' with empty strings
     cleaned = cleaned.replace('{', '').replace('}', '')
     return cleaned
-
-

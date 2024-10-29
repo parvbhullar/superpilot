@@ -4,48 +4,30 @@ import asyncio
 
 # Add the parent directory to the system path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+from typing import Dict
 
-
-#from superpilot.examples.persona.answering.agent import PersonaAgent
-# from superpilot.examples.persona.schema import Message, User, Role, Context
+from superpilot.examples.persona.schema import Message, User, Role, Context
 # from superpilot.core.planning import LanguageModelClassification, LanguageModelResponse, PromptStrategy
 from superpilot.core.store.chat.chat_models import LlmDoc
 from superpilot.core.store.vectorstore.vespa.configs.constants import DocumentSource
 from superpilot.examples.persona.answering.simple_answer import SimpleAnswer
+from superpilot.examples.persona.answering.agent import PersonaAgent
 query='Most important Historical Event of 21st Century'
 persona={
-                "persona_name": "Multi-AI",
+                "persona_name": "IT Policy Creator",
                 "tags": [
-                    "Prompt Engineering"
+                    "Policy Creator",
+                    "It Policies",
+                    "Security Policies"
                 ],
-                "handle": "multi-ai",
-                "about": "Multi-AI Based Response",
-                "persona": "You are MultiAIGPT, An advanced AI system designed to handle multiple tasks simultaneously, providing efficient and accurate responses based on the user's input.",
-                "knowledge_bases": [],
-                "query":query
+                "handle": "it-policy-creator",
+                "about": "I help you to create IT policies for the businesses i.e. Information Security policy, Device Security Policy and many more.",
+                "persona": "You are an experienced IT policy specialist specialising in creating comprehensive and tailored IT policies for businesses. I need your help to develop several IT policies for my organization, including but not limited to:\n\nInformation Security Policy\nDevice Security Policy\nData Protection Policy\nNetwork Security Policy\nAcceptable Use Policy\nRequirements:\n\nCustomization: The policies should be tailored to a small/medium/large business.\n\nStructure: Each policy should include the following sections:\n\nPurpose\nScope\nPolicy Statement\nRoles and Responsibilities\nProcedures\nCompliance and Enforcement\nReview and Maintenance\nContent Guidelines:\n\nCompliance: Ensure policies align with relevant laws and regulations such as GDPR, HIPAA, or other industry-specific standards.\nClarity: Use clear and concise language that is easily understandable by all employees.\nComprehensiveness: Cover key areas such as data protection, access controls, incident response, employee training, and acceptable use of company resources.\nPracticality: Provide actionable procedures and guidelines that can be realistically implemented within the organization.\nAdditional Information:\n\nHighlight any industry best practices that should be incorporated.\nConsider any potential risks specific to the industry or company size.\nEmphasize the importance of employee adherence and outline consequences for non-compliance.\nObjective:\n\nDeliver a set of well-structured, comprehensive IT policies that will enhance our organization's security posture and ensure compliance with all relevant regulations.",
+                "knowledge_bases": [
+                    "KPVTVCGZ61XUD37VRZGEUBZG",
+                    "PZ0ATSKMK9J3ST3ZVELRKCP9"
+                ]
             }
-
-from openai import OpenAI
-def openai_response():
-    
-    client = OpenAI()
-
-    completion = client.chat.completions.create(
-    model="gpt-4o",
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": f"{query}"}
-    ]
-    )
-    print("Resposne")
-    print(completion.choices[0].message)
-
-
-
-
-
-
-
 
 import time
 import requests
@@ -112,47 +94,35 @@ def to_LlmDoc():
     
 
 
-# async def generate_response():
-#     # Generate a response based on the provided input
-#     # Example: fetch data from an API based on the input, apply necessary transformations, and return the response
-    
-#     try:
-#         data=get_response(query)
-#         docs={
-#             "data":data
-#         }
-#         message=Message.create(message=query,data=data)
-#         #message.data=data
-#         persona_agent=PersonaAgent.from_json(json_data=persona)
-#         persona_agent._agent_data=persona
-#         response= await persona_agent.execute(message,Context.factory("Session1"))
-#         # answer=SimpleAnswer(question=query,docs=data,persona=persona,llm=persona_agent._providers[LanguageModelClassification.SMART_MODEL])
-#         # print(answer.llm_answer())
-#         print(response)
-#     except Exception as e:
-#         print(f"Error generating response: {e}")
-#         print('No Data Found')
+# 
 
 
-async def generate_simple_answer():
-    
+async def generate_simple_answer(query: str, persona: Dict[str, str]):
     try:
+        data = to_LlmDoc()  # Assuming this function is defined elsewhere and returns a list of documents.
+        answer_generator = SimpleAnswer(question=query, docs=data, persona=persona)
         
-        data=to_LlmDoc()
-        answer=SimpleAnswer(question=query,docs=data,persona=persona,llm=None)
-        response=answer.llm_answer
-            
-        print("Simple Answer Response")
-        print(response)
+        print("Simple Answer Response:")
+        c=1
+        async for response in answer_generator.llm_answer:
+            print(c,":",response)
+            print()
+            c+=1
     except Exception as e:
         print(f"Error generating response: {e}")
         print('No Data Found')
 
 
+async def persona_agent():
+    data = to_LlmDoc()
+    message=Message.create(message=query,data=data)
+    pilot = PersonaAgent.from_json(persona)
+        # pilot = DSPyHandler.from_json(agent)
+    response = await pilot.execute(message, Context.factory("Session1"), None)
+    print("Response from persona agent")
+    print(response)
 
 if __name__ == "__main__":
-    #asyncio.run(generate_response())
-    #openai_response()
     loop = asyncio.get_event_loop()
-    # Run the generate_simple_answer coroutine in the current event loop
-    loop.run_until_complete(generate_simple_answer())
+    loop.run_until_complete(generate_simple_answer(query=query, persona=persona))
+    #loop.run_until_complete(persona_agent())
