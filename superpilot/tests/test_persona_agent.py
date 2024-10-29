@@ -99,15 +99,20 @@ def to_LlmDoc():
 
 async def generate_simple_answer(query: str, persona: Dict[str, str]):
     try:
+        config = {
+        'model_name': 'your_model_name',
+        'temperature': 0.5,
+        'max_tokens': 100
+            }       
         data = to_LlmDoc()  # Assuming this function is defined elsewhere and returns a list of documents.
-        answer_generator = SimpleAnswer(question=query, docs=data, persona=persona)
+        answer_generator = SimpleAnswer(config=config,question=query, docs=data, persona=persona)
         
         print("Simple Answer Response:")
-        c=1
-        async for response in answer_generator.llm_answer:
-            print(c,":",response)
-            print()
-            c+=1
+        
+        async for final_output in answer_generator.llm_answer:
+            print("Final Output:")
+            print(final_output)
+            
     except Exception as e:
         print(f"Error generating response: {e}")
         print('No Data Found')
