@@ -100,7 +100,7 @@ def to_LlmDoc():
 async def generate_simple_answer(query: str, persona: Dict[str, str]):
     try:
         config = {
-        'model_name': 'your_model_name',
+        'model_name': 'gpt-3.5-turbo',
         'temperature': 0.5,
         'max_tokens': 100
             }       
@@ -110,7 +110,7 @@ async def generate_simple_answer(query: str, persona: Dict[str, str]):
         print("Simple Answer Response:")
         
         async for final_output in answer_generator.llm_answer:
-            print("Final Output:")
+            #print("Final Output:")
             print(final_output)
             
     except Exception as e:

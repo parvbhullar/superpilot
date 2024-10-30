@@ -113,7 +113,8 @@ class SimpleAnswer:
 
         async for response, citation_key, citation_value in self._raw_output():
             # Append the response along with its citation reference
-            print(f"Response [{citation_key}]: {response}")
+            #print(f"Response [{citation_key}]: {response}")
+            yield response
             await asyncio.sleep(2)
             print()
             combined_answer.append(f"{str(response)} [{citation_key}]")  # Format as "Response [1]"
