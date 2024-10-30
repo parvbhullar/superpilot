@@ -110,7 +110,7 @@ async def generate_simple_answer(query: str, persona: Dict[str, str]):
         print("Simple Answer Response:")
         
         async for final_output in answer_generator.llm_answer:
-            #print("Final Output:")
+            print("Final Output:")
             print(final_output)
             
     except Exception as e:
