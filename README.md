@@ -156,3 +156,12 @@ search_step = SuperTaskPilot(super_ability_registry, model_providers)
 
 
 **Credits:** This framework relies on [AutoGPT's](https://github.com/Significant-Gravitas/Auto-GPT/tree/master/autogpt/core) core library for its underlying functionalities.
+
+
+
+### Additional Installation Steps
+
+After installing `superpilot`, you need to install the spaCy model:
+
+```bash
+python -m spacy download en-core-web-sm

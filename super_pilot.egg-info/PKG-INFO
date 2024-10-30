@@ -1,0 +1,547 @@
+Metadata-Version: 2.1
+Name: super-pilot
+Version: 0.5.3
+Summary: The Multi-Role Superpilot Programming Framework
+Home-page: https://github.com/parvbhullar/superpilot
+Author: ParvBhullar
+Author-email: parvinder@recalll.co
+License: MIT
+Keywords: superpilot multi-role multi-agent programming gpt llm
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: abstract_singleton
+Requires-Dist: aiohappyeyeballs
+Requires-Dist: aiohttp
+Requires-Dist: aiosignal
+Requires-Dist: alembic
+Requires-Dist: annotated-types
+Requires-Dist: anthropic
+Requires-Dist: antlr4-python3-runtime
+Requires-Dist: anyio
+Requires-Dist: appdirs
+Requires-Dist: argon2-cffi
+Requires-Dist: argon2-cffi-bindings
+Requires-Dist: async-timeout
+Requires-Dist: attrs
+Requires-Dist: auto_gpt_plugin_template
+Requires-Dist: autoflake
+Requires-Dist: azure-core
+Requires-Dist: azure-identity
+Requires-Dist: backoff
+Requires-Dist: backports.tarfile
+Requires-Dist: bcrypt
+Requires-Dist: beanie
+Requires-Dist: beautifulsoup4
+Requires-Dist: bert-extractive-summarizer
+Requires-Dist: black
+Requires-Dist: Brotli
+Requires-Dist: cachetools
+Requires-Dist: catalogue
+Requires-Dist: certifi
+Requires-Dist: cffi
+Requires-Dist: cfgv
+Requires-Dist: chardet
+Requires-Dist: charset-normalizer
+Requires-Dist: click
+Requires-Dist: click-log
+Requires-Dist: cloudpathlib
+Requires-Dist: colorama
+Requires-Dist: coloredlogs
+Requires-Dist: colorlog
+Requires-Dist: confection
+Requires-Dist: contourpy
+Requires-Dist: cryptography
+Requires-Dist: cssselect
+Requires-Dist: cssselect2
+Requires-Dist: cycler
+Requires-Dist: cymem
+Requires-Dist: Cython
+Requires-Dist: dataclasses-json
+Requires-Dist: datasets
+Requires-Dist: decorator
+Requires-Dist: Deprecated
+Requires-Dist: deprecation
+Requires-Dist: dill
+Requires-Dist: dirtyjson
+Requires-Dist: diskcache
+Requires-Dist: distlib
+Requires-Dist: distro
+Requires-Dist: dnspython
+Requires-Dist: docker
+Requires-Dist: docopt
+Requires-Dist: docutils
+Requires-Dist: docx
+Requires-Dist: docx2txt
+Requires-Dist: dotty-dict
+Requires-Dist: dspy
+Requires-Dist: ecdsa
+Requires-Dist: effdet
+Requires-Dist: email_validator
+Requires-Dist: emoji
+Requires-Dist: et-xmlfile
+Requires-Dist: eval_type_backport
+Requires-Dist: exceptiongroup
+Requires-Dist: faiss-cpu
+Requires-Dist: fastapi
+Requires-Dist: fastapi-users
+Requires-Dist: fastapi-users-db-beanie
+Requires-Dist: fastapi-users-db-sqlalchemy
+Requires-Dist: feedfinder2
+Requires-Dist: feedparser
+Requires-Dist: filelock
+Requires-Dist: filetype
+Requires-Dist: FLAML
+Requires-Dist: flatbuffers
+Requires-Dist: fonttools
+Requires-Dist: frozenlist
+Requires-Dist: fsspec
+Requires-Dist: future
+Requires-Dist: gitdb
+Requires-Dist: GitPython
+Requires-Dist: google-api-core
+Requires-Dist: google-api-python-client
+Requires-Dist: google-auth
+Requires-Dist: google-auth-httplib2
+Requires-Dist: google-cloud-vision
+Requires-Dist: google_search_results
+Requires-Dist: googleapis-common-protos
+Requires-Dist: gotrue
+Requires-Dist: greenlet
+Requires-Dist: grpcio
+Requires-Dist: grpcio-status
+Requires-Dist: gTTS
+Requires-Dist: h11
+Requires-Dist: h2
+Requires-Dist: hpack
+Requires-Dist: html5lib
+Requires-Dist: httpcore
+Requires-Dist: httplib2
+Requires-Dist: httpx
+Requires-Dist: humanfriendly
+Requires-Dist: hyperframe
+Requires-Dist: identify
+Requires-Dist: idna
+Requires-Dist: importlib-resources
+Requires-Dist: importlib_metadata
+Requires-Dist: inflection
+Requires-Dist: invoke
+Requires-Dist: iopath
+Requires-Dist: isort
+Requires-Dist: jaraco.classes
+Requires-Dist: jaraco.context
+Requires-Dist: jaraco.functools
+Requires-Dist: jeepney
+Requires-Dist: jieba3k
+Requires-Dist: Jinja2
+Requires-Dist: jiter
+Requires-Dist: joblib
+Requires-Dist: jsonpatch
+Requires-Dist: jsonpath-python
+Requires-Dist: jsonpointer
+Requires-Dist: jsonschema
+Requires-Dist: jsonschema-specifications
+Requires-Dist: keyring
+Requires-Dist: kiwisolver
+Requires-Dist: in
+Requires-Dist: langchain-community
+Requires-Dist: langchain-core
+Requires-Dist: langchain-openai
+Requires-Dist: langchain-text-splitters
+Requires-Dist: langchainplus-sdk
+Requires-Dist: langcodes
+Requires-Dist: langdetect
+Requires-Dist: langsmith
+Requires-Dist: language_data
+Requires-Dist: layoutparser
+Requires-Dist: lazy-model
+Requires-Dist: libmagic
+Requires-Dist: litellm
+Requires-Dist: llama-cloud
+Requires-Dist: llama-index
+Requires-Dist: llama-index-agent-openai
+Requires-Dist: llama-index-cli
+Requires-Dist: llama-index-core
+Requires-Dist: llama-index-embeddings-openai
+Requires-Dist: llama-index-graph-stores-nebula
+Requires-Dist: llama-index-indices-managed-llama-cloud
+Requires-Dist: llama-index-legacy
+Requires-Dist: llama-index-llms-azure-openai
+Requires-Dist: llama-index-llms-openai
+Requires-Dist: llama-index-multi-modal-llms-openai
+Requires-Dist: llama-index-program-openai
+Requires-Dist: llama-index-question-gen-openai
+Requires-Dist: llama-index-readers-file
+Requires-Dist: llama-index-readers-llama-parse
+Requires-Dist: llama-parse
+Requires-Dist: lxml
+Requires-Dist: magicattr
+Requires-Dist: makefun
+Requires-Dist: Mako
+Requires-Dist: marisa-trie
+Requires-Dist: markdown-it-py
+Requires-Dist: markdown2
+Requires-Dist: MarkupSafe
+Requires-Dist: marshmallow
+Requires-Dist: matplotlib
+Requires-Dist: md2pdf
+Requires-Dist: mdurl
+Requires-Dist: more-itertools
+Requires-Dist: motor
+Requires-Dist: mpmath
+Requires-Dist: msal
+Requires-Dist: msal-extensions
+Requires-Dist: multidict
+Requires-Dist: multiprocess
+Requires-Dist: murmurhash
+Requires-Dist: mypy-extensions
+Requires-Dist: ndg-httpsclient
+Requires-Dist: nebula3-python
+Requires-Dist: nest-asyncio
+Requires-Dist: networkx
+Requires-Dist: newspaper3k
+Requires-Dist: nh3
+Requires-Dist: nltk
+Requires-Dist: nodeenv
+Requires-Dist: numexpr
+Requires-Dist: numpy
+Requires-Dist: oauthlib
+Requires-Dist: odmantic
+Requires-Dist: olefile
+Requires-Dist: omegaconf
+Requires-Dist: onnx
+Requires-Dist: openai
+Requires-Dist: openapi-python-client
+Requires-Dist: openapi-schema-pydantic
+Requires-Dist: opencv-python
+Requires-Dist: openpyxl
+Requires-Dist: optuna
+Requires-Dist: orjson
+Requires-Dist: outcome
+Requires-Dist: packaging
+Requires-Dist: pandas
+Requires-Dist: passlib
+Requires-Dist: pathspec
+Requires-Dist: pdf2image
+Requires-Dist: pdfminer.six
+Requires-Dist: pdfplumber
+Requires-Dist: pi_heif
+Requires-Dist: pikepdf
+Requires-Dist: pillow
+Requires-Dist: pkginfo
+Requires-Dist: platformdirs
+Requires-Dist: playwright
+Requires-Dist: portalocker
+Requires-Dist: postgrest
+Requires-Dist: pre-commit
+Requires-Dist: preshed
+Requires-Dist: prompt_toolkit
+Requires-Dist: proto-plus
+Requires-Dist: protobuf
+Requires-Dist: psutil
+Requires-Dist: pwdlib
+Requires-Dist: py
+Requires-Dist: pyarrow
+Requires-Dist: pyasn1
+Requires-Dist: pyasn1_modules
+Requires-Dist: pycocotools
+Requires-Dist: pycparser
+Requires-Dist: pydantic
+Requires-Dist: pydantic-settings
+Requires-Dist: pydantic_core
+Requires-Dist: pydyf
+Requires-Dist: pyee
+Requires-Dist: pyflakes
+Requires-Dist: Pygments
+Requires-Dist: PyJWT
+Requires-Dist: pymongo
+Requires-Dist: PyMuPDF
+Requires-Dist: PyMuPDFb
+Requires-Dist: pyOpenSSL
+Requires-Dist: pyparsing
+Requires-Dist: pypdf
+Requires-Dist: PyPDF2
+Requires-Dist: pypdfium2
+Requires-Dist: pyphen
+Requires-Dist: pysbd
+Requires-Dist: PySocks
+Requires-Dist: pytesseract
+Requires-Dist: python-dateutil
+Requires-Dist: python-docx
+Requires-Dist: python-dotenv
+Requires-Dist: python-gitlab
+Requires-Dist: python-iso639
+Requires-Dist: python-jose
+Requires-Dist: python-magic
+Requires-Dist: python-multipart
+Requires-Dist: python-oxmsg
+Requires-Dist: python-pptx
+Requires-Dist: python-semantic-release
+Requires-Dist: pytz
+Requires-Dist: pyvespa
+Requires-Dist: PyYAML
+Requires-Dist: ragas
+Requires-Dist: RapidFuzz
+Requires-Dist: readme_renderer
+Requires-Dist: realtime
+Requires-Dist: referencing
+Requires-Dist: regex
+Requires-Dist: requests
+Requires-Dist: requests-file
+Requires-Dist: requests-oauthlib
+Requires-Dist: requests-toolbelt
+Requires-Dist: retry
+Requires-Dist: retrying
+Requires-Dist: rfc3986
+Requires-Dist: rich
+Requires-Dist: rpds-py
+Requires-Dist: rsa
+Requires-Dist: safetensors
+Requires-Dist: scikit-learn
+Requires-Dist: scipy
+Requires-Dist: SecretStorage
+Requires-Dist: selenium
+Requires-Dist: semver
+Requires-Dist: sentence-transformers
+Requires-Dist: sgmllib3k
+Requires-Dist: shellingham
+Requires-Dist: six
+Requires-Dist: smart-open
+Requires-Dist: smmap
+Requires-Dist: sniffio
+Requires-Dist: sortedcontainers
+Requires-Dist: soupsieve
+Requires-Dist: spacy
+Requires-Dist: spacy-legacy
+Requires-Dist: spacy-loggers
+Requires-Dist: SQLAlchemy
+Requires-Dist: srsly
+Requires-Dist: starlette
+Requires-Dist: storage3
+Requires-Dist: StrEnum
+Requires-Dist: striprtf
+Requires-Dist: structlog
+Requires-Dist: supabase
+Requires-Dist: supafunc
+Requires-Dist: sympy
+Requires-Dist: tabulate
+Requires-Dist: tenacity
+Requires-Dist: termcolor
+Requires-Dist: thinc
+Requires-Dist: threadpoolctl
+Requires-Dist: tiktoken
+Requires-Dist: timm
+Requires-Dist: tinycss2
+Requires-Dist: tinysegmenter
+Requires-Dist: tldextract
+Requires-Dist: tokenizers
+Requires-Dist: toml
+Requires-Dist: tomli
+Requires-Dist: tomlkit
+Requires-Dist: torch
+Requires-Dist: torchaudio
+Requires-Dist: torchvision
+Requires-Dist: tqdm
+Requires-Dist: transformers
+Requires-Dist: trio
+Requires-Dist: trio-websocket
+Requires-Dist: tweepy
+Requires-Dist: twine
+Requires-Dist: typer
+Requires-Dist: typing-inspect
+Requires-Dist: typing_extensions
+Requires-Dist: tzdata
+Requires-Dist: ujson
+Requires-Dist: unstructured
+Requires-Dist: unstructured-client
+Requires-Dist: unstructured-inference
+Requires-Dist: unstructured.pytesseract
+Requires-Dist: uritemplate
+Requires-Dist: urllib3
+Requires-Dist: urllib3-secure-extra
+Requires-Dist: uvicorn
+Requires-Dist: vespacli
+Requires-Dist: virtualenv
+Requires-Dist: wasabi
+Requires-Dist: wcwidth
+Requires-Dist: weasel
+Requires-Dist: weasyprint
+Requires-Dist: webdriver-manager
+Requires-Dist: webencodings
+Requires-Dist: websocket-client
+Requires-Dist: websockets
+Requires-Dist: wrapt
+Requires-Dist: wsproto
+Requires-Dist: XlsxWriter
+Requires-Dist: xxhash
+Requires-Dist: yarl
+Requires-Dist: zipp
+Requires-Dist: zopfli
+
+# Superpilot
+LLM based multi-model framework for AI apps. The SuperPilot Framework is a robust architecture designed to 
+build and execute various LLM app using prompt, abilities like text summarization, web searching, and more. 
+It leverages machine learning models from providers like OpenAI to perform these tasks. The framework consists of 
+several key components including OpenAI Provider, SimplePrompt, AbilityRegistry, and SuperTaskPilot, which are essential for smooth operation.
+
+# SuperPilot Framework - Quickstart Guide
+
+## Table of Contents
+1. [Initializing OpenAI Provider](#initializing-openai-provider)
+2. [Creating SimplePrompt](#creating-superprompt)
+3. [Setting Up AbilityRegistry](#setting-up-abilityregistry)
+4. [Executing SuperTaskPilot](#executing-supertaskpilot)
+
+## Initializing OpenAI Provider
+
+**Purpose:** To set up OpenAI as a model provider for handling language completions.
+
+### Steps:
+1. Import the necessary modules.
+2. Use the `OpenAIProvider.factory()` method to create an OpenAI Provider instance.
+3. Store this instance in the `model_providers` dictionary for later use.
+
+```python
+from superpilot.core.resource.model_providers import OpenAIProvider, ModelProviderName
+from superpilot.core.configuration import get_config
+
+config = get_config()
+open_ai_provider = OpenAIProvider.factory(config.openai_api_key)
+model_providers = {ModelProviderName.OPENAI: open_ai_provider}
+```
+
+## Creating SimplePrompt
+
+**Purpose:** To generate the prompt that will be passed to the OpenAI model for completion.
+
+### Steps:
+1. Import the SimplePrompt class.
+2. Initialize a SimplePrompt object.
+3. Build the prompt using `build_prompt()` method.
+
+```python
+from superpilot.core.planning.strategies.simple import SimplePrompt
+
+super_prompt = SimplePrompt.factory()
+prompt = super_prompt.build_prompt("Your Query Here")
+```
+
+# Using SimpleTaskPilot
+
+## Initial Setup
+
+Before running any queries, make sure all necessary modules are imported and environment variables, including the OpenAI API key, are set up.
+
+## Making a Query
+
+To make a query, utilize the `test_pilot()` function. The `query` string parameter specifies the information you're seeking.
+
+### Example 1: Weather in Mumbai
+
+```python
+query = "What is the weather in Mumbai"
+```
+
+This query instructs SimpleTaskPilot to fetch weather information for Mumbai.
+
+### Example 2: Stock Market Analysis
+
+```python
+query = "Analyze the stock market for today"
+```
+
+This query prompts SimpleTaskPilot to provide an analysis of today's stock market.
+
+### Example 3: Email Summarization
+
+```python
+query = "Summarize the last 10 emails"
+```
+
+This query will lead SimpleTaskPilot to summarize the last 10 emails in your inbox.
+
+### Example 4: News Highlights
+
+```python
+query = "Summarize today's top 5 news"
+```
+
+This query tasks SimpleTaskPilot with fetching and summarizing the day's top 5 news articles.
+
+## Running the Query
+
+After setting your query string, execute it with the following code:
+
+```python
+from superpilot.core.context.schema import Context
+from superpilot.core.pilot.task.simple import SimpleTaskPilot
+from superpilot.core.resource.model_providers import (
+    ModelProviderName,
+    OpenAIProvider,
+    OpenAIModelName
+)
+
+context = Context()
+# Load Model Providers
+open_ai_provider = OpenAIProvider.factory(your_openai_api_key)
+model_providers = {ModelProviderName.OPENAI: open_ai_provider}
+
+task_pilot = SimpleTaskPilot(model_providers=model_providers)
+
+print("***************** Executing SimplePilot ******************************\n")
+query = "Summarize today's top 5 news"
+response = await task_pilot.execute(query, context)
+print(response)
+print("***************** Executing SimplePilot Completed ******************************\n")
+
+```
+
+The output should be displayed on the console.
+
+## Executing SuperTaskPilot
+
+**Purpose:** To execute tasks using the registered abilities and model providers.
+
+### Steps:
+1. Import the `SuperTaskPilot` class.
+2. Initialize it with the `super_ability_registry` and `model_providers`.
+
+
+## Setting Up AbilityRegistry
+
+**Purpose:** To manage and register the abilities that your application will use.
+
+### Steps:
+1. Import the `SuperAbilityRegistry` class.
+2. Initialize it with the allowed abilities.
+
+```python
+from superpilot.core.ability.super import SuperAbilityRegistry
+from superpilot.tests.test_env_simple import get_env
+
+env = get_env({})
+ALLOWED_ABILITY = {
+    TextSummarizeAbility.name(): TextSummarizeAbility.default_configuration,
+}
+
+super_ability_registry = SuperAbilityRegistry.factory(env, ALLOWED_ABILITY)
+```
+
+```python
+from superpilot.core.pilot.task.super import SuperTaskPilot
+
+search_step = SuperTaskPilot(super_ability_registry, model_providers)
+```
+
+
+
+**Credits:** This framework relies on [AutoGPT's](https://github.com/Significant-Gravitas/Auto-GPT/tree/master/autogpt/core) core library for its underlying functionalities.
+
+
+
+### Additional Installation Steps
+
+After installing `superpilot`, you need to install the spaCy model:
+
+```bash
+python -m spacy download en-core-web-sm
