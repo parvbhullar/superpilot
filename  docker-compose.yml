@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  superpilot:
+    build:
+      context: .  # Use the current directory as the build context
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8000"  # Expose port 8002 on the host and map it to port 8000 in the container
+    environment:
+      - PYTHONUNBUFFERED=1  # Optional: helps to see logs in real-time
+    volumes:
+      - .:/app  # Optional: mounts the current directory to /app in the container

@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: superpilot
-Version: 0.5.2
+Version: 0.5.4
 Summary: The Multi-Role Superpilot Programming Framework
 Home-page: https://github.com/parvbhullar/superpilot
 Author: ParvBhullar
@@ -377,7 +377,10 @@ Requires-Dist: xxhash
 Requires-Dist: yarl
 Requires-Dist: zipp
 Requires-Dist: zopfli
-Requires-Dist: setfit@ git+https://github.com/huggingface/setfit.git
+Requires-Dist: spacy
+Requires-Dist: langsmith==0.1.102
+Requires-Dist: transformers<5.0.0,>=4.41.0
+Requires-Dist: setfit>=0.1.0
 
 # Superpilot
 LLM based multi-model framework for AI apps. The SuperPilot Framework is a robust architecture designed to 
