@@ -327,7 +327,6 @@ Requires-Dist: sympy
 Requires-Dist: tabulate
 Requires-Dist: tenacity
 Requires-Dist: termcolor
-Requires-Dist: thinc
 Requires-Dist: threadpoolctl
 Requires-Dist: tiktoken
 Requires-Dist: timm
