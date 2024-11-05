@@ -79,6 +79,7 @@ Requires-Dist: ecdsa
 Requires-Dist: effdet
 Requires-Dist: email_validator
 Requires-Dist: emoji
+Requires-Dist: en-core-web-sm@ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl#sha256=86cc141f63942d4b2c5fcee06630fd6f904788d2f0ab005cce45aadb8fb73889
 Requires-Dist: et-xmlfile
 Requires-Dist: eval_type_backport
 Requires-Dist: exceptiongroup
@@ -118,6 +119,7 @@ Requires-Dist: html5lib
 Requires-Dist: httpcore
 Requires-Dist: httplib2
 Requires-Dist: httpx
+Requires-Dist: huggingface-hub
 Requires-Dist: humanfriendly
 Requires-Dist: hyperframe
 Requires-Dist: identify
@@ -143,7 +145,7 @@ Requires-Dist: jsonschema
 Requires-Dist: jsonschema-specifications
 Requires-Dist: keyring
 Requires-Dist: kiwisolver
-Requires-Dist: in
+Requires-Dist: langchain
 Requires-Dist: langchain-community
 Requires-Dist: langchain-core
 Requires-Dist: langchain-openai
@@ -210,6 +212,7 @@ Requires-Dist: odmantic
 Requires-Dist: olefile
 Requires-Dist: omegaconf
 Requires-Dist: onnx
+Requires-Dist: onnxruntime
 Requires-Dist: openai
 Requires-Dist: openapi-python-client
 Requires-Dist: openapi-schema-pydantic
@@ -311,9 +314,6 @@ Requires-Dist: smmap
 Requires-Dist: sniffio
 Requires-Dist: sortedcontainers
 Requires-Dist: soupsieve
-Requires-Dist: spacy
-Requires-Dist: spacy-legacy
-Requires-Dist: spacy-loggers
 Requires-Dist: SQLAlchemy
 Requires-Dist: srsly
 Requires-Dist: starlette
