@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UNPOD_CHUNK_NAME",
+  "type": "object",
+  "properties": {
+    "document_id": {
+      "type": "string",
+      "description": "Unique identifier for the document"
+    },
+    "chunk_id": {
+      "type": "integer",
+      "description": "Unique identifier for the chunk"
+    },
+    "hub_id": {
+      "type": "string",
+      "description": "Identifier for the hub"
+    },
+    "kn_token": {
+      "type": "string",
+      "description": "Token associated with the document"
+    },
+    "semantic_identifier": {
+      "type": "string",
+      "description": "Semantic identifier displayed in the UI"
+    },
+    "skip_title": {
+      "type": "boolean",
+      "description": "Flag to indicate whether to skip title embeddings"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title of the document",
+      "indexing": ["summary", "index", "attribute"]
+    },
+    "content": {
+      "type": "string",
+      "description": "Content of the document",
+      "indexing": ["summary", "index"]
+    },
+    "content_summary": {
+      "type": "string",
+      "description": "Summary of the document content",
+      "indexing": ["summary", "index"]
+    },
+    "title_embedding": {
+      "type": "array",
+      "items": { "type": "number" },
+      "description": "Title embedding as a tensor"
+    },
+    "embeddings": {
+      "type": "object",
+      "properties": {
+        "t": {
+          "type": "string",
+          "description": "Arbitrary identifier"
+        },
+        "x": {
+          "type": "array",
+          "items": { "type": "number" },
+          "description": "Embedding tensor"
+        }
+      }
+    },
+    "blurb": {
+      "type": "string",
+      "description": "Starting section of the document"
+    },
+    "source_type": {
+      "type": "string",
+      "description": "Source type of the document",
+      "indexing": ["summary", "attribute"],
+      "attribute": "fast-search"
+    },
+    "source_links": {
+      "type": "string",
+      "description": "Links related to the source"
+    },
+    "section_continuation": {
+      "type": "boolean",
+      "description": "Flag indicating section continuation"
+    },
+    "boost": {
+      "type": "number",
+      "description": "Boost value for ranking"
+    },
+    "hidden": {
+      "type": "boolean",
+      "description": "Flag indicating if the document is hidden"
+    },
+    "metadata_list": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of metadata attributes"
+    },
+    "metadata": {
+      "type": "string",
+      "description": "Metadata associated with the document"
+    },
+    "doc_updated_at": {
+      "type": "integer",
+      "description": "Timestamp when the document was last updated"
+    },
+    "primary_owners": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of primary owners"
+    },
+    "secondary_owners": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of secondary owners"
+    },
+    "access_control_list": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Access control list"
+    },
+    "document_sets": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Sets of documents"
+    }
+  },
+  "required": [
+    "document_id",
+    "chunk_id",
+    "semantic_identifier",
+    "content",
+    "doc_updated_at"
+  ]
+}

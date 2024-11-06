@@ -1,0 +1,13 @@
+{
+    "user_name": "John Doe",
+    "user_id": "123",
+    "file_path": "/path/to/your/pdf_file.pdf",
+    "space_id": "space_001",
+    "organization": "My Organization",
+    "_id": "file_001",
+    "file_upload_date": "2024-10-01",
+    "/CreationDate": "D:20090123122748-05'00'",
+    "/ModDate": "D:20150724122745-04'00'",
+    "/Producer": "Acrobat Distiller 7.0.5 (Windows)",
+    "/Title": "untitled"
+}

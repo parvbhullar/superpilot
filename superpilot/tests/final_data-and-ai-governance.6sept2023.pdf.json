@@ -1,0 +1,14 @@
+{
+    "user_name": "John Doe",
+    "user_id": "123",
+    "file_path": "/path/to/your/pdf_file.pdf",
+    "space_id": "space_001",
+    "organization": "My Organization",
+    "_id": "file_001",
+    "file_upload_date": "2024-10-01",
+    "/CreationDate": "D:20230906081946+08'00'",
+    "/Creator": "Adobe InDesign 17.3 (Macintosh)",
+    "/ModDate": "D:20230906081953+08'00'",
+    "/Producer": "Adobe PDF Library 16.0.7",
+    "/Trapped": "/False"
+}
