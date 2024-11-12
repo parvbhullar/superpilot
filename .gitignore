@@ -13,3 +13,7 @@ original/*
 Final/*
 final/*
 .cache
+superpilot/examples/fastapis/example
+superpilot/vespa/my_application
+persona_output.jsonl
+RCA.pdf

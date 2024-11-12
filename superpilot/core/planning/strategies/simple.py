@@ -88,9 +88,8 @@ class SimplePrompt(PromptStrategy):
         )
 
         if (
-            model_name == OpenAIModelName.GPT4_VISION
-            and "images" in template_kwargs
-            and template_kwargs.get("images", [])
+                ("images" in template_kwargs or "files" in template_kwargs)
+                and template_kwargs.get("images", [])
         ):
             user_message = LanguageModelMessage(
                 role=MessageRole.USER,
@@ -135,7 +134,7 @@ class SimplePrompt(PromptStrategy):
     def _generate_content_list(self, message: LanguageModelMessage, template_kwargs):
         message.add_text(self._user_prompt_template.format(**template_kwargs))
 
-        image_list = template_kwargs.pop("images", [])
+        image_list = template_kwargs.pop("images", template_kwargs.pop("files", []))
         for image in image_list:
             message.add_image(image, "")
         return message
