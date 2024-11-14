@@ -7,7 +7,7 @@ from superpilot.core.configuration.schema import (
 from superpilot.core.planning import strategies
 from superpilot.core.planning.schema import LanguageModelClassification
 from superpilot.core.resource.model_providers.schema import ModelProviderName
-
+from superpilot.core.plugin.base import PluginLocation
 
 class LanguageModelConfiguration(SystemConfiguration):
     """Struct for model configuration."""
@@ -22,7 +22,8 @@ class PromptStrategyConfiguration(SystemConfiguration):
     system_prompt: str = UserConfigurable()
     user_prompt_template: str = UserConfigurable()
     parser_schema: Union[dict, None] = None
-    location: dict = None
+    # location: dict = None
+    location:PluginLocation = None
 
 
 class PromptStrategiesConfiguration(SystemConfiguration):
