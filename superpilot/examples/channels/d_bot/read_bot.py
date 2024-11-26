@@ -1,10 +1,10 @@
 import os
 import sys
-import discord
+import work.superpilot.superpilot.examples.channels.d_bot.discord as discord
 from dotenv import load_dotenv
 from discord.ext import commands
 sys.path.append('/Users/zestgeek31/Desktop/super-pilot/work/superpilot/superpilot/examples/channels')
-from message_db import mongo_db_instance
+from work.superpilot.superpilot.examples.channels.d_bot.message_db import mongo_db_instance
 import logging
 sys.path.append('/Users/zestgeek31/Desktop/super-pilot/work/superpilot/superpilot/examples/channels')
 from channels_resp import DiscordBot  

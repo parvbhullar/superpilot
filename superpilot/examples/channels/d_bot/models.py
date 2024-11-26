@@ -2,7 +2,7 @@ import logging
 from llama_index.core import VectorStoreIndex, Document
 from llama_index.core.memory import ChatMemoryBuffer
 from datetime import datetime
-from message_db import mongo_db_instance
+from work.superpilot.superpilot.examples.channels.d_bot.message_db import mongo_db_instance
 
 class DocumentManager:
     @staticmethod

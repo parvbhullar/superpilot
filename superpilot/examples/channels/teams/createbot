@@ -1,0 +1,13 @@
+1. Set Up a Slack Workspace
+create Workspace
+
+2. Create a New Slack App
+
+3. Configure the Slack Bot
+
+set oauth permission redirect url (if needded)
+
+4. add bot oermisiions such as read and write msgs 
+5. Install the App to Your Workspace
+6. After installation, you'll receive an OAuth Access Token (a xoxb-... token). Save this token as it will be used to authenticate API requests.
+7. Set Up Event Subscriptions(Enable)

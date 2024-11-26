@@ -4,9 +4,9 @@ import os
 import nest_asyncio
 from llama_index.core import VectorStoreIndex, Document
 from llama_index.core.memory import ChatMemoryBuffer
-import discord
+import work.superpilot.superpilot.examples.channels.d_bot.discord as discord
 from discord.ext import commands
-from message_db import mongo_db_instance  
+from work.superpilot.superpilot.examples.channels.d_bot.message_db import mongo_db_instance  
 from datetime import datetime
 from llama_index.readers.discord import DiscordReader
 

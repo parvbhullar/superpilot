@@ -3,7 +3,7 @@ import sys
 import os
 import nest_asyncio
 from discord.ext import commands
-import discord
+import work.superpilot.superpilot.examples.channels.d_bot.discord as discord
 from dotenv import load_dotenv
 from llama_index.core import VectorStoreIndex, Document
 from llama_index.core.memory import ChatMemoryBuffer
@@ -12,7 +12,7 @@ import asyncio
 from base import BaseChannel
 
 sys.path.append("/Users/zestgeek31/Desktop/super-pilot/work/superpilot/superpilot/examples/channels")
-from models import DocumentManager, ChatEngineManager, DatabaseHandler
+from work.superpilot.superpilot.examples.channels.d_bot.models import DocumentManager, ChatEngineManager, DatabaseHandler
 
 load_dotenv()
 

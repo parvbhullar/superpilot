@@ -2,7 +2,7 @@ import logging
 import os
 import nest_asyncio
 from dotenv import load_dotenv
-import work.superpilot.superpilot.examples.channels.discord as discord
+import work.superpilot.superpilot.examples.channels.d_bot.discord as discord
 from discord.ext import commands
 from langchain.chat_models import ChatOpenAI  
 from langchain.agents import initialize_agent, AgentType, Tool
