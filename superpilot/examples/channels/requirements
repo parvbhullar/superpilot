@@ -1,0 +1,8 @@
+discord.py
+llama_index
+python-dotenv
+nest_asyncio
+langchain
+nest-asyncio
+
+#pip install langchain-huggingface

@@ -1,0 +1,7 @@
+Navigate to the Azure Portal.
+Go to App Registrations and create a new registration for your app.
+Select the desired account type for registration.
+After registration, retrieve the Application (Client) ID.
+Configure the necessary API permissions to enable reading and sending messages.
+Obtain the client secrets and copy them for later use.
+Use the client secrets to authenticate via OAuth and generate an access token.

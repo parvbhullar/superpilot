@@ -1,0 +1,21 @@
+Step 1: Create a Discord Application
+https://discord.com/developers/
+Log in and click "New Application".
+Enter a name for your app and click "Create".
+Step 2: Add a Bot to Your Application
+In your app, navigate to the "Bot" section.
+Click "Add Bot" and confirm by selecting "Yes, do it!".
+Grant the bot all necessary text and read permissions.
+Copy the Bot Token.
+Step 3: Configure OAuth2 and Generate an Invite Link
+Go to the "OAuth2" section and click "URL Generator".
+Select the following scopes:
+bot
+applications.commands
+Grant relevant permissions for the bot.
+Copy the generated OAuth2 URL.
+Open a new browser tab, paste the URL, and follow the prompts to grant access to Discord channels.
+Step 4: Create a Discord Server and Connect the Bot
+In Discord, click the "+" icon on the left sidebar to create a new server.
+Once the server is set up, the bot will automatically connect to it if you've followed the previous steps correctly.
+This process will allow your bot to read and send messages in your Discord server.
