@@ -79,7 +79,8 @@ class FileContentItem(ContentItem):
 
     @property
     def content(self) -> str:
-        return open(self.file_path).read()
+
+        return open(self.file_path,encoding="iso-8859-1").read()
 
     @property
     def description(self) -> str:

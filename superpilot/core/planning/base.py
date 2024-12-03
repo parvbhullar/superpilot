@@ -2,8 +2,6 @@ import abc
 import typing
 
 from superpilot.core.configuration import SystemConfiguration, UserConfigurable
-from superpilot.core.context.schema import Context
-# Cyclic import
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
     LanguageModelMessage,
@@ -62,8 +60,8 @@ class Planner(abc.ABC):
     async def reflect(
         self,
         task: Task,
-        context: Context,
     ) -> LanguageModelResponse:
+        from superpilot.core.context.schema import Context
         """Reflect on executed function, pilot or ability. Provide feedback to the user.
 
         Args:
