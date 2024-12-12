@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2021 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,7 +32,6 @@ from __future__ import print_function, unicode_literals
 from ._parsingstatedelta import ParsingStateDelta
 
 
-
 class LatexWalkerParsingStateEventHandler(object):
     r"""
     A LatexWalker parsing state event handler.
@@ -48,7 +47,7 @@ class LatexWalkerParsingStateEventHandler(object):
     - exit math mode
 
     .. versionadded:: 3.0
-    
+
        The :py:class:`LatexWalkerParsingStateEventHandler` class was added in
        `pylatexenc 3.0`.
     """
@@ -56,17 +55,13 @@ class LatexWalkerParsingStateEventHandler(object):
     def enter_math_mode(self, math_mode_delimiter=None, trigger_token=None):
         return ParsingStateDelta(
             set_attributes=dict(
-                in_math_mode=True,
-                math_mode_delimiter=math_mode_delimiter
+                in_math_mode=True, math_mode_delimiter=math_mode_delimiter
             )
         )
 
     def leave_math_mode(self, trigger_token=None):
         return ParsingStateDelta(
-            set_attributes=dict(
-                in_math_mode=False,
-                math_mode_delimiter=None
-            )
+            set_attributes=dict(in_math_mode=False, math_mode_delimiter=None)
         )
 
 
@@ -82,7 +77,7 @@ class LatexWalkerBase(object):
     See also :py:class:`latexwalker.LatexWalker`.
 
     .. versionadded:: 3.0
-    
+
        The :py:class:`LatexWalkerBase` class was added in `pylatexenc 3.0`.
     """
 
@@ -92,12 +87,15 @@ class LatexWalkerBase(object):
         """
         return _default_parsing_state_event_handler
 
-    def parse_content(self, parser, token_reader=None, parsing_state=None,
-                      open_context=None, **kwargs):
+    def parse_content(
+        self, parser, token_reader=None, parsing_state=None, open_context=None, **kwargs
+    ):
         r"""
         Doc......
         """
-        raise RuntimeError("LatexWalkerBase subclasses must reimplement parse_content()")
+        raise RuntimeError(
+            "LatexWalkerBase subclasses must reimplement parse_content()"
+        )
 
     def make_node(self, node_class, **kwargs):
         r"""
@@ -109,32 +107,33 @@ class LatexWalkerBase(object):
         r"""
         Doc......
         """
-        raise RuntimeError("LatexWalkerBase subclasses must reimplement make_nodelist()")
+        raise RuntimeError(
+            "LatexWalkerBase subclasses must reimplement make_nodelist()"
+        )
 
-    def make_nodes_collector(self,
-                             token_reader,
-                             parsing_state,
-                             **kwargs):
+    def make_nodes_collector(self, token_reader, parsing_state, **kwargs):
         r"""
         Doc......
         """
         raise RuntimeError(
-            "LatexWalkerBase subclasses must reimplement make_nodes_collector()")
+            "LatexWalkerBase subclasses must reimplement make_nodes_collector()"
+        )
 
     def make_latex_group_parser(self, delimiters):
         r"""
         Doc......
         """
         raise RuntimeError(
-            "LatexWalkerBase subclasses must reimplement make_latex_group_parser()")
-        
+            "LatexWalkerBase subclasses must reimplement make_latex_group_parser()"
+        )
+
     def make_latex_math_parser(self, math_mode_delimiters):
         r"""
         Doc......
         """
         raise RuntimeError(
-            "LatexWalkerBase subclasses must reimplement make_latex_math_parser()")
-
+            "LatexWalkerBase subclasses must reimplement make_latex_math_parser()"
+        )
 
     def check_tolerant_parsing_ignore_error(self, exc):
         r"""
@@ -151,4 +150,4 @@ class LatexWalkerBase(object):
         r"""
         Doc......
         """
-        return 'character position '+repr(node.pos)
+        return "character position " + repr(node.pos)

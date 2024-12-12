@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2022 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,6 +30,7 @@
 from __future__ import print_function, unicode_literals
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 from .._exctypes import *
@@ -45,18 +46,15 @@ from ._delimited import (
 )
 
 
-
 # for Py3
 _basestring = str
 
 ### BEGIN_PYTHON2_SUPPORT_CODE
 import sys
+
 if sys.version_info.major == 2:
     _basestring = basestring
 ### END_PYTHON2_SUPPORT_CODE
-
-
-
 
 
 class LatexMathParserInfo(LatexDelimitedExpressionParserInfo):
@@ -66,39 +64,49 @@ class LatexMathParserInfo(LatexDelimitedExpressionParserInfo):
     """
 
     @classmethod
-    def is_opening_delimiter(cls, delimiters, first_token, group_parsing_state,
-                             delimited_expression_parser, latex_walker, **kwargs):
-
-        if first_token.tok not in ('mathmode_inline', 'mathmode_display'):
+    def is_opening_delimiter(
+        cls,
+        delimiters,
+        first_token,
+        group_parsing_state,
+        delimited_expression_parser,
+        latex_walker,
+        **kwargs
+    ):
+        if first_token.tok not in ("mathmode_inline", "mathmode_display"):
             return False
 
         if not cls.check_opening_delimiter(
-                delimiters=delimiters,
-                parsed_opening_delimiter=first_token.arg,
-                latex_walker=latex_walker
+            delimiters=delimiters,
+            parsed_opening_delimiter=first_token.arg,
+            latex_walker=latex_walker,
         ):
             return False
 
         return True
 
     @classmethod
-    def get_acceptable_open_delimiter_list(cls, delimiters, group_parsing_state,
-                                           delimited_expression_parser, latex_walker,
-                                           **kwargs):
+    def get_acceptable_open_delimiter_list(
+        cls,
+        delimiters,
+        group_parsing_state,
+        delimited_expression_parser,
+        latex_walker,
+        **kwargs
+    ):
         if delimiters is not None:
             if isinstance(delimiters, _basestring):
                 return [delimiters]
             else:
                 return [delimiters[0]]
-            
+
         return [
             od
             for (od, cd) in (
-                    group_parsing_state.latex_inline_math_delimiters
-                    + group_parsing_state.latex_display_math_delimiters
+                group_parsing_state.latex_inline_math_delimiters
+                + group_parsing_state.latex_display_math_delimiters
             )
         ]
-
 
     # ---
 
@@ -113,7 +121,7 @@ class LatexMathParserInfo(LatexDelimitedExpressionParserInfo):
             self.parsing_state,
             ParsingStateDeltaEnterMathMode(
                 math_mode_delimiter=self.math_mode_delimiter,
-                trigger_token=self.first_token
+                trigger_token=self.first_token,
             ),
             self.latex_walker,
         )
@@ -127,24 +135,23 @@ class LatexMathParserInfo(LatexDelimitedExpressionParserInfo):
         return False
 
     def get_matching_delimiter(self, opening_delimiter):
-        return self.math_parsing_state._math_expecting_close_delim_info['close_delim']
+        return self.math_parsing_state._math_expecting_close_delim_info["close_delim"]
 
-
-    def make_group_node_and_parsing_state_delta(self, latex_walker, token_reader,
-                                                nodelist, parsing_state_delta):
-
+    def make_group_node_and_parsing_state_delta(
+        self, latex_walker, token_reader, nodelist, parsing_state_delta
+    ):
         # As for the delimited group parser, use cur_pos() so that it includes
         # the closing math mode delimiter.
         pos_end = token_reader.cur_pos()
 
         # note that nodelist can be None in case of a parse error
 
-        if self.math_mode_type == 'mathmode_inline':
-            displaytype = 'inline'
-        elif self.math_mode_type == 'mathmode_display':
-            displaytype = 'display'
+        if self.math_mode_type == "mathmode_inline":
+            displaytype = "inline"
+        elif self.math_mode_type == "mathmode_display":
+            displaytype = "display"
         else:
-            displaytype = '<unknown>'
+            displaytype = "<unknown>"
 
         math_node = latex_walker.make_node(
             nodes.LatexMathNode,
@@ -161,10 +168,9 @@ class LatexMathParserInfo(LatexDelimitedExpressionParserInfo):
 
 # ------------------------------------------------------------------------------
 
+
 class LatexMathParser(LatexDelimitedExpressionParser):
-    def __init__(self,
-                 math_mode_delimiters,
-                 **kwargs):
+    def __init__(self, math_mode_delimiters, **kwargs):
         super(LatexMathParser, self).__init__(
             delimiters=math_mode_delimiters,
             discard_parsing_state_delta=False,

@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2022 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,7 +29,7 @@
 
 from __future__ import print_function, unicode_literals
 
-#from ._parsedargs import ParsedArguments
+# from ._parsedargs import ParsedArguments
 
 
 # for Py3
@@ -37,10 +37,10 @@ _unicode_from_str = lambda x: x
 
 ### BEGIN_PYTHON2_SUPPORT_CODE
 import sys
-if sys.version_info.major == 2:
-    _unicode_from_str = lambda x: x.decode('utf-8')
-### END_PYTHON2_SUPPORT_CODE
 
+if sys.version_info.major == 2:
+    _unicode_from_str = lambda x: x.decode("utf-8")
+### END_PYTHON2_SUPPORT_CODE
 
 
 class LatexToken(object):
@@ -80,38 +80,38 @@ class LatexToken(object):
 
       - 'char': raw character(s) which have no special LaTeX meaning and which
         are part of the text content.
-        
+
         The `arg` field contains the characters themselves.
 
       - 'macro': a macro invocation, but not ``\begin`` or ``\end``
-        
+
         The `arg` field contains the name of the macro, without the leading
         backslash.
 
       - 'begin_environment': an invocation of ``\begin{environment}``.
-        
+
         The `arg` field contains the name of the environment inside the braces.
 
       - 'end_environment': an invocation of ``\end{environment}``.
-        
+
         The `arg` field contains the name of the environment inside the braces.
 
       - 'comment': a LaTeX comment delimited by a percent sign up to the end of
         the line.
-        
+
         The `arg` field contains the text in the comment line, not including the
         percent sign nor the newline.
 
       - 'brace_open': an opening brace.  This is usually a curly brace, and
         sometimes also a square bracket.  What is parsed as a brace depends on
         the arguments to :py:meth:`~LatexWalker.get_token()`.
-        
+
         The `arg` is a string which contains the relevant brace character.
-        
+
       - 'brace_close': a closing brace.  This is usually a curly brace, and
         sometimes also a square bracket.  What is parsed as a brace depends on
         the arguments to :py:meth:`~LatexWalker.get_token()`.
-        
+
         The `arg` is a string which contains the relevant brace character.
 
       - 'mathmode_inline': a delimiter which starts/ends inline math.  This is
@@ -154,9 +154,11 @@ class LatexToken(object):
        located in the :py:mod:`~pylatexenc.latexwalker` module, see
        :py:class:`~pylatexenc.latexwalker.LatexToken`.
     """
-    def __init__(self, tok, arg, pos, pos_end=None, pre_space='', post_space='', **kwargs):
 
-        len_ = kwargs.pop('len', None)
+    def __init__(
+        self, tok, arg, pos, pos_end=None, pre_space="", post_space="", **kwargs
+    ):
+        len_ = kwargs.pop("len", None)
 
         self.tok = tok
         self.arg = arg
@@ -164,16 +166,16 @@ class LatexToken(object):
         self.pos_end = pos_end
         self.pre_space = pre_space
         self.post_space = post_space
-        
+
         if pos_end is None and len_ is not None and pos is not None:
             self.pos_end = pos + len_
-            
+
         if kwargs:
             raise ValueError("Unexpected arguments to LatexToken(): " + repr(kwargs))
 
-        self._fields = ['tok', 'arg', 'pos', 'pos_end', 'pre_space']
-        if self.tok in ('macro', 'comment'):
-            self._fields.append('post_space')
+        self._fields = ["tok", "arg", "pos", "pos_end", "pre_space"]
+        if self.tok in ("macro", "comment"):
+            self._fields.append("post_space")
         super(LatexToken, self).__init__()
 
     @property
@@ -187,11 +189,10 @@ class LatexToken(object):
 
     def __repr__(self):
         return (
-            "LatexToken(" +
-            ", ".join([ "{}={!r}".format(k,getattr(self,k))
-                        for k in self._fields ]) +
-            ")"
-            )
+            "LatexToken("
+            + ", ".join(["{}={!r}".format(k, getattr(self, k)) for k in self._fields])
+            + ")"
+        )
 
     def __str__(self):
         return self.__repr__()
@@ -199,16 +200,19 @@ class LatexToken(object):
     def __eq__(self, other):
         return all(
             (
-                ( (getattr(self, f) is None and getattr(other, f) is None)
-                  or getattr(self, f) == getattr(other, f) )
+                (
+                    (getattr(self, f) is None and getattr(other, f) is None)
+                    or getattr(self, f) == getattr(other, f)
+                )
                 for f in self._fields
             )
         )
 
-    #__pragma__('skip')
+    # __pragma__('skip')
     # see https://docs.python.org/3/library/constants.html#NotImplemented
-    def __ne__(self, other): return NotImplemented
-    #__pragma__('noskip')
+    def __ne__(self, other):
+        return NotImplemented
+
+    # __pragma__('noskip')
 
     __hash__ = None
-

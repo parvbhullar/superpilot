@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2022 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,6 +30,7 @@
 from __future__ import print_function, unicode_literals
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 from ._exctypes import *
@@ -56,14 +57,14 @@ class LatexNodesCollector(object):
     encounter new macros, environments, specials, etc. in the bulk that is being
     parsed.  The result is a node list containing a full tree of child nodes
     that represents the logical structure of the tokens that were encountered.
-    
+
     The public API of this class resides essentially in the
     :py:meth:`process_tokens()`, as well as the :py:meth:`get_final_nodelist()`
     (and some other friends, see docs below).
 
 
     .. versionadded:: 3.0
-    
+
        The :py:class:`LatexNodesCollector` class was added in `pylatexenc 3.0`.
     """
 
@@ -71,40 +72,41 @@ class LatexNodesCollector(object):
         r"""
         Raised by the :py:meth:`process_one_token()` method if we reached the end of
         stream.
-        
+
         You should not have to worry about this exception unless you call
         :py:meth:`process_one_token()` yourself.  But most of the time you'll be
         calling :py:meth:`process_tokens()` instead, which does not raise this
         exception; it directly raises :py:exc:`LatexWalkerEndOfStream` as the
         higher-level parsers do.
         """
+
         pass
 
     class ReachedStoppingCondition(Exception):
         r"""
         Raised by the :py:meth:`process_one_token()` method to indicate that a
         stopping condition was met.
-        
+
         You should not have to worry about this exception unless you call
         :py:meth:`process_one_token()` yourself.  But most of the time you'll be
         calling :py:meth:`process_tokens()` instead, which simply stops
         processing tokens if a stopping condition is met.
         """
+
         def __init__(self, stop_data, **kwargs):
             super(LatexNodesCollector.ReachedStoppingCondition, self).__init__(**kwargs)
             self.stop_data = stop_data
 
-
-    def __init__(self,
-                 latex_walker,
-                 token_reader,
-                 parsing_state,
-                 stop_token_condition=None,
-                 stop_nodelist_condition=None,
-                 make_child_parsing_state=None,
-                 include_stop_token_pre_space_chars=True,
-                 ):
-
+    def __init__(
+        self,
+        latex_walker,
+        token_reader,
+        parsing_state,
+        stop_token_condition=None,
+        stop_nodelist_condition=None,
+        make_child_parsing_state=None,
+        include_stop_token_pre_space_chars=True,
+    ):
         super(LatexNodesCollector, self).__init__()
 
         self.latex_walker = latex_walker
@@ -133,15 +135,13 @@ class LatexNodesCollector(object):
 
         # characters that we are accumulating
         self._pending_chars_pos = None
-        self._pending_chars = ''
+        self._pending_chars = ""
 
         # whether finalize() was called or not
         self._finalized = False
 
         # override custom function to make the child parsing state
         self._make_child_parsing_state_fn = make_child_parsing_state
-
-
 
     def get_final_nodelist(self):
         r"""
@@ -158,21 +158,23 @@ class LatexNodesCollector(object):
             parsing_state=self.start_parsing_state,
         )
 
-
     def get_parser_parsing_state_delta(self):
         r"""
         Doc. ............
         """
         if not self._finalized:
-            raise RuntimeError("Call to get_parser_parsing_state_delta() before finalize()")
+            raise RuntimeError(
+                "Call to get_parser_parsing_state_delta() before finalize()"
+            )
 
         if self.start_parsing_state is self.parsing_state:
             # we ended with the same object as the initial parsing state
             return None
 
         # report our updated parsing state
-        return ParsingStateDeltaReplaceParsingState(set_parsing_state=self.parsing_state)
-
+        return ParsingStateDeltaReplaceParsingState(
+            set_parsing_state=self.parsing_state
+        )
 
     def pos_start(self):
         r"""
@@ -181,7 +183,7 @@ class LatexNodesCollector(object):
         """
         try:
             # transcrypt doesn't seem to support default value in next(iter, default)
-            p = next( ( n.pos for n in self._nodelist if n is not None ) )
+            p = next((n.pos for n in self._nodelist if n is not None))
         except StopIteration:
             p = None
         if p is not None:
@@ -195,13 +197,12 @@ class LatexNodesCollector(object):
         """
         try:
             # transcrypt doesn't seem to support default value in next(iter, default)
-            lastnode = next( ( n for n in reversed(self._nodelist) if n is not None ) )
+            lastnode = next((n for n in reversed(self._nodelist) if n is not None))
         except StopIteration:
             lastnode = None
         if lastnode is None:
             return None
         return lastnode.pos_end
-
 
     def stop_token_condition_met(self):
         r"""
@@ -236,7 +237,6 @@ class LatexNodesCollector(object):
         """
         return self._reached_end_of_stream
 
-
     def is_finalized(self):
         r"""
         Whether this object's node list has been finalized.
@@ -268,9 +268,8 @@ class LatexNodesCollector(object):
         self._finalized = True
 
         if exc is not None:
-            logger.debug('finalize(): raising exc=%r', exc)
+            logger.debug("finalize(): raising exc=%r", exc)
             raise exc
-
 
     # -----
 
@@ -282,7 +281,7 @@ class LatexNodesCollector(object):
     def push_pending_chars(self, chars, pos):
         r"""
         This method should only be called internally or by subclass derived methods.
-    
+
         Adds `chars` to the pending chars string, i.e., the latest chars that we
         have seen that will have to be collected into a chars node once we
         encounter anything other than a regular char.
@@ -294,7 +293,7 @@ class LatexNodesCollector(object):
     def flush_pending_chars(self):
         r"""
         This method should only be called internally or by subclass derived methods.
-    
+
         Create a chars node out of all the pending chars that were added with
         calls to `push_pending_chars()`.  Adds the chars node to the node list,
         and clears the pending chars string.
@@ -304,7 +303,7 @@ class LatexNodesCollector(object):
             return None
 
         charspos, chars = self._pending_chars_pos, self._pending_chars
-        self._pending_chars = ''
+        self._pending_chars = ""
         self._pending_chars_pos = None
 
         strnode = self.latex_walker.make_node(
@@ -312,7 +311,7 @@ class LatexNodesCollector(object):
             parsing_state=self.parsing_state,
             chars=chars,
             pos=charspos,
-            pos_end=charspos+len(chars),
+            pos_end=charspos + len(chars),
         )
         return self.push_to_nodelist(strnode)
 
@@ -333,7 +332,6 @@ class LatexNodesCollector(object):
             return exc
         return None
 
-
     def update_state_from_parsing_state_delta(self, parsing_state_delta):
         r"""
         This method should only be called internally or by subclass derived methods.
@@ -347,17 +345,17 @@ class LatexNodesCollector(object):
             ps = self.parsing_state
 
             self.parsing_state = parsing_state_delta.get_updated_parsing_state(
-                self.parsing_state,
-                self.latex_walker
+                self.parsing_state, self.latex_walker
             )
 
-            logger.debug("Updated parsing state using parsing_state_delta %r: %r →→→ %r",
-                         parsing_state_delta, ps, self.parsing_state)
-
-
+            logger.debug(
+                "Updated parsing state using parsing_state_delta %r: %r →→→ %r",
+                parsing_state_delta,
+                ps,
+                self.parsing_state,
+            )
 
     # ------------------
-
 
     def _check_nodelist_stop_condition(self):
         stop_nodelist_condition = self.stop_nodelist_condition
@@ -365,8 +363,10 @@ class LatexNodesCollector(object):
             stop_data = stop_nodelist_condition(self._nodelist)
             if stop_data:
                 self._stop_nodelist_condition_met = True
-                logger.debug("nodes collector reached nodelist stop condition; nodelist = %r",
-                             self._nodelist)
+                logger.debug(
+                    "nodes collector reached nodelist stop condition; nodelist = %r",
+                    self._nodelist,
+                )
                 return LatexNodesCollector.ReachedStoppingCondition(stop_data=stop_data)
         return None
 
@@ -377,12 +377,14 @@ class LatexNodesCollector(object):
             if stop_data:
                 self._stop_token_condition_met = True
                 self._stop_token_condition_met_token = tok
-                logger.debug("nodes collector reached token stop condition; tok = %r, "
-                             "current node list = %r",
-                             tok, self._nodelist)
+                logger.debug(
+                    "nodes collector reached token stop condition; tok = %r, "
+                    "current node list = %r",
+                    tok,
+                    self._nodelist,
+                )
                 return LatexNodesCollector.ReachedStoppingCondition(stop_data=stop_data)
         return None
-
 
     def process_tokens(self):
         r"""
@@ -399,7 +401,7 @@ class LatexNodesCollector(object):
         the methods :py:meth:`stop_token_condition_met()`,
         :py:meth:`stop_nodelist_condition_met()` and
         :py:meth:`reached_end_of_stream()`.
-        
+
         You can then call :py:meth:`get_final_nodelist()` to get the nodelist,
         :py:meth:`get_parser_parsing_state_delta()` to get any carry-over information
         for the parser for future parsing, etc.
@@ -429,9 +431,6 @@ class LatexNodesCollector(object):
 
         finally:
             self.finalize()
-
-
-
 
     def process_one_token(self):
         r"""
@@ -479,33 +478,31 @@ class LatexNodesCollector(object):
         token_reader = self.token_reader
 
         try:
-
             tok = token_reader.next_token(parsing_state=self.parsing_state)
             logger.debug("nodes collector read token %r", tok)
 
         except LatexWalkerEndOfStream as e:
-            final_space = getattr(e, 'final_space', None)
+            final_space = getattr(e, "final_space", None)
             if final_space:
                 # process the final space as an extra char token
-                final_space_pos = token_reader.cur_pos()+len(final_space)
+                final_space_pos = token_reader.cur_pos() + len(final_space)
                 tok = token_reader.make_token(
-                    tok='char',
-                    arg='',
+                    tok="char",
+                    arg="",
                     pre_space=final_space,
                     pos=final_space_pos,
                     pos_end=final_space_pos,
                 )
                 token_reader.move_past_token(tok)
             else:
-                #print("*** reached end of stream!")
+                # print("*** reached end of stream!")
                 exc = LatexNodesCollector.ReachedEndOfStream()
                 exc.pos_end = token_reader.cur_pos()
-                logger.debug('process_one_token(): reached end of stream, exc=%r', exc)
+                logger.debug("process_one_token(): reached end of stream, exc=%r", exc)
                 raise exc
 
-
         # first, let's check if a token-based stopping condition is met.
-        
+
         stop_exc = self._check_token_stop_condition(tok)
         if stop_exc is not None:
             if self.include_stop_token_pre_space_chars:
@@ -515,19 +512,21 @@ class LatexNodesCollector(object):
                     chars=tok.pre_space,
                     pos=tok.pos - len(tok.pre_space),
                 )
-                rewind_pre_space=False
+                rewind_pre_space = False
             else:
-                rewind_pre_space=True
+                rewind_pre_space = True
             # leave the token in the input stream if it generated a stopping
             # condition.
             token_reader.move_to_token(tok, rewind_pre_space=rewind_pre_space)
             stop_exc.pos_end = tok.pos_end
-            logger.debug('process_one_token(): stop token condition reached, exc=%r', stop_exc)
+            logger.debug(
+                "process_one_token(): stop token condition reached, exc=%r", stop_exc
+            )
             raise stop_exc
 
         # if it's a char, just append it to the stream of last "pending"
         # characters.
-        if tok.tok == 'char':
+        if tok.tok == "char":
             self.push_pending_chars(
                 chars=(tok.pre_space + tok.arg),
                 pos=(tok.pos - len(tok.pre_space)),
@@ -538,7 +537,7 @@ class LatexNodesCollector(object):
         # before we do anything else (include the present token's pre_space)
         if self._pending_chars:
             self._pending_chars += tok.pre_space
-            tok.pre_space = ''
+            tok.pre_space = ""
             stop_exc = self.flush_pending_chars()
             if stop_exc is not None:
                 # rewind to position immediately after the new token's
@@ -546,8 +545,9 @@ class LatexNodesCollector(object):
                 # absorbed its pre_space
                 token_reader.move_to_token(tok, rewind_pre_space=False)
                 stop_exc.pos_end = tok.pos
-                logger.debug('process_one_token(): stop condition reached (a), exc=%r',
-                             stop_exc)
+                logger.debug(
+                    "process_one_token(): stop condition reached (a), exc=%r", stop_exc
+                )
                 raise stop_exc
 
         # If we have pre_space, add a separate chars node that contains the
@@ -556,12 +556,14 @@ class LatexNodesCollector(object):
         # latex2text to implement the `strict_latex_spaces=...` flag correctly.
 
         elif tok.pre_space:
-            spacestrnode = latex_walker.make_node(LatexCharsNode,
-                                                  parsing_state=self.parsing_state,
-                                                  chars=tok.pre_space,
-                                                  pos=tok.pos-len(tok.pre_space),
-                                                  pos_end=tok.pos)
-            tok.pre_space = ''
+            spacestrnode = latex_walker.make_node(
+                LatexCharsNode,
+                parsing_state=self.parsing_state,
+                chars=tok.pre_space,
+                pos=tok.pos - len(tok.pre_space),
+                pos_end=tok.pos,
+            )
+            tok.pre_space = ""
             stop_exc = self.push_to_nodelist(spacestrnode)
             if stop_exc is not None:
                 # rewind to position immediately after the new token's
@@ -569,8 +571,9 @@ class LatexNodesCollector(object):
                 # absorbed its pre_space
                 token_reader.move_to_token(tok, rewind_pre_space=False)
                 stop_exc.pos_end = tok.pos
-                logger.debug('process_one_token(): stop condition reached (b), exc=%r',
-                             stop_exc)
+                logger.debug(
+                    "process_one_token(): stop condition reached (b), exc=%r", stop_exc
+                )
                 raise stop_exc
 
         # now, process the encountered token `tok`, keeping in mind that the
@@ -578,30 +581,32 @@ class LatexNodesCollector(object):
 
         # check for tokens that are illegal in this context
 
-        if tok.tok == 'brace_close':
+        if tok.tok == "brace_close":
             raise LatexWalkerNodesParseError(
                 msg=("Unexpected mismatching closing delimiter ‘{}’".format(tok.arg)),
                 pos=tok.pos,
                 recovery_past_token=tok,
                 error_type_info={
-                    'what': 'nodes_unexpected_closing_group_delimiter',
-                    'delimiter': tok.arg,
+                    "what": "nodes_unexpected_closing_group_delimiter",
+                    "delimiter": tok.arg,
                 },
             )
 
-        if tok.tok == 'end_environment':
+        if tok.tok == "end_environment":
             raise LatexWalkerNodesParseError(
                 msg=("Unexpected closing environment: ‘{}’".format(tok.arg)),
                 pos=tok.pos,
                 recovery_past_token=tok,
                 error_type_info={
-                    'what': 'nodes_unexpected_end_environment',
-                    'environmentname': tok.arg,
+                    "what": "nodes_unexpected_end_environment",
+                    "environmentname": tok.arg,
                 },
             )
 
-        if tok.tok in ('mathmode_inline', 'mathmode_display') \
-           and tok.arg not in self.parsing_state._math_delims_info_by_open:
+        if (
+            tok.tok in ("mathmode_inline", "mathmode_display")
+            and tok.arg not in self.parsing_state._math_delims_info_by_open
+        ):
             # an unexpected closing math mode delimiter
             raise LatexWalkerNodesParseError(
                 msg="Unexpected closing math mode token ‘{}’".format(
@@ -610,51 +615,43 @@ class LatexNodesCollector(object):
                 pos=tok.pos,
                 recovery_past_token=tok,
                 error_type_info={
-                    'what': 'nodes_unexpected_closing_math_delimiter',
-                    'mathmode_type': tok.tok,
-                    'delimiter': tok.arg,
+                    "what": "nodes_unexpected_closing_math_delimiter",
+                    "mathmode_type": tok.tok,
+                    "delimiter": tok.arg,
                 },
             )
 
         # now we can start parsing the token and taking the appropriate action.
 
-        if tok.tok == 'comment':
+        if tok.tok == "comment":
             self.parse_comment_node(tok)
             return
 
-        elif tok.tok == 'brace_open':
+        elif tok.tok == "brace_open":
             # a braced group.
             self.parse_latex_group(tok)
             return
 
-        elif tok.tok == 'macro':
-
+        elif tok.tok == "macro":
             self.parse_macro(tok)
             return
 
-        elif tok.tok == 'begin_environment':
-            
+        elif tok.tok == "begin_environment":
             self.parse_environment(tok)
             return
 
-        elif tok.tok == 'specials':
-
+        elif tok.tok == "specials":
             self.parse_specials(tok)
             return
 
-        elif tok.tok in ('mathmode_inline', 'mathmode_display'):
-
+        elif tok.tok in ("mathmode_inline", "mathmode_display"):
             self.parse_math(tok)
             return
 
         else:
-            
             raise LatexWalkerParseError(
-                "Unknown token type: {}".format(tok.tok),
-                pos=tok.pos
+                "Unknown token type: {}".format(tok.tok), pos=tok.pos
             )
-
-
 
     # ------------------
 
@@ -670,10 +667,10 @@ class LatexNodesCollector(object):
         nodes.
         """
         if self._make_child_parsing_state_fn is not None:
-            return self._make_child_parsing_state_fn(parsing_state=parsing_state,
-                                                     node_class=node_class)
+            return self._make_child_parsing_state_fn(
+                parsing_state=parsing_state, node_class=node_class
+            )
         return self.parsing_state
-
 
     def parse_comment_node(self, tok):
         r"""
@@ -690,20 +687,19 @@ class LatexNodesCollector(object):
         """
 
         commentnode = self.latex_walker.make_node(
-                LatexCommentNode,
-                parsing_state=self.parsing_state,
-                comment=tok.arg,
-                comment_post_space=tok.post_space,
-                pos=tok.pos,
-                pos_end=tok.pos_end
+            LatexCommentNode,
+            parsing_state=self.parsing_state,
+            comment=tok.arg,
+            comment_post_space=tok.post_space,
+            pos=tok.pos,
+            pos_end=tok.pos_end,
         )
 
-        stop_exc = self.push_to_nodelist( commentnode )
+        stop_exc = self.push_to_nodelist(commentnode)
         if stop_exc is not None:
             stop_exc.pos_end = tok.pos_end
-            logger.debug('parse_comment_node(): stop_exc=%r', stop_exc)
+            logger.debug("parse_comment_node(): stop_exc=%r", stop_exc)
             raise stop_exc
-
 
     def parse_latex_group(self, tok):
         r"""
@@ -729,26 +725,27 @@ class LatexNodesCollector(object):
             delimiters=tok.arg,
         )
 
-        groupnode, parsing_state_delta = \
-            self.latex_walker.parse_content(
-                group_parser,
-                token_reader=self.token_reader,
-                parsing_state=self.make_child_parsing_state(self.parsing_state,
-                                                            LatexGroupNode),
+        groupnode, parsing_state_delta = self.latex_walker.parse_content(
+            group_parser,
+            token_reader=self.token_reader,
+            parsing_state=self.make_child_parsing_state(
+                self.parsing_state, LatexGroupNode
+            ),
         )
 
         if parsing_state_delta is not None:
-            logger.warning("parsing_state_delta is ignored after parsing a LaTeX group: %r",
-                           parsing_state_delta)
+            logger.warning(
+                "parsing_state_delta is ignored after parsing a LaTeX group: %r",
+                parsing_state_delta,
+            )
 
         stop_exc = self.push_to_nodelist(groupnode)
         if stop_exc is not None:
             stop_exc.pos_end = groupnode.pos_end
-            logger.debug('parse_latex_group(): stop_exc=%r', stop_exc)
+            logger.debug("parse_latex_group(): stop_exc=%r", stop_exc)
             raise stop_exc
 
         logger.debug("nodes collector finished parsing group → %r", groupnode)
-
 
     def parse_macro(self, tok):
         r"""
@@ -777,8 +774,8 @@ class LatexNodesCollector(object):
                     msg=r"Encountered unknown macro ‘\{}’".format(macroname),
                     pos=tok.pos,
                     error_type_info={
-                        'what': 'nodes_unknown_macro_name',
-                        'macroname': macroname,
+                        "what": "nodes_unknown_macro_name",
+                        "macroname": macroname,
                     },
                 )
             )
@@ -787,7 +784,7 @@ class LatexNodesCollector(object):
             mspec = None
 
         node_class = LatexMacroNode
-        what = 'macro ‘\\{}’'.format(macroname)
+        what = "macro ‘\\{}’".format(macroname)
 
         return self.parse_invocable_token_type(tok, mspec, node_class, what)
 
@@ -808,23 +805,23 @@ class LatexNodesCollector(object):
         """
 
         latex_walker = self.latex_walker
-        #token_reader = self.token_reader
+        # token_reader = self.token_reader
 
         environmentname = tok.arg
         # envspec = tok.spec
         # if envspec is None:
-        envspec = \
-            self.parsing_state.latex_context.get_environment_spec(environmentname)
+        envspec = self.parsing_state.latex_context.get_environment_spec(environmentname)
 
         if envspec is None:
             exc = latex_walker.check_tolerant_parsing_ignore_error(
                 LatexWalkerParseError(
-                    msg=r"Encountered unknown environment ‘{}{}{}’"
-                    .format('{', environmentname, '}'),
+                    msg=r"Encountered unknown environment ‘{}{}{}’".format(
+                        "{", environmentname, "}"
+                    ),
                     pos=tok.pos,
                     error_type_info={
-                        'what': 'nodes_unknown_environment_name',
-                        'environmentname': environmentname,
+                        "what": "nodes_unknown_environment_name",
+                        "environmentname": environmentname,
                     },
                 )
             )
@@ -833,7 +830,7 @@ class LatexNodesCollector(object):
             envspec = None
 
         node_class = LatexEnvironmentNode
-        what = 'environment ‘{}{}{}’'.format('{', environmentname, '}')
+        what = "environment ‘{}{}{}’".format("{", environmentname, "}")
 
         return self.parse_invocable_token_type(tok, envspec, node_class, what)
 
@@ -854,7 +851,9 @@ class LatexNodesCollector(object):
         specials_spec = tok.arg
 
         node_class = LatexSpecialsNode
-        what = 'specials ‘{}’'.format(getattr(specials_spec, 'specials_chars', '<unkonwn>'))
+        what = "specials ‘{}’".format(
+            getattr(specials_spec, "specials_chars", "<unkonwn>")
+        )
 
         return self.parse_invocable_token_type(tok, specials_spec, node_class, what)
 
@@ -887,7 +886,6 @@ class LatexNodesCollector(object):
             node_parser = None
 
         if node_parser is None:
-
             exc = latex_walker.check_tolerant_parsing_ignore_error(
                 LatexWalkerParseError(
                     msg="No parser found for callable token {!r}".format(tok),
@@ -895,13 +893,14 @@ class LatexNodesCollector(object):
                 )
             )
             if exc is not None:
-                logger.debug('parse_invocable_token_type(): no-parser error, exc=%r', exc)
+                logger.debug(
+                    "parse_invocable_token_type(): no-parser error, exc=%r", exc
+                )
                 raise exc
             result_node = None
             parsing_state_delta = None
 
         else:
-
             result_node, parsing_state_delta = latex_walker.parse_content(
                 node_parser,
                 token_reader,
@@ -912,15 +911,16 @@ class LatexNodesCollector(object):
         self.update_state_from_parsing_state_delta(parsing_state_delta)
 
         if result_node is None:
-            logger.warning("Parser %r produced no node (None) for token %r", node_parser, tok)
+            logger.warning(
+                "Parser %r produced no node (None) for token %r", node_parser, tok
+            )
             return
 
         exc = self.push_to_nodelist(result_node)
         if exc is not None:
             exc.pos_end = result_node.pos_end
-            logger.debug('parse_invocable_token_type(): exc=%r', exc)
+            logger.debug("parse_invocable_token_type(): exc=%r", exc)
             raise exc
-
 
     def parse_math(self, tok):
         r"""
@@ -944,8 +944,7 @@ class LatexNodesCollector(object):
         # The math parser instance is responsible for setting the parsing state.
 
         child_math_parsing_state = self.make_child_parsing_state(
-            self.parsing_state,
-            LatexMathNode
+            self.parsing_state, LatexMathNode
         )
         logger.debug("child_math_parsing_state = %r", child_math_parsing_state)
 
@@ -954,12 +953,11 @@ class LatexNodesCollector(object):
         )
 
         # a math inline or display environment
-        mathnode, parsing_state_delta = \
-            self.latex_walker.parse_content(
-                math_parser,
-                token_reader=self.token_reader,
-                parsing_state=child_math_parsing_state,
-            )
+        mathnode, parsing_state_delta = self.latex_walker.parse_content(
+            math_parser,
+            token_reader=self.token_reader,
+            parsing_state=child_math_parsing_state,
+        )
 
         self.update_state_from_parsing_state_delta(parsing_state_delta)
 
@@ -970,5 +968,5 @@ class LatexNodesCollector(object):
         stop_exc = self.push_to_nodelist(mathnode)
         if stop_exc is not None:
             stop_exc.pos_end = mathnode.pos_end
-            logger.debug('parse_math_node(): stop_exc=%r', stop_exc)
+            logger.debug("parse_math_node(): stop_exc=%r", stop_exc)
             raise stop_exc

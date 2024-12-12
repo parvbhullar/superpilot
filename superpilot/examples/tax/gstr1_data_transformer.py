@@ -40,12 +40,20 @@ class Item(SchemaModel):
     """
     Class representing an item in the itemList.
     """
-    hsn_code: str = Field(..., description="HSN or SAC of Goods or Services as per Invoice line items")
+
+    hsn_code: str = Field(
+        ..., description="HSN or SAC of Goods or Services as per Invoice line items"
+    )
     quantity: float = Field(..., description="Quantity of goods sold")
     unit_of_product: str = Field(..., description="UQC (Unit of Measure) of goods sold")
-    gst_rate: float = Field(..., description="GST Rate that is applicable on the goods or services supplied")
+    gst_rate: float = Field(
+        ..., description="GST Rate that is applicable on the goods or services supplied"
+    )
     cess_amount: float = Field(..., description="Cess Amount as per invoice")
-    taxable_value: float = Field(..., description="Taxable value of Goods or Service as per invoice, taking into account discount or abatement, if any")
+    taxable_value: float = Field(
+        ...,
+        description="Taxable value of Goods or Service as per invoice, taking into account discount or abatement, if any",
+    )
     cgst_amount: float = Field(..., description="CGST Amount as per invoice")
     sgst_amount: float = Field(..., description="SGST Amount as per invoice")
     igst_amount: float = Field(..., description="IGST Amount as per invoice")
@@ -58,34 +66,76 @@ class Document(SchemaModel):
     """
     Class representing the data structure for document-related information.
     """
+
     document_number: str = Field(..., description="Document Number")
     document_date: str = Field(..., description="Document Date in format DD-MM-YYYY")
-    original_document_number: Optional[str] = Field(None, description="Original Document Number that was before the voucher number was amended")
-    original_document_date: Optional[str] = Field(None, description="Original Document date that was before the voucher number was amended")
-    ref_document_number: Optional[str] = Field(None, description="Reference Document Number")
-    ref_document_date: Optional[str] = Field(None, description="Reference Document Date")
-    supply_type: str = Field(..., description="Specify the type of supply that was made")
-    invoice_status: str = Field(..., description="Flag for deleting, holding or modifying an invoice")
+    original_document_number: Optional[str] = Field(
+        None,
+        description="Original Document Number that was before the voucher number was amended",
+    )
+    original_document_date: Optional[str] = Field(
+        None,
+        description="Original Document date that was before the voucher number was amended",
+    )
+    ref_document_number: Optional[str] = Field(
+        None, description="Reference Document Number"
+    )
+    ref_document_date: Optional[str] = Field(
+        None, description="Reference Document Date"
+    )
+    supply_type: str = Field(
+        ..., description="Specify the type of supply that was made"
+    )
+    invoice_status: str = Field(
+        ..., description="Flag for deleting, holding or modifying an invoice"
+    )
     invoice_category: str = Field(..., description="Category of the invoice")
     invoice_type: str = Field(..., description="Invoice Type")
-    total_invoice_value: float = Field(..., description="Supplier Invoice Value indicating a total of taxable value and total tax")
-    total_taxable_value: float = Field(..., description="Taxable value of Goods or Service as per invoice, taking into account discount or abatement, if any")
-    txpd_taxtable_value: float = Field(..., description="Taxable value as per tax table")
-    shipping_bill_number: Optional[str] = Field(None, description="Shipping Bill Number")
+    total_invoice_value: float = Field(
+        ...,
+        description="Supplier Invoice Value indicating a total of taxable value and total tax",
+    )
+    total_taxable_value: float = Field(
+        ...,
+        description="Taxable value of Goods or Service as per invoice, taking into account discount or abatement, if any",
+    )
+    txpd_taxtable_value: float = Field(
+        ..., description="Taxable value as per tax table"
+    )
+    shipping_bill_number: Optional[str] = Field(
+        None, description="Shipping Bill Number"
+    )
     shipping_bill_date: Optional[str] = Field(None, description="Shipping Bill Date")
     reason: Optional[str] = Field(None, description="Reason for the document")
     port_code: Optional[str] = Field(None, description="Port Code")
     location: str = Field(..., description="Location code")
-    gstr1_return_period: Optional[str] = Field(None, description="gstr1 return period in format MM-YYYY")
-    gstr3b_return_period: Optional[str] = Field(None, description="3B auto-fill period in format MMYYYY")
-    reverse_charge: Optional[str] = Field(None, description="If reverse charge is applicable on the supplies made to an unregistered business OR supplies made attract reverse charge")
-    isamended: Optional[str] = Field(None, description="Specifies if a sale was revised")
+    gstr1_return_period: Optional[str] = Field(
+        None, description="gstr1 return period in format MM-YYYY"
+    )
+    gstr3b_return_period: Optional[str] = Field(
+        None, description="3B auto-fill period in format MMYYYY"
+    )
+    reverse_charge: Optional[str] = Field(
+        None,
+        description="If reverse charge is applicable on the supplies made to an unregistered business OR supplies made attract reverse charge",
+    )
+    isamended: Optional[str] = Field(
+        None, description="Specifies if a sale was revised"
+    )
     amended_pos: Optional[str] = Field(None, description="Amended place of supply")
     amended_period: Optional[str] = Field(None, description="Amended Period")
-    place_of_supply: str = Field(..., description="Name of the state where supplies were actually made")
-    supplier_gstin: str = Field(..., description="GSTIN/UID of the Supplier taxpayer/UN, Govt Bodies")
-    buyer_gstin: str = Field(..., description="GSTIN/UID of the Receiver taxpayer/UN, Govt Bodies")
-    customer_name: str = Field(..., description="Name of the customer to whom supplies were made")
+    place_of_supply: str = Field(
+        ..., description="Name of the state where supplies were actually made"
+    )
+    supplier_gstin: str = Field(
+        ..., description="GSTIN/UID of the Supplier taxpayer/UN, Govt Bodies"
+    )
+    buyer_gstin: str = Field(
+        ..., description="GSTIN/UID of the Receiver taxpayer/UN, Govt Bodies"
+    )
+    customer_name: str = Field(
+        ..., description="Name of the customer to whom supplies were made"
+    )
     amortised_cost: str = Field(..., description="Amortised cost flag")
     itemList: List[Item] = Field(..., description="List of items in the document")
 
@@ -106,7 +156,7 @@ class GSTR1DataTransformerPrompt(SimplePrompt, ABC):
         you are a GST expert. You need to analyze the data and provide the correct data & their respective fields such as status.
 
         Examples :-
-        
+
 
         """
 
@@ -161,4 +211,3 @@ class GSTR1DataTransformerPrompt(SimplePrompt, ABC):
         # parsed_response = json_loads(response_content["content"])
         # parsed_response = self._parser_schema.from_response(response_content)
         return parsed_response
-

@@ -39,11 +39,11 @@ class SuperAbility(Ability):
     )
 
     def __init__(
-            self,
-            logger: logging.Logger,
-            configuration: AbilityConfiguration,
-            language_model_provider: LanguageModelProvider,
-            prompt_strategy: PromptStrategy,
+        self,
+        logger: logging.Logger,
+        configuration: AbilityConfiguration,
+        language_model_provider: LanguageModelProvider,
+        prompt_strategy: PromptStrategy,
     ):
         self._logger = logger
         self._configuration = configuration
@@ -110,20 +110,28 @@ class SuperAbility(Ability):
 
     @classmethod
     def required_arguments(cls) -> List[str]:
-        return ["ability_name", "description", "arguments", "required_arguments", "package_requirements", "code"]
+        return [
+            "ability_name",
+            "description",
+            "arguments",
+            "required_arguments",
+            "package_requirements",
+            "code",
+        ]
 
     async def __call__(
-            self,
-            ability_name: str,
-            description: str,
-            arguments: List[dict],
-            required_arguments: List[str],
-            package_requirements: List[str],
-            code: str,
+        self,
+        ability_name: str,
+        description: str,
+        arguments: List[dict],
+        required_arguments: List[str],
+        package_requirements: List[str],
+        code: str,
     ) -> AbilityAction:
         breakpoint()
 
-    async def chat_with_model(self,
+    async def chat_with_model(
+        self,
         model_prompt: List[LanguageModelMessage],
         functions: List[LanguageModelFunction] = [],
         completion_parser: Callable[[str], dict] = None,
@@ -138,6 +146,7 @@ class SuperAbility(Ability):
         return model_response
 
     @classmethod
-    def create_new_ability(cls, logger: logging.Logger,
-                           configuration: AbilityConfiguration) -> "SuperAbility":
+    def create_new_ability(
+        cls, logger: logging.Logger, configuration: AbilityConfiguration
+    ) -> "SuperAbility":
         return cls(logger, configuration)

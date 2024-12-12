@@ -3,8 +3,12 @@ from typing import Union
 
 class GPTPromptGenerator:
     """Through LLM, given an output, asks LLM to provide the input (supports instruction, chatbot, and query styles)"""
+
     def __init__(self):
-        self._generators = {i: getattr(self, f"gen_{i}_style") for i in ['instruction', 'chatbot', 'query']}
+        self._generators = {
+            i: getattr(self, f"gen_{i}_style")
+            for i in ["instruction", "chatbot", "query"]
+        }
 
     def gen_instruction_style(self, example):
         """Instruction style: Given an output, asks LLM for the corresponding input"""
@@ -28,7 +32,7 @@ class GPTPromptGenerator:
                 Document: {example} What is the detailed query X?
                 X:"""
 
-    def gen(self, example: str, style: str = 'all') -> Union[list[str], str]:
+    def gen(self, example: str, style: str = "all") -> Union[list[str], str]:
         """
         Generates one or more outputs through the example, for LLM to reply with corresponding inputs
 
@@ -36,9 +40,10 @@ class GPTPromptGenerator:
         :param style: (all|instruction|chatbot|query)
         :return: LLM's expected input sample (one or more)
         """
-        if style != 'all':
+        if style != "all":
             return self._generators[style](example)
         return [f(example) for f in self._generators.values()]
+
 
 class WikiHowTemplate:
     def __init__(self):

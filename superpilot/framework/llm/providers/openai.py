@@ -21,6 +21,7 @@ from superpilot.framework.llm.base import (
     TText,
 )
 from superpilot.framework.helpers.logs import logger
+
 # from superpilot.models.command_registry import CommandRegistry
 
 OPEN_AI_CHAT_MODELS = {

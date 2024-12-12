@@ -103,7 +103,9 @@ class WolframAbility(Ability):
         return {"content": response_content["content"]}
 
 
-def get_from_dict_or_env(data: Dict[str, Any], key: str, env_key: str, default: Optional[str] = None) -> str:
+def get_from_dict_or_env(
+    data: Dict[str, Any], key: str, env_key: str, default: Optional[str] = None
+) -> str:
     """Get a value from a dictionary or an environment variable."""
     if key in data and data[key]:
         return data[key]
@@ -142,14 +144,19 @@ class WolframAlphaAPIWrapper(BaseModel):
     @root_validator(skip_on_failure=True)
     def validate_environment(cls, values: Dict) -> Dict:
         """Validate that api key and python package exists in environment."""
-        wolfram_alpha_appid = get_from_dict_or_env(values, "wolfram_alpha_appid", "WOLFRAM_ALPHA_APPID")
+        wolfram_alpha_appid = get_from_dict_or_env(
+            values, "wolfram_alpha_appid", "WOLFRAM_ALPHA_APPID"
+        )
         values["wolfram_alpha_appid"] = wolfram_alpha_appid
 
         try:
             import wolframalpha
 
         except ImportError:
-            raise ImportError("wolframalpha is not installed. " "Please install it with `pip install wolframalpha`")
+            raise ImportError(
+                "wolframalpha is not installed. "
+                "Please install it with `pip install wolframalpha`"
+            )
         client = wolframalpha.Client(wolfram_alpha_appid)
         values["wolfram_client"] = client
 
@@ -179,7 +186,7 @@ class WolframAlphaAPIWrapper(BaseModel):
             )
 
         try:
-            print("WF"*32, res)
+            print("WF" * 32, res)
             if not res["@success"]:
                 return (
                     "Your Wolfram query is invalid. Please try a new query for wolfram or use python.",

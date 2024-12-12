@@ -1,4 +1,5 @@
 """The Agent is an autonomouos entity guided by a LLM provider."""
+
 from superpilot.core.pilot.base import Agent
 from superpilot.core.pilot.settings import AgentSettings
 from superpilot.core.pilot.simple import SimpleAgent

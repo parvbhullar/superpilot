@@ -1,12 +1,14 @@
 import json
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 import click
 
 from superpilot.core.pilot import AgentSettings, SimpleAgent
 from superpilot.core.runner.client_lib.logging import get_client_logger
 import asyncio
+
 
 async def run_superpilot(user_configuration: dict):
     """Run the Superpilot CLI client."""
@@ -63,7 +65,7 @@ async def run_superpilot(user_configuration: dict):
             "Should the pilot proceed with this ability?",
             default="y",
         )
-        if not next_ability['next_ability']:
+        if not next_ability["next_ability"]:
             print("Agent is done!", "No Next Ability Found")
             break
         ability_result = await pilot.execute_next_ability(user_input)

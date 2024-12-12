@@ -4,7 +4,8 @@ from superpilot.core.pilot.task.simple import SimpleTaskPilot
 from superpilot.core.resource.model_providers.factory import ModelProviderFactory
 from superpilot.examples.executor.base import BaseExecutor
 from superpilot.examples.prompt_generator.latex_code_gen import (
-    LatexCodeGenPrompt, Question
+    LatexCodeGenPrompt,
+    Question,
 )
 from superpilot.framework.tools.latex import latex_to_text
 from superpilot.core.planning.strategies.utils import json_loads
@@ -33,10 +34,14 @@ class LatexCodeGenExecutor(BaseExecutor):
             pass
         response = await self.pilot.execute(query)
         # response.content = json_loads(response.content.get("content", "{}"))
-        response.content = extract_json_from_response(response.content.get("content", "{}"), Question.function_schema())
+        response.content = extract_json_from_response(
+            response.content.get("content", "{}"), Question.function_schema()
+        )
         options = self.format_numbered(response.content.get("options", []))
         try:
-            response.content["question"] = latex_to_text(response.content.get("question", ""))
+            response.content["question"] = latex_to_text(
+                response.content.get("question", "")
+            )
         except:
             response.content["question"] = response.content.get("question", "")
         response.content["question"] += f"\n{options}\n"

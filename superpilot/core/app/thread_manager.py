@@ -15,18 +15,26 @@ class ThreadManager:
     def execute_goal(self, goal):
         # Execute the task using SuperPilot
         superpilot = initialize_superpilot(goal)
-        logger.info(f"Executing goal: {goal.goal} with stage: {goal.stage}", __class__.__name__)
+        logger.info(
+            f"Executing goal: {goal.goal} with stage: {goal.stage}", __class__.__name__
+        )
         goal = superpilot.init_plan(goal)
 
         if goal.stage == ThreadStage.WAITING:
             # save the goal to the database
-            logger.info(f"Saving goal: {goal.goal} with stage: {goal.stage}", __class__.__name__)
-            goal = ThreadStore.save_goal_with_status(goal, Status.IN_PROGRESS, ThreadStage.TASK_PLANING_COMPLETED)
+            logger.info(
+                f"Saving goal: {goal.goal} with stage: {goal.stage}", __class__.__name__
+            )
+            goal = ThreadStore.save_goal_with_status(
+                goal, Status.IN_PROGRESS, ThreadStage.TASK_PLANING_COMPLETED
+            )
             # save_object_to_file("goal", goal, os.getcwd())
 
         if goal.stage != ThreadStage.COMPLETED:
             # push task actions to task execution queue for execution if distributed mode is true
-            logger.info(f"CFG.distributed_mode is {CFG.distributed_mode}", __class__.__name__)
+            logger.info(
+                f"CFG.distributed_mode is {CFG.distributed_mode}", __class__.__name__
+            )
             if CFG.distributed_mode:
                 self.push_to_queue(goal)
             else:
@@ -60,6 +68,7 @@ def get_task(t, pilot_handle):
 
 def test_query_planner():
     import pandas as pd
+
     # Specify the path to your JSON file
     json_file_path = "../notebooks/data/self-instruct/databricks-dolly-15k.jsonl"
     # Open the JSON file
@@ -73,14 +82,16 @@ def test_query_planner():
         # Access and print a specific column
         # print(row['instruction'])
 
-        action_result = executor.start_executor(get_task(row['instruction'], 'question_pilot_01'))
-        j.append({"instruction": row['instruction'], "query_plan": action_result})
+        action_result = executor.start_executor(
+            get_task(row["instruction"], "question_pilot_01")
+        )
+        j.append({"instruction": row["instruction"], "query_plan": action_result})
         if index > 10:
             break
 
     jsonl_file_path = "logs/query_planner_response.json"
     df = pd.DataFrame(j)
-    df.to_json(jsonl_file_path, orient='records')
+    df.to_json(jsonl_file_path, orient="records")
 
 
 def process_block(thread_id, pilot_handle):
@@ -121,7 +132,9 @@ def manual_testing():
     # action_result = executor.start_executor(get_task("Determine the opponent team in the game where Kyle Van Zyl scored 36 points", 'question_pilot_01'))
     # action_result = executor.start_executor(get_task("Initiate the recruitment process for a senior HR manager position", 'question_pilot_01'))
     # action_result = executor.start_executor(get_task("Write a patent on Multimodel Transformer it should able to execute the multi task models at once.", 'question_pilot_01'))
-    action_result = executor.start_executor(get_task("Tell me weather of bikaner?", 'question_pilot_01'))
+    action_result = executor.start_executor(
+        get_task("Tell me weather of bikaner?", "question_pilot_01")
+    )
     # print(json.dumps(action_result, indent=4), "\n")
     # print("OutPut -->", action_result['output'], "\n")
     # Fitness: Completing a 10 K race in under an hour
@@ -135,6 +148,7 @@ def main():
     # manual_testing()
     # process_block('527154309490540801', 'question_pilot_01')
     from services.superpilot_service.services.task import process_task_plan
+
     block_data = {
         # "thread_id": "527154309490540801",
         "thread_id": "527154309490540801",
@@ -147,15 +161,17 @@ def main():
             "user_token": "ANONYMOUS",
             "is_active": True,
             "full_name": "Anonymous User",
-            "is_anonymous": True
+            "is_anonymous": True,
         },
         "data": {
             "block": "html",
             "block_type": "question",
-            "data": {"content": "Understand the current topics in Indian politics and write a blog on the same"},
+            "data": {
+                "content": "Understand the current topics in Indian politics and write a blog on the same"
+            },
             "parent_id": None,
-            "pilot": "question_pilot_01"
-        }
+            "pilot": "question_pilot_01",
+        },
     }
     process_task_plan(**block_data)
     # test_query_planner()

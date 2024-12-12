@@ -10,7 +10,8 @@ from superpilot.core.configuration import SystemConfiguration
 from superpilot.core.planning.settings import LanguageModelConfiguration
 from superpilot.core.planning.simple import PromptStrategy
 from superpilot.core.resource.model_providers import (
-    LanguageModelMessage, LanguageModelFunction,
+    LanguageModelMessage,
+    LanguageModelFunction,
 )
 from superpilot.core.plugin.simple import PluginLocation, PluginStorageFormat
 from superpilot.core.resource.model_providers import (
@@ -27,6 +28,7 @@ from superpilot.core.configuration.schema import (
 
 class AbilityConfiguration(SystemConfiguration):
     """Struct for model configuration."""
+
     from superpilot.core.plugin.base import PluginLocation
 
     location: PluginLocation
@@ -37,13 +39,13 @@ class AbilityConfiguration(SystemConfiguration):
 
     @classmethod
     def factory(
-            cls,
-            location_route: str = "superpilot.core.builtins.QueryLanguageModel",
-            model_name: str = OpenAIModelName.GPT3,
-            provider_name: str = ModelProviderName.OPENAI,
-            temperature: str = 0.9,
-            memory_provider_required: bool = False,
-            workspace_required: bool = False,
+        cls,
+        location_route: str = "superpilot.core.builtins.QueryLanguageModel",
+        model_name: str = OpenAIModelName.GPT3,
+        provider_name: str = ModelProviderName.OPENAI,
+        temperature: str = 0.9,
+        memory_provider_required: bool = False,
+        workspace_required: bool = False,
     ) -> "AbilityConfiguration":
         return AbilityConfiguration(
             location=PluginLocation(
@@ -88,8 +90,7 @@ class Ability(abc.ABC):
         return []
 
     @abc.abstractmethod
-    async def __call__(self, *args, **kwargs) -> AbilityAction:
-        ...
+    async def __call__(self, *args, **kwargs) -> AbilityAction: ...
 
     def __str__(self) -> str:
         return pformat(self.dump)
@@ -111,10 +112,10 @@ class Ability(abc.ABC):
 
     @classmethod
     def create_ability(
-            cls,
-            ability_type: type,  # Assuming you pass the Class itself
-            logger: logging.Logger,
-            configuration: AbilityConfiguration,
+        cls,
+        ability_type: type,  # Assuming you pass the Class itself
+        logger: logging.Logger,
+        configuration: AbilityConfiguration,
     ) -> "Ability":
         # Instantiate and return Ability
         return ability_type(logger=logger, configuration=configuration)
@@ -124,25 +125,19 @@ class AbilityRegistry(abc.ABC):
     @abc.abstractmethod
     def register_ability(
         self, ability_name: str, ability_configuration: AbilityConfiguration
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @abc.abstractmethod
-    def list_abilities(self) -> List[str]:
-        ...
+    def list_abilities(self) -> List[str]: ...
 
     @abc.abstractmethod
-    def abilities(self) -> List[Ability]:
-        ...
+    def abilities(self) -> List[Ability]: ...
 
     @abc.abstractmethod
-    def dump_abilities(self) -> List[dict]:
-        ...
+    def dump_abilities(self) -> List[dict]: ...
 
     @abc.abstractmethod
-    def get_ability(self, ability_name: str) -> Ability:
-        ...
+    def get_ability(self, ability_name: str) -> Ability: ...
 
     @abc.abstractmethod
-    async def perform(self, ability_name: str, **kwargs) -> AbilityAction:
-        ...
+    async def perform(self, ability_name: str, **kwargs) -> AbilityAction: ...

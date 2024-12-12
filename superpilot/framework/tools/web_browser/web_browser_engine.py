@@ -21,10 +21,14 @@ class WebBrowserEngine:
         engine = engine or WebBrowserEngineType.PLAYWRIGHT or Config.web_browser_engine
 
         if engine == WebBrowserEngineType.PLAYWRIGHT:
-            module = "superpilot.framework.tools.web_browser.web_browser_engine_playwright"
+            module = (
+                "superpilot.framework.tools.web_browser.web_browser_engine_playwright"
+            )
             run_func = importlib.import_module(module).PlaywrightWrapper().run
         elif engine == WebBrowserEngineType.SELENIUM:
-            module = "superpilot.framework.tools.web_browser.web_browser_engine_selenium"
+            module = (
+                "superpilot.framework.tools.web_browser.web_browser_engine_selenium"
+            )
             run_func = importlib.import_module(module).SeleniumWrapper().run
         elif engine == WebBrowserEngineType.CUSTOM:
             run_func = run_func
@@ -35,12 +39,10 @@ class WebBrowserEngine:
         self.engine = engine
 
     @overload
-    async def run(self, url: str) -> str:
-        ...
+    async def run(self, url: str) -> str: ...
 
     @overload
-    async def run(self, url: str, *urls: str) -> list[str]:
-        ...
+    async def run(self, url: str, *urls: str) -> list[str]: ...
 
     async def run(self, url: str, *urls: str) -> str | list[str]:
         page = await self.run_func(url, *urls)
@@ -51,7 +53,10 @@ class WebBrowserEngine:
 
 def get_page_content(page: str):
     soup = BeautifulSoup(page, "html.parser")
-    return "\n".join(i.text.strip() for i in soup.find_all(["h1", "h2", "h3", "h4", "h5", "p", "pre"]))
+    return "\n".join(
+        i.text.strip()
+        for i in soup.find_all(["h1", "h2", "h3", "h4", "h5", "p", "pre"])
+    )
 
 
 if __name__ == "__main__":

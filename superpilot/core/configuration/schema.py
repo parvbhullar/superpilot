@@ -158,7 +158,9 @@ class WorkspaceSetup(abc.ABC):
         return workspace_root if save_file else settings_json
 
     @staticmethod
-    def load_environment_settings(workspace_root: Path, config_name: str) -> "EnvSettings":
+    def load_environment_settings(
+        workspace_root: Path, config_name: str
+    ) -> "EnvSettings":
         # Cyclic import
         from superpilot.core.environment.simple import EnvSettings
         import json

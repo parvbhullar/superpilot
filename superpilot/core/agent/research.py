@@ -390,7 +390,9 @@ class ResearchAgent(Agent, Configurable):
             pilot_settings,
             logger=logger,
         )
-        settings_json = workspace.setup_workspace(pilot_settings, logger, cls.name(), save_file=False)
+        settings_json = workspace.setup_workspace(
+            pilot_settings, logger, cls.name(), save_file=False
+        )
         settings_json = json.loads(settings_json)
         return workspace.save_pilot_settings_goal(goal, thread_id, settings_json)
 

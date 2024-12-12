@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2022 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,6 +30,7 @@
 from __future__ import print_function, unicode_literals
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 from .._exctypes import *
@@ -43,14 +44,14 @@ _basestring = str
 
 ### BEGIN_PYTHON2_SUPPORT_CODE
 import sys
+
 if sys.version_info.major == 2:
     _basestring = basestring
 ### END_PYTHON2_SUPPORT_CODE
 
 
-
-
 # ------------------------------------------------------------------------------
+
 
 class LatexGeneralNodesParser(LatexParserBase):
     r"""
@@ -101,16 +102,19 @@ class LatexGeneralNodesParser(LatexParserBase):
         latex_walker=latex_walker, token_reader=token_reader,
         parsing_state=parsing_state)`.
     """
-    def __init__(self,
-                 stop_token_condition=None,
-                 stop_nodelist_condition=None,
-                 require_stop_condition_met=True,
-                 stop_condition_message=None,
-                 make_child_parsing_state=None,
-                 handle_stop_condition_token=None,
-                 include_stop_token_pre_space_chars=True,
-                 handle_stop_data=None,
-                 **kwargs):
+
+    def __init__(
+        self,
+        stop_token_condition=None,
+        stop_nodelist_condition=None,
+        require_stop_condition_met=True,
+        stop_condition_message=None,
+        make_child_parsing_state=None,
+        handle_stop_condition_token=None,
+        include_stop_token_pre_space_chars=True,
+        handle_stop_data=None,
+        **kwargs
+    ):
         super(LatexGeneralNodesParser, self).__init__(**kwargs)
         self.stop_token_condition = stop_token_condition
         self.stop_nodelist_condition = stop_nodelist_condition
@@ -119,12 +123,11 @@ class LatexGeneralNodesParser(LatexParserBase):
         self.stop_condition_message = stop_condition_message
         # parsing state for child nodes
         self.make_child_parsing_state = make_child_parsing_state
-        # 
+        #
         self.handle_stop_condition_token = handle_stop_condition_token
         self.handle_stop_data = handle_stop_data
 
         self.include_stop_token_pre_space_chars = include_stop_token_pre_space_chars
-
 
     def make_nodes_collector(self, latex_walker, token_reader, parsing_state):
         r"""
@@ -153,16 +156,14 @@ class LatexGeneralNodesParser(LatexParserBase):
         collector = self.make_nodes_collector(latex_walker, token_reader, parsing_state)
 
         try:
-
             collector.process_tokens()
 
         except LatexWalkerParseError as e:
-
             # we got an error! Add some info to help with recovery in case
             # we're in tolerant parsing mode, and then raise the issue
             # further up.
             #
-            
+
             logger.debug("Got parse error while reading general nodes: %r", e)
 
             thenodelist = collector.get_final_nodelist()
@@ -186,7 +187,6 @@ class LatexGeneralNodesParser(LatexParserBase):
         if collected_nodelist.pos_end is None:
             collected_nodelist.pos_end = pos_start
 
-
         # check that any required stop condition was met
 
         stop_token_condition_met = collector.stop_token_condition_met()
@@ -207,23 +207,27 @@ class LatexGeneralNodesParser(LatexParserBase):
                 # there were no stopping conditions set
                 met_a_required_stop_condition = True
 
-        logger.debug("finished parsing general nodes; "
-                     "self.require_stop_condition_met=%r, "
-                     "stop_token_condition=%r, stop_token_condition_met=%r, "
-                     "stop_nodelist_condition=%r, stop_nodelist_condition_met=%r;"
-                     "met_a_required_stop_condition=%r",
-                     self.require_stop_condition_met,
-                     self.stop_token_condition, stop_token_condition_met,
-                     self.stop_nodelist_condition, stop_nodelist_condition_met,
-                     met_a_required_stop_condition)
+        logger.debug(
+            "finished parsing general nodes; "
+            "self.require_stop_condition_met=%r, "
+            "stop_token_condition=%r, stop_token_condition_met=%r, "
+            "stop_nodelist_condition=%r, stop_nodelist_condition_met=%r;"
+            "met_a_required_stop_condition=%r",
+            self.require_stop_condition_met,
+            self.stop_token_condition,
+            stop_token_condition_met,
+            self.stop_nodelist_condition,
+            stop_nodelist_condition_met,
+            met_a_required_stop_condition,
+        )
 
         if not met_a_required_stop_condition:
             #
             message = self.stop_condition_message
             if message is None:
                 message = (
-                    'End of stream encountered while parsing nodes without '
-                    'stop condition being met [reporting starting position]'
+                    "End of stream encountered while parsing nodes without "
+                    "stop condition being met [reporting starting position]"
                 )
             exc = LatexWalkerNodesParseError(
                 msg=message,
@@ -231,14 +235,13 @@ class LatexGeneralNodesParser(LatexParserBase):
                 recovery_nodes=collected_nodelist,
                 recovery_parsing_state_delta=collector.get_parser_parsing_state_delta(),
                 error_type_info={
-                    'what': 'nodes_generalnodes_required_stop_condition_not_met',
-                    'stop_condition_message': self.stop_condition_message
+                    "what": "nodes_generalnodes_required_stop_condition_not_met",
+                    "stop_condition_message": self.stop_condition_message,
                 },
             )
             raise exc
 
-        if stop_token_condition_met \
-           and self.handle_stop_condition_token is not None:
+        if stop_token_condition_met and self.handle_stop_condition_token is not None:
             stoptoken = collector.stop_token_condition_met_token()
             # do something with the token that caused the stop condition to fire
             if stoptoken is not None:
@@ -251,10 +254,12 @@ class LatexGeneralNodesParser(LatexParserBase):
 
         stop_data = collector.stop_condition_stop_data()
         if stop_data is not None and self.handle_stop_data is not None:
-            self.handle_stop_data(stop_data,
-                                  latex_walker=latex_walker,
-                                  token_reader=token_reader,
-                                  parsing_state=parsing_state)
+            self.handle_stop_data(
+                stop_data,
+                latex_walker=latex_walker,
+                token_reader=token_reader,
+                parsing_state=parsing_state,
+            )
 
         # put together the node list & carry on
 
@@ -264,7 +269,6 @@ class LatexGeneralNodesParser(LatexParserBase):
         logger.debug("parser - we got final nodelist - %r", nodelist)
 
         return nodelist, parsing_state_delta
-
 
 
 # ------------------------------------------------------------------------------
@@ -286,11 +290,12 @@ class LatexSingleNodeParser(LatexGeneralNodesParser):
     If the end of stream is reached, an empty node list is returned.
 
     Arguments:
-    
+
       - `stop_on_comment`: If `True`, then a single comment node will count as a
         single node read.  If `False`, then processing will continue until a
         non-comment node is reached.
     """
+
     def __init__(self, stop_on_comment=True, **kwargs):
         super(LatexSingleNodeParser, self).__init__(
             stop_nodelist_condition=self._stop_nodelist_condition,
@@ -298,7 +303,7 @@ class LatexSingleNodeParser(LatexGeneralNodesParser):
             **kwargs
         )
         self.stop_on_comment = stop_on_comment
-        
+
     def _stop_nodelist_condition(self, nodelist):
         nl = nodelist
         if not self.stop_on_comment:
@@ -313,8 +318,3 @@ class LatexSingleNodeParser(LatexGeneralNodesParser):
         this parser.
         """
         return False
-
-
-
-
-

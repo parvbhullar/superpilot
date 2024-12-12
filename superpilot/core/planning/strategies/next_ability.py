@@ -121,7 +121,8 @@ class NextAbility(PromptStrategy):
         template_kwargs["task_objective"] = task.objective
         template_kwargs["cycle_count"] = task.context.cycle_count + context.count()
         template_kwargs["action_history"] = to_numbered_list(
-            [action.summary() for action in task.context.prior_actions] + [item.summary() for item in context.items],
+            [action.summary() for action in task.context.prior_actions]
+            + [item.summary() for item in context.items],
             no_items_response="You have not taken any actions yet.",
             use_format=False,
             **template_kwargs,
@@ -186,7 +187,9 @@ class NextAbility(PromptStrategy):
 
         """
         function_name = response_content.get("function_call", {}).get("name")
-        function_arguments = json_loads(response_content.get("function_call", {}).get("arguments", "{}"))
+        function_arguments = json_loads(
+            response_content.get("function_call", {}).get("arguments", "{}")
+        )
         parsed_response = {
             "motivation": function_arguments.pop("motivation", None),
             "self_criticism": function_arguments.pop("self_criticism", None),

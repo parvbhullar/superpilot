@@ -30,15 +30,14 @@ from superpilot.core.resource.model_providers import (
     ModelProviderName,
     OpenAIModelName,
 )
-from superpilot.core.pilot.settings import (
-    PilotConfiguration,
-    ExecutionAlgo
+from superpilot.core.pilot.settings import PilotConfiguration, ExecutionAlgo
+from superpilot.core.resource.model_providers.factory import (
+    ModelProviderFactory,
+    ModelConfigFactory,
 )
-from superpilot.core.resource.model_providers.factory import ModelProviderFactory, ModelConfigFactory
 
 
 class SuperTaskPilot(TaskPilot):
-
     default_configuration = TaskPilotConfiguration(
         location=PluginLocation(
             storage_format=PluginStorageFormat.INSTALLED_PACKAGE,
@@ -46,9 +45,7 @@ class SuperTaskPilot(TaskPilot):
         ),
         pilot=PilotConfiguration(
             name="super_task_pilot",
-            role=(
-                "An AI Pilot designed to complete simple tasks with "
-            ),
+            role=("An AI Pilot designed to complete simple tasks with "),
             goals=[
                 "Complete simple tasks",
             ],
@@ -90,8 +87,8 @@ class SuperTaskPilot(TaskPilot):
             self._providers[model] = model_providers[model_config.provider_name]
 
         self._prompt_strategy = strategies.NextAbility(
-                **self._configuration.prompt_strategy.dict()
-            )
+            **self._configuration.prompt_strategy.dict()
+        )
 
     async def execute(self, objective: str, *args, **kwargs) -> Context:
         """Execute the task."""
@@ -205,14 +202,15 @@ class SuperTaskPilot(TaskPilot):
         return f"SuperTaskPilot({self._configuration})"
 
     @classmethod
-    def create(cls,
-               prompt_config,
-               smart_model_name=OpenAIModelName.GPT4,
-               fast_model_name=OpenAIModelName.GPT3,
-               smart_model_temp=0.9,
-               fast_model_temp=0.9,
-               model_providers=None):
-
+    def create(
+        cls,
+        prompt_config,
+        smart_model_name=OpenAIModelName.GPT4,
+        fast_model_name=OpenAIModelName.GPT3,
+        smart_model_temp=0.9,
+        fast_model_temp=0.9,
+        model_providers=None,
+    ):
         models_config = ModelConfigFactory.get_models_config(
             smart_model_name=smart_model_name,
             fast_model_name=fast_model_name,

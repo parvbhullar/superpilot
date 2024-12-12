@@ -1,4 +1,5 @@
 """Text processing functions"""
+
 from math import ceil
 from typing import Dict, Optional
 import urllib
@@ -107,14 +108,15 @@ def summarize_text(
     logger.info(f"Max chunk length: {max_chunk_length} tokens")
 
     if not must_chunk_content(text, model, max_chunk_length):
-        summarization_prompt.add("user",
+        summarization_prompt.add(
+            "user",
             f"Summaries: {text} \n\n"
             f"Using the above information, answer the following question or topic: {question} in a detailed response --"
             "The response should focus on the answer to the question, should be well structured, informative, "
             "in depth, with facts, stats and numbers if available, a minimum of 300 words"
             "if the question cannot be answered using the text, simply summarize the text in depth. "
             "You MUST determine your own concrete and valid opinion based on the information found. Do NOT deter to general and meaningless conclusions."
-            "Write all source urls at the end of the response in apa format"
+            "Write all source urls at the end of the response in apa format",
         )
         # summarization_prompt.add(
         #     "user",

@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2021 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,7 +25,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals
 
-#import sys
+# import sys
 import logging
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 from ._unicode_to_latex_encoder import (
     RULE_CALLABLE,
     UnicodeToLatexConversionRule,
-    UnicodeToLatexEncoder
+    UnicodeToLatexEncoder,
 )
 
 
@@ -64,29 +64,33 @@ class PartialLatexToLatexEncoder(UnicodeToLatexEncoder):
 
     .. versionadded: 2.10
     """
-    def __init__(self,
-                 # keyword arguments:
-                 keep_latex_chars=r'\${}^_',
-                 conversion_rules=None,
-                 **kwargs):
 
+    def __init__(
+        self,
+        # keyword arguments:
+        keep_latex_chars=r"\${}^_",
+        conversion_rules=None,
+        **kwargs
+    ):
         base_conversion_rules = conversion_rules
         if base_conversion_rules is None:
-            base_conversion_rules = ['defaults']
+            base_conversion_rules = ["defaults"]
 
         super(PartialLatexToLatexEncoder, self).__init__(
             # only a single rule, our own special method that tries to parse
             # partial latex.
-            conversion_rules=[UnicodeToLatexConversionRule(
-                rule_type=RULE_CALLABLE,
-                rule=self._do_partial_latex_encode_step,
-                replacement_latex_protection='none'
-            )] + base_conversion_rules,
+            conversion_rules=[
+                UnicodeToLatexConversionRule(
+                    rule_type=RULE_CALLABLE,
+                    rule=self._do_partial_latex_encode_step,
+                    replacement_latex_protection="none",
+                )
+            ]
+            + base_conversion_rules,
             **kwargs
         )
 
         self.keep_latex_chars = keep_latex_chars
-
 
     def _do_partial_latex_encode_step(self, s, pos):
         r"""
@@ -104,9 +108,9 @@ class PartialLatexToLatexEncoder(UnicodeToLatexEncoder):
             ps = lw.make_parsing_state()
             tok = lw.make_token_reader(pos=pos).peek_token(parsing_state=ps)
 
-            tok_as_latex = tok.pre_space + s[tok.pos : tok.pos+tok.len]
+            tok_as_latex = tok.pre_space + s[tok.pos : tok.pos + tok.len]
 
             # keep the LaTeX token as-is
-            return (tok.pos+tok.len - pos, tok_as_latex)
+            return (tok.pos + tok.len - pos, tok_as_latex)
 
         return None

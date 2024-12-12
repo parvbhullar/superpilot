@@ -1,7 +1,7 @@
 # Superpilot
-LLM based multi-model framework for AI apps. The SuperPilot Framework is a robust architecture designed to 
-build and execute various LLM app using prompt, abilities like text summarization, web searching, and more. 
-It leverages machine learning models from providers like OpenAI to perform these tasks. The framework consists of 
+LLM based multi-model framework for AI apps. The SuperPilot Framework is a robust architecture designed to
+build and execute various LLM app using prompt, abilities like text summarization, web searching, and more.
+It leverages machine learning models from providers like OpenAI to perform these tasks. The framework consists of
 several key components including OpenAI Provider, SimplePrompt, AbilityRegistry, and SuperTaskPilot, which are essential for smooth operation.
 
 # SuperPilot Framework - Quickstart Guide

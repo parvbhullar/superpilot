@@ -1,6 +1,10 @@
 """The language model acts as the core intelligence of the Agent."""
+
 from superpilot.core.embedding.base import EmbeddingModel, EmbeddingModelResponse
-from superpilot.core.embedding.simple import EmbeddingModelSettings, SimpleEmbeddingModel
+from superpilot.core.embedding.simple import (
+    EmbeddingModelSettings,
+    SimpleEmbeddingModel,
+)
 from superpilot.core.status import ShortStatus, Status
 
 status = Status(

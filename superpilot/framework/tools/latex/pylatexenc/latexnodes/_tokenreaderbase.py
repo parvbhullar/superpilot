@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2019 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,6 +28,7 @@
 # time and without notice.
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -202,8 +203,6 @@ class LatexTokenReaderBase(object):
         raise RuntimeError("This token reader does not support character-level access")
 
 
-
-
 # ----------------------------
 
 
@@ -215,6 +214,7 @@ class LatexTokenListTokenReader(LatexTokenReaderBase):
     This object doesn't parse any LaTeX code.  Use `LatexTokenReader`
     for that.
     """
+
     def __init__(self, token_list):
         super(LatexTokenListTokenReader, self).__init__()
         self.token_list = token_list
@@ -236,23 +236,19 @@ class LatexTokenListTokenReader(LatexTokenReaderBase):
     def _find_tok_idx(self, tok, methname):
         try:
             # transcrypt doesn't seem to support default value in next(iter, default)
-            i = next( (j for j, t in enumerate(self.token_list) if t is tok) )
+            i = next((j for j, t in enumerate(self.token_list) if t is tok))
         except StopIteration:
             raise IndexError("{}({!r}): no such token in list".format(methname, tok))
         return i
 
     def move_to_token(self, tok, rewind_pre_space=True):
-        self._idx = self._find_tok_idx(tok, 'move_to_token')
+        self._idx = self._find_tok_idx(tok, "move_to_token")
 
     def move_past_token(self, tok, fastforward_post_space=True):
-        self._idx = self._find_tok_idx(tok, 'move_past_token') + 1
+        self._idx = self._find_tok_idx(tok, "move_past_token") + 1
 
     def cur_pos(self):
         return self.peek_token(None).pos
 
     def final_pos(self):
-        return self.token_list[len(self.token_list)-1].pos_end
-
-
-
-
+        return self.token_list[len(self.token_list) - 1].pos_end

@@ -24,12 +24,10 @@ class TaskPilot(Pilot, abc.ABC):
         return inflection.underscore(cls.__name__)
 
     @abc.abstractmethod
-    async def execute(self, *args, **kwargs) -> Context:
-        ...
+    async def execute(self, *args, **kwargs) -> Context: ...
 
     @abc.abstractmethod
-    def __repr__(self):
-        ...
+    def __repr__(self): ...
 
     @staticmethod
     def _parse_response(response_content: dict) -> dict:

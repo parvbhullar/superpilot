@@ -56,7 +56,6 @@ if __name__ == "__main__":
     planner = env.get("planner")
     ability_registry = env.get("ability_registry")
 
-
     search_step = SuperTaskPilot(super_ability_registry, model_providers)
     # search_step.run(query, context)
     # flow = SimpleFlow(query)

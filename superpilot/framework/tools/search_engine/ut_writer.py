@@ -6,11 +6,11 @@ from pathlib import Path
 
 from metagpt.provider.openai_api import OpenAIGPTAPI as GPTAPI
 
-ICL_SAMPLE = '''接口定义：
+ICL_SAMPLE = """接口定义：
 ```text
 接口名称：元素打标签
 接口路径：/projects/{project_key}/node-tags
-Method：POST	
+Method：POST
 
 请求参数：
 路径参数：
@@ -22,7 +22,7 @@ nodes	array	是		节点
 	node_key	string	否		节点key
 	tags	array	否		节点原标签列表
 	node_type	string	否		节点类型 DATASET / RECIPE
-operations	array	是		
+operations	array	是
 	tags	array	否		操作标签列表
 	mode	string	否		操作类型 ADD / DELETE
 
@@ -59,30 +59,30 @@ def test_node_tags(project_key, nodes, operations, expected_msg):
 3. 如果需要注释，使用中文
 
 如果你明白了，请等待我给出接口定义，并只回答"明白"，以节省token
-'''
+"""
 
-ACT_PROMPT_PREFIX = '''参考测试类型：如缺少请求参数，字段边界校验，字段类型不正确
+ACT_PROMPT_PREFIX = """参考测试类型：如缺少请求参数，字段边界校验，字段类型不正确
 请在一个 `@pytest.mark.parametrize` 作用域内输出10个测试用例
 ```text
-'''
+"""
 
-YFT_PROMPT_PREFIX = '''参考测试类型：如SQL注入，跨站点脚本（XSS），非法访问和越权访问，认证和授权，参数验证，异常处理，文件上传和下载
+YFT_PROMPT_PREFIX = """参考测试类型：如SQL注入，跨站点脚本（XSS），非法访问和越权访问，认证和授权，参数验证，异常处理，文件上传和下载
 请在一个 `@pytest.mark.parametrize` 作用域内输出10个测试用例
 ```text
-'''
+"""
 
-OCR_API_DOC = '''```text
-接口名称：OCR识别 
-接口路径：/api/v1/contract/treaty/task/ocr 
-Method：POST 
+OCR_API_DOC = """```text
+接口名称：OCR识别
+接口路径：/api/v1/contract/treaty/task/ocr
+Method：POST
 
 请求参数：
 路径参数：
 
 Body参数：
 名称	类型	是否必须	默认值	备注
-file_id	string	是		
-box	array	是		
+file_id	string	是
+box	array	是
 contract_id	number	是		合同id
 start_time	string	否		yyyy-mm-dd
 end_time	string	否		yyyy-mm-dd
@@ -90,18 +90,24 @@ extract_type	number	否		识别类型 1-导入中 2-导入后 默认1
 
 返回数据：
 名称	类型	是否必须	默认值	备注
-code	integer	是		
-message	string	是		
-data	object	是		
+code	integer	是
+message	string	是
+data	object	是
 ```
-'''
+"""
 
 
 class UTGenerator:
     """UT生成器：通过API文档构造UT"""
 
-    def __init__(self, swagger_file: str, ut_py_path: str, questions_path: str,
-                 chatgpt_method: str = "API", template_prefix=YFT_PROMPT_PREFIX) -> None:
+    def __init__(
+        self,
+        swagger_file: str,
+        ut_py_path: str,
+        questions_path: str,
+        chatgpt_method: str = "API",
+        template_prefix=YFT_PROMPT_PREFIX,
+    ) -> None:
         """初始化UT生成器
 
         Args:
@@ -142,7 +148,9 @@ class UTGenerator:
         required = name in prop_object_required
         return self.__para_to_str(prop, required, name)
 
-    def build_object_properties(self, node, prop_object_required, level: int = 0) -> str:
+    def build_object_properties(
+        self, node, prop_object_required, level: int = 0
+    ) -> str:
         """递归输出object和array[object]类型的子属性
 
         Args:
@@ -157,7 +165,9 @@ class UTGenerator:
             """如果是object类型，递归输出子属性"""
             if node.get("type") == "object":
                 sub_properties = node.get("properties", {})
-                return self.build_object_properties(sub_properties, prop_object_required, level=level + 1)
+                return self.build_object_properties(
+                    sub_properties, prop_object_required, level=level + 1
+                )
             return ""
 
         if node.get("in", "") in ["query", "header", "formData"]:
@@ -166,7 +176,9 @@ class UTGenerator:
             return doc
 
         for name, prop in node.items():
-            doc += f'{"	" * level}{self.para_to_str(name, prop, prop_object_required)}\n'
+            doc += (
+                f'{"	" * level}{self.para_to_str(name, prop, prop_object_required)}\n'
+            )
             doc += dive_into_object(prop)
             if prop["type"] == "array":
                 items = prop.get("items", {})
@@ -271,7 +283,7 @@ class UTGenerator:
 
     def gpt_msgs_to_code(self, messages: list) -> str:
         """根据不同调用方式选择"""
-        result = ''
+        result = ""
         if self.chatgpt_method == "API":
             result = GPTAPI().ask_code(msgs=messages)
 

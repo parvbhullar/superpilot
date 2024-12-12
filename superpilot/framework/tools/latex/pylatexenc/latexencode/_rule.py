@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2023 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,13 +24,10 @@
 #
 
 
-
 # Internal module. Internal API may move, disappear or otherwise change at any
 # time and without notice.
 
 from __future__ import print_function, unicode_literals
-
-
 
 
 RULE_DICT = 0
@@ -70,7 +67,7 @@ class UnicodeToLatexConversionRule:
     Specify a rule how to convert unicode characters into LaTeX escapes.
 
     .. py:attribute:: rule_type
-    
+
        One of :py:data:`RULE_DICT`, :py:data:`RULE_REGEX`, or
        :py:data:`RULE_CALLABLE`.
 
@@ -100,7 +97,7 @@ class UnicodeToLatexConversionRule:
 
 
     Constructor syntax::
-    
+
         UnicodeToLatexConversionRule(RULE_XXX, <...>)
         UnicodeToLatexConversionRule(rule_type=RULE_XXX, rule=<...>)
 
@@ -113,7 +110,7 @@ class UnicodeToLatexConversionRule:
 
 
     Rules types:
-    
+
       - `RULE_DICT`: If `rule_type` is `RULE_DICT`, then `rule` should be a
         dictionary whose keys are integers representing unicode code points
         (e.g., `0x210F`), and whose values are corresponding replacement strings
@@ -130,7 +127,7 @@ class UnicodeToLatexConversionRule:
         argument.
 
         .. note::
-    
+
            The replacement string is parsed like the second argument to
            `re.sub()` and backslashes have a special meaning because they can
            refer to captured sub-expressions.  For a literal backslash, use two
@@ -181,16 +178,22 @@ class UnicodeToLatexConversionRule:
 
        This class was introduced in `pylatexenc 2.0`.
     """
-    def __init__(self, rule_type, rule=None,
-                 # keyword-only, please:
-                 replacement_latex_protection=None):
+
+    def __init__(
+        self,
+        rule_type,
+        rule=None,
+        # keyword-only, please:
+        replacement_latex_protection=None,
+    ):
         self.rule_type = rule_type
         self.rule = rule
         self.replacement_latex_protection = replacement_latex_protection
 
     def __repr__(self):
         return "{}(rule_type={!r}, rule=<{}>, replacement_latex_protection={})".format(
-            self.__class__.__name__, self.rule_type, type(self.rule).__name__,
-            repr(self.replacement_latex_protection)
+            self.__class__.__name__,
+            self.rule_type,
+            type(self.rule).__name__,
+            repr(self.replacement_latex_protection),
         )
-

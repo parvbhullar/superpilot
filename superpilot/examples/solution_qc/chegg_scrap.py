@@ -16,9 +16,9 @@ MATHPIX_APP_ID = os.environ.get("MATHPIX_APP_ID")
 MATHPIX_APP_KEY = os.environ.get("MATHPIX_APP_KEY")
 
 SESSION_HEADERS = {}
-SESSION_HEADERS[
-    "User-Agent"
-] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+SESSION_HEADERS["User-Agent"] = (
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+)
 
 CHEGG_URL = "https://expert.chegg.com/api/auth/login"
 ANSWER_API = "https://gateway.chegg.com/nestor-graph/graphql"
@@ -53,13 +53,9 @@ def process_chegg_file(input_path, output_path):
         try:
             if each.get("answer_uuid", "") != "":
                 data = request_chegg(each)
-                answer_body = (
-                    question_body
-                ) = (
-                    question_subject
-                ) = (
-                    sub_subject_str
-                ) = topics_str = q_base64 = img_url = q_text = answer_html = ""
+                answer_body = question_body = question_subject = sub_subject_str = (
+                    topics_str
+                ) = q_base64 = img_url = q_text = answer_html = ""
                 print(each.get("answer_uuid", ""), each.get("preview_url"))
                 if data.status_code == 200:
                     try:

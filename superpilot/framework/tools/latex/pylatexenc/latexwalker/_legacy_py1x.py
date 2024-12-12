@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2019 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -76,10 +76,9 @@ def MacrosDef(macname, optarg, numargs):
 
 
 default_macro_dict = _util.LazyDict(
-    generate_dict_fn=lambda: dict([
-        (m.macroname, m)
-        for m in get_default_latex_context_db().iter_macro_specs()
-    ])
+    generate_dict_fn=lambda: dict(
+        [(m.macroname, m) for m in get_default_latex_context_db().iter_macro_specs()]
+    )
 )
 r"""
 .. deprecated:: 2.0
@@ -99,9 +98,10 @@ they are actually queried or modified, and thus users of `pylatexenc 2.0` that
 don't rely on the default macro/environment definitions shouldn't notice any
 decrease in performance.
 """
-    
+
 
 # ------------------------------------------------------------------------------
+
 
 def get_token(s, pos, brackets_are_chars=True, environments=True, **parse_flags):
     """
@@ -112,9 +112,9 @@ def get_token(s, pos, brackets_are_chars=True, environments=True, **parse_flags)
     .. deprecated:: 1.0
        Please use :py:meth:`LatexWalker.get_token()` instead.
     """
-    return LatexWalker(s, **parse_flags).get_token(pos=pos,
-                                                   brackets_are_chars=brackets_are_chars,
-                                                   environments=environments)
+    return LatexWalker(s, **parse_flags).get_token(
+        pos=pos, brackets_are_chars=brackets_are_chars, environments=environments
+    )
 
 
 def get_latex_expression(s, pos, **parse_flags):
@@ -143,8 +143,8 @@ def get_latex_maybe_optional_arg(s, pos, **parse_flags):
 
     return LatexWalker(s, **parse_flags).get_latex_maybe_optional_arg(pos=pos)
 
-    
-def get_latex_braced_group(s, pos, brace_type='{', **parse_flags):
+
+def get_latex_braced_group(s, pos, brace_type="{", **parse_flags):
     """
     Reads a latex expression enclosed in braces {...}. The first token of `s[pos:]` must
     be an opening brace.
@@ -157,7 +157,9 @@ def get_latex_braced_group(s, pos, brace_type='{', **parse_flags):
        Please use :py:meth:`LatexWalker.get_latex_braced_group()` instead.
     """
 
-    return LatexWalker(s, **parse_flags).get_latex_braced_group(pos=pos, brace_type=brace_type)
+    return LatexWalker(s, **parse_flags).get_latex_braced_group(
+        pos=pos, brace_type=brace_type
+    )
 
 
 def get_latex_environment(s, pos, environmentname=None, **parse_flags):
@@ -171,11 +173,19 @@ def get_latex_environment(s, pos, environmentname=None, **parse_flags):
        Please use :py:meth:`LatexWalker.get_latex_environment()` instead.
     """
 
-    return LatexWalker(s, **parse_flags).get_latex_environment(pos=pos,
-                                                               environmentname=environmentname)
+    return LatexWalker(s, **parse_flags).get_latex_environment(
+        pos=pos, environmentname=environmentname
+    )
 
-def get_latex_nodes(s, pos=0, stop_upon_closing_brace=None, stop_upon_end_environment=None,
-                    stop_upon_closing_mathmode=None, **parse_flags):
+
+def get_latex_nodes(
+    s,
+    pos=0,
+    stop_upon_closing_brace=None,
+    stop_upon_end_environment=None,
+    stop_upon_closing_mathmode=None,
+    **parse_flags
+):
     """
     Parses latex content `s`.
 
@@ -191,9 +201,5 @@ def get_latex_nodes(s, pos=0, stop_upon_closing_brace=None, stop_upon_end_enviro
     return LatexWalker(s, **parse_flags).get_latex_nodes(
         stop_upon_closing_brace=stop_upon_closing_brace,
         stop_upon_end_environment=stop_upon_end_environment,
-        stop_upon_closing_mathmode=stop_upon_closing_mathmode
+        stop_upon_closing_mathmode=stop_upon_closing_mathmode,
     )
-
-
-
-

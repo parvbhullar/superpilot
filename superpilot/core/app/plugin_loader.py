@@ -4,13 +4,20 @@ from superpilot.core.plugin.simple import (
     PluginStorageFormat,
     SimplePluginService,
 )
+
 if TYPE_CHECKING:
     from superpilot.core.plugin.base import PluginType
 
 
 class PluginSchema:
-    def __init__(self, name: str, goals: Optional[str] = None,
-                 role: Optional[str] = None, plugin_storage: Optional[str] = None, **kwargs):
+    def __init__(
+        self,
+        name: str,
+        goals: Optional[str] = None,
+        role: Optional[str] = None,
+        plugin_storage: Optional[str] = None,
+        **kwargs
+    ):
         self.name = name
         self.role = role
         self.goals = goals
@@ -25,7 +32,7 @@ class PluginContainer:
         for system_name, config in plugin_configuration.items():
             location = {
                 "storage_format": PluginStorageFormat.INSTALLED_PACKAGE,
-                "storage_route": config["plugin_path"]
+                "storage_route": config["plugin_path"],
             }
             plugin = PluginSchema(system_name, **config)
             plugin.plugin = SimplePluginService.get_plugin(location)
@@ -38,15 +45,15 @@ class PluginContainer:
     def factory(cls, config=None):
         if config is None:
             config = {
-            "ability_registry": {
-                "goals": "INSTALLED_PACKAGE",
-                "role": "",
-                "plugin_path": "superpilot.core.ability.SimpleAbilityRegistry",
-            },
-            "memory": {
-                "plugin_path": "superpilot.core.memory.SimpleMemory",
+                "ability_registry": {
+                    "goals": "INSTALLED_PACKAGE",
+                    "role": "",
+                    "plugin_path": "superpilot.core.ability.SimpleAbilityRegistry",
+                },
+                "memory": {
+                    "plugin_path": "superpilot.core.memory.SimpleMemory",
+                },
             }
-        }
         return cls(config)
 
 
@@ -60,7 +67,7 @@ if __name__ == "__main__":
         },
         "memory": {
             "plugin_path": "superpilot.core.memory.SimpleMemory",
-        }
+        },
     }
 
     container = PluginContainer(plugin_configurations)

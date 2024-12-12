@@ -1,4 +1,5 @@
 """Utilities for the json_fixes package."""
+
 import ast
 import json
 import os.path
@@ -10,7 +11,9 @@ from jsonschema import Draft7Validator
 from superpilot.core.configuration import Config
 from superpilot.framework.helpers.logs import logger
 from superpilot.framework.helpers.json_utils.json_fix_llm import auto_fix_json
-from superpilot.framework.helpers.json_utils.json_fix_llm import fix_json_using_multiple_techniques
+from superpilot.framework.helpers.json_utils.json_fix_llm import (
+    fix_json_using_multiple_techniques,
+)
 
 LLM_DEFAULT_RESPONSE_FORMAT = "llm_response_format_1"
 
@@ -22,7 +25,9 @@ def extract_json_from_response(response_content: str, schema: dict = None) -> di
         response_content = "```".join(response_content.split("```")[1:-1])
     # response content comes from OpenAI as a Python `str(content_dict)`, literal_eval reverses this
     try:
-        response_content = fix_json_using_multiple_techniques(response_content, schema).__str__()
+        response_content = fix_json_using_multiple_techniques(
+            response_content, schema
+        ).__str__()
         logger.info(f"Response after braces {response_content}")
         return ast.literal_eval(response_content)
     except BaseException as e:
@@ -32,13 +37,15 @@ def extract_json_from_response(response_content: str, schema: dict = None) -> di
         return {}
 
 
-def extract_function_call_json_from_response(response_content: str, schema: dict = None) -> dict:
+def extract_function_call_json_from_response(
+    response_content: str, schema: dict = None
+) -> dict:
     json = extract_json_from_response(response_content, schema=schema)
     logger.info(f"Extracted json from content {json}")
     if schema is None or validate_json(json, Config(), schema=schema):
         function_call = schema["name"]
         if "function" in json:
-            function_call = json["function"].split('.')[-1]
+            function_call = json["function"].split(".")[-1]
         elif "name" in json:
             function_call = json["name"]
         elif schema is not None:
@@ -49,23 +56,40 @@ def extract_function_call_json_from_response(response_content: str, schema: dict
         json = {"function_call": {"name": function_call, "arguments": arguments}}
         return json
     else:
-        logger.info(f"Validation failed of string {response_content} for the schema {schema}")
-        return {"function_call": {"name": "retry", "arguments": {"type": "ability_extraction", "message": "validation failed"}}}
+        logger.info(
+            f"Validation failed of string {response_content} for the schema {schema}"
+        )
+        return {
+            "function_call": {
+                "name": "retry",
+                "arguments": {
+                    "type": "ability_extraction",
+                    "message": "validation failed",
+                },
+            }
+        }
 
 
 def execute_function_from_json(data, schema):
     # Extract function name from $type
-    function_name = schema['name']
+    function_name = schema["name"]
 
     # Extract parameters from schema
-    params = schema['parameters']['properties']
+    params = schema["parameters"]["properties"]
     # Match parameters in JSON data with parameters in schema
     if "arguments" in data:
         data = data["arguments"]
-    function_params = {f"{param}": f"{data[param]}" for param in params if param in data}
+    function_params = {
+        f"{param}": f"{data[param]}" for param in params if param in data
+    }
     print("Extract functions", function_params)
     # Execute the function with the extracted parameters
-    return {"function_call": {"name": function_name, "arguments": function_params.__str__().replace("'", '"')}}
+    return {
+        "function_call": {
+            "name": function_name,
+            "arguments": function_params.__str__().replace("'", '"'),
+        }
+    }
 
 
 def llm_response_schema(
@@ -77,7 +101,10 @@ def llm_response_schema(
 
 
 def validate_json(
-    json_object: object, config: Config, schema_name: str = LLM_DEFAULT_RESPONSE_FORMAT, schema: dict = None
+    json_object: object,
+    config: Config,
+    schema_name: str = LLM_DEFAULT_RESPONSE_FORMAT,
+    schema: dict = None,
 ) -> bool:
     """
     :type schema_name: object

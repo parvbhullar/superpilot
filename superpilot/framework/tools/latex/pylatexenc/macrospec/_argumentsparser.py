@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2022 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,6 +29,7 @@
 from __future__ import print_function, unicode_literals
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 from ..latexnodes.parsers import get_standard_argument_parser, LatexParserBase
@@ -45,15 +46,11 @@ _basestring = str
 
 ### BEGIN_PYTHON2_SUPPORT_CODE
 import sys
+
 if sys.version_info.major == 2:
     # Py2
     _basestring = basestring
 ### END_PYTHON2_SUPPORT_CODE
-
-
-
-
-
 
 
 class LatexNoArgumentsParser(LatexParserBase):
@@ -61,11 +58,12 @@ class LatexNoArgumentsParser(LatexParserBase):
     Convenience class for whenever there are no arguments to parse at all.
     """
 
-### BEGIN_PYLATEXENC2_LEGACY_SUPPORT_CODE
+    ### BEGIN_PYLATEXENC2_LEGACY_SUPPORT_CODE
     @property
     def argspec(self):
-        return ''
-### END_PYLATEXENC2_LEGACY_SUPPORT_CODE
+        return ""
+
+    ### END_PYLATEXENC2_LEGACY_SUPPORT_CODE
 
     def parse(self, latex_walker, token_reader, parsing_state, **kwargs):
         r"""
@@ -84,10 +82,6 @@ class LatexNoArgumentsParser(LatexParserBase):
 
     def __eq__(self, other):
         return self.__class__ is other.__class__
-
-
-
-
 
 
 class LatexArgumentsParser(LatexParserBase):
@@ -118,10 +112,7 @@ class LatexArgumentsParser(LatexParserBase):
        class).
     """
 
-    def __init__(self,
-                 arguments_spec_list,
-                 **kwargs
-                 ):
+    def __init__(self, arguments_spec_list, **kwargs):
         super(LatexArgumentsParser, self).__init__(**kwargs)
 
         if arguments_spec_list is None:
@@ -132,12 +123,14 @@ class LatexArgumentsParser(LatexParserBase):
             for arg in arguments_spec_list
         ]
 
-### BEGIN_PYLATEXENC2_LEGACY_SUPPORT_CODE
+    ### BEGIN_PYLATEXENC2_LEGACY_SUPPORT_CODE
     @property
     def argspec(self):
         from ..latexnodes._parsedargs import _argspec_from_arguments_spec_list
+
         return _argspec_from_arguments_spec_list(self.arguments_spec_list)
-### END_PYLATEXENC2_LEGACY_SUPPORT_CODE
+
+    ### END_PYLATEXENC2_LEGACY_SUPPORT_CODE
 
     def parse(self, latex_walker, token_reader, parsing_state, **kwargs):
         r"""
@@ -151,7 +144,6 @@ class LatexArgumentsParser(LatexParserBase):
         # last_arg_node = None
 
         for argj, arg in enumerate(self.arguments_spec_list):
-
             arg_node_parser = arg.parser
 
             logger.debug("Parsing argument %d / %s", argj, arg_node_parser)
@@ -162,29 +154,28 @@ class LatexArgumentsParser(LatexParserBase):
                 arg_node_parser = get_standard_argument_parser(arg_node_parser)
 
             arg_parsing_state = get_updated_parsing_state_from_delta(
-                parsing_state,
-                arg.parsing_state_delta,
-                latex_walker
+                parsing_state, arg.parsing_state_delta, latex_walker
             )
 
-            logger.debug("Argument %d will use parsing state = %r (delta was %r)",
-                         argj, arg_parsing_state, arg.parsing_state_delta)
-                
+            logger.debug(
+                "Argument %d will use parsing state = %r (delta was %r)",
+                argj,
+                arg_parsing_state,
+                arg.parsing_state_delta,
+            )
+
             argnodes, parsing_state_delta = latex_walker.parse_content(
                 arg_node_parser,
                 token_reader,
                 arg_parsing_state,
-                open_context=(
-                    "Argument {}".format(argj),
-                    peeked_token
-                )
+                open_context=("Argument {}".format(argj), peeked_token),
             )
             if parsing_state_delta is not None:
                 logger.warning(
                     "Parsing state changes information (%r) ignored in arguments!",
-                    parsing_state_delta
+                    parsing_state_delta,
                 )
-            argnlist.append( argnodes )
+            argnlist.append(argnodes)
 
             # if argnodes is not None:
             #     if pos_start is None:
@@ -209,13 +200,11 @@ class LatexArgumentsParser(LatexParserBase):
 
         return parsed, None
 
-
     def __eq__(self, other):
         return (
             self.__class__ is other.__class__
             and self.arguments_spec_list == other.arguments_spec_list
         )
-
 
 
 # ------------------------------------------------------------------------------
@@ -235,13 +224,15 @@ class _LegacyPyltxenc2MacroArgsParserWrapper(LatexParserBase):
         return self.args_parser.argspec
 
     def parse(self, latex_walker, token_reader, parsing_state, **kwargs):
+        argsresult = self.args_parser.parse_args(
+            w=latex_walker, pos=token_reader.cur_pos(), parsing_state=parsing_state
+        )
 
-        argsresult = self.args_parser.parse_args(w=latex_walker,
-                                                 pos=token_reader.cur_pos(),
-                                                 parsing_state=parsing_state)
-
-        logger.debug("Parsed legacy callable args from %s; argsresult = %r",
-                     self.args_parser, argsresult)
+        logger.debug(
+            "Parsed legacy callable args from %s; argsresult = %r",
+            self.args_parser,
+            argsresult,
+        )
 
         if len(argsresult) == 4:
             (nodeargd, apos, alen, adic) = argsresult
@@ -255,8 +246,8 @@ class _LegacyPyltxenc2MacroArgsParserWrapper(LatexParserBase):
         nodeargd.pos = apos
         nodeargd.pos_end = apos_end
 
-        new_parsing_state = adic.get('new_parsing_state', None)
-        inner_parsing_state = adic.get('inner_parsing_state', None)
+        new_parsing_state = adic.get("new_parsing_state", None)
+        inner_parsing_state = adic.get("inner_parsing_state", None)
 
         # We can't return parsing_state_delta here, because the carryover info
         # associated with *argument* (and *body*) parsers of a spec are ignored

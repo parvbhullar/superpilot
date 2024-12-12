@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2019 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,17 +35,16 @@ from ..latexnodes import ParsingStateDelta
 
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
-
-_autogen_category_prefix = '__lctxdb_cat_'
+_autogen_category_prefix = "__lctxdb_cat_"
 
 
 ### BEGINPATCH_UNIQUE_OBJECT_ID
 fn_unique_object_id = id
 ### ENDPATCH_UNIQUE_OBJECT_ID
-
 
 
 class LatexContextDb(object):
@@ -80,7 +79,7 @@ class LatexContextDb(object):
     nodes, and modifying the context will modify that stored information, too.
     Instead of being tempted to modify the object, create a new one with
     :py:meth:`filtered_context()`.
-    
+
     To (partially) ensure that the database isn't modified while it is being
     used, it can be "frozen" with the method :py:meth:`freeze()`.  This method
     simply sets a flag and will cause methods like `add_context_category()` to
@@ -97,6 +96,7 @@ class LatexContextDb(object):
 
     The constructor doesn't accept any meaningful arguments.
     """
+
     def __init__(self, **kwargs):
         super(LatexContextDb, self).__init__(**kwargs)
 
@@ -107,9 +107,9 @@ class LatexContextDb(object):
 
         # these chainmaps' list of maps mirror the category_list item for item.
         self.lookup_chain_maps = {
-            'macros': _util.ChainMap({}),
-            'environments': _util.ChainMap({}),
-            'specials': _util.ChainMap({}),
+            "macros": _util.ChainMap({}),
+            "environments": _util.ChainMap({}),
+            "specials": _util.ChainMap({}),
         }
 
         self.unknown_macro_spec = None
@@ -117,7 +117,6 @@ class LatexContextDb(object):
         self.unknown_specials_spec = None
 
         self._autogen_category_counter = 0
-
 
     def freeze(self):
         r"""
@@ -132,16 +131,21 @@ class LatexContextDb(object):
         """
         self.frozen = True
 
-    
     def __repr__(self):
         return "<LatexContextDb {:#x}{}>".format(
-            fn_unique_object_id(self),
-            ("" if self.frozen else " unfrozen")
+            fn_unique_object_id(self), ("" if self.frozen else " unfrozen")
         )
 
-
-    def add_context_category(self, category, macros=[], environments=[], specials=[],
-                             prepend=False, insert_before=None, insert_after=None):
+    def add_context_category(
+        self,
+        category,
+        macros=[],
+        environments=[],
+        specials=[],
+        prepend=False,
+        insert_before=None,
+        insert_after=None,
+    ):
         r"""
         Register a category of macro and environment specifications in the context
         database.
@@ -174,29 +178,39 @@ class LatexContextDb(object):
         """
 
         if self.frozen:
-            raise RuntimeError("You attempted to modify a frozen LatexContextDb object.")
+            raise RuntimeError(
+                "You attempted to modify a frozen LatexContextDb object."
+            )
 
         if category is not None and category.startswith(_autogen_category_prefix):
-            raise ValueError("Category name {} is unfortunately reserved for internal use"
-                             .format(category))
+            raise ValueError(
+                "Category name {} is unfortunately reserved for internal use".format(
+                    category
+                )
+            )
 
         if category is None:
             _autogen_category_counter, category = self._get_new_autogen_category()
             self._autogen_category_counter = _autogen_category_counter + 1
 
         if category in self.category_list:
-            raise ValueError("Category {} is already registered in the context database"
-                             .format(category))
+            raise ValueError(
+                "Category {} is already registered in the context database".format(
+                    category
+                )
+            )
 
         # ensure only one of these options is set
-        if len([ x for x in (prepend, insert_before, insert_after) if x ]) > 1:
-            raise TypeError("add_context_category(): You may only specify one of "
-                            "prepend=True, insert_before=... or insert_after=...")
+        if len([x for x in (prepend, insert_before, insert_after) if x]) > 1:
+            raise TypeError(
+                "add_context_category(): You may only specify one of "
+                "prepend=True, insert_before=... or insert_after=..."
+            )
 
         category_dicts = {
-            'macros': dict( (m.macroname, m) for m in macros ),
-            'environments': dict( (e.environmentname, e) for e in environments ),
-            'specials': dict( (s.specials_chars, s) for s in specials ),
+            "macros": dict((m.macroname, m) for m in macros),
+            "environments": dict((e.environmentname, e) for e in environments),
+            "specials": dict((s.specials_chars, s) for s in specials),
         }
 
         logger.debug("Adding category context in db: %r", category_dicts)
@@ -211,7 +225,9 @@ class LatexContextDb(object):
             insert_fn = lambda listobj, item: listobj.insert(i, item)
         elif insert_after:
             if insert_after in self.category_list:
-                i = self.category_list.index(insert_after) + 1 # insert after found category
+                i = (
+                    self.category_list.index(insert_after) + 1
+                )  # insert after found category
             else:
                 i = len(self.category_list)
             insert_fn = lambda listobj, item: listobj.insert(i, item)
@@ -219,19 +235,24 @@ class LatexContextDb(object):
             insert_fn = lambda listobj, item: listobj.append(item)
 
         insert_fn(self.category_list, category)
-        for which in ('macros', 'environments', 'specials',):
+        for which in (
+            "macros",
+            "environments",
+            "specials",
+        ):
             insert_fn(self.lookup_chain_maps[which].maps, category_dicts[which])
 
         self.d[category] = category_dicts
 
-        
     def set_unknown_macro_spec(self, macrospec):
         r"""
         Set the macro spec to use when encountering a macro that is not in the
         database.
         """
         if self.frozen:
-            raise RuntimeError("You attempted to modify a frozen LatexContextDb object.")
+            raise RuntimeError(
+                "You attempted to modify a frozen LatexContextDb object."
+            )
         self.unknown_macro_spec = macrospec
 
     def set_unknown_environment_spec(self, environmentspec):
@@ -240,18 +261,22 @@ class LatexContextDb(object):
         is not in the database.
         """
         if self.frozen:
-            raise RuntimeError("You attempted to modify a frozen LatexContextDb object.")
+            raise RuntimeError(
+                "You attempted to modify a frozen LatexContextDb object."
+            )
         self.unknown_environment_spec = environmentspec
 
     def set_unknown_specials_spec(self, specialsspec):
         r"""
         Set the latex specials spec to use when encountering a LaTeX environment
         that is not in the database.
-        
+
         ### FIXME: When is an "unknown specials" encountered ??
         """
         if self.frozen:
-            raise RuntimeError("You attempted to modify a frozen LatexContextDb object.")
+            raise RuntimeError(
+                "You attempted to modify a frozen LatexContextDb object."
+            )
         self.unknown_specials_spec = specialsspec
 
     def categories(self):
@@ -269,19 +294,19 @@ class LatexContextDb(object):
         Returns a macro spec instance that matches the given `macroname`.  If
         the macro name was not found, we return the default macro specification
         set by :py:meth:`set_unknown_macro_spec()` or `None` if no such spec was
-        set.  
+        set.
         """
         # for cat in self.category_list:
         #     # search categories in the given order
         #     if macroname in self.d[cat]['macros']:
         #         return self.d[cat]['macros'][macroname]
         try:
-            return self.lookup_chain_maps['macros'][macroname]
+            return self.lookup_chain_maps["macros"][macroname]
         except KeyError:
             if raise_if_not_found:
                 raise
             return self.unknown_macro_spec
-    
+
     def get_environment_spec(self, environmentname, raise_if_not_found=False):
         r"""
         Look up an environment specification by environment name.  The environment
@@ -298,7 +323,7 @@ class LatexContextDb(object):
         #     if environmentname in self.d[cat]['environments']:
         #         return self.d[cat]['environments'][environmentname]
         try:
-            return self.lookup_chain_maps['environments'][environmentname]
+            return self.lookup_chain_maps["environments"][environmentname]
         except KeyError:
             if raise_if_not_found:
                 raise
@@ -328,7 +353,7 @@ class LatexContextDb(object):
         #     if specials_chars in self.d[cat]['specials']:
         #         return self.d[cat]['specials'][specials_chars]
         try:
-            return self.lookup_chain_maps['specials'][specials_chars]
+            return self.lookup_chain_maps["specials"][specials_chars]
         except KeyError:
             if raise_if_not_found:
                 raise
@@ -352,16 +377,18 @@ class LatexContextDb(object):
 
         for cat in self.category_list:
             # search categories in the given order
-            for specials_chars in self.d[cat]['specials'].keys():
+            for specials_chars in self.d[cat]["specials"].keys():
                 # logger.debug("test_for_specials() ‘%s...’ testing %r",
                 #              s[pos:pos+4], specials_chars)
-                if len(specials_chars) > best_match_len and s.startswith(specials_chars, pos):
-                    best_match_s = self.d[cat]['specials'][specials_chars]
+                if len(specials_chars) > best_match_len and s.startswith(
+                    specials_chars, pos
+                ):
+                    best_match_s = self.d[cat]["specials"][specials_chars]
                     best_match_len = len(specials_chars)
                     # logger.debug("        -> best_match_s=%s, best_match_len=%s",
                     #              best_match_s, best_match_len)
 
-        return best_match_s # this is None if no match
+        return best_match_s  # this is None if no match
 
     def iter_macro_specs(self, categories=None):
         r"""
@@ -382,10 +409,11 @@ class LatexContextDb(object):
         for c in categories:
             if c not in self.category_list:
                 raise ValueError(
-                    "Invalid latex macro spec db category: {!r} (Expected one of {!r})"
-                    .format(c, self.category_list)
+                    "Invalid latex macro spec db category: {!r} (Expected one of {!r})".format(
+                        c, self.category_list
+                    )
                 )
-            for spec in self.d[c]['macros'].values():
+            for spec in self.d[c]["macros"].values():
                 yield spec
 
     def iter_environment_specs(self, categories=None):
@@ -408,10 +436,11 @@ class LatexContextDb(object):
         for c in categories:
             if c not in self.category_list:
                 raise ValueError(
-                    "Invalid latex environment spec db category: {!r} (Expected one of {!r})"
-                    .format(c, self.category_list)
+                    "Invalid latex environment spec db category: {!r} (Expected one of {!r})".format(
+                        c, self.category_list
+                    )
                 )
-            for spec in self.d[c]['environments'].values():
+            for spec in self.d[c]["environments"].values():
                 yield spec
 
     def iter_specials_specs(self, categories=None):
@@ -434,14 +463,14 @@ class LatexContextDb(object):
         for c in categories:
             if c not in self.category_list:
                 raise ValueError(
-                    "Invalid latex environment spec db category: {!r} (Expected one of {!r})"
-                    .format(c, self.category_list)
+                    "Invalid latex environment spec db category: {!r} (Expected one of {!r})".format(
+                        c, self.category_list
+                    )
                 )
-            for spec in self.d[c]['specials'].values():
+            for spec in self.d[c]["specials"].values():
                 yield spec
 
-
-### BEGIN_PYLATEXENC2_LEGACY_SUPPORT_CODE
+    ### BEGIN_PYLATEXENC2_LEGACY_SUPPORT_CODE
 
     def filter_context(self, *args, **kwargs):
         r"""
@@ -450,19 +479,24 @@ class LatexContextDb(object):
            The `filter_context()` method was renamed `filtered_context()`.  The
            method signature is unchanged.
         """
-        _util.pylatexenc_deprecated_3("`LatexContextDb.filter_context()` was renamed to "
-                                      "`filtered_context()`.")
+        _util.pylatexenc_deprecated_3(
+            "`LatexContextDb.filter_context()` was renamed to " "`filtered_context()`."
+        )
         return self.filtered_context(*args, **kwargs)
 
-### END_PYLATEXENC2_LEGACY_SUPPORT_CODE
+    ### END_PYLATEXENC2_LEGACY_SUPPORT_CODE
 
-
-    def filtered_context(self, keep_categories=[], exclude_categories=[],
-                         keep_which=[], create_class=None):
+    def filtered_context(
+        self,
+        keep_categories=[],
+        exclude_categories=[],
+        keep_which=[],
+        create_class=None,
+    ):
         r"""
         Return a new :py:class:`LatexContextDb` instance where we only keep
         certain categories of macro and environment specifications.
-        
+
         If `keep_categories` is set to a nonempty list, then the returned
         context will not contain any definitions that do not correspond to the
         specified categories.
@@ -478,7 +512,7 @@ class LatexContextDb(object):
         The argument `keep_which`, if non-empty, specifies which definitions to
         keep.  It should be a subset of the list ['macros', 'environments',
         'specials'].
-        
+
         The returned context will make a copy of the dictionaries that store the
         macro and environment specifications, but the specification classes (and
         corresponding argument parsers) might correspond to the same instances.
@@ -489,7 +523,7 @@ class LatexContextDb(object):
            The `filter_context()` method was renamed `filtered_context()` in
            `pylatexenc 3.0`.
         """
-        
+
         if create_class is None:
             create_class = self.__class__
 
@@ -499,9 +533,9 @@ class LatexContextDb(object):
         new_context.unknown_environment_spec = self.unknown_environment_spec
         new_context.unknown_specials_spec = self.unknown_specials_spec
 
-        keep_macros = not keep_which or 'macros' in keep_which
-        keep_environments = not keep_which or 'environments' in keep_which
-        keep_specials = not keep_which or 'specials' in keep_which
+        keep_macros = not keep_which or "macros" in keep_which
+        keep_environments = not keep_which or "environments" in keep_which
+        keep_specials = not keep_which or "specials" in keep_which
 
         for cat in self.category_list:
             if keep_categories and cat not in keep_categories:
@@ -512,9 +546,11 @@ class LatexContextDb(object):
             # include this category
             new_context.add_context_category(
                 cat,
-                macros=self.d[cat]['macros'].values() if keep_macros else [],
-                environments=self.d[cat]['environments'].values() if keep_environments else [],
-                specials=self.d[cat]['specials'].values() if keep_specials else [],
+                macros=self.d[cat]["macros"].values() if keep_macros else [],
+                environments=(
+                    self.d[cat]["environments"].values() if keep_environments else []
+                ),
+                specials=self.d[cat]["specials"].values() if keep_specials else [],
             )
 
         return new_context
@@ -525,11 +561,18 @@ class LatexContextDb(object):
             if category not in self.category_list:
                 break
             self._autogen_category_counter += 1
-            
+
         return (self._autogen_category_counter, category)
 
-    def extended_with(self, category=None, macros=None, environments=None, specials=None,
-                      create_class=None, **kwargs):
+    def extended_with(
+        self,
+        category=None,
+        macros=None,
+        environments=None,
+        specials=None,
+        create_class=None,
+        **kwargs
+    ):
         r"""
         Creates a new context category by adding a new category before all others.
         (Behaves as you'd imagine immediately after issuing a
@@ -556,21 +599,27 @@ class LatexContextDb(object):
 
         new_context = create_class()
 
-        new_context.unknown_macro_spec = \
-            kwargs.pop('unknown_macro_spec', self.unknown_macro_spec)
-        new_context.unknown_environment_spec = \
-            kwargs.pop('unknown_environment_spec', self.unknown_environment_spec)
-        new_context.unknown_specials_spec = \
-            kwargs.pop('unknown_specials_spec', self.unknown_specials_spec)
+        new_context.unknown_macro_spec = kwargs.pop(
+            "unknown_macro_spec", self.unknown_macro_spec
+        )
+        new_context.unknown_environment_spec = kwargs.pop(
+            "unknown_environment_spec", self.unknown_environment_spec
+        )
+        new_context.unknown_specials_spec = kwargs.pop(
+            "unknown_specials_spec", self.unknown_specials_spec
+        )
 
-        if macros is None: macros = []
-        if environments is None: environments = []
-        if specials is None: specials = []
+        if macros is None:
+            macros = []
+        if environments is None:
+            environments = []
+        if specials is None:
+            specials = []
 
         new_category_dicts = {
-            'macros': dict( (m.macroname, m) for m in macros ),
-            'environments': dict( (e.environmentname, e) for e in environments ),
-            'specials': dict( (s.specials_chars, s) for s in specials ),
+            "macros": dict((m.macroname, m) for m in macros),
+            "environments": dict((e.environmentname, e) for e in environments),
+            "specials": dict((s.specials_chars, s) for s in specials),
         }
 
         new_context.category_list = self.category_list
@@ -581,8 +630,11 @@ class LatexContextDb(object):
         # logger.debug("extended_with() extending context, category=%r, category_list=%r",
         #              category, self.category_list)
 
-        if category is None and len(self.category_list) > 0 \
-           and self.category_list[0].startswith(_autogen_category_prefix):
+        if (
+            category is None
+            and len(self.category_list) > 0
+            and self.category_list[0].startswith(_autogen_category_prefix)
+        ):
             # no need to create new category, can merge with our current
             # internally-named one.
             cat = self.category_list[0]
@@ -594,29 +646,27 @@ class LatexContextDb(object):
             # with the new definitions.  Avoid the construction dict(olddict,
             # **new_stuff) because it doesn't seem to work with Transcrypt.
             d_cat = dict(
-                macros=dict(d_cat['macros']),
-                environments=dict(d_cat['environments']),
-                specials=dict(d_cat['specials']),
+                macros=dict(d_cat["macros"]),
+                environments=dict(d_cat["environments"]),
+                specials=dict(d_cat["specials"]),
             )
-            d_cat['macros'].update(new_category_dicts['macros'])
-            d_cat['environments'].update(new_category_dicts['environments'])
-            d_cat['specials'].update(new_category_dicts['specials'])
+            d_cat["macros"].update(new_category_dicts["macros"])
+            d_cat["environments"].update(new_category_dicts["environments"])
+            d_cat["specials"].update(new_category_dicts["specials"])
             # logger.debug("extended_with() DEBUG: updated d_cat is now = %r ; None is %r",
             #              d_cat, None)
             dd[cat] = d_cat
             new_context.d = dd
             new_context.lookup_chain_maps = {
-                'macros': _util.ChainMap(
-                    d_cat['macros'],
-                    *self.lookup_chain_maps['macros'].maps[1:]
+                "macros": _util.ChainMap(
+                    d_cat["macros"], *self.lookup_chain_maps["macros"].maps[1:]
                 ),
-                'environments': _util.ChainMap(
-                    d_cat['environments'],
-                    *self.lookup_chain_maps['environments'].maps[1:]
+                "environments": _util.ChainMap(
+                    d_cat["environments"],
+                    *self.lookup_chain_maps["environments"].maps[1:]
                 ),
-                'specials': _util.ChainMap(
-                    d_cat['specials'],
-                    *self.lookup_chain_maps['specials'].maps[1:]
+                "specials": _util.ChainMap(
+                    d_cat["specials"], *self.lookup_chain_maps["specials"].maps[1:]
                 ),
             }
             new_context._autogen_category_counter = self._autogen_category_counter
@@ -628,7 +678,7 @@ class LatexContextDb(object):
                 self,
                 {k: list(v.keys()) for k, v in new_category_dicts.items()},
                 cat,
-                new_context
+                new_context,
             )
             return new_context
 
@@ -651,15 +701,15 @@ class LatexContextDb(object):
 
         # these chainmaps' list of maps mirror the category_list item for item.
         new_context.lookup_chain_maps = {
-            'macros':
-                self.lookup_chain_maps['macros']
-                .new_child(new_category_dicts['macros']),
-            'environments':
-                self.lookup_chain_maps['environments']
-                .new_child(new_category_dicts['environments']),
-            'specials':
-                self.lookup_chain_maps['specials']
-                .new_child(new_category_dicts['specials']),
+            "macros": self.lookup_chain_maps["macros"].new_child(
+                new_category_dicts["macros"]
+            ),
+            "environments": self.lookup_chain_maps["environments"].new_child(
+                new_category_dicts["environments"]
+            ),
+            "specials": self.lookup_chain_maps["specials"].new_child(
+                new_category_dicts["specials"]
+            ),
         }
 
         new_context.frozen = True
@@ -669,14 +719,11 @@ class LatexContextDb(object):
             self,
             {k: list(v.keys()) for k, v in new_category_dicts.items()},
             category,
-            new_context
+            new_context,
         )
 
-        #logger.debug("extended_with(): new context is = %r", new_context)
+        # logger.debug("extended_with(): new context is = %r", new_context)
         return new_context
-
-
-
 
 
 class ParsingStateDeltaExtendLatexContextDb(ParsingStateDelta):
@@ -688,39 +735,36 @@ class ParsingStateDeltaExtendLatexContextDb(ParsingStateDelta):
 
        A dictionary with keys 'macros', 'environments', 'specials', as accepted
        by :py:meth:`LatexContextDb.add_context_category()`.
-        
+
        Can be used along with set_parsing_state; in which case definitions are
        added on top of the parsing state change.
     """
+
     def __init__(self, extend_latex_context, **kwargs):
         super(ParsingStateDeltaExtendLatexContextDb, self).__init__(
-            _fields=('extend_latex_context', 'set_attributes',),
+            _fields=(
+                "extend_latex_context",
+                "set_attributes",
+            ),
             **kwargs
         )
         self.extend_latex_context = extend_latex_context
 
     def get_updated_parsing_state(self, parsing_state, latex_walker):
-
         if self.extend_latex_context:
-
             if self.set_attributes:
                 set_attributes = self.set_attributes
             else:
                 set_attributes = {}
 
             latex_context = parsing_state.latex_context.extended_with(
-                category=None,
-                **self.extend_latex_context
+                category=None, **self.extend_latex_context
             )
 
             return parsing_state.sub_context(
-                latex_context=latex_context,
-                **set_attributes
+                latex_context=latex_context, **set_attributes
             )
         elif self.set_attributes:
-            return parsing_state.sub_context(
-                **self.set_attributes
-            )
+            return parsing_state.sub_context(**self.set_attributes)
 
         return parsing_state
-

@@ -24,7 +24,7 @@ class NameAndGoalsConfiguration(SystemConfiguration):
 class NameAndGoals(PromptStrategy):
     DEFAULT_SYSTEM_PROMPT = (
         "Your job is to respond to a user-defined query by invoking the `create_pilot` function "
-        "to generate an autonomous pilot info to related to query. \n\n" 
+        "to generate an autonomous pilot info to related to query. \n\n"
         "The work of this funtion to generate the pilot info and create goals related to query"
         "Response should contain name for the pilot, an informative description for what the pilot does, and 1 to 5 "
         "goals that are optimally aligned with the successful completion of its assigned query.\n\n"
@@ -50,9 +50,7 @@ class NameAndGoals(PromptStrategy):
 
     DEFAULT_CREATE_AGENT_FUNCTION = {
         "name": "create_pilot",
-        "description": (
-            "Create a new autonomous AI pilot to complete a given task."
-        ),
+        "description": ("Create a new autonomous AI pilot to complete a given task."),
         "parameters": {
             "type": "object",
             "properties": {

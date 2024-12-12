@@ -2,8 +2,6 @@ import logging
 from collections import OrderedDict
 
 
-
-
 class QueryProcessor:
     def __init__(self, query):
         self.query = query

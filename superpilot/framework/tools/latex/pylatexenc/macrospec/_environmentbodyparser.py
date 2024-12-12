@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2022 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,10 +30,12 @@
 from __future__ import print_function, unicode_literals
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 from ..latexnodes._exctypes import *
-#from ..latexnodes import nodes
+
+# from ..latexnodes import nodes
 from ..latexnodes import (
     get_updated_parsing_state_from_delta,
 )
@@ -43,13 +45,17 @@ from ..latexnodes.parsers import (
 )
 
 
-
 class LatexEnvironmentBodyContentsParserInfo(LatexDelimitedExpressionParserInfo):
-
     @classmethod
-    def parse_initial(cls, delimiters, allow_pre_space,
-                      latex_walker, token_reader, group_parsing_state,
-                      delimited_expression_parser):
+    def parse_initial(
+        cls,
+        delimiters,
+        allow_pre_space,
+        latex_walker,
+        token_reader,
+        group_parsing_state,
+        delimited_expression_parser,
+    ):
         # we're already parsing the contents of the environment, so the "initial
         # delimiter" \begin{environment} was already encountered and parsed
         return []
@@ -59,26 +65,32 @@ class LatexEnvironmentBodyContentsParserInfo(LatexDelimitedExpressionParserInfo)
     def initialize(self):
         # set up all the relevant fields manually
 
-        #logger.debug("parsing_state=%r, group_parsing_state = %r",
+        # logger.debug("parsing_state=%r, group_parsing_state = %r",
         #             self.parsing_state, self.group_parsing_state)
 
-        contents_parsing_state_delta = \
+        contents_parsing_state_delta = (
             self.delimited_expression_parser.get_contents_parsing_state_delta()
+        )
 
         self.contents_parsing_state = get_updated_parsing_state_from_delta(
             self.group_parsing_state,
             contents_parsing_state_delta,
             self.latex_walker,
         )
-        #logger.debug("Contents state = %r, delta was = %r",
+        # logger.debug("Contents state = %r, delta was = %r",
         #             self.contents_parsing_state, contents_parsing_state_delta)
 
-        self.child_parsing_state_delta = \
+        self.child_parsing_state_delta = (
             self.delimited_expression_parser.get_child_parsing_state_delta()
+        )
 
         self.parsed_delimiters = (
-            "\\begin{}{}{}".format('{',self.delimited_expression_parser.environmentname,'}'),
-            "\\end{}{}{}".format('{',self.delimited_expression_parser.environmentname,'}')
+            "\\begin{}{}{}".format(
+                "{", self.delimited_expression_parser.environmentname, "}"
+            ),
+            "\\end{}{}{}".format(
+                "{", self.delimited_expression_parser.environmentname, "}"
+            ),
         )
 
         logger.debug(
@@ -96,23 +108,23 @@ class LatexEnvironmentBodyContentsParserInfo(LatexDelimitedExpressionParserInfo)
         return None
 
     def stop_token_condition(self, token):
-        if token.tok == 'end_environment' \
-           and token.arg == self.delimited_expression_parser.environmentname:
+        if (
+            token.tok == "end_environment"
+            and token.arg == self.delimited_expression_parser.environmentname
+        ):
             return True
         return False
 
     # Note: The default handle_stop_token_condition handler will move past the
     # end environment token.
 
-
-    def make_group_node_and_parsing_state_delta(self, latex_walker, token_reader,
-                                                nodelist, parsing_state_delta):
-
+    def make_group_node_and_parsing_state_delta(
+        self, latex_walker, token_reader, nodelist, parsing_state_delta
+    ):
         if nodelist is None:
             logger.warning("environment body contents parser: parsed nodelist is None")
             nodelist = latex_walker.make_nodelist(
-                nodelist=[],
-                parsing_state=self.contents_parsing_state
+                nodelist=[], parsing_state=self.contents_parsing_state
             )
 
         # just return the LatexNodeList instance
@@ -120,6 +132,7 @@ class LatexEnvironmentBodyContentsParserInfo(LatexDelimitedExpressionParserInfo)
 
 
 # ------------------------------------------------------------------------------
+
 
 class LatexEnvironmentBodyContentsParser(LatexDelimitedExpressionParser):
     r"""
@@ -147,7 +160,7 @@ class LatexEnvironmentBodyContentsParser(LatexDelimitedExpressionParser):
     achieve the following behavior:
 
     .. code: latex
-    
+
         % failure, \item command unknown
         \item{...}
 
@@ -164,12 +177,15 @@ class LatexEnvironmentBodyContentsParser(LatexDelimitedExpressionParser):
           \textbf{Hello \item{world}} % fail; \item forbidden within children
         \end{enumerate}
     """
-    def __init__(self,
-                 environmentname,
-                 contents_parsing_state_delta=None,
-                 child_parsing_state_delta=None,
-                 discard_parsing_state_delta=True,
-                 **kwargs):
+
+    def __init__(
+        self,
+        environmentname,
+        contents_parsing_state_delta=None,
+        child_parsing_state_delta=None,
+        discard_parsing_state_delta=True,
+        **kwargs
+    ):
         super(LatexEnvironmentBodyContentsParser, self).__init__(
             delimiters=None,
             discard_parsing_state_delta=discard_parsing_state_delta,
@@ -185,4 +201,3 @@ class LatexEnvironmentBodyContentsParser(LatexDelimitedExpressionParser):
 
     def get_child_parsing_state_delta(self):
         return self.child_parsing_state_delta
-

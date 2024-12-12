@@ -1,9 +1,13 @@
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 import json
 import logging
-from superpilot.framework.abilities import SearchAndSummarizeAbility, TextSummarizeAbility
+from superpilot.framework.abilities import (
+    SearchAndSummarizeAbility,
+    TextSummarizeAbility,
+)
 
 import asyncio
 
@@ -17,9 +21,8 @@ logger = logging.getLogger("SearchAndSummarizeAbility")
 ability_arguments = {
     "query": "Write a blog on Future of Financial Services and LLMs",
     "context": ["AI", "Deep Learning"],
-    "system_text": "SEARCH_AND_SUMMARIZE_SYSTEM"
+    "system_text": "SEARCH_AND_SUMMARIZE_SYSTEM",
 }
-
 
 
 # Pilot name and goals define
@@ -43,12 +46,10 @@ ability_arguments = {
 
 # Create ability instance
 search_ability = SearchAndSummarizeAbility(
-    logger=logger,
-    configuration=SearchAndSummarizeAbility.default_configuration
+    logger=logger, configuration=SearchAndSummarizeAbility.default_configuration
 )
 ability = TextSummarizeAbility(
-    logger=logger,
-    configuration=SearchAndSummarizeAbility.default_configuration
+    logger=logger, configuration=SearchAndSummarizeAbility.default_configuration
 )
 
 content = ""
