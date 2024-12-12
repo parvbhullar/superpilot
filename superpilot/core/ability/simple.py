@@ -29,7 +29,6 @@ class AbilityRegistrySettings(SystemSettings):
 
 
 class SimpleAbilityRegistry(AbilityRegistry, Configurable):
-
     default_settings = AbilityRegistrySettings(
         name="simple_ability_registry",
         description="A simple ability registry.",
@@ -84,7 +83,9 @@ class SimpleAbilityRegistry(AbilityRegistry, Configurable):
         self._abilities.append(ability)
 
     def list_abilities(self) -> List[str]:
-        return [f"{ability.name()}: {ability.description()}" for ability in self._abilities]
+        return [
+            f"{ability.name()}: {ability.description()}" for ability in self._abilities
+        ]
 
     def dump_abilities(self) -> List[dict]:
         return [ability.dump() for ability in self._abilities]

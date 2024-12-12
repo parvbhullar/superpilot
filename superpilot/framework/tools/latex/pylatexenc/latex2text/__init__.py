@@ -51,23 +51,22 @@ import textwrap
 
 # for Py3
 _basestring = str
-_getfullargspec = getattr(inspect, 'getfullargspec', None)
+_getfullargspec = getattr(inspect, "getfullargspec", None)
 
 ## Begin Py2 support code
 import sys
+
 if sys.version_info.major == 2:
     # Py2
     _basestring = basestring
     _getfullargspec = inspect.getargspec
     chr = unichr
 #
-_python_is_narrow_build = (sys.maxunicode < 0x10FFFF)
+_python_is_narrow_build = sys.maxunicode < 0x10FFFF
 ## End Py2 support code
 
 
-
-
-#import pylatexenc
+# import pylatexenc
 from .. import latexwalker
 from ..latexnodes import nodes as latexnodes_nodes
 from ..latexnodes import parsers as latexnodes_parsers
@@ -75,8 +74,8 @@ from .. import macrospec
 from .. import _util
 
 import logging
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 
 
 class MacroTextSpec(object):
@@ -121,6 +120,7 @@ class MacroTextSpec(object):
        The class :py:class:`MacroTextSpec` was introduced in `pylatexenc
        2.0` to succeed to the previously named `MacroDef` class.
     """
+
     def __init__(self, macroname, simplify_repl=None, discard=None):
         super(MacroTextSpec, self).__init__()
         self.macroname = macroname
@@ -175,6 +175,7 @@ class EnvironmentTextSpec(object):
        The class :py:class:`EnvironmentTextSpec` was introduced in `pylatexenc
        2.0` to succeed to the previously named `EnvDef` class.
     """
+
     def __init__(self, environmentname, simplify_repl=None, discard=False):
         super(EnvironmentTextSpec, self).__init__()
         self.environmentname = environmentname
@@ -219,11 +220,11 @@ class SpecialsTextSpec(object):
 
        Latex specials were introduced in `pylatexenc 2.0`.
     """
+
     def __init__(self, specials_chars, simplify_repl=None):
         super(SpecialsTextSpec, self).__init__()
         self.specials_chars = specials_chars
         self.simplify_repl = simplify_repl
-
 
 
 def EnvDef(envname, simplify_repl=None, discard=False):
@@ -236,10 +237,12 @@ def EnvDef(envname, simplify_repl=None, discard=False):
        :py:class:`~pylatexenc.macrospec.EnvironmentTextSpec` instance.  In this
        way the earlier idiom ``EnvDef(...)`` still works in `pylatexenc 2`.
     """
-    e = EnvironmentTextSpec(environmentname=envname, simplify_repl=simplify_repl,
-                            discard=discard)
+    e = EnvironmentTextSpec(
+        environmentname=envname, simplify_repl=simplify_repl, discard=discard
+    )
     e.envname = e.environmentname
     return e
+
 
 def MacroDef(macname, simplify_repl=None, discard=None):
     r"""
@@ -256,7 +259,6 @@ def MacroDef(macname, simplify_repl=None, discard=None):
     return m
 
 
-
 #
 # NOTE: while internally documented (but not in the public docs), these fmt_***
 # functions should be considered internal API and should not be relied upon for
@@ -265,6 +267,7 @@ def MacroDef(macname, simplify_repl=None, discard=None):
 # requires a placeholder, etc.) by some other means such as by extending the
 # latex context database object directly.
 #
+
 
 def fmt_equation_environment(envnode, l2tobj):
     r"""
@@ -309,16 +312,19 @@ def placeholder_node_formatter(placeholdertext, block=True):
 
        This function was introduced in `pylatexenc 2.0`.
     """
-    return  lambda n, l2tobj, pht=placeholdertext: \
-        _do_fmt_placeholder_node(pht, l2tobj, block=block)
+    return lambda n, l2tobj, pht=placeholdertext: _do_fmt_placeholder_node(
+        pht, l2tobj, block=block
+    )
+
 
 def _do_fmt_placeholder_node(placeholdertext, l2tobj, block=True):
     # spaces added so that database indexing doesn't index the word "array" or
     # "pmatrix"
-    txt = '< ' + " ".join(placeholdertext) + ' >'
+    txt = "< " + " ".join(placeholdertext) + " >"
     if block:
-        return l2tobj._fmt_indented_block(txt, indent='    ')
-    return ' ' + txt + ' '
+        return l2tobj._fmt_indented_block(txt, indent="    ")
+    return " " + txt + " "
+
 
 def fmt_placeholder_node(node, l2tobj):
     r"""
@@ -333,12 +339,12 @@ def fmt_placeholder_node(node, l2tobj):
        This function was introduced in `pylatexenc 2.0`.
     """
 
-    for att in ('macroname', 'environmentname', 'specials_chars'):
+    for att in ("macroname", "environmentname", "specials_chars"):
         if hasattr(node, att):
             name = getattr(node, att)
             break
     else:
-        name = '<unknown>'
+        name = "<unknown>"
 
     return _do_fmt_placeholder_node(name, l2tobj)
 
@@ -368,20 +374,20 @@ def fmt_matrix_environment_node(node, l2tobj):
         def new_column(self):
             if self.buffer_nodes:
                 self.buffer_this_column.append(
-                    l2tobj.nodelist_to_text(self.buffer_nodes) .strip()
+                    l2tobj.nodelist_to_text(self.buffer_nodes).strip()
                 )
             self.buffer_nodes = []
 
         def new_row(self):
             self.new_column()
-            self.matrix_rows.append( self.buffer_this_column )
+            self.matrix_rows.append(self.buffer_this_column)
             self.buffer_this_column = []
-            
+
     state = StateType()
 
     # iterate the nodelist and find column and row separators
     for n in node.nodelist:
-        if n.isNodeType(latexwalker.LatexSpecialsNode) and n.specials_chars == '&':
+        if n.isNodeType(latexwalker.LatexSpecialsNode) and n.specials_chars == "&":
             # column separator
             state.new_column()
             continue
@@ -391,76 +397,77 @@ def fmt_matrix_environment_node(node, l2tobj):
             continue
         state.add_content(n)
 
-    state.new_row() # finish the last row
+    state.new_row()  # finish the last row
 
     # now format the contents as array --
-    max_char_width = max( ( len(x)  for row in state.matrix_rows  for x in row ) )
-    matrix_contents = "; ".join( (
-        " ".join( (
-            x.rjust(max_char_width, ' ')
-            for x in row
-        ) )
-        for row in state.matrix_rows
-    ) )
+    max_char_width = max((len(x) for row in state.matrix_rows for x in row))
+    matrix_contents = "; ".join(
+        (
+            " ".join((x.rjust(max_char_width, " ") for x in row))
+            for row in state.matrix_rows
+        )
+    )
     return "[ " + matrix_contents + " ]"
+
 
 #
 # see reference: https://unicode.org/charts/PDF/U1D400.pdf
 #
 
 _fmt_math_style_offsets = {
-    'bold': (0x1D400, 0x1D41A),
-    'italic': (0x1D434, 0x1D44E),
-    'bold-italic': (0x1D468, 0x1D482),
-    'script': (0x1D49C, 0x1D4B6),
-    'bold-script': (0x1D4D0, 0x1D4EA),
-    'fraktur': (0x1D504, 0x1D51E),
-    'doublestruck': (0x1D538, 0x1D552),
-    'bold-fraktur': (0x1D56C, 0x1D586),
-    'sans': (0x1D5A0, 0x1D5BA),
-    'sans-bold': (0x1D5D4, 0x1D5EE),
-    'sans-italic': (0x1D608, 0x1D622),
-    'sans-bold-italic': (0x1D63C, 0x1D656),
-    'monospace': (0x1D670, 0x1D68A),
+    "bold": (0x1D400, 0x1D41A),
+    "italic": (0x1D434, 0x1D44E),
+    "bold-italic": (0x1D468, 0x1D482),
+    "script": (0x1D49C, 0x1D4B6),
+    "bold-script": (0x1D4D0, 0x1D4EA),
+    "fraktur": (0x1D504, 0x1D51E),
+    "doublestruck": (0x1D538, 0x1D552),
+    "bold-fraktur": (0x1D56C, 0x1D586),
+    "sans": (0x1D5A0, 0x1D5BA),
+    "sans-bold": (0x1D5D4, 0x1D5EE),
+    "sans-italic": (0x1D608, 0x1D622),
+    "sans-bold-italic": (0x1D63C, 0x1D656),
+    "monospace": (0x1D670, 0x1D68A),
 }
 # account for "holes" in code point chart because some symbols have already
 # been allocated earlier code points (see reference linked above)
 _fmt_math_style_exceptions = {
-    'italic': {
-        ord('h'): chr(0x210E), # PLANK CONSTANT
+    "italic": {
+        ord("h"): chr(0x210E),  # PLANK CONSTANT
     },
-    'script': {
-        ord('B'): chr(0x212C),
-        ord('E'): chr(0x2130),
-        ord('F'): chr(0x2131),
-        ord('H'): chr(0x210B),
-        ord('I'): chr(0x2110),
-        ord('L'): chr(0x2112),
-        ord('M'): chr(0x2133),
-        ord('R'): chr(0x211B),
-        ord('e'): chr(0x212F),
-        ord('g'): chr(0x210A),
-        ord('o'): chr(0x2134),
+    "script": {
+        ord("B"): chr(0x212C),
+        ord("E"): chr(0x2130),
+        ord("F"): chr(0x2131),
+        ord("H"): chr(0x210B),
+        ord("I"): chr(0x2110),
+        ord("L"): chr(0x2112),
+        ord("M"): chr(0x2133),
+        ord("R"): chr(0x211B),
+        ord("e"): chr(0x212F),
+        ord("g"): chr(0x210A),
+        ord("o"): chr(0x2134),
     },
-    'fraktur': {
-        ord('C'): chr(0x212D),
-        ord('H'): chr(0x210C),
-        ord('I'): chr(0x2111),
-        ord('R'): chr(0x211C),
-        ord('Z'): chr(0x2128),
+    "fraktur": {
+        ord("C"): chr(0x212D),
+        ord("H"): chr(0x210C),
+        ord("I"): chr(0x2111),
+        ord("R"): chr(0x211C),
+        ord("Z"): chr(0x2128),
     },
-    'doublestruck': {
-        ord('C'): chr(0x2102),
-        ord('H'): chr(0x210D),
-        ord('N'): chr(0x2115),
-        ord('P'): chr(0x2119),
-        ord('Q'): chr(0x211A),
-        ord('R'): chr(0x211D),
-        ord('Z'): chr(0x2124),
+    "doublestruck": {
+        ord("C"): chr(0x2102),
+        ord("H"): chr(0x210D),
+        ord("N"): chr(0x2115),
+        ord("P"): chr(0x2119),
+        ord("Q"): chr(0x211A),
+        ord("R"): chr(0x211D),
+        ord("Z"): chr(0x2124),
     },
 }
 
-_oA, _oZ, _oa, _oz = ord('A'), ord('Z'), ord('a'), ord('z')
+_oA, _oZ, _oa, _oz = ord("A"), ord("Z"), ord("a"), ord("z")
+
 
 def _fmt_math_style_char(c, style):
     oc = ord(c)
@@ -468,7 +475,13 @@ def _fmt_math_style_char(c, style):
     if z is not None:
         return z
 
-    offset_up, offset_lo = _fmt_math_style_offsets.get(style, (_oA, _oa,))
+    offset_up, offset_lo = _fmt_math_style_offsets.get(
+        style,
+        (
+            _oA,
+            _oa,
+        ),
+    )
 
     if oc >= _oA and oc <= _oZ:
         return chr(offset_up + oc - _oA)
@@ -478,10 +491,10 @@ def _fmt_math_style_char(c, style):
     # don't know how to handle this char
     return c
 
+
 if _python_is_narrow_build:
     # narrow python build, disable math alphabets.
     _fmt_math_style_char = lambda c, style: c
-
 
 
 def fmt_math_text_style(text, style):
@@ -499,11 +512,7 @@ def fmt_math_text_style(text, style):
     implemented in the future, for instance to implement the double-struck
     one/identity operator ``\mathbbm{1}``.)
     """
-    return "".join( (_fmt_math_style_char(c, style=style) for c in text) )
-
-
-
-
+    return "".join((_fmt_math_style_char(c, style=style) for c in text))
 
 
 def get_default_latex_context_db():
@@ -534,21 +543,20 @@ def get_default_latex_context_db():
     from ._defaultspecs import specs
 
     for cat, catspecs in specs:
-        db.add_context_category(cat,
-                                macros=catspecs['macros'],
-                                environments=catspecs['environments'],
-                                specials=catspecs['specials'])
+        db.add_context_category(
+            cat,
+            macros=catspecs["macros"],
+            environments=catspecs["environments"],
+            specials=catspecs["specials"],
+        )
 
     return db
 
 
-
-
 default_macro_dict = _util.LazyDict(
-    generate_dict_fn=lambda: dict([
-        (m.macroname, m)
-        for m in get_default_latex_context_db().iter_macro_specs()
-    ])
+    generate_dict_fn=lambda: dict(
+        [(m.macroname, m) for m in get_default_latex_context_db().iter_macro_specs()]
+    )
 )
 r"""
 .. deprecated:: 2.0
@@ -570,10 +578,12 @@ decrease in performance.
 """
 
 default_env_dict = _util.LazyDict(
-    generate_dict_fn=lambda: dict([
-        (m.environmentname, m)
-        for m in get_default_latex_context_db().iter_environment_specs()
-    ])
+    generate_dict_fn=lambda: dict(
+        [
+            (m.environmentname, m)
+            for m in get_default_latex_context_db().iter_environment_specs()
+        ]
+    )
 )
 r"""
 .. deprecated:: 2.0
@@ -595,7 +605,7 @@ decrease in performance.
 """
 
 
-default_text_replacements = ( )
+default_text_replacements = ()
 r"""
 .. deprecated:: 2.0
 
@@ -609,76 +619,78 @@ r"""
 # ------------------------------------------------------------------------------
 
 _strict_latex_spaces_predef = {
-    'based-on-source': {
-        'between-macro-and-chars': False,
-        'between-latex-constructs': False,
-        'after-comment': False,
-        'in-equations': None,
+    "based-on-source": {
+        "between-macro-and-chars": False,
+        "between-latex-constructs": False,
+        "after-comment": False,
+        "in-equations": None,
     },
-    'macros': {
-        'between-macro-and-chars': True,
-        'between-latex-constructs': True,
-        'after-comment': False,
-        'in-equations': 'based-on-source',
+    "macros": {
+        "between-macro-and-chars": True,
+        "between-latex-constructs": True,
+        "after-comment": False,
+        "in-equations": "based-on-source",
     },
-    'except-in-equations': {
-        'between-macro-and-chars': True,
-        'between-latex-constructs': True,
-        'after-comment': True,
-        'in-equations': 'based-on-source',
+    "except-in-equations": {
+        "between-macro-and-chars": True,
+        "between-latex-constructs": True,
+        "after-comment": True,
+        "in-equations": "based-on-source",
     },
 }
 
 
 def _parse_strict_latex_spaces_dict(strict_latex_spaces):
     d = {
-        'between-macro-and-chars': False,
-        'between-latex-constructs': False,
-        'after-comment': False,
-        'in-equations': None,
+        "between-macro-and-chars": False,
+        "between-latex-constructs": False,
+        "after-comment": False,
+        "in-equations": None,
     }
     if strict_latex_spaces is None:
         return d
     elif strict_latex_spaces is False:
         # "False" == the actual default for non-strict latex spaces == "macros"
-        return _strict_latex_spaces_predef['macros']
+        return _strict_latex_spaces_predef["macros"]
     elif strict_latex_spaces is True:
         return dict([(k, True) for k in d.keys()])
     elif isinstance(strict_latex_spaces, dict):
         d.update(strict_latex_spaces)
         return d
     elif isinstance(strict_latex_spaces, _basestring):
-        if strict_latex_spaces == 'on':
+        if strict_latex_spaces == "on":
             return _parse_strict_latex_spaces_dict(True)
-        if strict_latex_spaces == 'off':
+        if strict_latex_spaces == "off":
             return _parse_strict_latex_spaces_dict(False)
         if strict_latex_spaces not in _strict_latex_spaces_predef:
-            raise ValueError("invalid value for strict_latex_spaces preset: {}"
-                             .format(strict_latex_spaces))
+            raise ValueError(
+                "invalid value for strict_latex_spaces preset: {}".format(
+                    strict_latex_spaces
+                )
+            )
 
-        if strict_latex_spaces == 'default': # deprecated -- report this
+        if strict_latex_spaces == "default":  # deprecated -- report this
             # compatibility with pylatexenc 1.x, but it is no longer the default!!
             _util.pylatexenc_deprecated_2(
                 "The value 'default' for `strict_latex_spaces=` in LatexNodes2Text() "
                 "is deprecated. The actual default changed to 'macros', and for "
                 "backwards compatibility the obsolete value 'default' still refers to "
                 "the earlier default which is now called 'based-on-source'.",
-                stacklevel=4
+                stacklevel=4,
             )
-            strict_latex_spaces = 'based-on-source'
+            strict_latex_spaces = "based-on-source"
 
         return _strict_latex_spaces_predef[strict_latex_spaces]
     else:
-        raise ValueError("Invalid value for strict_latex_spaces: {!r}"
-                         .format(strict_latex_spaces))
+        raise ValueError(
+            "Invalid value for strict_latex_spaces: {!r}".format(strict_latex_spaces)
+        )
+
 
 #
 
 
-
 from ._inputlatexfile import read_latex_file
-
-
 
 
 class LatexNodes2Text(object):
@@ -842,11 +854,12 @@ class LatexNodes2Text(object):
          cannot specify both `macro_list` (or `env_list`) and
          `latex_context_db`.
     """
+
     def __init__(self, latex_context=None, **flags):
         super(LatexNodes2Text, self).__init__()
 
         if latex_context is None:
-            if 'macro_dict' in flags or 'env_dict' in flags:
+            if "macro_dict" in flags or "env_dict" in flags:
                 # LEGACY -- build a latex context using the given macro_dict
                 _util.pylatexenc_deprecated_2(
                     "The `macro_dict=...` and `env_dict=...` options in LatexNodes2Text() are "
@@ -854,14 +867,16 @@ class LatexNodes2Text(object):
                     "using instead the more versatile option `latex_context=...`."
                 )
 
-                macro_dict = flags.pop('macro_dict', [])
-                env_dict = flags.pop('env_dict', [])
+                macro_dict = flags.pop("macro_dict", [])
+                env_dict = flags.pop("env_dict", [])
 
                 latex_context = macrospec.LatexContextDb()
-                latex_context.add_context_category('custom',
-                                                   macros=macro_dict.values(),
-                                                   environments=env_dict.values(),
-                                                   specials=[])
+                latex_context.add_context_category(
+                    "custom",
+                    macros=macro_dict.values(),
+                    environments=env_dict.values(),
+                    specials=[],
+                )
 
             else:
                 # default -- use default
@@ -872,53 +887,58 @@ class LatexNodes2Text(object):
         self.tex_input_directory = None
         self.strict_input = True
 
-        if 'keep_inline_math' in flags:
-            if 'math_mode' in flags:
-                raise TypeError("Cannot specify both math_mode= and keep_inline_math= "
-                                "for LatexNodes2Text()")
+        if "keep_inline_math" in flags:
+            if "math_mode" in flags:
+                raise TypeError(
+                    "Cannot specify both math_mode= and keep_inline_math= "
+                    "for LatexNodes2Text()"
+                )
             _util.pylatexenc_deprecated_2(
                 "The keep_inline_math=... option in LatexNodes2Text() has been replaced by "
                 "the math_mode=... option."
             )
-            self.math_mode = 'verbatim' if flags.pop('keep_inline_math') else 'text'
+            self.math_mode = "verbatim" if flags.pop("keep_inline_math") else "text"
         else:
-            self.math_mode = flags.pop('math_mode', 'text')
+            self.math_mode = flags.pop("math_mode", "text")
 
-        if self.math_mode not in ('text', 'with-delimiters', 'verbatim', 'remove'):
-            raise ValueError("math_mode= option must be one of 'text', 'with-delimiters', "
-                             "'verbatim', 'remove'")
+        if self.math_mode not in ("text", "with-delimiters", "verbatim", "remove"):
+            raise ValueError(
+                "math_mode= option must be one of 'text', 'with-delimiters', "
+                "'verbatim', 'remove'"
+            )
 
-        self.keep_comments = flags.pop('keep_comments', False)
+        self.keep_comments = flags.pop("keep_comments", False)
 
-        strict_latex_spaces = flags.pop('strict_latex_spaces', False)
+        strict_latex_spaces = flags.pop("strict_latex_spaces", False)
         self.strict_latex_spaces = _parse_strict_latex_spaces_dict(strict_latex_spaces)
 
-        self.keep_braced_groups = flags.pop('keep_braced_groups', False)
-        self.keep_braced_groups_minlen = flags.pop('keep_braced_groups_minlen', 2)
+        self.keep_braced_groups = flags.pop("keep_braced_groups", False)
+        self.keep_braced_groups_minlen = flags.pop("keep_braced_groups_minlen", 2)
 
-        self.fill_text = flags.pop('fill_text', None)
-        if not self.fill_text: # None, 0, False, or false-ish
+        self.fill_text = flags.pop("fill_text", None)
+        if not self.fill_text:  # None, 0, False, or false-ish
             self.fill_text = None
-        if self.fill_text is True: # exactly boolean true, not an int
+        if self.fill_text is True:  # exactly boolean true, not an int
             self.fill_text = 80
 
-        if 'text_replacements' in flags:
-            del flags['text_replacements']
+        if "text_replacements" in flags:
+            del flags["text_replacements"]
             _util.pylatexenc_deprecated_2(
                 "The text_replacements= argument is ignored since pylatexenc 2. "
                 "To keep existing code working, add a call to "
                 "`LatexNodes2Text.apply_text_replacements()`. "
-                "New code should use \"latex specials\" instead."
+                'New code should use "latex specials" instead.'
             )
 
         if flags:
             # any flags left which we haven't recognized
-            logger.warning("LatexNodes2Text(): Unknown flag(s) encountered: %r",
-                           list(flags.keys()))
+            logger.warning(
+                "LatexNodes2Text(): Unknown flag(s) encountered: %r", list(flags.keys())
+            )
 
-
-    def set_tex_input_directory(self, tex_input_directory, latex_walker_init_args=None,
-                                strict_input=True):
+    def set_tex_input_directory(
+        self, tex_input_directory, latex_walker_init_args=None, strict_input=True
+    ):
         """
         Set where to look for input files when encountering the ``\\input`` or
         ``\\include`` macro.
@@ -940,10 +960,10 @@ class LatexNodes2Text(object):
         file.
         """
         self.tex_input_directory = tex_input_directory
-        self.latex_walker_init_args = latex_walker_init_args if latex_walker_init_args else {}
+        self.latex_walker_init_args = (
+            latex_walker_init_args if latex_walker_init_args else {}
+        )
         self.strict_input = strict_input
-
-
 
     def read_input_file(self, fn):
         """
@@ -971,10 +991,9 @@ class LatexNodes2Text(object):
         """
 
         if self.tex_input_directory is None:
-            return ''
+            return ""
 
         return read_latex_file(self.tex_input_directory, self.strict_input, fn)
-
 
     def _input_node_simplify_repl(self, n):
         #
@@ -982,21 +1001,20 @@ class LatexNodes2Text(object):
         #
 
         if len(n.nodeargs) != 1:
-            logger.warning(u"Expected exactly one argument for '\\input' ! Got = %r",
-                           n.nodeargs)
+            logger.warning(
+                "Expected exactly one argument for '\\input' ! Got = %r", n.nodeargs
+            )
 
         inputtex = self.read_input_file(self.nodelist_to_text([n.nodeargs[0]]).strip())
 
         if not inputtex:
-            return ''
+            return ""
 
         lw = latexwalker.LatexWalker(inputtex, **self.latex_walker_init_args)
 
         nodelist, _ = lw.parse_content(latexnodes_parsers.LatexGeneralNodesParser())
 
         return self.nodelist_to_text(nodelist)
-
-
 
     def latex_to_text(self, latex, **parse_flags):
         """
@@ -1015,8 +1033,7 @@ class LatexNodes2Text(object):
 
         lw = latexwalker.LatexWalker(latex, **parse_flags)
         nodelist, _ = lw.parse_content(latexnodes_parsers.LatexGeneralNodesParser())
-        return self.nodelist_to_text( nodelist )
-
+        return self.nodelist_to_text(nodelist)
 
     def nodelist_to_text(self, nodelist):
         """
@@ -1031,13 +1048,13 @@ class LatexNodes2Text(object):
         according to the class options.)
         """
 
-        s = ''
+        s = ""
         prev_node = None
         for node in nodelist:
-            if self._is_bare_macro_node(prev_node) and \
-               node.isNodeType(latexwalker.LatexCharsNode):
-
-                if not self.strict_latex_spaces['between-macro-and-chars']:
+            if self._is_bare_macro_node(prev_node) and node.isNodeType(
+                latexwalker.LatexCharsNode
+            ):
+                if not self.strict_latex_spaces["between-macro-and-chars"]:
                     # after a macro with absolutely no arguments, include
                     # post_space in output by default if there are other chars
                     # that follow.  This is for more breathing space (especially
@@ -1047,9 +1064,9 @@ class LatexNodes2Text(object):
                     # corresponding `strict_latex_spaces=` flag is set.
                     s += prev_node.macro_post_space
 
-            last_nl_pos = s.rfind('\n')
+            last_nl_pos = s.rfind("\n")
             if last_nl_pos != -1:
-                textcol = len(s)-last_nl_pos-1
+                textcol = len(s) - last_nl_pos - 1
             else:
                 textcol = len(s)
 
@@ -1111,10 +1128,12 @@ class LatexNodes2Text(object):
         # track of all relevant pre_space of tokens, such as between two
         # braced groups ("{one} {two}") or other such situations.
         content = node.chars
-        if self.fill_text: # None or column width
+        if self.fill_text:  # None or column width
             content = self.do_fill_text(content, textcol=textcol)
-        if not self.strict_latex_spaces['between-latex-constructs'] \
-           and len(content.strip()) == 0:
+        if (
+            not self.strict_latex_spaces["between-latex-constructs"]
+            and len(content.strip()) == 0
+        ):
             return ""
         return content
 
@@ -1125,27 +1144,26 @@ class LatexNodes2Text(object):
         :py:class:`~pylatexenc.latexwalker.LatexCommentNode`.
         """
         if self.keep_comments:
-            if self.strict_latex_spaces['after-comment']:
-                nl = '\n'
-                if node.comment_post_space == '':
+            if self.strict_latex_spaces["after-comment"]:
+                nl = "\n"
+                if node.comment_post_space == "":
                     # this happens if two newlines follow a comment---the
                     # comment_post_space is empty, and the \n\n is reported as a
                     # char node to notify that there is a new paragraph.
-                    nl = ''
-                return '%' + node.comment + nl
+                    nl = ""
+                return "%" + node.comment + nl
             else:
                 # default spaces, i.e., keep what spaces were already there
                 # after the comment
-                return '%' + node.comment + node.comment_post_space
+                return "%" + node.comment + node.comment_post_space
         else:
-            if self.strict_latex_spaces['after-comment']:
+            if self.strict_latex_spaces["after-comment"]:
                 return ""
             else:
                 # default spaces, i.e., keep what spaces were already there
                 # after the comment.  This can be useful to preserve
                 # e.g. indentation of the next line
                 return node.comment_post_space
-
 
     def group_node_to_text(self, node):
         r"""
@@ -1169,12 +1187,13 @@ class LatexNodes2Text(object):
         mac = self.latex_context.get_macro_spec(macroname)
         if mac is None:
             # default for unknown macros
-            mac = MacroTextSpec('', discard=True)
+            mac = MacroTextSpec("", discard=True)
 
         def get_macro_str_repl(node, macroname, mac):
             if mac.simplify_repl:
-                return self.apply_simplify_repl(node, mac.simplify_repl,
-                                                what=r"macro '\%s'"%(macroname))
+                return self.apply_simplify_repl(
+                    node, mac.simplify_repl, what=r"macro '\%s'" % (macroname)
+                )
             if mac.discard:
                 return ""
             a = []
@@ -1196,11 +1215,12 @@ class LatexNodes2Text(object):
         envdef = self.latex_context.get_environment_spec(environmentname)
         if envdef is None:
             # default for unknown environments
-            envdef = EnvironmentTextSpec('', discard=False)
+            envdef = EnvironmentTextSpec("", discard=False)
 
         if envdef.simplify_repl:
-            return self.apply_simplify_repl(node, envdef.simplify_repl,
-                                            what="environment '%s'"%(environmentname))
+            return self.apply_simplify_repl(
+                node, envdef.simplify_repl, what="environment '%s'" % (environmentname)
+            )
         if envdef.discard:
             return ""
 
@@ -1221,8 +1241,9 @@ class LatexNodes2Text(object):
 
         def get_specials_str_repl(node, specials_chars, spec):
             if spec.simplify_repl:
-                return self.apply_simplify_repl(node, spec.simplify_repl,
-                                                what="specials '%s'"%(specials_chars))
+                return self.apply_simplify_repl(
+                    node, spec.simplify_repl, what="specials '%s'" % (specials_chars)
+                )
             if spec.discard:
                 return ""
             a = []
@@ -1244,35 +1265,45 @@ class LatexNodes2Text(object):
         provided to the constructor.
         """
 
-        if self.math_mode == 'verbatim':
-            if node.isNodeType(latexwalker.LatexEnvironmentNode) \
-               or node.displaytype == 'display':
-                return self._fmt_indented_block(node.latex_verbatim(), indent='')
+        if self.math_mode == "verbatim":
+            if (
+                node.isNodeType(latexwalker.LatexEnvironmentNode)
+                or node.displaytype == "display"
+            ):
+                return self._fmt_indented_block(node.latex_verbatim(), indent="")
             else:
                 return node.latex_verbatim()
 
-        elif self.math_mode == 'remove':
-            return ''
+        elif self.math_mode == "remove":
+            return ""
 
-        elif self.math_mode == 'with-delimiters':
+        elif self.math_mode == "with-delimiters":
             with _PushEquationContext(self):
                 content = self.nodelist_to_text(node.nodelist).strip()
             if node.isNodeType(latexwalker.LatexMathNode):
                 delims = node.delimiters
-            else: # environment node
-                delims = (r'\begin{%s}'%(node.environmentname),
-                          r'\end{%s}'%(node.environmentname),)
-            if node.isNodeType(latexwalker.LatexEnvironmentNode) \
-               or node.displaytype == 'display':
-                return delims[0] + self._fmt_indented_block(content, indent='') + delims[1]
+            else:  # environment node
+                delims = (
+                    r"\begin{%s}" % (node.environmentname),
+                    r"\end{%s}" % (node.environmentname),
+                )
+            if (
+                node.isNodeType(latexwalker.LatexEnvironmentNode)
+                or node.displaytype == "display"
+            ):
+                return (
+                    delims[0] + self._fmt_indented_block(content, indent="") + delims[1]
+                )
             else:
                 return delims[0] + content + delims[1]
 
-        elif self.math_mode == 'text':
+        elif self.math_mode == "text":
             with _PushEquationContext(self):
                 content = self.nodelist_to_text(node.nodelist).strip()
-            if node.isNodeType(latexwalker.LatexEnvironmentNode) \
-               or node.displaytype == 'display':
+            if (
+                node.isNodeType(latexwalker.LatexEnvironmentNode)
+                or node.displaytype == "display"
+            ):
                 return self._fmt_indented_block(content)
             else:
                 return content
@@ -1280,44 +1311,51 @@ class LatexNodes2Text(object):
         else:
             raise RuntimeError("unknown math_mode={} !".format(self.math_mode))
 
-
     def do_fill_text(self, text, textcol=0):
         # keep trailing whitespace to have whitespace between macros in text as
         # in "see \ref{...} and blah blah"
-        head_ws = re.search(r'^\s*', text).group()
-        head_par = '\n\n' if ('\n\n' in head_ws) else ''
-        #head_nl = '\n' if (not head_par and '\n' in head_ws) else ''
-        trail_ws = re.search(r'\s*$', text).group()
-        trail_par = '\n\n' if ('\n\n' in trail_ws) else ''
-        #trail_nl = '\n' if (not trail_par and '\n' in trail_ws) else ''
+        head_ws = re.search(r"^\s*", text).group()
+        head_par = "\n\n" if ("\n\n" in head_ws) else ""
+        # head_nl = '\n' if (not head_par and '\n' in head_ws) else ''
+        trail_ws = re.search(r"\s*$", text).group()
+        trail_par = "\n\n" if ("\n\n" in trail_ws) else ""
+        # trail_nl = '\n' if (not trail_par and '\n' in trail_ws) else ''
         text = text.strip()
 
         def fill_chunk(x, textcol):
-            #head_ws = ' ' if textcol>0 and x[0:1].isspace() else ''
-            #trail_ws = ' ' if x[-1:].isspace() else ''
-            head_ws, trail_ws = '', ''
+            # head_ws = ' ' if textcol>0 and x[0:1].isspace() else ''
+            # trail_ws = ' ' if x[-1:].isspace() else ''
+            head_ws, trail_ws = "", ""
             x = x.strip()
-            if textcol >= self.fill_text-4:
-                return '\n' + textwrap.fill(x, self.fill_text) + trail_ws
+            if textcol >= self.fill_text - 4:
+                return "\n" + textwrap.fill(x, self.fill_text) + trail_ws
             else:
-                return head_ws + \
-                    textwrap.fill(x, self.fill_text, initial_indent='X'*textcol)[textcol:] + \
-                    trail_ws
+                return (
+                    head_ws
+                    + textwrap.fill(x, self.fill_text, initial_indent="X" * textcol)[
+                        textcol:
+                    ]
+                    + trail_ws
+                )
 
-        rawchunks = re.compile(r'\n{2,}').split(text)
+        rawchunks = re.compile(r"\n{2,}").split(text)
 
         chunks = [
             thechunk
             for (j, thechunk) in (
-                    ( j, fill_chunk(x, textcol if j==0 else 0) )
-                    for j, x in enumerate(rawchunks)
+                (j, fill_chunk(x, textcol if j == 0 else 0))
+                for j, x in enumerate(rawchunks)
             )
             if thechunk.strip()
         ]
 
-        return head_par + (' ' if textcol>0 and head_ws and not head_par else '') + \
-            "\n\n".join(chunks) + \
-            (' ' if trail_ws and not trail_par else '') + trail_par
+        return (
+            head_par
+            + (" " if textcol > 0 and head_ws and not head_par else "")
+            + "\n\n".join(chunks)
+            + (" " if trail_ws and not trail_par else "")
+            + trail_par
+        )
 
     def apply_simplify_repl(self, node, simplify_repl, what):
         r"""
@@ -1330,25 +1368,28 @@ class LatexNodes2Text(object):
         if callable(simplify_repl):
             kwargs = {}
             fn_args = _getfullargspec(simplify_repl)[0]
-            if 'l2tobj' in fn_args:
+            if "l2tobj" in fn_args:
                 # callable accepts an argument named 'l2tobj', provide pointer to self
-                kwargs['l2tobj'] = self
-            if node.isNodeType(latexwalker.LatexEnvironmentNode) and \
-               'environmentname' in fn_args:
-                kwargs['environmentname'] = node.environmentname
-            if node.isNodeType(latexwalker.LatexMacroNode) and \
-               'macroname' in fn_args:
-                kwargs['macroname'] = node.macroname
-            if node.isNodeType(latexwalker.LatexSpecialsNode) and \
-               'specials_chars' in fn_args:
-                kwargs['specials_chars'] = node.specials_chars
+                kwargs["l2tobj"] = self
+            if (
+                node.isNodeType(latexwalker.LatexEnvironmentNode)
+                and "environmentname" in fn_args
+            ):
+                kwargs["environmentname"] = node.environmentname
+            if node.isNodeType(latexwalker.LatexMacroNode) and "macroname" in fn_args:
+                kwargs["macroname"] = node.macroname
+            if (
+                node.isNodeType(latexwalker.LatexSpecialsNode)
+                and "specials_chars" in fn_args
+            ):
+                kwargs["specials_chars"] = node.specials_chars
 
             r = simplify_repl(node, **kwargs)
             if r:
                 return r
-            return '' # don't return None
+            return ""  # don't return None
 
-        if '%' in simplify_repl and len(simplify_repl) != 1:
+        if "%" in simplify_repl and len(simplify_repl) != 1:
             # if simplify_repl contains a '%' sign then we will look for %-based
             # formatting placeholder(s), except if simplify_repl is the string
             # '%' itself (checked above with "len(simplify_repl)!=1") in which
@@ -1358,24 +1399,25 @@ class LatexNodes2Text(object):
             if node.nodeargd and node.nodeargd.argnlist:
                 nodeargs = node.nodeargd.argnlist
 
-            has_percent_s = re.search('(^|[^%])(%%)*%s', simplify_repl)
+            has_percent_s = re.search("(^|[^%])(%%)*%s", simplify_repl)
 
             if node.isNodeType(latexwalker.LatexEnvironmentNode):
                 if has_percent_s:
-                    x = (self.nodelist_to_text(node.nodelist), )
+                    x = (self.nodelist_to_text(node.nodelist),)
                 else:
                     x = dict(
-                        (str(1+j),val) for j, val in enumerate(
+                        (str(1 + j), val)
+                        for j, val in enumerate(
                             self._groupnodecontents_to_text(nn) for nn in nodeargs
                         )
                     )
                     x.update(body=self.nodelist_to_text(node.nodelist))
             elif has_percent_s:
-                x = tuple([self._groupnodecontents_to_text(nn)
-                           for nn in nodeargs])
+                x = tuple([self._groupnodecontents_to_text(nn) for nn in nodeargs])
             else:
                 x = dict(
-                    (str(1+j),val) for j, val in enumerate(
+                    (str(1 + j), val)
+                    for j, val in enumerate(
                         self._groupnodecontents_to_text(nn) for nn in nodeargs
                     )
                 )
@@ -1384,29 +1426,31 @@ class LatexNodes2Text(object):
                 return simplify_repl % x
             except (TypeError, ValueError):
                 logger.warning(
-                    "WARNING: Error in configuration: {} failed its substitution!"
-                    .format(what)
+                    "WARNING: Error in configuration: {} failed its substitution!".format(
+                        what
+                    )
                 )
-                return simplify_repl # too bad, keep the percent signs as they are...
+                return simplify_repl  # too bad, keep the percent signs as they are...
         return simplify_repl
 
-    def _fmt_indented_block(self, contents, indent=' '*4):
-        block = ("\n"+indent + contents.replace("\n", "\n"+indent) + "\n")
+    def _fmt_indented_block(self, contents, indent=" " * 4):
+        block = "\n" + indent + contents.replace("\n", "\n" + indent) + "\n"
         if self.fill_text:
             # additional newlines because neighboring text gets trimmed
-            block = '\n'+block+'\n'
+            block = "\n" + block + "\n"
         return block
 
-
     def _is_bare_macro_node(self, node):
-        return (node is not None and
-                node.isNodeType(latexwalker.LatexMacroNode) and
-                node.nodeoptarg is None and
-                len(node.nodeargs) == 0)
+        return (
+            node is not None
+            and node.isNodeType(latexwalker.LatexMacroNode)
+            and node.nodeoptarg is None
+            and len(node.nodeargs) == 0
+        )
 
     def _groupnodecontents_to_text(self, groupnode):
         if groupnode is None:
-            return ''
+            return ""
         if isinstance(groupnode, latexnodes_nodes.LatexNodeList):
             return self.nodelist_to_text(groupnode)
         if not groupnode.isNodeType(latexwalker.LatexGroupNode):
@@ -1421,7 +1465,7 @@ class LatexNodes2Text(object):
         """
         if node.nodeargd and node.nodeargd.argnlist:
             return self._groupnodecontents_to_text(node.nodeargd.argnlist[k])
-        return ''
+        return ""
 
     def apply_text_replacements(self, s, text_replacements):
         r"""
@@ -1461,7 +1505,7 @@ class LatexNodes2Text(object):
 
         # perform suitable replacements
         for pattern, replacement in text_replacements:
-            if hasattr(pattern, 'sub'):
+            if hasattr(pattern, "sub"):
                 s = pattern.sub(replacement, s)
             else:
                 s = s.replace(pattern, replacement)
@@ -1469,34 +1513,25 @@ class LatexNodes2Text(object):
         return s
 
 
-
-
-
 class _PushEquationContext(_util.PushPropOverride):
     def __init__(self, l2t):
-
         new_strict_latex_spaces = None
-        if l2t.strict_latex_spaces['in-equations'] is not None:
+        if l2t.strict_latex_spaces["in-equations"] is not None:
             new_strict_latex_spaces = _parse_strict_latex_spaces_dict(
-                l2t.strict_latex_spaces['in-equations']
+                l2t.strict_latex_spaces["in-equations"]
             )
 
-        super(_PushEquationContext, self).__init__(l2t, 'strict_latex_spaces',
-                                                   new_strict_latex_spaces)
-
-
-
-
-
-
+        super(_PushEquationContext, self).__init__(
+            l2t, "strict_latex_spaces", new_strict_latex_spaces
+        )
 
 
 # ------------------------------------------------------------------------------
 
 
-
-def latex2text(content, tolerant_parsing=False, keep_inline_math=False,
-               keep_comments=False):
+def latex2text(
+    content, tolerant_parsing=False, keep_inline_math=False, keep_comments=False
+):
     """
     Heuristic conversion of LaTeX content `content` to unicode text.
 
@@ -1507,17 +1542,16 @@ def latex2text(content, tolerant_parsing=False, keep_inline_math=False,
     _util.pylatexenc_deprecated_ver(
         "1.0",
         "The module-level function `pylatexenc.latex2text.latex2text()` is deprecated "
-        "in favor of the `pylatexenc.latex2text.LatexNodes2Text` class."
+        "in favor of the `pylatexenc.latex2text.LatexNodes2Text` class.",
     )
 
     (nodelist, tpos, tlen) = latexwalker.get_latex_nodes(
-        content,
-        keep_inline_math=keep_inline_math,
-        tolerant_parsing=tolerant_parsing)
+        content, keep_inline_math=keep_inline_math, tolerant_parsing=tolerant_parsing
+    )
 
-    return latexnodes2text(nodelist,
-                           keep_inline_math=keep_inline_math,
-                           keep_comments=keep_comments)
+    return latexnodes2text(
+        nodelist, keep_inline_math=keep_inline_math, keep_comments=keep_comments
+    )
 
 
 def latexnodes2text(nodelist, keep_inline_math=False, keep_comments=False):
@@ -1532,10 +1566,9 @@ def latexnodes2text(nodelist, keep_inline_math=False, keep_comments=False):
     _util.pylatexenc_deprecated_ver(
         "1.0",
         "The module-level function `pylatexenc.latex2text.latexnodes2text()` is "
-        "deprecated in favor of the `pylatexenc.latex2text.LatexNodes2Text` class."
+        "deprecated in favor of the `pylatexenc.latex2text.LatexNodes2Text` class.",
     )
 
     return LatexNodes2Text(
-        keep_inline_math=keep_inline_math,
-        keep_comments=keep_comments
+        keep_inline_math=keep_inline_math, keep_comments=keep_comments
     ).nodelist_to_text(nodelist)

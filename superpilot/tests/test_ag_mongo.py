@@ -13,7 +13,13 @@ config_list = config_list_from_json(env_or_file="llm_config")
 
 
 class MongoRetrieveUserProxyAgent(RetrieveUserProxyAgent):
-    def query_vector_db(self, query_texts: List[str], n_results: int = 10, search_string: str = "", **kwargs) -> Dict[str, Union[List[str], List[List[str]]]]:
+    def query_vector_db(
+        self,
+        query_texts: List[str],
+        n_results: int = 10,
+        search_string: str = "",
+        **kwargs,
+    ) -> Dict[str, Union[List[str], List[List[str]]]]:
         # Combine all query texts into one string
         concatenated_text = " ".join(query_texts)
 
@@ -29,7 +35,9 @@ class MongoRetrieveUserProxyAgent(RetrieveUserProxyAgent):
             "documents": [document_contents],  # Wrap document_contents in a list
         }
 
-    def retrieve_docs(self, problem: str, n_results: int = 20, search_string: str = "", **kwargs):
+    def retrieve_docs(
+        self, problem: str, n_results: int = 20, search_string: str = "", **kwargs
+    ):
         # Query for similar documents
         results = self.query_vector_db(
             query_texts=[problem],
@@ -40,7 +48,11 @@ class MongoRetrieveUserProxyAgent(RetrieveUserProxyAgent):
         self._results = results
 
         # Check if results is a dictionary and "documents" is a list
-        if isinstance(results["ids"], list) and len(results["ids"]) > 0 and isinstance(results["ids"][0], str):
+        if (
+            isinstance(results["ids"], list)
+            and len(results["ids"]) > 0
+            and isinstance(results["ids"][0], str)
+        ):
             doc_id = results["ids"][0]
             if doc_id in self._doc_ids:
                 # Access the "documents" key in the results dictionary
@@ -57,7 +69,9 @@ class MongoRetrieveUserProxyAgent(RetrieveUserProxyAgent):
         Get the embedding for a given text using OpenAI's API.
         """
         text = text.replace("\n", " ")
-        return openai.Embedding.create(input=[text], model=model)['data'][0]['embedding']
+        return openai.Embedding.create(input=[text], model=model)["data"][0][
+            "embedding"
+        ]
 
     def connect_db(self):
         """
@@ -74,19 +88,23 @@ class MongoRetrieveUserProxyAgent(RetrieveUserProxyAgent):
         Find similar documents in MongoDB based on the provided embedding.
         """
         collection = self.connect_db()
-        documents = list(collection.aggregate([
-            {
-                "$search": {
-                    "index": "YOUR_VECTOR_INDEX",
-                    "knnBeta": {
-                        "vector": embedding,
-                        "path": "YOUR_EMBEDDING_FIELD",
-                        "k": 10,
+        documents = list(
+            collection.aggregate(
+                [
+                    {
+                        "$search": {
+                            "index": "YOUR_VECTOR_INDEX",
+                            "knnBeta": {
+                                "vector": embedding,
+                                "path": "YOUR_EMBEDDING_FIELD",
+                                "k": 10,
+                            },
+                        }
                     },
-                }
-            },
-            {"$project": {"_id": 1, "text_chunks": 1}}
-        ]))
+                    {"$project": {"_id": 1, "text_chunks": 1}},
+                ]
+            )
+        )
         return documents
 
 

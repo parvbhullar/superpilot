@@ -6,8 +6,7 @@ import inflection
 
 class Environment(abc.ABC):
     @abc.abstractmethod
-    def __init__(self, *args, **kwargs):
-        ...
+    def __init__(self, *args, **kwargs): ...
 
     @classmethod
     @abc.abstractmethod
@@ -15,16 +14,13 @@ class Environment(abc.ABC):
         cls,
         workspace_path: Path,
         logger: logging.Logger,
-    ) -> "Environment":
-        ...
+    ) -> "Environment": ...
 
     @abc.abstractmethod
-    def get(self, system_name: str):
-        ...
+    def get(self, system_name: str): ...
 
     @abc.abstractmethod
-    def __repr__(self):
-        ...
+    def __repr__(self): ...
 
     @classmethod
     def name(cls) -> str:

@@ -11,8 +11,14 @@ from superpilot.core.resource.model_providers.factory import ModelProviderFactor
 from superpilot.tests.test_env_simple import get_env
 from superpilot.core.configuration.config import get_config
 from superpilot.core.ability.super import SuperAbilityRegistry
-from superpilot.examples.tax.ability import Gstr1DataTransformAbility, SalesDataImportAbility, ApiResponseObserverAbility
-from superpilot.examples.tax.gstr1_data_transformer_prompt import GSTR1DataTransformerPrompt
+from superpilot.examples.tax.ability import (
+    Gstr1DataTransformAbility,
+    SalesDataImportAbility,
+    ApiResponseObserverAbility,
+)
+from superpilot.examples.tax.gstr1_data_transformer_prompt import (
+    GSTR1DataTransformerPrompt,
+)
 from superpilot.core.resource.model_providers import (
     OpenAIModelName,
 )
@@ -76,15 +82,19 @@ class Gstr1FillingExecutor(BaseExecutor):
         print("data transformer", response)
         # task = json.dumps(response.contesnt)
         data = response.content
-        data.update({'header':{
-                        'gstin': os.environ.get('GSTIN'),
-                        'month': '04',
-                        'year': '2023-24',
-                        'invoice': 'Y',
-                        'summary': 'N',
-                        'MiplApiKey': os.environ.get('MIPL_API_KEY'),
-                        "Content-Type": "application/json"
-                    }})
+        data.update(
+            {
+                "header": {
+                    "gstin": os.environ.get("GSTIN"),
+                    "month": "04",
+                    "year": "2023-24",
+                    "invoice": "Y",
+                    "summary": "N",
+                    "MiplApiKey": os.environ.get("MIPL_API_KEY"),
+                    "Content-Type": "application/json",
+                }
+            }
+        )
         task = self.PROMPT_TEMPLATE.format(**data)
         # print(task)
         return task, context
@@ -106,25 +116,101 @@ class Gstr1FillingExecutor(BaseExecutor):
 
     PROMPT_TEMPLATE = """
             Documents:{documents}
-            
+
             Header:{header}
             """
 
     async def execute(self, task: str, **kwargs):
-        task = {'documents': [{'document_number': '800/50', 'document_date': '29-08-2021', 'supply_type': 'Normal', 'invoice_status': 'Add', 'invoice_category': '', 'invoice_type': 'Tax Invoice', 'total_invoice_value': 3068, 'total_taxable_value': 45600.56, 'txpd_taxtable_value': 0, 'location': 'Delhi', 'gstr1_return_period': '08-2021', 'gstr3b_return_period': '082021', 'reverse_charge': '', 'place_of_supply': '9', 'supplier_gstin': '27GSPMH0591G1ZK', 'buyer_gstin': '33GSPTN9511G3Z3', 'customer_name': 'IPM INDIA WHOLESALE TRADING PVT LTD', 'amortised_cost': '', 'itemList': [{'hsn_code': '0208', 'quantity': 25.56, 'unit_of_product': 'KGS', 'gst_rate': 18, 'cess_amount': 25.65, 'taxable_value': 45600.56, 'cgst_amount': 0, 'sgst_amount': 0, 'igst_amount': 8208.1008, 'item_description': '', 'product_name': '', 'invoice_value': 3068}]}, {'document_number': '800/51', 'document_date': '29-08-2021', 'supply_type': 'Normal', 'invoice_status': 'Add', 'invoice_category': '', 'invoice_type': 'Tax Invoice', 'total_invoice_value': 3068, 'total_taxable_value': 85900.56, 'txpd_taxtable_value': 0, 'location': 'Delhi', 'gstr1_return_period': '08-2021', 'gstr3b_return_period': '082021', 'reverse_charge': '', 'place_of_supply': '27', 'supplier_gstin': '27GSPMH0591G1ZK', 'buyer_gstin': '33GSPTN9511G3Z3', 'customer_name': 'IPM INDIA WHOLESALE TRADING PVT LTD', 'amortised_cost': '', 'itemList': [{'hsn_code': '0208', 'quantity': 25.56, 'unit_of_product': 'KGS', 'gst_rate': 18, 'cess_amount': 50.56, 'taxable_value': 85900.56, 'cgst_amount': 7731.0504, 'sgst_amount': 7731.0504, 'igst_amount': 0, 'item_description': '', 'product_name': '', 'invoice_value': 3068}]}]
-                    , 'header':{
-                        'gstin': os.environ.get('GSTIN'),
-                        'month': '04',
-                        'year': '2023-24',
-                        'invoice': 'Y',
-                        'summary': 'N',
-                        'MiplApiKey': os.environ.get('MIPL_API_KEY'),
-                        "Content-Type": "application/json"
-                    }
-                }
-        self.context.add(Content.add_content_item(
-            self.PROMPT_TEMPLATE.format(**task), ContentType.DICT
-        ))
+        task = {
+            "documents": [
+                {
+                    "document_number": "800/50",
+                    "document_date": "29-08-2021",
+                    "supply_type": "Normal",
+                    "invoice_status": "Add",
+                    "invoice_category": "",
+                    "invoice_type": "Tax Invoice",
+                    "total_invoice_value": 3068,
+                    "total_taxable_value": 45600.56,
+                    "txpd_taxtable_value": 0,
+                    "location": "Delhi",
+                    "gstr1_return_period": "08-2021",
+                    "gstr3b_return_period": "082021",
+                    "reverse_charge": "",
+                    "place_of_supply": "9",
+                    "supplier_gstin": "27GSPMH0591G1ZK",
+                    "buyer_gstin": "33GSPTN9511G3Z3",
+                    "customer_name": "IPM INDIA WHOLESALE TRADING PVT LTD",
+                    "amortised_cost": "",
+                    "itemList": [
+                        {
+                            "hsn_code": "0208",
+                            "quantity": 25.56,
+                            "unit_of_product": "KGS",
+                            "gst_rate": 18,
+                            "cess_amount": 25.65,
+                            "taxable_value": 45600.56,
+                            "cgst_amount": 0,
+                            "sgst_amount": 0,
+                            "igst_amount": 8208.1008,
+                            "item_description": "",
+                            "product_name": "",
+                            "invoice_value": 3068,
+                        }
+                    ],
+                },
+                {
+                    "document_number": "800/51",
+                    "document_date": "29-08-2021",
+                    "supply_type": "Normal",
+                    "invoice_status": "Add",
+                    "invoice_category": "",
+                    "invoice_type": "Tax Invoice",
+                    "total_invoice_value": 3068,
+                    "total_taxable_value": 85900.56,
+                    "txpd_taxtable_value": 0,
+                    "location": "Delhi",
+                    "gstr1_return_period": "08-2021",
+                    "gstr3b_return_period": "082021",
+                    "reverse_charge": "",
+                    "place_of_supply": "27",
+                    "supplier_gstin": "27GSPMH0591G1ZK",
+                    "buyer_gstin": "33GSPTN9511G3Z3",
+                    "customer_name": "IPM INDIA WHOLESALE TRADING PVT LTD",
+                    "amortised_cost": "",
+                    "itemList": [
+                        {
+                            "hsn_code": "0208",
+                            "quantity": 25.56,
+                            "unit_of_product": "KGS",
+                            "gst_rate": 18,
+                            "cess_amount": 50.56,
+                            "taxable_value": 85900.56,
+                            "cgst_amount": 7731.0504,
+                            "sgst_amount": 7731.0504,
+                            "igst_amount": 0,
+                            "item_description": "",
+                            "product_name": "",
+                            "invoice_value": 3068,
+                        }
+                    ],
+                },
+            ],
+            "header": {
+                "gstin": os.environ.get("GSTIN"),
+                "month": "04",
+                "year": "2023-24",
+                "invoice": "Y",
+                "summary": "N",
+                "MiplApiKey": os.environ.get("MIPL_API_KEY"),
+                "Content-Type": "application/json",
+            },
+        }
+        self.context.add(
+            Content.add_content_item(
+                self.PROMPT_TEMPLATE.format(**task), ContentType.DICT
+            )
+        )
         task = "Use given data to fill GSTR1 return then observe the response given from api."
 
         # task = Task.factory(task, **kwargs)

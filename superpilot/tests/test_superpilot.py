@@ -17,7 +17,9 @@ from superpilot.core.resource.model_providers import (
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.super import SuperAbilityRegistry
 from superpilot.core.pilot.task.simple import SimpleTaskPilot
-from superpilot.examples.ed_tech.ag_question_solver_ability import AGQuestionSolverAbility
+from superpilot.examples.ed_tech.ag_question_solver_ability import (
+    AGQuestionSolverAbility,
+)
 from superpilot.examples.pilots.tasks.super import SuperTaskPilot
 from superpilot.core.planning.schema import Task
 

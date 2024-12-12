@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2019 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,6 +29,7 @@
 
 
 import bisect
+
 bisect_right = bisect.bisect_right
 
 
@@ -39,8 +40,10 @@ class LineNumbersCalculator(object):
     r"""
     Utility to calculate line numbers.
     """
-    def __init__(self, s,
-                 line_number_offset=1, first_line_column_offset=0, column_offset=0):
+
+    def __init__(
+        self, s, line_number_offset=1, first_line_column_offset=0, column_offset=0
+    ):
         super(LineNumbersCalculator, self).__init__()
 
         self.line_number_offset = line_number_offset
@@ -52,7 +55,7 @@ class LineNumbersCalculator(object):
             yield 0
             k = 0
             while k < len(x):
-                k = x.find('\n', k)
+                k = x.find("\n", k)
                 if k == -1:
                     return
                 k += 1
@@ -62,7 +65,6 @@ class LineNumbersCalculator(object):
 
         self._pos_new_lines = list(find_all_new_lines(s))
 
-        
     def pos_to_lineno_colno(self, pos, as_dict=False):
         r"""
         Return the line and column number corresponding to the given `pos`.
@@ -76,13 +78,13 @@ class LineNumbersCalculator(object):
 
         if pos is None:
             if as_dict:
-                return {'lineno': None, 'colno': None}
+                return {"lineno": None, "colno": None}
             return (None, None)
 
         # find line number in list
 
         # line_no is the index of the last item in self._pos_new_lines that is <= pos.
-        line_no = bisect_right(self._pos_new_lines, pos)-1
+        line_no = bisect_right(self._pos_new_lines, pos) - 1
         assert line_no >= 0 and line_no < len(self._pos_new_lines)
 
         col_no = pos - self._pos_new_lines[line_no]
@@ -94,9 +96,8 @@ class LineNumbersCalculator(object):
         line_no += self.line_number_offset
 
         if as_dict:
-            return {'lineno': line_no, 'colno': col_no}
+            return {"lineno": line_no, "colno": col_no}
         return (line_no, col_no)
-
 
 
 # ------------------------------------------------------------------------------
@@ -128,29 +129,27 @@ try:
     from collections import ChainMap
 except ImportError:
     pass
-### BEGIN_PYTHON2_SUPPORT_CODE
+    ### BEGIN_PYTHON2_SUPPORT_CODE
     from chainmap import ChainMap
 ### END_PYTHON2_SUPPORT_CODE
-
 
 
 # ------------------------------------------------------------------------------
 
 
-
-pylatexenc_deprecated_ver = lambda *args: None  #lgtm [py/multiple-definition]
-pylatexenc_deprecated_2 = lambda *args: None  #lgtm [py/multiple-definition]
-pylatexenc_deprecated_3 = lambda *args: None  #lgtm [py/multiple-definition]
-LazyDict = None  #lgtm [py/multiple-definition]
+pylatexenc_deprecated_ver = lambda *args: None  # lgtm [py/multiple-definition]
+pylatexenc_deprecated_2 = lambda *args: None  # lgtm [py/multiple-definition]
+pylatexenc_deprecated_3 = lambda *args: None  # lgtm [py/multiple-definition]
+LazyDict = None  # lgtm [py/multiple-definition]
 
 ### BEGIN_PYLATEXENC2_LEGACY_SUPPORT_CODE
 
-from ._util_support import (   # lgtm [py/unused-import]
+from ._util_support import (  # lgtm [py/unused-import]
     pylatexenc_deprecated_ver,
     pylatexenc_deprecated_2,
     pylatexenc_deprecated_3,
     #
-    LazyDict
+    LazyDict,
 )
 
 ### END_PYLATEXENC2_LEGACY_SUPPORT_CODE

@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2021 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,16 +35,19 @@ import unicodedata
 # "defaults" e.g. for Transcrypt:
 def unicode_str(s=None):
     if s is None:
-        return ''
+        return ""
     return str(s)
+
+
 basestring_cls = str
 
-#__pragma__('ecom')
+# __pragma__('ecom')
 
-#__pragma__('skip')
+# __pragma__('skip')
 import sys
+
 if sys.version_info.major > 2:
-    unicode_str = str # need to support unicode() w/ no arguments
+    unicode_str = str  # need to support unicode() w/ no arguments
     basestring_cls = str
     # use MappingProxyType for keeping
     from types import MappingProxyType as _MappingProxyType
@@ -52,7 +55,7 @@ else:
     unicode_str = unicode
     basestring_cls = basestring
     _MappingProxyType = dict
-#__pragma__('noskip')
+# __pragma__('noskip')
 
 
 logger = logging.getLogger(__name__)
@@ -60,15 +63,18 @@ logger = logging.getLogger(__name__)
 
 ### BEGINPATCH_LATEXENCODE_CALLABLE_ACCEPTS_U2LOBJ_ARG
 import sys
+
 if sys.version_info.major > 2:
     from inspect import getfullargspec
 else:
     from inspect import getargspec as getfullargspec
 
-def _callable_accepts_u2lobj_arg(fn):
-    return ('u2lobj' in getfullargspec(fn)[0])
-### ENDPATCH_LATEXENCODE_CALLABLE_ACCEPTS_U2LOBJ_ARG
 
+def _callable_accepts_u2lobj_arg(fn):
+    return "u2lobj" in getfullargspec(fn)[0]
+
+
+### ENDPATCH_LATEXENCODE_CALLABLE_ACCEPTS_U2LOBJ_ARG
 
 
 # Apparently, Transcrypt does not support hexadecimal formatting, neither
@@ -76,29 +82,36 @@ def _callable_accepts_u2lobj_arg(fn):
 # hex(...) ... so we provide our own JS implementation.
 
 # Feed some raw JS to transcrypt directly
-#__pragma__('ecom')
+# __pragma__('ecom')
 """?
 __pragma__('js', 'var HexstrN = (v, N=4) => (+v).toString(16).toUpperCase().padStart(N, "0")');
 ?"""
 
-#__pragma__('skip')
-def HexstrN(value, N=4):
-    return ('%X'%(value)).zfill(N)
-#__pragma__('noskip')
 
+# __pragma__('skip')
+def HexstrN(value, N=4):
+    return ("%X" % (value)).zfill(N)
+
+
+# __pragma__('noskip')
 
 
 ## Transcrypt currently does not provide an implementation of m.expand() or
 ## rx.match(..., pos=) ... :/
 
-#__pragma__('skip')
+
+# __pragma__('skip')
 def re_match_expand(m, repl):
     return m.expand(repl)
+
+
 def regex_match_pos(rx, s, pos):
     # CAREFUL !! m.start() and m.end() will differ on Transcrypt because we
     # slice the string.  Only rely on the difference m.start()-m.end() !!
     return rx.match(s, pos)
-#__pragma__('noskip')
+
+
+# __pragma__('noskip')
 
 """?
 __pragma__('js', '''
@@ -108,11 +121,9 @@ var regex_match_pos = (rx, s, pos) => rx.match(s.slice(pos)) ;
 ?"""
 
 
-
 ### BEGIN_PYLATEXENC_GET_DEFAULT_SPECS_FN
-from .get_builtin_rules import (
-    get_builtin_uni2latex_dict, get_builtin_conversion_rules
-)
+from .get_builtin_rules import get_builtin_uni2latex_dict, get_builtin_conversion_rules
+
 ### END_PYLATEXENC_GET_DEFAULT_SPECS_FN
 
 
@@ -122,7 +133,6 @@ from ._rule import (
     RULE_CALLABLE,
     UnicodeToLatexConversionRule,
 )
-
 
 
 class UnicodeToLatexEncoder(object):
@@ -156,7 +166,7 @@ class UnicodeToLatexEncoder(object):
        specify a string specifying a built-in rule (e.g., 'defaults'), which
        will be expanded to the corresponding rules according to
        :py:func:`get_builtin_conversion_rules()`.
-    
+
        If you specify your own list of rules using this argument, you will
        probably want to include presumably at the end of your list the element
        'defaults' to include all built-in default conversion rules.  To override
@@ -217,7 +227,7 @@ class UnicodeToLatexEncoder(object):
            a special character) that has been encoded; it should return the
            actual string to append to the output string.
 
-         .. versionadded:: 2.10 
+         .. versionadded:: 2.10
 
             You can specify a callable object to `replacement_latex_protection`
             since `pylatexenc 2.10`.
@@ -283,7 +293,7 @@ class UnicodeToLatexEncoder(object):
            #                    r'\ensuremath{\alpha}' ]
 
     .. warning::
-      
+
        None of the above attributes should be modified after constructing the
        object.  The values specified to the class constructor are final and
        cannot be changed.  [Indeed, the class constructor "compiles" these
@@ -294,16 +304,21 @@ class UnicodeToLatexEncoder(object):
 
        This class was introduced in `pylatexenc 2.0`.
     """
+
     def __init__(self, **kwargs):
-        self.non_ascii_only = kwargs.pop('non_ascii_only', False)
-        self.conversion_rules = kwargs.pop('conversion_rules', ['defaults'])
-        self.replacement_latex_protection = kwargs.pop('replacement_latex_protection', 'braces')
-        self.unknown_char_policy = kwargs.pop('unknown_char_policy', 'keep')
-        self.unknown_char_warning = kwargs.pop('unknown_char_warning', True)
-        self.latex_string_class = kwargs.pop('latex_string_class', unicode_str)
+        self.non_ascii_only = kwargs.pop("non_ascii_only", False)
+        self.conversion_rules = kwargs.pop("conversion_rules", ["defaults"])
+        self.replacement_latex_protection = kwargs.pop(
+            "replacement_latex_protection", "braces"
+        )
+        self.unknown_char_policy = kwargs.pop("unknown_char_policy", "keep")
+        self.unknown_char_warning = kwargs.pop("unknown_char_warning", True)
+        self.latex_string_class = kwargs.pop("latex_string_class", unicode_str)
 
         if len(kwargs):
-            logger.warning("Ignoring unknown keyword arguments: %s", ",".join(kwargs.keys())) 
+            logger.warning(
+                "Ignoring unknown keyword arguments: %s", ",".join(kwargs.keys())
+            )
 
         super(UnicodeToLatexEncoder, self).__init__(**kwargs)
 
@@ -314,11 +329,11 @@ class UnicodeToLatexEncoder(object):
         #     for r in self.conversion_rules
         # ])
         for r in self.conversion_rules:
-### BEGIN_PYLATEXENC_GET_DEFAULT_SPECS_FN
+            ### BEGIN_PYLATEXENC_GET_DEFAULT_SPECS_FN
             if isinstance(r, basestring_cls):
-                expanded_conversion_rules.extend( get_builtin_conversion_rules(r) )
+                expanded_conversion_rules.extend(get_builtin_conversion_rules(r))
                 continue
-### END_PYLATEXENC_GET_DEFAULT_SPECS_FN
+            ### END_PYLATEXENC_GET_DEFAULT_SPECS_FN
             if isinstance(r, basestring_cls):
                 logger.warning(
                     "The pylatexenc.latexencode module was preprocessed and/or transpiled "
@@ -328,7 +343,7 @@ class UnicodeToLatexEncoder(object):
                 )
                 continue
 
-            expanded_conversion_rules.append( r )
+            expanded_conversion_rules.append(r)
 
         #
         # now "pre-compile" some stuff so that calls to unicode_to_latex() can
@@ -349,35 +364,38 @@ class UnicodeToLatexEncoder(object):
             elif rule.rule_type == RULE_CALLABLE:
                 thecallable = rule.rule
                 if _callable_accepts_u2lobj_arg(thecallable):
-                #if 'u2lobj' in getfullargspec(thecallable)[0]:
+                    # if 'u2lobj' in getfullargspec(thecallable)[0]:
                     thecallable = functools.partial(rule.rule, u2lobj=self)
                 self._compiled_rules.append(
                     functools.partial(self._apply_rule_callable, thecallable, rule)
                 )
             else:
                 raise TypeError("Invalid rule type: {}".format(rule.rule_type))
-        
+
         # bad char policy:
         if isinstance(self.unknown_char_policy, basestring_cls):
             self._do_unknown_char = self._get_method_fn(
-                'do_unknown_char',
-                self.unknown_char_policy,
-                what='unknown_char_policy'
+                "do_unknown_char", self.unknown_char_policy, what="unknown_char_policy"
             )
         elif callable(self.unknown_char_policy):
             fn = self.unknown_char_policy
             if _callable_accepts_u2lobj_arg(fn):
-            #if 'u2lobj' in getfullargspec(fn)[0]:
-                self._do_unknown_char = functools.partial(self.unknown_char_policy, u2lobj=self)
+                # if 'u2lobj' in getfullargspec(fn)[0]:
+                self._do_unknown_char = functools.partial(
+                    self.unknown_char_policy, u2lobj=self
+                )
             else:
                 self._do_unknown_char = self.unknown_char_policy
         else:
-            raise TypeError("Invalid argument for unknown_char_policy: {}"
-                            .format(repr(self.unknown_char_policy)))
+            raise TypeError(
+                "Invalid argument for unknown_char_policy: {}".format(
+                    repr(self.unknown_char_policy)
+                )
+            )
 
         # bad char warning:
         if not self.unknown_char_warning:
-            self._do_warn_unknown_char = lambda ch: None # replace method by no-op
+            self._do_warn_unknown_char = lambda ch: None  # replace method by no-op
         else:
             self._do_warn_unknown_char = self._do_warn_unknown_char_defaultimpl
 
@@ -393,7 +411,7 @@ class UnicodeToLatexEncoder(object):
         )
 
     def _get_method_fn(self, base, name, what):
-        selfmethname = '_' + base + '_' + name.replace('-', '_')
+        selfmethname = "_" + base + "_" + name.replace("-", "_")
         if not hasattr(self, selfmethname):
             raise ValueError("Invalid {}: {}".format(what, name))
         return getattr(self, selfmethname)
@@ -402,9 +420,9 @@ class UnicodeToLatexEncoder(object):
         if callable(replacement_latex_protection):
             return replacement_latex_protection
         return self._get_method_fn(
-            'apply_protection',
+            "apply_protection",
             replacement_latex_protection,
-            what='replacement_latex_protection'
+            what="replacement_latex_protection",
         )
 
     def unicode_to_latex(self, s):
@@ -413,16 +431,17 @@ class UnicodeToLatexEncoder(object):
         according to the rules and options given to the constructor.
         """
 
-        s = unicode_str(s) # make sure s is unicode
-        s = unicodedata.normalize('NFC', s)
+        s = unicode_str(s)  # make sure s is unicode
+        s = unicodedata.normalize("NFC", s)
 
-        class _NS: pass
+        class _NS:
+            pass
+
         p = _NS()
         p.latex = self.latex_string_class()
         p.pos = 0
 
         while p.pos < len(s):
-            
             if self._maybe_skip_ascii(s, p):
                 continue
 
@@ -442,9 +461,8 @@ class UnicodeToLatexEncoder(object):
                     self._do_warn_unknown_char(ch)
                     p.latex += self._do_unknown_char(ch)
                     p.pos += 1
-                
-        return p.latex
 
+        return p.latex
 
     def _check_do_skip_ascii(self, s, p):
         if ord(s[p.pos]) < 127:
@@ -454,13 +472,13 @@ class UnicodeToLatexEncoder(object):
             return True
         return False
 
-
     def _apply_rule_dict(self, ruledict, rule, s, p):
         o = ord(s[p.pos])
         if o in ruledict:
             self._apply_replacement(p, ruledict[o], 1, rule)
             return True
         return None
+
     def _apply_rule_regex(self, ruleregexes, rule, s, p):
         for regex, repl in ruleregexes:
             m = regex_match_pos(regex, s, p.pos)
@@ -472,6 +490,7 @@ class UnicodeToLatexEncoder(object):
                 self._apply_replacement(p, replstr, m.end() - m.start(), rule)
                 return True
         return None
+
     def _apply_rule_callable(self, rulecallable, rule, s, p):
         res = rulecallable(s, p.pos)
         if res is None:
@@ -498,23 +517,27 @@ class UnicodeToLatexEncoder(object):
     def _apply_protection_none(self, repl):
         # no protection
         return repl
+
     def _apply_protection_braces(self, repl):
-        k = repl.rfind('\\')
-        if k >= 0 and repl[k+1:].isalpha():
+        k = repl.rfind("\\")
+        if k >= 0 and repl[k + 1 :].isalpha():
             # has dangling named macro, apply protection.
-            return '{' + repl + '}'
+            return "{" + repl + "}"
         return repl
+
     def _apply_protection_braces_almost_all(self, repl):
-        if repl[0:1] == '\\':
-            return '{' + repl + '}'
+        if repl[0:1] == "\\":
+            return "{" + repl + "}"
         return repl
+
     def _apply_protection_braces_all(self, repl):
-        return '{' + repl + '}'
+        return "{" + repl + "}"
+
     def _apply_protection_braces_after_macro(self, repl):
-        k = repl.rfind('\\')
-        if k >= 0 and repl[k+1:].isalpha():
+        k = repl.rfind("\\")
+        if k >= 0 and repl[k + 1 :].isalpha():
             # has dangling named macro, apply protection.
-            return repl + '{}'
+            return repl + "{}"
         return repl
 
     # policies for "bad chars":
@@ -522,27 +545,28 @@ class UnicodeToLatexEncoder(object):
         return ch
 
     def _do_unknown_char_replace(self, ch):
-        return r'{\bfseries ?}'
+        return r"{\bfseries ?}"
 
     def _do_unknown_char_ignore(self, ch):
-        return ''
+        return ""
 
     def _do_unknown_char_fail(self, ch):
         raise ValueError(
-            "No known latex representation for character: U+{} - ‘{}’"
-            .format(HexstrN(ord(ch), 4), ch)
+            "No known latex representation for character: U+{} - ‘{}’".format(
+                HexstrN(ord(ch), 4), ch
+            )
         )
 
     def _do_unknown_char_unihex(self, ch):
         return (
-            r'\ensuremath{\langle}\texttt{U+' + HexstrN(ord(ch), 4)
-            + r'}\ensuremath{\rangle}'
+            r"\ensuremath{\langle}\texttt{U+"
+            + HexstrN(ord(ch), 4)
+            + r"}\ensuremath{\rangle}"
         )
 
     def _do_warn_unknown_char_defaultimpl(self, ch):
         logger.warning(
-            "No known latex representation for character: U+{} - ‘{}’"
-            .format(HexstrN(ord(ch), 4), ch)
+            "No known latex representation for character: U+{} - ‘{}’".format(
+                HexstrN(ord(ch), 4), ch
+            )
         )
-
-

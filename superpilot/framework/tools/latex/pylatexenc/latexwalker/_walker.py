@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2021 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -46,17 +46,18 @@ get_default_latex_context_db = macrospec.LatexContextDb
 
 ### BEGIN_PYLATEXENC_GET_DEFAULT_SPECS_FN
 from ._get_defaultspecs import get_default_latex_context_db
+
 ### END_PYLATEXENC_GET_DEFAULT_SPECS_FN
 
 from ..latexnodes import ParsingState
 
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
 _maketuple = lambda *args: tuple(args)
-
 
 
 ### BEGINPATCH_UNIQUE_OBJECT_ID
@@ -64,13 +65,10 @@ fn_unique_object_id = id
 ### ENDPATCH_UNIQUE_OBJECT_ID
 
 
-
 _legacy_pyltxenc1_do = lambda *args: None
 
 
-
 # ------------------------------------------------------------------------------
-
 
 
 class LatexWalker(latexnodes.LatexWalkerBase):
@@ -97,7 +95,7 @@ class LatexWalker(latexnodes.LatexWalkerBase):
         :py:meth:`make_parsing_state()` method.  That method returns a
         sub-context of the default parsing state with the specified attributes
         set.
-    
+
         This argument is keyword-only.
 
         .. versionadded: 3.0
@@ -155,11 +153,11 @@ class LatexWalker(latexnodes.LatexWalkerBase):
         specials are parsed so that the behavior closer to `pylatexenc 1.x`.
 
         .. deprecated:: 2.0
-    
+
            The `macro_dict` argument has been replaced by the much more powerful
            `latex_context` argument which allows you to further provide
            environment specifications, etc.
-    
+
       - `keep_inline_math=True|False`: Obsolete option.  In `pylatexenc 1.x`,
         this option triggered a weird behavior especially since there is a
         similarly named option in
@@ -177,23 +175,24 @@ class LatexWalker(latexnodes.LatexWalkerBase):
 
 
     .. py:attribute:: s
-    
+
        The string that is being parsed.
 
        Do NOT modify this attribute.
     """
 
     def __init__(self, s, latex_context=None, **kwargs):
-
-        default_parsing_state = kwargs.pop('default_parsing_state', None)
+        default_parsing_state = kwargs.pop("default_parsing_state", None)
 
         self.s = s
 
         # Shift reported line numbers by this amount.  Useful if you're parsing
         # a part of a file, so that line numbers are reported correctly.
-        self.line_number_offset = kwargs.pop('line_number_offset', None) # first line = line # 1
-        self.first_line_column_offset = kwargs.pop('first_line_column_offset', None)
-        self.column_offset = kwargs.pop('column_offset', None)
+        self.line_number_offset = kwargs.pop(
+            "line_number_offset", None
+        )  # first line = line # 1
+        self.first_line_column_offset = kwargs.pop("first_line_column_offset", None)
+        self.column_offset = kwargs.pop("column_offset", None)
 
         if self.line_number_offset is None:
             self.line_number_offset = 1
@@ -211,13 +210,14 @@ class LatexWalker(latexnodes.LatexWalkerBase):
             self.default_parsing_state = default_parsing_state
 
             if latex_context is not None:
-                raise ValueError("You cannot specify both the default_parsing_state= and "
-                                 "the latex_context= arguments")
+                raise ValueError(
+                    "You cannot specify both the default_parsing_state= and "
+                    "the latex_context= arguments"
+                )
         else:
             if latex_context is None:
-
                 latex_context = _legacy_pyltxenc1_do(
-                    'LatexWalker_init_from_macro_dict', self, kwargs
+                    "LatexWalker_init_from_macro_dict", self, kwargs
                 )
 
                 if latex_context is None:
@@ -226,7 +226,7 @@ class LatexWalker(latexnodes.LatexWalkerBase):
 
             else:
                 # make sure the user didn't also provide a macro_dict= argument
-                if 'macro_dict' in kwargs:
+                if "macro_dict" in kwargs:
                     raise TypeError(
                         "Cannot specify both `latex_context=` and `macro_dict=` arguments"
                     )
@@ -235,7 +235,7 @@ class LatexWalker(latexnodes.LatexWalkerBase):
             # access it via the current parsing_state
 
             if latex_context is not None:
-                latex_context.freeze() # prevent future changes to the latex context db
+                latex_context.freeze()  # prevent future changes to the latex context db
                 self.default_parsing_state = ParsingState(
                     s=self.s,
                     latex_context=latex_context,
@@ -245,32 +245,31 @@ class LatexWalker(latexnodes.LatexWalkerBase):
                 # the user must promise to set a meaningful default_parsing_state !
                 self.default_parsing_state = None
 
-
         #
         # now parsing flags:
         #
-        self.tolerant_parsing = kwargs.pop('tolerant_parsing', True)
-        self.strict_braces = kwargs.pop('strict_braces', False)
+        self.tolerant_parsing = kwargs.pop("tolerant_parsing", True)
+        self.strict_braces = kwargs.pop("strict_braces", False)
 
-        if 'keep_inline_math' in kwargs:
+        if "keep_inline_math" in kwargs:
             _util.pylatexenc_deprecated_2(
                 "The keep_inline_math=... option in LatexWalker() has no effect "
                 "in pylatexenc 2.  Please consider using the more versatile option "
                 "math_mode=... in LatexNodes2Text() instead."
             )
-            del kwargs['keep_inline_math']
+            del kwargs["keep_inline_math"]
 
         if kwargs:
             # any flags left which we haven't recognized
-            logger.warning("LatexWalker(): Unknown flag(s) encountered: %r", kwargs.keys())
+            logger.warning(
+                "LatexWalker(): Unknown flag(s) encountered: %r", kwargs.keys()
+            )
 
         super(LatexWalker, self).__init__()
-
 
     make_latex_group_parser = parsers.LatexDelimitedGroupParser
 
     make_latex_math_parser = parsers.LatexMathParser
-
 
     def make_parsing_state(self, **kwargs):
         r"""
@@ -284,7 +283,7 @@ class LatexWalker(latexnodes.LatexWalkerBase):
         If keyword arguments are provided, then they can override fields from
         the default parsing state.  For instance, if we enter math mode, you
         might use::
-        
+
           parsing_state_mathmode = \
               my_latex_walker.make_parsing_state(in_math_mode=True)
         """
@@ -302,16 +301,15 @@ class LatexWalker(latexnodes.LatexWalkerBase):
            `pylatexenc 2` and might be removed entirely in future versions.
         """
         return {
-            'tolerant_parsing': self.tolerant_parsing,
-            'strict_braces': self.strict_braces,
+            "tolerant_parsing": self.tolerant_parsing,
+            "strict_braces": self.strict_braces,
             # compatibility with pylatexenc 1.x
-            'keep_inline_math': None,
+            "keep_inline_math": None,
         }
 
     def _report_ignore_parse_error(self, exc):
         logger.info("Ignoring parse error (tolerant parsing mode): %s", exc)
-        
-    
+
     def check_tolerant_parsing_ignore_error(self, exc):
         r"""
         Check if we should attempt to recover from the given error in tolerant
@@ -335,12 +333,12 @@ class LatexWalker(latexnodes.LatexWalkerBase):
 
         return None
 
-
     class _ParsingContext(object):
         r"""
         Helper, use as context manager to capture parse errors and attempt recovery
         from parse errors in tolerant parsing mode.
         """
+
         def __init__(self, latex_walker, open_context):
             super(LatexWalker._ParsingContext, self).__init__()
 
@@ -360,51 +358,55 @@ class LatexWalker(latexnodes.LatexWalkerBase):
                     if what is not None:
                         if tok is not None:
                             e.open_contexts.append(
-                                _maketuple(what, tok.pos,
-                                           * self.latex_walker.pos_to_lineno_colno(tok.pos))
+                                _maketuple(
+                                    what,
+                                    tok.pos,
+                                    *self.latex_walker.pos_to_lineno_colno(tok.pos)
+                                )
                             )
                         else:
-                            e.open_contexts.append(
-                                _maketuple(what, None, -1, -1)
-                            )
+                            e.open_contexts.append(_maketuple(what, None, -1, -1))
 
-                if hasattr(e, 'pos') and e.lineno is None and e.colno is None:
-                    epos = getattr(e, 'pos', None)
+                if hasattr(e, "pos") and e.lineno is None and e.colno is None:
+                    epos = getattr(e, "pos", None)
                     e.lineno, e.colno = self.latex_walker.pos_to_lineno_colno(epos)
                 e = self.latex_walker.check_tolerant_parsing_ignore_error(e)
                 if e is None:
                     # we're trying to recover from this error (tolerant parsing mode)
                     self.recovery_from_exception = e
-                    return True # error was handled
+                    return True  # error was handled
 
-                return None # raise the same error further
+                return None  # raise the same error further
 
         def perform_recovery_nodes_and_parsing_state_delta(self, token_reader):
             if self.recovery_from_exception is None:
-                raise RuntimeError("No exception had happened to try to recover nodes from")
+                raise RuntimeError(
+                    "No exception had happened to try to recover nodes from"
+                )
 
             nodes = None
             parsing_state_delta = None
             reset_at_tok = None
 
             # set nodes
-            if hasattr(self.recovery_from_exception, 'recovery_nodes'):
+            if hasattr(self.recovery_from_exception, "recovery_nodes"):
                 # remember, transcrypt doesn't like getattr(a, b, default) with default arg
                 nodes = self.recovery_from_exception.recovery_nodes
             # parser state delta information?
-            if hasattr(self.recovery_from_exception, 'recovery_parsing_state_delta'):
-                parsing_state_delta = \
+            if hasattr(self.recovery_from_exception, "recovery_parsing_state_delta"):
+                parsing_state_delta = (
                     self.recovery_from_exception.recovery_parsing_state_delta
+                )
 
             # attempt to reset token_reader's position
-            if hasattr(self.recovery_from_exception, 'recovery_at_token'):
+            if hasattr(self.recovery_from_exception, "recovery_at_token"):
                 reset_at_tok = self.recovery_from_exception.recovery_at_token
 
             if reset_at_tok is not None:
                 token_reader.move_to_token(reset_at_tok)
             else:
                 reset_past_tok = None
-                if hasattr(self.recovery_from_exception, 'recovery_past_token'):
+                if hasattr(self.recovery_from_exception, "recovery_past_token"):
                     reset_past_tok = self.recovery_from_exception.recovery_past_token
                 if reset_past_tok is not None:
                     token_reader.move_past_token(reset_past_tok)
@@ -445,7 +447,9 @@ class LatexWalker(latexnodes.LatexWalkerBase):
         and the `open_context_token` is the token instance that is associated
         with the opening of this context.
         """
-        return LatexWalker._ParsingContext(self, (open_context_name, open_context_token))
+        return LatexWalker._ParsingContext(
+            self, (open_context_name, open_context_token)
+        )
 
     def make_token_reader(self, pos=None):
         r"""
@@ -454,19 +458,21 @@ class LatexWalker(latexnodes.LatexWalkerBase):
         then the token reader is initialized to start parsing at the position
         index `pos` in the string.
         """
-        token_reader = latexnodes.LatexTokenReader(self.s,
-                                                   tolerant_parsing=self.tolerant_parsing)
+        token_reader = latexnodes.LatexTokenReader(
+            self.s, tolerant_parsing=self.tolerant_parsing
+        )
         if pos is not None:
             token_reader.move_to_pos_chars(pos)
         return token_reader
 
-    def parse_content(self, parser, token_reader=None, parsing_state=None,
-                      open_context=None):
+    def parse_content(
+        self, parser, token_reader=None, parsing_state=None, open_context=None
+    ):
         r"""
         The main entry point to parse the stored LaTeX code into a node structure.
 
         Arguments:
-        
+
         - The `parser` must be a callable object that can be called with the
           keyword arguments `latex_walker`, `token_reader` and `parsing_state`.
           The return value of `parser(...)` should be a :py:class:`LatexNode` or
@@ -524,13 +530,16 @@ class LatexWalker(latexnodes.LatexWalkerBase):
             open_context_name, open_context_tok = open_context
 
         start_pos = the_token_reader.cur_pos()
-        logger.debug(":: Parsing content (%s @ %r) - %r [%r]::",
-                     open_context_name, start_pos, parser, the_parsing_state)
+        logger.debug(
+            ":: Parsing content (%s @ %r) - %r [%r]::",
+            open_context_name,
+            start_pos,
+            parser,
+            the_parsing_state,
+        )
 
         with self.new_parsing_open_context(open_context_name, open_context_tok) as pc:
-
             try:
-
                 nodes, info = parser.parse(
                     latex_walker=self,
                     token_reader=the_token_reader,
@@ -538,28 +547,30 @@ class LatexWalker(latexnodes.LatexWalkerBase):
                 )
 
             except LatexWalkerEndOfStream:
-                logger.warning("End of stream encountered when parsing content with %s (%s)",
-                               parser.__class__.__name__, open_context_name)
+                logger.warning(
+                    "End of stream encountered when parsing content with %s (%s)",
+                    parser.__class__.__name__,
+                    open_context_name,
+                )
                 nodes, info = None, None
 
         if pc.recovery_from_exception is not None:
             nodes, info = pc.perform_recovery_nodes_info(the_token_reader)
 
-        logger.debug(":: PARSED content (%s @ %r) - %r - result %r + %r DONE ::",
-                     open_context_name, start_pos, parser, nodes, info)
+        logger.debug(
+            ":: PARSED content (%s @ %r) - %r - result %r + %r DONE ::",
+            open_context_name,
+            start_pos,
+            parser,
+            nodes,
+            info,
+        )
 
         return nodes, info
 
-
-    def make_nodes_collector(self,
-                             token_reader,
-                             parsing_state,
-                             **kwargs):
+    def make_nodes_collector(self, token_reader, parsing_state, **kwargs):
         return latexnodes.LatexNodesCollector(
-            self,
-            token_reader,
-            parsing_state,
-            **kwargs
+            self, token_reader, parsing_state, **kwargs
         )
 
     def make_node(self, node_class, **kwargs):
@@ -580,27 +591,36 @@ class LatexWalker(latexnodes.LatexWalkerBase):
         method to create node classes.
 
         .. versionadded:: 2.0
-        
+
            This method was introduced in `pylatexenc 2.0`.
 
         .. versionchanged:: 3.0
-        
+
            The mandatory `len=` keyword argument was replaced by the mandatory
            keyword argument `pos_end=`.  For backwards compatibility, you can
            still specify `len=` instead of `pos_end=`.
         """
         # mandatory keyword-only arguments:
-        pos, pos_end, parsing_state = \
-            kwargs.pop('pos'), kwargs.pop('pos_end', None), kwargs.pop('parsing_state')
+        pos, pos_end, parsing_state = (
+            kwargs.pop("pos"),
+            kwargs.pop("pos_end", None),
+            kwargs.pop("parsing_state"),
+        )
 
-        if pos_end is None and pos is not None and 'len' in kwargs:
+        if pos_end is None and pos is not None and "len" in kwargs:
             _util.pylatexenc_deprecated_3(
-                "make_node(..., len=..., ...); use ‘pos_end=’ instead of ‘len=’")
-            len_ = kwargs['len']
+                "make_node(..., len=..., ...); use ‘pos_end=’ instead of ‘len=’"
+            )
+            len_ = kwargs["len"]
             pos_end = pos + len_
 
-        node = node_class(pos=pos, pos_end=pos_end, parsing_state=parsing_state,
-                          latex_walker=self, **kwargs)
+        node = node_class(
+            pos=pos,
+            pos_end=pos_end,
+            parsing_state=parsing_state,
+            latex_walker=self,
+            **kwargs
+        )
         if self.debug_nodes:
             logger.debug("New node: %r", node)
         return node
@@ -610,28 +630,23 @@ class LatexWalker(latexnodes.LatexWalkerBase):
         Doc .............................
 
         .. versionadded:: 3.0
-        
+
            This method was introduced in `pylatexenc 3.0`.
 
         """
 
         # mandatory keyword-only argument:
-        parsing_state = kwargs.pop('parsing_state')
+        parsing_state = kwargs.pop("parsing_state")
 
         return LatexNodeList(
-            nodelist=nodelist,
-            parsing_state=parsing_state,
-            latex_walker=self,
-            **kwargs
+            nodelist=nodelist, parsing_state=parsing_state, latex_walker=self, **kwargs
         )
-
 
     def format_pos(self, pos):
         if pos is None:
-            return '(location unknown)'
+            return "(location unknown)"
         lineno, colno = self.pos_to_lineno_colno(pos)
         return format_pos(pos, lineno, colno)
-
 
     def pos_to_lineno_colno(self, pos, as_dict=False):
         r"""
@@ -659,24 +674,17 @@ class LatexWalker(latexnodes.LatexWalkerBase):
 
         return self._line_no_calc.pos_to_lineno_colno(pos, as_dict=as_dict)
 
-
     def __repr__(self):
         return "<LatexWalker {}>".format(fn_unique_object_id(self))
 
 
-
-
-
-
-
 ### BEGIN_PYLATEXENC1_LEGACY_SUPPORT_CODE
 
-_legacy_pyltxenc1_do = \
-    lambda what, *args: globals()['_legacy_pyltxenc1_'+what](*args)
+_legacy_pyltxenc1_do = lambda what, *args: globals()["_legacy_pyltxenc1_" + what](*args)
+
 
 def _legacy_pyltxenc1_LatexWalker_init_from_macro_dict(walker, kwargs):
-
-    if 'macro_dict' not in kwargs:
+    if "macro_dict" not in kwargs:
         return None
 
     # LEGACY -- build a latex context using the given macro_dict
@@ -686,29 +694,34 @@ def _legacy_pyltxenc1_LatexWalker_init_from_macro_dict(walker, kwargs):
         "the more versatile option `latex_context=...`."
     )
 
-    macro_dict = kwargs.pop('macro_dict', None)
+    macro_dict = kwargs.pop("macro_dict", None)
 
     default_latex_context = get_default_latex_context_db()
 
     latex_context = default_latex_context.filter_context(
-        keep_which=['environments'], # no specials
+        keep_which=["environments"],  # no specials
     )
     latex_context.add_context_category(
-        'custom',
-        macro_dict.values(),
-        default_latex_context.iter_environment_specs()
+        "custom", macro_dict.values(), default_latex_context.iter_environment_specs()
     )
 
     return latex_context
+
 
 ### END_PYLATEXENC1_LEGACY_SUPPORT_CODE
 
 
 ### BEGIN_PYLATEXENC2_LEGACY_SUPPORT_CODE
 
+
 def _pyltxenc2_LatexWalker_get_token(
-        self, pos, include_brace_chars=None, environments=True,
-        keep_inline_math=None, parsing_state=None, **kwargs
+    self,
+    pos,
+    include_brace_chars=None,
+    environments=True,
+    keep_inline_math=None,
+    parsing_state=None,
+    **kwargs
 ):
     r"""
     Parses the latex content given to the constructor (and stored in `self.s`),
@@ -772,46 +785,47 @@ def _pyltxenc2_LatexWalker_get_token(
        The `parsing_state` argument was introduced in version 2.0.
     """
 
-    _util.pylatexenc_deprecated_3("get_token(); use LatexTokenReader instances instead, "
-                                  "see LatexWalker.make_token_reader()")
-
+    _util.pylatexenc_deprecated_3(
+        "get_token(); use LatexTokenReader instances instead, "
+        "see LatexWalker.make_token_reader()"
+    )
 
     if parsing_state is None:
-        parsing_state = self.make_parsing_state() # get default parsing state
+        parsing_state = self.make_parsing_state()  # get default parsing state
 
     parsing_state_setattrs = {}
 
-    if 'brackets_are_chars' in kwargs:
-        if not kwargs.pop('brackets_are_chars'):
+    if "brackets_are_chars" in kwargs:
+        if not kwargs.pop("brackets_are_chars"):
             if not include_brace_chars:
                 include_brace_chars = []
             else:
                 include_brace_chars = list(include_brace_chars)
-            include_brace_chars += [('[', ']')]
+            include_brace_chars += [("[", "]")]
 
     if include_brace_chars:
         d = parsing_state.latex_group_delimiters + include_brace_chars
-        parsing_state_setattrs['latex_group_delimiters'] = d
+        parsing_state_setattrs["latex_group_delimiters"] = d
     if environments is not None and parsing_state.enable_environments != environments:
-        parsing_state_setattrs['enable_environments'] = environments
+        parsing_state_setattrs["enable_environments"] = environments
 
     if parsing_state_setattrs:
         parsing_state = parsing_state.sub_context(**parsing_state_setattrs)
 
     return self.make_token_reader(pos=pos).peek_token(parsing_state=parsing_state)
 
+
 LatexWalker.get_token = _pyltxenc2_LatexWalker_get_token
 
 
-
 def _pyltxenc2_LatexWalker_get_latex_nodes(
-        self,
-        pos=0,
-        stop_upon_closing_brace=None,
-        stop_upon_end_environment=None,
-        stop_upon_closing_mathmode=None,
-        read_max_nodes=None,
-        parsing_state=None
+    self,
+    pos=0,
+    stop_upon_closing_brace=None,
+    stop_upon_end_environment=None,
+    stop_upon_closing_mathmode=None,
+    read_max_nodes=None,
+    parsing_state=None,
 ):
     r"""
     Parses the latex content given to the constructor (and stored in `self.s`)
@@ -823,13 +837,13 @@ def _pyltxenc2_LatexWalker_get_latex_nodes(
        objects instead.  You probably want something like::
 
         # Deprecated since pylatexenc 3:
-        
+
         #nodelist, npos, nlen = my_latex_walker.get_latex_nodes(
         #    parsing_state=parsing_state
         #)
-        
+
         # New syntax since pylatexenc 3:
-        
+
         nodelist, parsing_state_delta = my_latex_walker.parse_content(
             latexnodes.parsers.LatexGeneralNodesParser(),
             parsing_state=parsing_state
@@ -928,30 +942,35 @@ def _pyltxenc2_LatexWalker_get_latex_nodes(
 
     def stop_token_condition(tok):
         if stop_upon_closing_brace is not None:
-            if tok.tok == 'brace_close' and tok.arg == stop_upon_closing_brace:
+            if tok.tok == "brace_close" and tok.arg == stop_upon_closing_brace:
                 # stop condition met
                 logger.debug("Stop condition reached - closing brace - %r", tok)
                 return True
         if stop_upon_end_environment is not None:
-            if tok.tok == 'end_environment' and tok.arg == stop_upon_end_environment:
+            if tok.tok == "end_environment" and tok.arg == stop_upon_end_environment:
                 # stop condition met
                 logger.debug("Stop condition reached - end environ - %r", tok)
                 return True
         if stop_upon_closing_mathmode is not None:
-            if tok.tok in ('mathmode_inline', 'mathmode_display') \
-               and tok.arg == stop_upon_closing_mathmode:
+            if (
+                tok.tok in ("mathmode_inline", "mathmode_display")
+                and tok.arg == stop_upon_closing_mathmode
+            ):
                 # stop condition met
                 logger.debug("Stop condition reached - closing math mode - %r", tok)
                 return True
         return False
 
     def stop_nodelist_condition(nodelist):
-        #print(f"**** nodelist stopping condition ? *** {nodelist=} ")
+        # print(f"**** nodelist stopping condition ? *** {nodelist=} ")
         if read_max_nodes is not None:
             if len(nodelist) >= read_max_nodes:
                 # stop condition met
-                logger.debug("Stop condition reached - nodes read (%d) >= read_max_nodes (%d)",
-                             len(nodelist), read_max_nodes)
+                logger.debug(
+                    "Stop condition reached - nodes read (%d) >= read_max_nodes (%d)",
+                    len(nodelist),
+                    read_max_nodes,
+                )
                 return True
         return False
 
@@ -959,18 +978,15 @@ def _pyltxenc2_LatexWalker_get_latex_nodes(
         # we need to include the corresponding open brace as brace character
         # in the parsing state.
         if len(stop_upon_closing_brace) == 2:
-            opbr,clbr = stop_upon_closing_brace
+            opbr, clbr = stop_upon_closing_brace
             stop_upon_closing_brace = clbr
         else:
             clbr = stop_upon_closing_brace
-            opbr = { '}': '{',
-                     ']': '[', 
-                     ')': '(',
-                     '>': '<' }.get(clbr, None)
+            opbr = {"}": "{", "]": "[", ")": "(", ">": "<"}.get(clbr, None)
         if (opbr, clbr) not in parsing_state.latex_group_delimiters:
             parsing_state = parsing_state.sub_context(
-                latex_group_delimiters= \
-                    list(parsing_state.latex_group_delimiters) + [ (opbr, clbr) ]
+                latex_group_delimiters=list(parsing_state.latex_group_delimiters)
+                + [(opbr, clbr)]
             )
 
         require_stop_condition_met = True
@@ -978,13 +994,13 @@ def _pyltxenc2_LatexWalker_get_latex_nodes(
 
     elif stop_upon_end_environment is not None:
         require_stop_condition_met = True
-        stop_condition_message = \
-            "Was expecting ‘\\end{}{}{}’".format('{',stop_upon_end_environment,'}')
+        stop_condition_message = "Was expecting ‘\\end{}{}{}’".format(
+            "{", stop_upon_end_environment, "}"
+        )
 
     elif stop_upon_closing_mathmode is not None:
         require_stop_condition_met = True
-        stop_condition_message = \
-            "Was expecting ‘{}’".format(stop_upon_closing_mathmode)
+        stop_condition_message = "Was expecting ‘{}’".format(stop_upon_closing_mathmode)
 
     else:
         stop_condition_message = None
@@ -1020,8 +1036,10 @@ def _pyltxenc2_LatexWalker_get_latex_nodes(
     pos_end = token_reader.cur_pos()
 
     if info is not None:
-        logger.warning("Call to get_latex_nodes() ignores parsing state changes information "
-                       "of parsing state")
+        logger.warning(
+            "Call to get_latex_nodes() ignores parsing state changes information "
+            "of parsing state"
+        )
 
     if nodes is not None:
         p = nodes.pos
@@ -1032,15 +1050,12 @@ def _pyltxenc2_LatexWalker_get_latex_nodes(
 
     return (nodes, p, l)
 
+
 LatexWalker.get_latex_nodes = _pyltxenc2_LatexWalker_get_latex_nodes
 
 
-
 def _pyltxenc2_LatexWalker_get_latex_expression(
-        self,
-        pos,
-        strict_braces=None,
-        parsing_state=None
+    self, pos, strict_braces=None, parsing_state=None
 ):
     r"""
     Parses the latex content given to the constructor (and stored in `self.s`),
@@ -1063,15 +1078,14 @@ def _pyltxenc2_LatexWalker_get_latex_expression(
     """
 
     if parsing_state is None:
-        parsing_state = self.make_parsing_state() # get default parsing state
+        parsing_state = self.make_parsing_state()  # get default parsing state
 
     _util.pylatexenc_deprecated_3(
         "get_latex_expression(): "
         "use LatexWalker.parse_content(LatexExpressionParser(), ...) instead."
     )
 
-    logger.debug("get_latex_expression(): “%s...”",
-                 self.s[pos:pos+50])
+    logger.debug("get_latex_expression(): “%s...”", self.s[pos : pos + 50])
 
     parser = parsers.LatexExpressionParser(
         return_full_node_list=False,
@@ -1094,27 +1108,33 @@ def _pyltxenc2_LatexWalker_get_latex_expression(
         # the input stream and let the next call report an error.  (I don't know
         # why this is the best behavior, but it's needed because that's how
         # pylatexenc 2 worked.)
-        if getattr(e, '_error_was_unexpected_closing_brace_in_expression', False) \
-           and not strict_braces:
+        if (
+            getattr(e, "_error_was_unexpected_closing_brace_in_expression", False)
+            and not strict_braces
+        ):
             logger.warning(
                 "Ignoring parse error (strict_braces=False in "
-                "LatexWalker.get_latex_expression)", exc_info=True)
+                "LatexWalker.get_latex_expression)",
+                exc_info=True,
+            )
             nodes, info = None, None
         else:
             raise
 
     if nodes is not None and (
-            nodes.isNodeType(LatexMacroNode)
-            or nodes.isNodeType(LatexEnvironmentNode)
-            or nodes.isNodeType(LatexSpecialsNode)
+        nodes.isNodeType(LatexMacroNode)
+        or nodes.isNodeType(LatexEnvironmentNode)
+        or nodes.isNodeType(LatexSpecialsNode)
     ):
         # match behavior of pylatexenc 2, where a macros' nodeargd attribute was
         # always None even if the macro didn't accept any arguments
         nodes.nodeargd = None
 
     if info is not None:
-        logger.warning("Call to get_latex_expression() ignores parsing state changes information "
-                       "of parsing state")
+        logger.warning(
+            "Call to get_latex_expression() ignores parsing state changes information "
+            "of parsing state"
+        )
 
     if nodes is None and (self.tolerant_parsing or strict_braces is False):
         logger.warning(
@@ -1124,7 +1144,7 @@ def _pyltxenc2_LatexWalker_get_latex_expression(
         nodes = self.make_node(
             LatexCharsNode,
             parsing_state=parsing_state,
-            chars='',
+            chars="",
             pos=pos,
             pos_end=pos,
         )
@@ -1141,10 +1161,7 @@ LatexWalker.get_latex_expression = _pyltxenc2_LatexWalker_get_latex_expression
 
 
 def _pyltxenc2_LatexWalker_get_latex_braced_group(
-        self,
-        pos,
-        brace_type='{',
-        parsing_state=None
+    self, pos, brace_type="{", parsing_state=None
 ):
     r"""
     Parses the latex content given to the constructor (and stored in `self.s`),
@@ -1179,36 +1196,37 @@ def _pyltxenc2_LatexWalker_get_latex_braced_group(
     )
 
     if parsing_state is None:
-        parsing_state = self.make_parsing_state() # get default parsing state
+        parsing_state = self.make_parsing_state()  # get default parsing state
 
-    if brace_type == '{':
-        brace_type = ['{', '}']
-    elif brace_type == '[':
-        brace_type = ['[', ']']
-    elif brace_type == '(':
-        brace_type = ['(', ')']
-    elif brace_type == '<':
-        brace_type = ['<', '>']
+    if brace_type == "{":
+        brace_type = ["{", "}"]
+    elif brace_type == "[":
+        brace_type = ["[", "]"]
+    elif brace_type == "(":
+        brace_type = ["(", ")"]
+    elif brace_type == "<":
+        brace_type = ["<", ">"]
     elif len(brace_type) == 2:
         pass
     else:
-        raise ValueError("Invalid brace type for get_latex_braced_group(): {}"
-                         .format(brace_type))
-    
+        raise ValueError(
+            "Invalid brace type for get_latex_braced_group(): {}".format(brace_type)
+        )
+
     brace_type = tuple(brace_type)
 
-    #require_brace_type = brace_type[0] # the opening brace
+    # require_brace_type = brace_type[0] # the opening brace
     #
     # ### This is now done automatically by LatexDelimitedGroupParser
     #
     # include_brace_chars = None
     # if brace_type not in parsing_state.latex_group_delimiters:
     #     include_brace_chars = [ brace_type ]
-    
+
     parser = parsers.LatexDelimitedGroupParser(
         delimiters=brace_type,
         allow_pre_space=True,
-        #include_delimiter_chars=include_brace_chars,
+        # include_delimiter_chars=include_brace_chars,
     )
 
     nodes, info = self.parse_content(
@@ -1218,8 +1236,10 @@ def _pyltxenc2_LatexWalker_get_latex_braced_group(
     )
 
     if info is not None:
-        logger.warning("Call to get_latex_braced_group() ignores parsing state changes "
-                       "information of parsing state")
+        logger.warning(
+            "Call to get_latex_braced_group() ignores parsing state changes "
+            "information of parsing state"
+        )
 
     if nodes is not None:
         p, l = nodes.pos, nodes.len
@@ -1228,15 +1248,12 @@ def _pyltxenc2_LatexWalker_get_latex_braced_group(
 
     return (nodes, p, l)
 
+
 LatexWalker.get_latex_braced_group = _pyltxenc2_LatexWalker_get_latex_braced_group
 
 
-
 def _pyltxenc2_LatexWalker_get_latex_environment(
-        self,
-        pos,
-        environmentname=None,
-        parsing_state=None
+    self, pos, environmentname=None, parsing_state=None
 ):
     r"""
     Parses the latex content given to the constructor (and stored in `self.s`),
@@ -1263,7 +1280,7 @@ def _pyltxenc2_LatexWalker_get_latex_environment(
     :py:class:`LatexEnvironmentNode`.
 
     .. deprecated:: 3.0
-    
+
        This function was deprecated in pylatexenc 3.0.  Use
        `LatexWalker.parse_content(LatexSingleNodeParser(), ...)`
        at the beginning of the environment.
@@ -1279,8 +1296,7 @@ def _pyltxenc2_LatexWalker_get_latex_environment(
     )
 
     if parsing_state is None:
-        parsing_state = self.make_parsing_state() # get default parsing state
-
+        parsing_state = self.make_parsing_state()  # get default parsing state
 
     # parse a single node and then we'll verify that it was the correct
     # environment node
@@ -1293,8 +1309,10 @@ def _pyltxenc2_LatexWalker_get_latex_environment(
     )
 
     if info is not None:
-        logger.warning("Call to get_latex_environment() ignores parsing state changes "
-                       "information of parsing state")
+        logger.warning(
+            "Call to get_latex_environment() ignores parsing state changes "
+            "information of parsing state"
+        )
 
     if not nodes or len(nodes) != 1 or not nodes[0].isNodeType(LatexEnvironmentNode):
         raise LatexWalkerParseError("Expected environment, got {}".format(nodes))
@@ -1304,16 +1322,17 @@ def _pyltxenc2_LatexWalker_get_latex_environment(
     if environmentname is not None and envnode.environmentname != environmentname:
         raise LatexWalkerParseError(
             "Expected environment {{{correct_envname}}}, got {{{got_envname}}}".format(
-                correct_envname=environmentname,
-                got_envname=envnode.environmentname
+                correct_envname=environmentname, got_envname=envnode.environmentname
             )
         )
 
     p, l = envnode.pos, envnode.len
 
     return (envnode, p, l)
-    
+
+
 LatexWalker.get_latex_environment = _pyltxenc2_LatexWalker_get_latex_environment
+
 
 def _pyltxenc2_LatexWalker_get_latex_maybe_optional_arg(self, pos, parsing_state=None):
     r"""
@@ -1344,10 +1363,8 @@ def _pyltxenc2_LatexWalker_get_latex_maybe_optional_arg(self, pos, parsing_state
         "use LatexWalker.parse_content(LatexOptionalSquareBracketsParser(), ...) instead."
     )
 
-
     if parsing_state is None:
-        parsing_state = self.make_parsing_state() # get default parsing state
-
+        parsing_state = self.make_parsing_state()  # get default parsing state
 
     # parse a single node and then we'll verify that it was the correct
     # environment node
@@ -1360,9 +1377,10 @@ def _pyltxenc2_LatexWalker_get_latex_maybe_optional_arg(self, pos, parsing_state
     )
 
     if info is not None:
-        logger.warning("Call to get_latex_maybe_optional_arg() ignores parsing state changes "
-                       "information of parsing state")
-
+        logger.warning(
+            "Call to get_latex_maybe_optional_arg() ignores parsing state changes "
+            "information of parsing state"
+        )
 
     if nodes is None:
         return None
@@ -1372,8 +1390,9 @@ def _pyltxenc2_LatexWalker_get_latex_maybe_optional_arg(self, pos, parsing_state
     return (nodes, p, l)
 
 
-LatexWalker.get_latex_maybe_optional_arg = \
+LatexWalker.get_latex_maybe_optional_arg = (
     _pyltxenc2_LatexWalker_get_latex_maybe_optional_arg
+)
 
 
 ### END_PYLATEXENC2_LEGACY_SUPPORT_CODE

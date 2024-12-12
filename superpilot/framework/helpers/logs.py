@@ -1,4 +1,5 @@
 """Logging module for Superpilot."""
+
 import logging
 import os
 import random
@@ -9,7 +10,10 @@ from typing import Any
 
 from colorama import Fore, Style
 
-from superpilot.framework.helpers.log_cycle.json_handler import JsonFileHandler, JsonFormatter
+from superpilot.framework.helpers.log_cycle.json_handler import (
+    JsonFileHandler,
+    JsonFormatter,
+)
 from superpilot.core.singleton import Singleton
 
 

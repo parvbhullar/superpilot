@@ -17,7 +17,9 @@ from superpilot.core.resource.model_providers import (
 from superpilot.core.context.schema import Context
 from superpilot.core.ability.super import SuperAbilityRegistry
 from superpilot.core.pilot.task.simple import SimpleTaskPilot
-from superpilot.examples.ed_tech.ag_question_solver_ability import AGQuestionSolverAbility
+from superpilot.examples.ed_tech.ag_question_solver_ability import (
+    AGQuestionSolverAbility,
+)
 from superpilot.examples.pilots.tasks.super import SuperTaskPilot
 from superpilot.core.planning.schema import Task
 
@@ -57,13 +59,13 @@ async def test_pilot():
     3. Test if the population mean years of education (EDUC) is more than 12. Submit your answers to steps mathbf1 through mathbf5 of the significance testing process.
     One-sample mathrmt test
      begintabular|c|c|c|c|c|c|c|
-     hline Variable     Obs     Mean     Std. Err.     Std. Dev.     [95 
-     hline educ     2,345     13.73177     .0614208     2.974313     13.61133     13.85221   
-     hline  multicolumn4|c| mean = mean ( educ )             =28.1952   
-     hline  multicolumn4|c| Ho: mean =12     degrees     of freedom =     =2344   
+     hline Variable     Obs     Mean     Std. Err.     Std. Dev.     [95
+     hline educ     2,345     13.73177     .0614208     2.974313     13.61133     13.85221
+     hline  multicolumn4|c| mean = mean ( educ )             =28.1952
+     hline  multicolumn4|c| Ho: mean =12     degrees     of freedom =     =2344
      hline
      endtabular
-    
+
     Ha: mean <12
     operatornamePr( mathrmT< mathrmt)=1.0000
     Ha: mean !=12
@@ -91,7 +93,10 @@ async def test_pilot():
     open_ai_provider = OpenAIProvider.factory(config.openai_api_key)
     anthropic_provider = AnthropicApiProvider.factory(config.anthropic_api_key)
     ollama_provider = OllamaApiProvider.factory(config.anthropic_api_key)
-    model_providers = {ModelProviderName.OPENAI: open_ai_provider, ModelProviderName.ANTHROPIC: anthropic_provider}
+    model_providers = {
+        ModelProviderName.OPENAI: open_ai_provider,
+        ModelProviderName.ANTHROPIC: anthropic_provider,
+    }
     # model_providers = {ModelProviderName.OLLAMA: ollama_provider}
 
     # Load Prompt Strategy
@@ -154,8 +159,6 @@ async def test_pilot():
 
     # Step 2. Provision the environment.
     # environment_workspace = SuperPilot.provision_environment(environment_settings, client_logger)
-
-
 
     exit(0)
     user_objectives = "What is the weather in Mumbai"

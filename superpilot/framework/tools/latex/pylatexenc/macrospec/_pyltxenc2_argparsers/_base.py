@@ -15,12 +15,11 @@ _basestring = str
 
 ## Begin Py2 support code
 import sys
+
 if sys.version_info.major == 2:
     # Py2
     _basestring = basestring
 ## End Py2 support code
-
-
 
 
 class MacroStandardArgsParser(object):
@@ -71,7 +70,7 @@ class MacroStandardArgsParser(object):
         environments, where AMS apparently introduced a patch to prevent a
         bracket on a new line after ``\\`` from being interpreted as the
         optional argument to ``\\``.
-    
+
       - `args_math_mode`: Either `None`, or a list of the same length as
         `argspec`.  If a list is given, then each item must be `True`, `False`,
         or `None`.  The corresponding argument (cf. `argspec`) is then
@@ -96,24 +95,27 @@ class MacroStandardArgsParser(object):
 
        See the corresponding constructor argument.
     """
-    def __init__(self, argspec=None, optional_arg_no_space=False,
-                 args_math_mode=None, **kwargs):
+
+    def __init__(
+        self, argspec=None, optional_arg_no_space=False, args_math_mode=None, **kwargs
+    ):
         super(MacroStandardArgsParser, self).__init__(**kwargs)
-        self.argspec = argspec if argspec else ''
+        self.argspec = argspec if argspec else ""
         self.optional_arg_no_space = optional_arg_no_space
         self.args_math_mode = args_math_mode
         # catch bugs, make sure that argspec is a string with only accepted chars
-        if not isinstance(self.argspec, _basestring) or \
-           not all(x in '*[{' for x in self.argspec):
+        if not isinstance(self.argspec, _basestring) or not all(
+            x in "*[{" for x in self.argspec
+        ):
             raise TypeError(
-                "argspec must be a string containing chars '*', '[', '{{' only: {!r}"
-                .format(self.argspec)
+                "argspec must be a string containing chars '*', '[', '{{' only: {!r}".format(
+                    self.argspec
+                )
             )
         # non-documented attribute that makes us ignore any leading '*'.  We use
         # this to emulate pylatexenc 1.x behavior when using the MacrosDef()
         # function explicitly
         self._like_pylatexenc1x_ignore_leading_star = False
-
 
     def parse_args(self, w, pos, parsing_state=None):
         r"""
@@ -154,10 +156,14 @@ class MacroStandardArgsParser(object):
 
         argnlist = []
 
-        if self.args_math_mode is not None and \
-           len(self.args_math_mode) != len(self.argspec):
-            raise ValueError("Invalid args_math_mode={!r} for argspec={!r}!"
-                             .format(self.args_math_mode, self.argspec))
+        if self.args_math_mode is not None and len(self.args_math_mode) != len(
+            self.argspec
+        ):
+            raise ValueError(
+                "Invalid args_math_mode={!r} for argspec={!r}!".format(
+                    self.args_math_mode, self.argspec
+                )
+            )
 
         def get_inner_parsing_state(j):
             if self.args_math_mode is None:
@@ -174,29 +180,25 @@ class MacroStandardArgsParser(object):
         if self._like_pylatexenc1x_ignore_leading_star:
             # ignore any leading '*' character
             tok = w.get_token(p)
-            if tok.tok == 'char' and tok.arg == '*':
+            if tok.tok == "char" and tok.arg == "*":
                 p = tok.pos + tok.len
 
         for j, argt in enumerate(self.argspec):
-            if argt == '{':
+            if argt == "{":
                 (node, np, nl) = w.get_latex_expression(
-                    p,
-                    strict_braces=False,
-                    parsing_state=get_inner_parsing_state(j)
+                    p, strict_braces=False, parsing_state=get_inner_parsing_state(j)
                 )
                 p = np + nl
                 argnlist.append(node)
 
-            elif argt == '[':
-
+            elif argt == "[":
                 if self.optional_arg_no_space and p < len(w.s) and w.s[p].isspace():
                     # don't try to read optional arg, we don't allow space
                     argnlist.append(None)
                     continue
 
                 optarginfotuple = w.get_latex_maybe_optional_arg(
-                    p,
-                    parsing_state=get_inner_parsing_state(j)
+                    p, parsing_state=get_inner_parsing_state(j)
                 )
                 if optarginfotuple is None:
                     argnlist.append(None)
@@ -205,15 +207,19 @@ class MacroStandardArgsParser(object):
                 p = np + nl
                 argnlist.append(node)
 
-            elif argt == '*':
+            elif argt == "*":
                 # possible star.
                 tok = w.get_token(p)
-                if tok.tok == 'char' and tok.arg.startswith('*'):
+                if tok.tok == "char" and tok.arg.startswith("*"):
                     # has star
                     argnlist.append(
-                        w.make_node(LatexCharsNode,
-                                    parsing_state=get_inner_parsing_state(j),
-                                    chars='*', pos=tok.pos, len=1)
+                        w.make_node(
+                            LatexCharsNode,
+                            parsing_state=get_inner_parsing_state(j),
+                            chars="*",
+                            pos=tok.pos,
+                            len=1,
+                        )
                     )
                     p = tok.pos + 1
                 else:
@@ -229,12 +235,14 @@ class MacroStandardArgsParser(object):
             argnlist=argnlist,
         )
 
-        return (parsed, pos, p-pos)
-
+        return (parsed, pos, p - pos)
 
     def __repr__(self):
-        return '{}(argspec={!r}, optional_arg_no_space={!r}, args_math_mode={!r})'.format(
-            self.__class__.__name__, self.argspec, self.optional_arg_no_space,
-            self.args_math_mode
+        return (
+            "{}(argspec={!r}, optional_arg_no_space={!r}, args_math_mode={!r})".format(
+                self.__class__.__name__,
+                self.argspec,
+                self.optional_arg_no_space,
+                self.args_math_mode,
+            )
         )
-    

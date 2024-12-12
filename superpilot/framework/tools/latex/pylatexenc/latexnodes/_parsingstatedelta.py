@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2021 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,10 +30,9 @@
 from __future__ import print_function, unicode_literals
 
 
-
 import logging
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 
 
 class ParsingStateDelta(object):
@@ -50,18 +49,19 @@ class ParsingStateDelta(object):
     well as a simple implementation of a parsing state change based on parsing
     state attributes that are to be changed.
     """
+
     def __init__(self, set_attributes=None, _fields=None, **kwargs):
         super(ParsingStateDelta, self).__init__(**kwargs)
         self.set_attributes = dict(set_attributes) if set_attributes else None
-        self._fields = _fields if (_fields is not None) else ('set_attributes',)
+        self._fields = _fields if (_fields is not None) else ("set_attributes",)
 
     def __repr__(self):
         return (
-            self.__class__.__name__ + "("
-            + ", ".join([
-                "{}={!r}".format(k, getattr(self, k, '<??>'))
-                for k in self._fields
-            ])
+            self.__class__.__name__
+            + "("
+            + ", ".join(
+                ["{}={!r}".format(k, getattr(self, k, "<??>")) for k in self._fields]
+            )
             + ")"
         )
 
@@ -75,12 +75,9 @@ class ParsingStateDelta(object):
         """
 
         if self.set_attributes:
-            return parsing_state.sub_context( **self.set_attributes )
+            return parsing_state.sub_context(**self.set_attributes)
 
-        return parsing_state    
-
-
-
+        return parsing_state
 
 
 class ParsingStateDeltaReplaceParsingState(ParsingStateDelta):
@@ -88,10 +85,10 @@ class ParsingStateDeltaReplaceParsingState(ParsingStateDelta):
     A parsing state change in which a new full parsing state object entirely
     replaces the previous parsing state.
     """
+
     def __init__(self, set_parsing_state, **kwargs):
         super(ParsingStateDeltaReplaceParsingState, self).__init__(
-            _fields=('set_parsing_state',),
-            **kwargs
+            _fields=("set_parsing_state",), **kwargs
         )
         self.set_parsing_state = set_parsing_state
 
@@ -101,16 +98,14 @@ class ParsingStateDeltaReplaceParsingState(ParsingStateDelta):
         return parsing_state
 
 
-
-
 class ParsingStateDeltaChained(ParsingStateDelta):
     r"""
     Apply multiple parsing state deltas, in the order specified.
     """
+
     def __init__(self, parsing_state_deltas, **kwargs):
         super(ParsingStateDeltaChained, self).__init__(
-            _fields=('parsing_state_deltas',),
-            **kwargs
+            _fields=("parsing_state_deltas",), **kwargs
         )
         self.parsing_state_deltas = parsing_state_deltas
 
@@ -122,12 +117,12 @@ class ParsingStateDeltaChained(ParsingStateDelta):
         return ps
 
 
-
 # ------------------------------------------------------------------------------
 
 #
 # parsing state delta's associated with walker events
 #
+
 
 class ParsingStateDeltaWalkerEvent(ParsingStateDelta):
     r"""
@@ -137,22 +132,25 @@ class ParsingStateDeltaWalkerEvent(ParsingStateDelta):
 
     DOC......................
     """
+
     def __init__(self, walker_event_name, walker_event_kwargs):
         super(ParsingStateDeltaWalkerEvent, self).__init__(
-            _fields=('walker_event_name', 'walker_event_kwargs',)
+            _fields=(
+                "walker_event_name",
+                "walker_event_kwargs",
+            )
         )
         self.walker_event_name = walker_event_name
         self.walker_event_kwargs = walker_event_kwargs
-    
+
     def get_updated_parsing_state(self, parsing_state, latex_walker):
         handler = latex_walker.parsing_state_event_handler()
         handler_fn = getattr(handler, self.walker_event_name)
         parsing_state_delta = handler_fn(**self.walker_event_kwargs)
         return get_updated_parsing_state_from_delta(
-            parsing_state,
-            parsing_state_delta,
-            latex_walker
+            parsing_state, parsing_state_delta, latex_walker
         )
+
 
 class ParsingStateDeltaEnterMathMode(ParsingStateDeltaWalkerEvent):
     r"""
@@ -166,14 +164,15 @@ class ParsingStateDeltaEnterMathMode(ParsingStateDeltaWalkerEvent):
     changes other than `in_math_mode=True`, such as a different set of macro
     definitions, etc.)
     """
+
     def __init__(self, math_mode_delimiter=None, trigger_token=None):
         super(ParsingStateDeltaEnterMathMode, self).__init__(
-            walker_event_name='enter_math_mode',
+            walker_event_name="enter_math_mode",
             walker_event_kwargs=dict(
-                math_mode_delimiter=math_mode_delimiter,
-                trigger_token=trigger_token
-            )
+                math_mode_delimiter=math_mode_delimiter, trigger_token=trigger_token
+            ),
         )
+
 
 class ParsingStateDeltaLeaveMathMode(ParsingStateDeltaWalkerEvent):
     r"""
@@ -184,18 +183,17 @@ class ParsingStateDeltaLeaveMathMode(ParsingStateDeltaWalkerEvent):
 
     def __init__(self, trigger_token=None):
         super(ParsingStateDeltaLeaveMathMode, self).__init__(
-            walker_event_name='leave_math_mode',
-            walker_event_kwargs=dict(
-                trigger_token=trigger_token
-            )
+            walker_event_name="leave_math_mode",
+            walker_event_kwargs=dict(trigger_token=trigger_token),
         )
 
 
 # ------------------------------------------------------------------------------
 
-def get_updated_parsing_state_from_delta(parsing_state, parsing_state_delta, latex_walker):
+
+def get_updated_parsing_state_from_delta(
+    parsing_state, parsing_state_delta, latex_walker
+):
     if parsing_state_delta is None:
         return parsing_state
     return parsing_state_delta.get_updated_parsing_state(parsing_state, latex_walker)
-
-

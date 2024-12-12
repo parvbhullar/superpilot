@@ -9,7 +9,7 @@ def config_to_goal(user_objective: str, thread_id: str, settings_json: Dict):
     goals = settings_json.get("pilot", {}).get("configuration", {}).get("goals", [])
     tasks = []
     for index, task in enumerate(goals):
-        tasks.append({"task_id": index + 1, "task": task, 'result': ''})
+        tasks.append({"task_id": index + 1, "task": task, "result": ""})
     return GoalSchema(
         goal=user_objective,
         thread_id=thread_id,

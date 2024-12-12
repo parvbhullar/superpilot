@@ -44,12 +44,16 @@ class Gstr1DataTransformAbility(Ability):
 
 
 class HeaderSchema(SchemaModel):
-    gstin: str = Field(..., description="GSTIN (Goods and Services Tax Identification Number).")
+    gstin: str = Field(
+        ..., description="GSTIN (Goods and Services Tax Identification Number)."
+    )
     month: str = Field(..., description="Month in MM format.")
     year: str = Field(..., description="Year or year range in YYYY-YY format.")
     invoice: str = Field(..., description="Indicator for invoice ('Y' or 'N').")
     summary: str = Field(..., description="Indicator for summary ('Y' or 'N').")
-    MiplApiKey: str = Field(..., description="API Key for MIPL (Mandatory Invoice Parameters List).")
+    MiplApiKey: str = Field(
+        ..., description="API Key for MIPL (Mandatory Invoice Parameters List)."
+    )
     Content_Type: str = Field(..., description="Content type.", alias="Content-Type")
 
 
@@ -62,9 +66,7 @@ class ImportAbilityArguments(SchemaModel):
     json_data: List[Document] = Field(
         ..., description="List of gstr documents/rows to be processed"
     )
-    header: HeaderSchema = Field(
-        ..., description="Header information for the API call"
-    )
+    header: HeaderSchema = Field(..., description="Header information for the API call")
 
 
 class SalesDataImportAbility(Ability):
@@ -95,9 +97,7 @@ class SalesDataImportAbility(Ability):
         print("Arguments", args)
         return args
 
-    async def __call__(
-        self, ImportAbilityArguments: dict, **kwargs
-    ) -> Context:
+    async def __call__(self, ImportAbilityArguments: dict, **kwargs) -> Context:
         url = f"{ARAP_BASE_URL}/api/v1/saas-apis/sales/"
         header = ImportAbilityArguments["header"]
         json_data = ImportAbilityArguments["json_data"]
@@ -107,9 +107,7 @@ class SalesDataImportAbility(Ability):
         data = {"saleData": json_data}
         response = requests.request("POST", url, headers=header, data=data)
         text = "api_response:" + response.text
-        return Context(
-            [await self.get_content_item(text, header, url)]
-        )
+        return Context([await self.get_content_item(text, header, url)])
 
     async def get_content_item(
         self, content: str, header: dict, url: str = None
@@ -215,11 +213,14 @@ class ApiResponseSchema(SchemaModel):
     """
     Schema for the API response.
     """
+
     success: bool = Field(
         ..., description="Whether the API call was successful or not."
     )
     data: dict = Field(..., description="The data returned by the API call.")
-    message: ResMessage = Field(..., description="The message returned by the API call.")
+    message: ResMessage = Field(
+        ..., description="The message returned by the API call."
+    )
 
     @classmethod
     def name(cls) -> str:
@@ -250,7 +251,9 @@ class ApiResponseObserverAbility(Ability):
 
     @classmethod
     def description(cls) -> str:
-        return "Observe api_response given in context and communicate next steps to user"
+        return (
+            "Observe api_response given in context and communicate next steps to user"
+        )
 
     @classmethod
     def arguments(cls) -> dict:
@@ -263,5 +266,3 @@ class ApiResponseObserverAbility(Ability):
 
     async def get_content_item(self, content: str) -> Content:
         return Content.add_content_item(content, ContentType.DICT)
-
-

@@ -32,17 +32,17 @@ class StepFlow(PromptStrategy):
     ]
 
     DEFAULT_USER_PROMPT_TEMPLATE = """
-    Given the query or question: '{query}'\n\n, 
+    Given the query or question: '{query}'\n\n,
     Generate a series of steps (Min -1 & Max - 3) to process and answer the query comprehensively\n.
     Each Step should be unique and clear and No Two Step can be the same.
     Also Steps should be limited accordingly the scope area of user query.
-    Each step should also be associated with an 'ability' that can be executed to fulfill that step. 
+    Each step should also be associated with an 'ability' that can be executed to fulfill that step.
     These abilities include actions such as per the below\n\n
     Abilities : \n
     {abilities}\n\n\n
-    
+
     For each step, specify which ability is most appropriate.
-    Ensure that the steps are clear, detailed, and well-organized. 
+    Ensure that the steps are clear, detailed, and well-organized.
     Ensure that the ability is associated with the correct step.
     Include any necessary context or data that would be required for executing the abilities effectively."
     Your Answer should be in the following format:\n

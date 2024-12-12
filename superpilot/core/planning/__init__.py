@@ -1,4 +1,5 @@
 """The planning system organizes the Agent's activities."""
+
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
     LanguageModelPrompt,

@@ -11,9 +11,11 @@ from superpilot.core.resource.model_providers import (
 )
 from superpilot.examples.abilities.utlis.scraperapi import scrape_page
 from superpilot.framework.tools.search_engine import SearchEngine, SearchEngineType
+
 # from superpilot.framework.tools.web_browser import WebBrowserEngine
 from superpilot.core.configuration import Config
 from superpilot.core.planning.strategies import SummarizerStrategy
+
 # from superpilot.framework.tools.web_browser.web_browser_engine_type import (
 #     WebBrowserEngineType,
 # )

@@ -2,6 +2,7 @@ import abc
 import typing
 
 from superpilot.core.configuration import SystemConfiguration, UserConfigurable
+
 # Cyclic import
 from superpilot.core.planning.schema import (
     LanguageModelClassification,
@@ -67,13 +68,10 @@ class PromptStrategy(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def model_classification(self) -> LanguageModelClassification:
-        ...
+    def model_classification(self) -> LanguageModelClassification: ...
 
     @abc.abstractmethod
-    def build_prompt(self, *_, **kwargs) -> LanguageModelPrompt:
-        ...
+    def build_prompt(self, *_, **kwargs) -> LanguageModelPrompt: ...
 
     @abc.abstractmethod
-    def parse_response_content(self, response_content: dict) -> dict:
-        ...
+    def parse_response_content(self, response_content: dict) -> dict: ...

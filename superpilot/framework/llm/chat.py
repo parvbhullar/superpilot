@@ -181,11 +181,15 @@ def chat_with_ai(
                     + (
                         " BUDGET EXCEEDED! SHUT DOWN!\n\n"
                         if remaining_budget == 0
-                        else " Budget very nearly exceeded! Shut down gracefully!\n\n"
-                        if remaining_budget < 0.005
-                        else " Budget nearly exceeded. Finish up.\n\n"
-                        if remaining_budget < 0.01
-                        else "\n\n"
+                        else (
+                            " Budget very nearly exceeded! Shut down gracefully!\n\n"
+                            if remaining_budget < 0.005
+                            else (
+                                " Budget nearly exceeded. Finish up.\n\n"
+                                if remaining_budget < 0.01
+                                else "\n\n"
+                            )
+                        )
                     )
                 )
                 logger.debug(system_message)

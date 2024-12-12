@@ -5,6 +5,7 @@ from superpilot.core.context.schema import Context, Content
 
 class AbilityAction(BaseModel):
     """The AbilityAction is a standard response struct for an ability."""
+
     task_id: str = ""
     thread_id: str = ""
     ability_name: str = ""
@@ -27,6 +28,3 @@ class AbilityAction(BaseModel):
 
         kwargs = ", ".join(f"{k}={v}" for k, v in self.ability_args.items())
         return f"{self.ability_name}({kwargs}): {self.message}"
-
-
-

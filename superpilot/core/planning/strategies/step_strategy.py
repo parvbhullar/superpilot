@@ -71,12 +71,12 @@ class StepStrategy(PromptStrategy):
     )
 
     def __init__(
-            self,
-            model_classification: LanguageModelClassification,
-            system_prompt_template: str,
-            system_info: List[str],
-            user_prompt_template: str,
-            additional_ability_arguments: dict,
+        self,
+        model_classification: LanguageModelClassification,
+        system_prompt_template: str,
+        system_info: List[str],
+        user_prompt_template: str,
+        additional_ability_arguments: dict,
     ):
         self._model_classification = model_classification
         self._system_prompt_template = system_prompt_template
@@ -89,13 +89,13 @@ class StepStrategy(PromptStrategy):
         return self._model_classification
 
     def build_prompt(
-            self,
-            task: Task,
-            ability_schema: List[dict],
-            os_info: str,
-            api_budget: float,
-            current_time: str,
-            **kwargs,
+        self,
+        task: Task,
+        ability_schema: List[dict],
+        os_info: str,
+        api_budget: float,
+        current_time: str,
+        **kwargs,
     ) -> LanguageModelPrompt:
         template_kwargs = {
             "os_info": os_info,
@@ -163,8 +163,8 @@ class StepStrategy(PromptStrategy):
         )
 
     def parse_response_content(
-            self,
-            response_content: dict,
+        self,
+        response_content: dict,
     ) -> dict:
         """Parse the actual text response from the objective model.
 
@@ -176,7 +176,9 @@ class StepStrategy(PromptStrategy):
 
         """
         function_name = response_content.get("function_call", {}).get("name")
-        function_arguments = json_loads(response_content.get("function_call", {}).get("arguments", "{}"))
+        function_arguments = json_loads(
+            response_content.get("function_call", {}).get("arguments", "{}")
+        )
         parsed_response = {
             "motivation": function_arguments.pop("motivation", None),
             "self_criticism": function_arguments.pop("self_criticism", None),

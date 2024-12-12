@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2018 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -94,7 +94,7 @@ import itertools
 
 ### BEGIN_PYTHON2_SUPPORT_CODE
 if sys.version_info.major > 2:
-    unicode = str # need to support unicode() w/ no arguments
+    unicode = str  # need to support unicode() w/ no arguments
     basestring = str
 
 ### END_PYTHON2_SUPPORT_CODE
@@ -116,15 +116,14 @@ from ._unicode_to_latex_encoder import (
     UnicodeToLatexConversionRule,
     UnicodeToLatexEncoder,
 )
+
 #    get_builtin_uni2latex_dict,
 #    get_builtin_conversion_rules,
 
 ### BEGIN_PYLATEXENC_GET_DEFAULT_SPECS_FN
-from .get_builtin_rules import (
-    get_builtin_uni2latex_dict, get_builtin_conversion_rules
-)
-### END_PYLATEXENC_GET_DEFAULT_SPECS_FN
+from .get_builtin_rules import get_builtin_uni2latex_dict, get_builtin_conversion_rules
 
+### END_PYLATEXENC_GET_DEFAULT_SPECS_FN
 
 
 # ------------------------------------------------
@@ -132,7 +131,6 @@ from .get_builtin_rules import (
 from ._partial_latex_encoder import (
     PartialLatexToLatexEncoder,
 )
-
 
 
 # ------------------------------------------------
@@ -143,8 +141,13 @@ from ._partial_latex_encoder import (
 _u2l_obj_cache = {}
 
 
-def unicode_to_latex(s, non_ascii_only=False, replacement_latex_protection='braces',
-                     unknown_char_policy='keep', unknown_char_warning=True):
+def unicode_to_latex(
+    s,
+    non_ascii_only=False,
+    replacement_latex_protection="braces",
+    unknown_char_policy="keep",
+    unknown_char_warning=True,
+):
     r"""
     Shorthand for constructing a :py:class:`UnicodeToLatexEncoder` instance and
     calling its :py:meth:`~UnicodeToLatexEncoder.unicode_to_latex()` method.
@@ -167,21 +170,25 @@ def unicode_to_latex(s, non_ascii_only=False, replacement_latex_protection='brac
     :py:class:`UnicodeToLatexEncoder` instance directly.
     """
 
-    key = (non_ascii_only, replacement_latex_protection, unknown_char_policy,
-           unknown_char_warning)
+    key = (
+        non_ascii_only,
+        replacement_latex_protection,
+        unknown_char_policy,
+        unknown_char_warning,
+    )
 
     if key in _u2l_obj_cache:
         u = _u2l_obj_cache[key]
     else:
-        u = UnicodeToLatexEncoder(non_ascii_only=non_ascii_only,
-                                  replacement_latex_protection=replacement_latex_protection,
-                                  unknown_char_policy=unknown_char_policy,
-                                  unknown_char_warning=unknown_char_warning)
+        u = UnicodeToLatexEncoder(
+            non_ascii_only=non_ascii_only,
+            replacement_latex_protection=replacement_latex_protection,
+            unknown_char_policy=unknown_char_policy,
+            unknown_char_warning=unknown_char_warning,
+        )
         _u2l_obj_cache[key] = u
 
     return u.unicode_to_latex(s)
-    
-
 
 
 # ------------------------------------------------------------------------------
@@ -207,6 +214,7 @@ def _get_deprecated_utf82latex():
     # `unicode_to_latex()`.  If both modules use `utf8tolatex()`, we can't avoid
     # this influence.)
     from ._uni2latexmap import uni2latex as _uni2latex
+
     return _uni2latex.copy()
 
 
@@ -237,10 +245,13 @@ utf82latex = _util.LazyDict(generate_dict_fn=_get_deprecated_utf82latex)
 """
 
 
-
-
-def utf8tolatex(s, non_ascii_only=False, brackets=True, substitute_bad_chars=False,
-                fail_bad_chars=False):
+def utf8tolatex(
+    s,
+    non_ascii_only=False,
+    brackets=True,
+    substitute_bad_chars=False,
+    fail_bad_chars=False,
+):
     """
     .. note::
 
@@ -289,39 +300,40 @@ def utf8tolatex(s, non_ascii_only=False, brackets=True, substitute_bad_chars=Fal
         Added `fail_bad_chars` switch
     """
 
-    s = unicode(s) # make sure s is unicode
-    s = unicodedata.normalize('NFC', s)
+    s = unicode(s)  # make sure s is unicode
+    s = unicodedata.normalize("NFC", s)
 
     if not s:
         return ""
 
-    result = u""
+    result = ""
     for ch in s:
-        #logger.longdebug("Encoding char %r", ch)
-        if (non_ascii_only and ord(ch) < 127):
+        # logger.longdebug("Encoding char %r", ch)
+        if non_ascii_only and ord(ch) < 127:
             result += ch
         else:
             # use the `utf82latex` dict -- not `_uni2latex` which should NOT be
             # modified externally even for backwards-compatible code
             lch = utf82latex.get(ord(ch), None)
-            if (lch is not None):
+            if lch is not None:
                 # add brackets if needed, i.e. if we have a substituting macro.
                 # note: in condition, beware, that lch might be of zero length.
-                result += (  '{'+lch+'}' if brackets and lch[0:1] == '\\' else
-                             lch  )
-            elif ((ord(ch) >= 32 and ord(ch) <= 127) or
-                  (ch in "\n\r\t")):
+                result += "{" + lch + "}" if brackets and lch[0:1] == "\\" else lch
+            elif (ord(ch) >= 32 and ord(ch) <= 127) or (ch in "\n\r\t"):
                 # ordinary printable ascii char, just add it
                 result += ch
             else:
                 # non-ascii char
-                msg = u"Character cannot be encoded into LaTeX: U+%04X - `%s'" % (ord(ch), ch)
+                msg = "Character cannot be encoded into LaTeX: U+%04X - `%s'" % (
+                    ord(ch),
+                    ch,
+                )
                 if fail_bad_chars:
                     raise ValueError(msg)
 
                 logger.warning(msg)
                 if substitute_bad_chars:
-                    result += r'{\bfseries ?}'
+                    result += r"{\bfseries ?}"
                 else:
                     # keep unescaped char
                     result += ch

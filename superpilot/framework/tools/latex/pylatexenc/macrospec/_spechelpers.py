@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2019 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,17 +37,16 @@ _basestring = str
 
 ### BEGIN_PYTHON2_SUPPORT_CODE
 import sys
+
 if sys.version_info.major == 2:
     _basestring = basestring
 ### END_PYTHON2_SUPPORT_CODE
 
 
-
-
 def std_macro(macname, *args, **kwargs):
     r"""
     Return a macro specification for the given macro.  Syntax::
-    
+
       spec = std_macro(macname, argspec)
       #  or
       spec = std_macro(macname, optarg, numargs)
@@ -86,7 +85,7 @@ def std_macro(macname, *args, **kwargs):
         ``std_macro(macname, argspec)``.
 
     - `numargs`: depends on `optarg`, see above.
-    
+
     To make environment specifications (:py:class:`EnvironmentSpec`) instead of
     a macro specification, use the function :py:func:`std_environment()`
     instead.
@@ -101,18 +100,24 @@ def std_macro(macname, *args, **kwargs):
 
     if isinstance(macname, tuple):
         if len(args) != 0:
-            raise TypeError("No positional arguments expected if first argument is a tuple")
+            raise TypeError(
+                "No positional arguments expected if first argument is a tuple"
+            )
         args = tuple(macname[1:])
         macname = macname[0]
 
     if isinstance(macname, MacroSpec):
         if len(args) != 0:
-            raise TypeError("No positional arguments expected if first argument is a MacroSpec")
+            raise TypeError(
+                "No positional arguments expected if first argument is a MacroSpec"
+            )
         return macname
-    
+
     if isinstance(macname, EnvironmentSpec):
         if len(args) != 0:
-            raise TypeError("No positional arguments expected if first argument is a EnvironmentSpec")
+            raise TypeError(
+                "No positional arguments expected if first argument is a EnvironmentSpec"
+            )
         return macname
 
     if len(args) == 1:
@@ -122,19 +127,21 @@ def std_macro(macname, *args, **kwargs):
         raise TypeError(
             "Wrong number of arguments for std_macro, macname={!r}, args={!r}".format(
                 macname, args
-            ))
+            )
+        )
     elif not args[0] and isinstance(args[1], _basestring):
         # argspec given in numargs
         argspec = args[1]
     else:
-        argspec = ''
+        argspec = ""
         if args[0]:
-            argspec = '['
-        argspec += '{'*args[1]
+            argspec = "["
+        argspec += "{" * args[1]
 
-    if kwargs.get('make_environment_spec', False):
-        return EnvironmentSpec(macname, argspec,
-                               is_math_mode=kwargs.get('environment_is_math_mode', None))
+    if kwargs.get("make_environment_spec", False):
+        return EnvironmentSpec(
+            macname, argspec, is_math_mode=kwargs.get("environment_is_math_mode", None)
+        )
     return MacroSpec(macname, argspec)
 
 
@@ -195,10 +202,9 @@ def std_environment(envname, *args, **kwargs):
       `is_math_mode` *must* be given as a keyword argument, in contrast to all
       other arguments which must be positional (non-keyword) arguments.
     """
-    is_math_mode = kwargs.pop('is_math_mode', None)
+    is_math_mode = kwargs.pop("is_math_mode", None)
     kwargs2 = dict(kwargs)
-    kwargs2.update(make_environment_spec=True,
-                   environment_is_math_mode=is_math_mode)
+    kwargs2.update(make_environment_spec=True, environment_is_math_mode=is_math_mode)
     return std_macro(envname, *args, **kwargs2)
 
 
@@ -216,4 +222,3 @@ def std_specials(specials_chars):
     :py:class:`SpecialsSpec` directly.
     """
     return SpecialsSpec(specials_chars, None)
-

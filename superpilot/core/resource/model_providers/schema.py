@@ -231,16 +231,13 @@ class ModelProvider(abc.ABC):
     defaults: ClassVar[ModelProviderSettings]
 
     @abc.abstractmethod
-    def get_token_limit(self, model_name: str) -> int:
-        ...
+    def get_token_limit(self, model_name: str) -> int: ...
 
     @abc.abstractmethod
-    def get_remaining_budget(self) -> float:
-        ...
+    def get_remaining_budget(self) -> float: ...
 
     @abc.abstractmethod
-    def get_total_cost(self) -> float:
-        ...
+    def get_total_cost(self) -> float: ...
 
 
 ####################
@@ -276,8 +273,7 @@ class EmbeddingModelProvider(ModelProvider):
         model_name: str,
         embedding_parser: Callable[[Embedding], Embedding],
         **kwargs,
-    ) -> EmbeddingModelProviderModelResponse:
-        ...
+    ) -> EmbeddingModelProviderModelResponse: ...
 
 
 ###################
@@ -312,8 +308,7 @@ class LanguageModelProvider(ModelProvider):
         model_name: str,
         completion_parser: Callable[[dict], dict],
         **kwargs,
-    ) -> LanguageModelProviderModelResponse:
-        ...
+    ) -> LanguageModelProviderModelResponse: ...
 
 
 ###################
@@ -342,8 +337,7 @@ class MediaModelProvider(ModelProvider):
         model_name: str,
         completion_parser: Callable[[dict], dict],
         **kwargs,
-    ) -> MediaModelProviderModelResponse:
-        ...
+    ) -> MediaModelProviderModelResponse: ...
 
 
 ## Function Calls ##

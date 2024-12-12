@@ -8,7 +8,11 @@ from superpilot.framework.llm.base import (
     Message,
     ModelInfo,
 )
-from superpilot.framework.llm.chat import chat_with_ai, create_chat_message, generate_context
+from superpilot.framework.llm.chat import (
+    chat_with_ai,
+    create_chat_message,
+    generate_context,
+)
 from superpilot.framework.llm.llm_utils import (
     call_ai_function,
     chunked_tokens,
@@ -16,7 +20,10 @@ from superpilot.framework.llm.llm_utils import (
     get_ada_embedding,
 )
 from superpilot.framework.llm.modelsinfo import COSTS
-from superpilot.framework.llm.token_counter import count_message_tokens, count_string_tokens
+from superpilot.framework.llm.token_counter import (
+    count_message_tokens,
+    count_string_tokens,
+)
 
 __all__ = [
     "ApiManager",

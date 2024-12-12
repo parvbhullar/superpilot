@@ -78,7 +78,7 @@ class SerpAPIWrapper(BaseModel):
     def _process_response(res: dict) -> str:
         """Process response from SerpAPI."""
         # print(res)
-        focus = ['title', 'snippet', 'link']
+        focus = ["title", "snippet", "link"]
         get_focused = lambda x: {i: j for i, j in x.items() if i in focus}
 
         if "error" in res.keys():

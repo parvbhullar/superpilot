@@ -1,4 +1,5 @@
 """The messaging system provides a protocol for Agent communication with other pilots and users."""
+
 from superpilot.core.status import ShortStatus, Status
 
 status = Status(

@@ -69,7 +69,9 @@ class SummarizerStrategy(PromptStrategy):
     def model_classification(self) -> LanguageModelClassification:
         return self._model_classification
 
-    def build_prompt(self, content: str = "", question: str = "", **kwargs) -> LanguageModelPrompt:
+    def build_prompt(
+        self, content: str = "", question: str = "", **kwargs
+    ) -> LanguageModelPrompt:
         system_message = LanguageModelMessage(
             role=MessageRole.SYSTEM,
             content=self._system_prompt_message,

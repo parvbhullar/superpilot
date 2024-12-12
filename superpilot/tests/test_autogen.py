@@ -11,7 +11,7 @@ config_list = autogen.config_list_from_json(
             "gpt-4-32k-0314",
             "gpt-4-32k-v0314",
         }
-    }
+    },
 )
 
 from autogen.agentchat.contrib.math_user_proxy_agent import MathUserProxyAgent
@@ -26,7 +26,7 @@ assistant = autogen.AssistantAgent(
         "request_timeout": 600,
         "seed": 42,
         "config_list": config_list,
-    }
+    },
 )
 
 # 2. create the MathUserProxyAgent instance named "mathproxyagent"
@@ -56,10 +56,10 @@ query = """
     3. Test if the population mean years of education (EDUC) is more than 12. Submit your answers to steps mathbf1 through mathbf5 of the significance testing process.
     One-sample mathrmt test
      begintabular|c|c|c|c|c|c|c|
-     hline Variable     Obs     Mean     Std. Err.     Std. Dev.     [95 
-     hline educ     2,345     13.73177     .0614208     2.974313     13.61133     13.85221   
-     hline  multicolumn4|c| mean = mean ( educ )             =28.1952   
-     hline  multicolumn4|c| Ho: mean =12     degrees     of freedom =     =2344   
+     hline Variable     Obs     Mean     Std. Err.     Std. Dev.     [95
+     hline educ     2,345     13.73177     .0614208     2.974313     13.61133     13.85221
+     hline  multicolumn4|c| mean = mean ( educ )             =28.1952
+     hline  multicolumn4|c| Ho: mean =12     degrees     of freedom =     =2344
      hline
      endtabular
 
@@ -85,20 +85,18 @@ query = """
 def format_messages(messages):
     messages = list(messages.values())[0]
     # Skip the first message and extract the 'content' from the rest
-    contents = [msg['role'] + " : " + msg['content'] for msg in messages[1:]]
+    contents = [msg["role"] + " : " + msg["content"] for msg in messages[1:]]
 
     # Join the contents with a space to form the prompt
-    prompt = '\n\n'.join(contents)
+    prompt = "\n\n".join(contents)
 
     return prompt
+
 
 mathproxyagent.initiate_chat(assistant, problem=query, prompt_type="python")
 
 print("*" * 32, "Chatting", "*" * 32)
 print(format_messages(mathproxyagent.chat_messages))
-
-
-
 
 
 # mathproxyagent.initiate_chat(assistant, problem=math_problem, prompt_type="two_tools")

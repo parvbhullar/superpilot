@@ -14,7 +14,7 @@ from superpilot.core.pilot.settings import (
     PilotSystemSettings,
     PilotConfiguration,
     PilotSystems,
-    ExecutionAlgo
+    ExecutionAlgo,
 )
 from superpilot.core.configuration import Configurable
 from superpilot.core.memory import SimpleMemory
@@ -30,7 +30,6 @@ from superpilot.core.workspace.simple import SimpleWorkspace
 
 
 class SuperPilot(Pilot, Configurable):
-
     default_settings = PilotSystemSettings(
         name="super_pilot",
         description="A super pilot.",
@@ -73,11 +72,7 @@ class SuperPilot(Pilot, Configurable):
         self._current_task = None
         self._next_step = None
 
-    async def initialize(
-            self,
-            user_objective: str,
-            *args, **kwargs
-    ) -> dict:
+    async def initialize(self, user_objective: str, *args, **kwargs) -> dict:
         self._logger.debug("Initializing SuperPilot.")
         model_response = await self._planning.decide_name_and_goals(
             user_objective,
@@ -97,7 +92,6 @@ class SuperPilot(Pilot, Configurable):
         pass
 
     async def watch(self, *args, **kwargs):
-
         pass
 
     async def build_initial_plan(self) -> dict:

@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2019 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,34 +38,33 @@ _unicode_from_str = lambda x: x
 
 ### BEGIN_PYTHON2_SUPPORT_CODE
 import sys
+
 if sys.version_info.major == 2:
-    _unicode_from_str = lambda x: x.decode('utf-8')
+    _unicode_from_str = lambda x: x.decode("utf-8")
 ### END_PYTHON2_SUPPORT_CODE
 
 
-
 def _display_abbrev_str(s, maxlen=40):
-    if not maxlen or maxlen < 2: # also catches None
+    if not maxlen or maxlen < 2:  # also catches None
         maxlen = 2
     if len(s) < maxlen:
         return s
-    return s[:maxlen-2] + '…'
+    return s[: maxlen - 2] + "…"
 
 
 def _display_str_delimiters(delimiters):
-
-    open_delim = '<??>'
-    close_delim = '<??>'
+    open_delim = "<??>"
+    close_delim = "<??>"
 
     try:
         open_delim, close_delim = delimiters
-    except: # Transcrypt-friendly
+    except:  # Transcrypt-friendly
         pass
 
     if open_delim is None:
-        open_delim = ''
+        open_delim = ""
     if close_delim is None:
-        close_delim = ''
+        close_delim = ""
 
     return open_delim, close_delim
 
@@ -76,7 +75,6 @@ def _display_str_delimiters(delimiters):
 
 
 # ------------------------------------------------------------------------------
-
 
 
 class LatexNode(object):
@@ -90,7 +88,7 @@ class LatexNode(object):
     the latex walker has the opportunity to do some additional setting up.
 
     .. versionchanged: 3.0
-    
+
        This class (along with its canonical subclasses) is located in the module
        :py:mod:`pylatexenc.latexnodes.nodes` starting in `pylatexenc 3.0`.  It
        is aliased in :py:mod:`pylatexenc.latexwalker` for backwards
@@ -135,7 +133,7 @@ class LatexNode(object):
        read-only attribute that computes `pos_end - pos`.
 
     .. versionadded:: 2.0
-       
+
        The attributes `parsing_state`, `pos` and `len` were added in
        `pylatexenc 2.0`.
 
@@ -147,11 +145,18 @@ class LatexNode(object):
 
           The attribute latex_walker was added in `pylatexenc 3`.
     """
-    def __init__(self, _fields, _redundant_fields=None,
-                 parsing_state=None, pos=None, pos_end=None, latex_walker=None,
-                 **kwargs):
 
-        len_ = kwargs.pop('len', None)
+    def __init__(
+        self,
+        _fields,
+        _redundant_fields=None,
+        parsing_state=None,
+        pos=None,
+        pos_end=None,
+        latex_walker=None,
+        **kwargs
+    ):
+        len_ = kwargs.pop("len", None)
 
         # Important: subclasses must specify a list of fields they set in the
         # `_fields` argument.  They should only specify base (non-redundant)
@@ -167,13 +172,15 @@ class LatexNode(object):
         if pos_end is None and len_ is not None:
             self.pos_end = self.pos + len_
 
-        self._fields = tuple(['pos', 'pos_end', 'parsing_state', 'latex_walker']
-                             + list(_fields))
+        self._fields = tuple(
+            ["pos", "pos_end", "parsing_state", "latex_walker"] + list(_fields)
+        )
         if _redundant_fields is not None:
-            self._redundant_fields = tuple(list(self._fields) + ['len']
-                                           + list(_redundant_fields))
+            self._redundant_fields = tuple(
+                list(self._fields) + ["len"] + list(_redundant_fields)
+            )
         else:
-            self._redundant_fields = tuple(list(self._fields) + ['len'])
+            self._redundant_fields = tuple(list(self._fields) + ["len"])
 
     def nodeType(self):
         """
@@ -205,49 +212,60 @@ class LatexNode(object):
         This is a shorthand for ``node.latex_walker.s[node.pos:node.pos_end]``.
         """
         if self.latex_walker is None:
-            raise TypeError("Can't use latex_verbatim() on node because we don't "
-                            "have any latex_walker set")
+            raise TypeError(
+                "Can't use latex_verbatim() on node because we don't "
+                "have any latex_walker set"
+            )
         return self.latex_walker.s[self.pos : self.pos_end]
 
     def __eq__(self, other):
         return (
-            other is not None  and
-            isinstance(other, LatexNode) and
-            self.nodeType() is other.nodeType()  and
-            other.parsing_state is self.parsing_state  and
-            other.latex_walker is self.latex_walker  and
+            other is not None
+            and isinstance(other, LatexNode)
+            and self.nodeType() is other.nodeType()
+            and other.parsing_state is self.parsing_state
+            and other.latex_walker is self.latex_walker
+            and
             # the "pos is None and other.pos is None" checks on top of equality
             # comparison are there for transcrypt ...
-            ((other.pos is None and self.pos is None) or other.pos == self.pos)  and
-            ((other.pos_end is None and self.pos_end is None)
-             or other.pos_end == self.pos_end)  and
-            all(
+            ((other.pos is None and self.pos is None) or other.pos == self.pos)
+            and (
+                (other.pos_end is None and self.pos_end is None)
+                or other.pos_end == self.pos_end
+            )
+            and all(
                 (
-                    ( (getattr(self, f) is None and getattr(other, f) is None)
-                      or getattr(self, f) == getattr(other, f) )
+                    (
+                        (getattr(self, f) is None and getattr(other, f) is None)
+                        or getattr(self, f) == getattr(other, f)
+                    )
                     for f in self._fields
                 )
             )
         )
 
     # see https://docs.python.org/3/library/constants.html#NotImplemented
-    def __ne__(self, other): return NotImplemented
+    def __ne__(self, other):
+        return NotImplemented
 
     __hash__ = None
 
     def __unicode__(self):
         return _unicode_from_str(self.__str__())
+
     def __str__(self):
         return self.__repr__()
+
     def __repr__(self):
         return (
-            self.nodeType().__name__ + "(" +
-            ", ".join([ "{}={!r}".format(k,getattr(self,k))  for k in self._fields ]) +
-            ")"
-            )
+            self.nodeType().__name__
+            + "("
+            + ", ".join(["{}={!r}".format(k, getattr(self, k)) for k in self._fields])
+            + ")"
+        )
 
     def display_str(self):
-        return r'<UNKNOWN NODE TYPE>: ' + repr(self)
+        return r"<UNKNOWN NODE TYPE>: " + repr(self)
 
     def accept_node_visitor(self, visitor):
         visitor.visit_unknown_node(self)
@@ -255,14 +273,14 @@ class LatexNode(object):
     def to_json_object_with_latexwalker(self, latexwalker):
         # Prepare a dictionary with the correct keys and values.
         d = {
-            'nodetype': self.__class__.__name__,
+            "nodetype": self.__class__.__name__,
         }
-        #redundant_fields = getattr(n, '_redundant_fields', n._fields)
+        # redundant_fields = getattr(n, '_redundant_fields', n._fields)
         for fld in self._fields:
-            if fld == 'spec':
+            if fld == "spec":
                 # TODO: maybe do something smarter here in the future
                 d[fld] = repr(self.spec)
-            elif fld == 'latex_walker':
+            elif fld == "latex_walker":
                 # skip
                 pass
             else:
@@ -273,7 +291,7 @@ class LatexNode(object):
     def format_pos(self):
         if self.latex_walker is not None:
             return self.latex_walker.format_pos(self.pos)
-        return '[@ pos {}]'.format(repr(self.pos))
+        return "[@ pos {}]".format(repr(self.pos))
 
 
 class LatexCharsNode(LatexNode):
@@ -285,22 +303,19 @@ class LatexCharsNode(LatexNode):
 
        The string of characters represented by this node.
     """
+
     def __init__(self, chars, **kwargs):
-        super(LatexCharsNode, self).__init__(
-            _fields = ('chars',),
-            **kwargs
-        )
+        super(LatexCharsNode, self).__init__(_fields=("chars",), **kwargs)
         self.chars = chars
 
     def nodeType(self):
         return LatexCharsNode
 
     def display_str(self):
-        return 'chars ‘' + _display_abbrev_str(self.chars) + '’'
+        return "chars ‘" + _display_abbrev_str(self.chars) + "’"
 
     def accept_node_visitor(self, visitor):
         visitor.visit_chars_node(self)
-
 
 
 class LatexGroupNode(LatexNode):
@@ -315,7 +330,7 @@ class LatexGroupNode(LatexNode):
 
        A list of nodes describing the contents of the LaTeX braced group.  Each
        item of the list is a :py:class:`LatexNode`.
-    
+
        This attribute is normally a :py:class:`LatexNodeList`.
 
     .. py:attribute:: delimiters
@@ -328,10 +343,14 @@ class LatexGroupNode(LatexNode):
 
           The `delimiters` field was added in `pylatexenc 2.0`.
     """
+
     def __init__(self, nodelist, **kwargs):
-        delimiters = kwargs.pop('delimiters', ('{', '}'))
+        delimiters = kwargs.pop("delimiters", ("{", "}"))
         super(LatexGroupNode, self).__init__(
-            _fields=('nodelist','delimiters',),
+            _fields=(
+                "nodelist",
+                "delimiters",
+            ),
             **kwargs
         )
         self.nodelist = nodelist
@@ -366,11 +385,15 @@ class LatexCommentNode(LatexNode):
        (e.g., indentation spaces of the next line)
 
     """
+
     def __init__(self, comment, **kwargs):
-        comment_post_space = kwargs.pop('comment_post_space', '')
+        comment_post_space = kwargs.pop("comment_post_space", "")
 
         super(LatexCommentNode, self).__init__(
-            _fields = ('comment', 'comment_post_space', ),
+            _fields=(
+                "comment",
+                "comment_post_space",
+            ),
             **kwargs
         )
 
@@ -451,15 +474,17 @@ class LatexMacroNode(LatexNode):
        A list of arguments to the macro. Each item in the list is a
        :py:class:`LatexNode`.
     """
+
     def __init__(self, macroname, **kwargs):
-        nodeargd = kwargs.pop('nodeargd', ParsedArguments())
-        macro_post_space = kwargs.pop('macro_post_space', '')
-        spec = kwargs.pop('spec', None)
+        nodeargd = kwargs.pop("nodeargd", ParsedArguments())
+        macro_post_space = kwargs.pop("macro_post_space", "")
+        spec = kwargs.pop("spec", None)
 
         super(LatexMacroNode, self).__init__(
-            _fields = ('macroname','spec','nodeargd','macro_post_space'),
-            _redundant_fields = ('nodeoptarg','nodeargs'),
-            **kwargs)
+            _fields=("macroname", "spec", "nodeargd", "macro_post_space"),
+            _redundant_fields=("nodeoptarg", "nodeargs"),
+            **kwargs
+        )
 
         self.macroname = macroname
         self.spec = spec
@@ -477,24 +502,25 @@ class LatexMacroNode(LatexNode):
             self.nodeargd.accept_node_visitor(visitor)
         visitor.visit_macro_node(self)
 
-
-### BEGIN_PYLATEXENC2_LEGACY_SUPPORT_CODE
+    ### BEGIN_PYLATEXENC2_LEGACY_SUPPORT_CODE
     @property
     def nodeoptarg(self):
-        if not hasattr(self, '_nodeoptarg'):
-            self._nodeoptarg, self._nodeargs = \
-                getattr(self.nodeargd, 'legacy_nodeoptarg_nodeargs', (None,None))
+        if not hasattr(self, "_nodeoptarg"):
+            self._nodeoptarg, self._nodeargs = getattr(
+                self.nodeargd, "legacy_nodeoptarg_nodeargs", (None, None)
+            )
         return self._nodeoptarg
 
     @property
     def nodeargs(self):
-        if not hasattr(self, '_nodeargs'):
-            self._nodeoptarg, self._nodeargs = \
-                getattr(self.nodeargd, 'legacy_nodeoptarg_nodeargs', (None,None))
+        if not hasattr(self, "_nodeargs"):
+            self._nodeoptarg, self._nodeargs = getattr(
+                self.nodeargd, "legacy_nodeoptarg_nodeargs", (None, None)
+            )
         return self._nodeargs
 
-### END_PYLATEXENC2_LEGACY_SUPPORT_CODE
 
+### END_PYLATEXENC2_LEGACY_SUPPORT_CODE
 
 
 class LatexEnvironmentNode(LatexNode):
@@ -562,36 +588,45 @@ class LatexEnvironmentNode(LatexNode):
           the argument `args` will still give a list of curly-brace-delimited
           arguments for standard latex macros, for backwards compatibility.
     """
-    
+
     def __init__(self, environmentname, nodelist, **kwargs):
-        nodeargd = kwargs.pop('nodeargd', ParsedArguments())
-        spec = kwargs.pop('spec', None)
+        nodeargd = kwargs.pop("nodeargd", ParsedArguments())
+        spec = kwargs.pop("spec", None)
         # # legacy:
         # optargs = kwargs.pop('optargs', [])
         # args = kwargs.pop('args', [])
 
         super(LatexEnvironmentNode, self).__init__(
-            _fields = ('environmentname','spec','nodelist','nodeargd',),
-            _redundant_fields = ('envname', 'optargs','args',),
-            **kwargs)
+            _fields=(
+                "environmentname",
+                "spec",
+                "nodelist",
+                "nodeargd",
+            ),
+            _redundant_fields=(
+                "envname",
+                "optargs",
+                "args",
+            ),
+            **kwargs
+        )
 
         self.environmentname = environmentname
         self.spec = spec
         self.nodelist = nodelist
         self.nodeargd = nodeargd
         # legacy:
-        #self.envname = environmentname
-        #self.optargs = optargs
-        #self.args = args
+        # self.envname = environmentname
+        # self.optargs = optargs
+        # self.args = args
 
-
-### BEGIN_PYLATEXENC2_LEGACY_SUPPORT_CODE
+    ### BEGIN_PYLATEXENC2_LEGACY_SUPPORT_CODE
     @property
     def envname(self):
         # Obsolete, don't use.
         return self.environmentname
 
-### END_PYLATEXENC2_LEGACY_SUPPORT_CODE
+    ### END_PYLATEXENC2_LEGACY_SUPPORT_CODE
 
     def nodeType(self):
         return LatexEnvironmentNode
@@ -607,7 +642,6 @@ class LatexEnvironmentNode(LatexNode):
                 if node is not None:
                     node.accept_node_visitor(visitor)
         visitor.visit_environment_node(self)
-
 
 
 class LatexSpecialsNode(LatexNode):
@@ -632,7 +666,7 @@ class LatexSpecialsNode(LatexNode):
        If the specials spec (cf. :py:class:`~pylatexenc.macrospec.SpecialsSpec`)
        has `args_parser=None` then the attribute `nodeargd` is set to `None`.
        If `args_parser` is specified in the spec, then the attribute `nodeargd`
-       is a :py:class:`pylatexenc.latexnodes.ParsedArguments` instance that 
+       is a :py:class:`pylatexenc.latexnodes.ParsedArguments` instance that
        represents the arguments to the specials.
 
        The `nodeargd` attribute can also be `None` even if the specials expects
@@ -648,14 +682,14 @@ class LatexSpecialsNode(LatexNode):
 
        Latex specials were introduced in `pylatexenc 2.0`.
     """
-    def __init__(self, specials_chars, **kwargs):
 
-        spec = kwargs.pop('spec', None)
-        nodeargd = kwargs.pop('nodeargd', None)
+    def __init__(self, specials_chars, **kwargs):
+        spec = kwargs.pop("spec", None)
+        nodeargd = kwargs.pop("nodeargd", None)
 
         super(LatexSpecialsNode, self).__init__(
-            _fields = ('specials_chars','spec','nodeargd'),
-            **kwargs)
+            _fields=("specials_chars", "spec", "nodeargd"), **kwargs
+        )
 
         self.specials_chars = specials_chars
         self.spec = spec
@@ -695,16 +729,16 @@ class LatexMathNode(LatexNode):
           The `delimiters` attribute was introduced in `pylatexenc 2`.
 
     .. py:attribute:: nodelist
-    
+
        The contents of the environment.  This attribute is normally a
        :py:class:`LatexNodeList`.
     """
+
     def __init__(self, displaytype, nodelist=[], **kwargs):
-        delimiters = kwargs.pop('delimiters', (None, None))
+        delimiters = kwargs.pop("delimiters", (None, None))
 
         super(LatexMathNode, self).__init__(
-            _fields = ('displaytype','nodelist','delimiters'),
-            **kwargs
+            _fields=("displaytype", "nodelist", "delimiters"), **kwargs
         )
 
         self.displaytype = displaytype
@@ -726,9 +760,7 @@ class LatexMathNode(LatexNode):
         visitor.visit_math_node(self)
 
 
-
 # ------------------------------------------------------------------------------
-
 
 
 class LatexNodeList(object):
@@ -743,7 +775,7 @@ class LatexNodeList(object):
        A list of node instances.
 
     .. py:attribute:: pos
-    
+
        The position in the parsed string where this node list starts, assuming
        that the `nodelist` represents a single continuous sequence of nodes in
        the latex string.
@@ -773,8 +805,8 @@ class LatexNodeList(object):
 
        The `LatexNodeList` class was introduced in `pylatexenc 3.0`.
     """
-    def __init__(self, nodelist, **kwargs):
 
+    def __init__(self, nodelist, **kwargs):
         if isinstance(nodelist, LatexNodeList):
             obj = nodelist
             self.nodelist = obj.nodelist
@@ -787,24 +819,32 @@ class LatexNodeList(object):
         self.nodelist = nodelist
 
         if self.nodelist is None:
-            logger.warning("You're creating a LatexNodeList with nodelist=None. That's "
-                           "likely to cause crashes!")
+            logger.warning(
+                "You're creating a LatexNodeList with nodelist=None. That's "
+                "likely to cause crashes!"
+            )
 
-        self.parsing_state = kwargs.pop('parsing_state', None)
-        self.latex_walker = kwargs.pop('latex_walker', None)
-        self.pos = kwargs.pop('pos', None)
-        self.pos_end = kwargs.pop('pos_end', None)
+        self.parsing_state = kwargs.pop("parsing_state", None)
+        self.latex_walker = kwargs.pop("latex_walker", None)
+        self.pos = kwargs.pop("pos", None)
+        self.pos_end = kwargs.pop("pos_end", None)
 
-        if len(kwargs): # len() for Transcrypt
-            raise ValueError("Unexpected keyword arguments to LatexNodeList: "
-                             + repr(kwargs))
+        if len(kwargs):  # len() for Transcrypt
+            raise ValueError(
+                "Unexpected keyword arguments to LatexNodeList: " + repr(kwargs)
+            )
 
-        self.pos, self.pos_end = \
-            _update_posposend_from_nodelist(self.pos, self.pos_end, self.nodelist)
+        self.pos, self.pos_end = _update_posposend_from_nodelist(
+            self.pos, self.pos_end, self.nodelist
+        )
 
-
-    _fields = ('nodelist', 'parsing_state', 'latex_walker', 'pos', 'pos_end',)
-
+    _fields = (
+        "nodelist",
+        "parsing_state",
+        "latex_walker",
+        "pos",
+        "pos_end",
+    )
 
     @property
     def len(self):
@@ -818,7 +858,6 @@ class LatexNodeList(object):
             return iter([])
         return iter(self.nodelist)
 
-
     def __getitem__(self, index):
         # supports slicing, too, and returns a simple list in such cases
 
@@ -826,7 +865,7 @@ class LatexNodeList(object):
         # Provide supporting code that is only visible to Transcrypt -->
         #
 
-        #__pragma__('ecom')
+        # __pragma__('ecom')
 
         # Transcrypt supports slices by passing an array [lower,upper,step] as
         # "index" parameter.
@@ -848,11 +887,9 @@ class LatexNodeList(object):
 
         return self.nodelist[index]
 
-
     def __len__(self):
         return len(self.nodelist)
-    
-    
+
     def latex_verbatim(self):
         r"""
         Return the chunk of LaTeX code that this node represents.
@@ -860,29 +897,26 @@ class LatexNodeList(object):
         This is a shorthand for concatenating all the `latex_verbatim()`
         representation of all the nodes in the list.
         """
-        return "".join([
-            n.latex_verbatim()
-            for n in self.nodelist
-            if n is not None
-        ])
-
+        return "".join([n.latex_verbatim() for n in self.nodelist if n is not None])
 
     def display_str(self):
         r"""
         Return a string that is not too long
         """
         if self.nodelist is None:
-            list_len = 'null list'
-            list_preview = ''
+            list_len = "null list"
+            list_preview = ""
         else:
             list_len = len(self.nodelist)
             list_preview = (
                 ": "
-                + ", ".join([
-                    n.display_str() if n is not None else 'None'
-                    for n in self.nodelist[:2]
-                ])
-                + (" …" if list_len > 2 else '')
+                + ", ".join(
+                    [
+                        n.display_str() if n is not None else "None"
+                        for n in self.nodelist[:2]
+                    ]
+                )
+                + (" …" if list_len > 2 else "")
             )
         return "list of nodes (" + str(list_len) + ")" + list_preview
 
@@ -893,32 +927,34 @@ class LatexNodeList(object):
                     node.accept_node_visitor(visitor)
         visitor.visit_node_list(self)
 
-
-    def filter(self, node_predicate_fn=None,
-               skip_none=True, skip_comments=False, skip_whitespace_char_nodes=False):
-
+    def filter(
+        self,
+        node_predicate_fn=None,
+        skip_none=True,
+        skip_comments=False,
+        skip_whitespace_char_nodes=False,
+    ):
         if self.latex_walker is not None:
             make_nodelist = self.latex_walker.make_nodelist
         else:
             make_nodelist = lambda nl, **kwargs: LatexNodeList(nl, **kwargs)
-        
+
         def filter_full_predicate_fn(n):
             if skip_none and n is None:
                 return False
             if skip_comments and n.isNodeType(LatexCommentNode):
                 return False
-            if skip_whitespace_char_nodes and n.isNodeType(LatexCharsNode) \
-               and len(n.chars.strip()) == 0:
+            if (
+                skip_whitespace_char_nodes
+                and n.isNodeType(LatexCharsNode)
+                and len(n.chars.strip()) == 0
+            ):
                 return False
             if node_predicate_fn is not None:
                 return node_predicate_fn(n)
             return True
 
-        filtered_nodes = [
-            n
-            for n in self.nodelist
-            if filter_full_predicate_fn(n)
-        ]
+        filtered_nodes = [n for n in self.nodelist if filter_full_predicate_fn(n)]
 
         return make_nodelist(
             filtered_nodes,
@@ -928,12 +964,11 @@ class LatexNodeList(object):
             pos=(None if len(filtered_nodes) else self.pos_end),
             pos_end=(None if len(filtered_nodes) else self.pos_end),
         )
-    
 
-    def split_at_node(self, node_predicate_fn, skip_none=True, keep_separators=False,
-                      max_split=None):
-
-        nodelists_list = [ [] ]
+    def split_at_node(
+        self, node_predicate_fn, skip_none=True, keep_separators=False, max_split=None
+    ):
+        nodelists_list = [[]]
 
         if max_split is not None and max_split == 0:
             no_more_splits = True
@@ -948,12 +983,12 @@ class LatexNodeList(object):
                     nodelists_list.append([n])
                 else:
                     nodelists_list.append([])
-                    
+
                 if max_split is not None and len(nodelists_list) >= max_split:
                     no_more_splits = True
             else:
-                nodelists_list[len(nodelists_list)-1].append(n)
-        
+                nodelists_list[len(nodelists_list) - 1].append(n)
+
         if self.latex_walker is not None:
             make_latex_node_list = self.latex_walker.make_nodelist
         else:
@@ -964,7 +999,9 @@ class LatexNodeList(object):
             for nl in nodelists_list
         ]
 
-    def split_at_chars(self, sep_chars, max_split=None, keep_empty=False, skip_none=True):
+    def split_at_chars(
+        self, sep_chars, max_split=None, keep_empty=False, skip_none=True
+    ):
         r"""
         Split the node list into multiple node lists corresponding to chunks
         delimited by the given `sep_chars`.
@@ -1000,16 +1037,16 @@ class LatexNodeList(object):
         If `sep_chars` is a Regular expression (or any object with a `search()`
         method returning match-like objects with `start()` and `end()`).
         """
-        
+
         # untested code !
 
         split_node_lists = []
-        
+
         def get_split_match_start_end(m, offset=0):
             if m is None:
                 return (-1, None)
-            if hasattr(m, 'start') and hasattr(m, 'end'):
-                return (offset+m.start(), offset+m.end())
+            if hasattr(m, "start") and hasattr(m, "end"):
+                return (offset + m.start(), offset + m.end())
             if not m or not len(m):
                 return (-1, None)
             start, end = m
@@ -1021,14 +1058,13 @@ class LatexNodeList(object):
             return start, end
 
         def get_next_split(chars, pos):
-
             if max_split is not None and len(split_node_lists) >= max_split:
                 return (-1, len(chars))
 
-            if hasattr(sep_chars, 'search'):
-                #__pragma__('skip')
+            if hasattr(sep_chars, "search"):
+                # __pragma__('skip')
                 return get_split_match_start_end(sep_chars.search(chars, pos))
-                #__pragma__('noskip')
+                # __pragma__('noskip')
                 # Transcrypt's implementation of regexp.search(chars, pos) seems
                 # buggy, so use the following code instead:
                 m = sep_chars.search(chars[pos:])
@@ -1041,8 +1077,7 @@ class LatexNodeList(object):
             idx = chars.find(sep_chars, pos)
             if idx is None or idx == -1:
                 return (-1, None)
-            return (idx, idx+len(sep_chars))
-
+            return (idx, idx + len(sep_chars))
 
         lw = self.latex_walker
         if lw is not None:
@@ -1053,17 +1088,21 @@ class LatexNodeList(object):
             make_nodelist = lambda nl, **kwargs: LatexNodeList(nl, **kwargs)
 
         def chars_to_node(chars, n, rel_pos, rel_pos_end):
-            return make_node(LatexCharsNode,
-                             parsing_state=self.parsing_state,
-                             pos=n.pos + rel_pos,
-                             pos_end=n.pos + rel_pos_end,
-                             chars=chars)
+            return make_node(
+                LatexCharsNode,
+                parsing_state=self.parsing_state,
+                pos=n.pos + rel_pos,
+                pos_end=n.pos + rel_pos_end,
+                chars=chars,
+            )
 
         def flush_nodes(nodes, pos_end=None):
             newnodelist = make_nodelist(
                 nodes,
                 parsing_state=self.parsing_state,
-                pos=None if len(nodes) else pos_end, # auto-detect from nodes if applicable
+                pos=(
+                    None if len(nodes) else pos_end
+                ),  # auto-detect from nodes if applicable
                 pos_end=pos_end,
             )
             split_node_lists.append(newnodelist)
@@ -1071,14 +1110,12 @@ class LatexNodeList(object):
         pending_nodes = []
 
         for n in self.nodelist:
-
             if n is None:
                 if not skip_none:
                     pending_nodes.append(n)
                 continue
 
             if n.isNodeType(LatexCharsNode):
-
                 next_sep_end = 0
 
                 while True:
@@ -1101,7 +1138,7 @@ class LatexNodeList(object):
                                     chars_to_node(p, n, prev_sep_end, next_sep_idx)
                                 )
                             if len(pending_nodes) or keep_empty:
-                                flush_nodes(pending_nodes, pos_end=n.pos+next_sep_idx)
+                                flush_nodes(pending_nodes, pos_end=n.pos + next_sep_idx)
                             pending_nodes = []
                             continue
                         else:
@@ -1113,7 +1150,7 @@ class LatexNodeList(object):
                                     chars_to_node(p, n, prev_sep_end, next_sep_idx)
                                 ]
                             if len(thenodes) or keep_empty:
-                                flush_nodes(thenodes, pos_end=n.pos+next_sep_idx)
+                                flush_nodes(thenodes, pos_end=n.pos + next_sep_idx)
                             continue
                     else:
                         if prev_sep_end == 0:
@@ -1133,18 +1170,16 @@ class LatexNodeList(object):
                             break
                         # in all cases, we're done searching through this char
                         # node's string content
-                        #break
+                        # break
 
                 continue
 
-            pending_nodes.append( n )
+            pending_nodes.append(n)
 
         if pending_nodes or keep_empty:
             flush_nodes(pending_nodes, pos_end=self.pos_end)
 
         return split_node_lists
-
-
 
     def get_content_as_chars(self):
         r"""
@@ -1163,8 +1198,6 @@ class LatexNodeList(object):
         """
         return _get_content_as_chars(self.nodelist)
 
-
-
     def __eq__(self, other):
         if isinstance(other, list):
             return self.nodelist == other
@@ -1172,36 +1205,32 @@ class LatexNodeList(object):
             self.nodelist == other.nodelist
             # the "pos is None and other.pos is None" checks are there for transcrypt ...
             and ((self.pos is None and other.pos is None) or self.pos == other.pos)
-            and ((self.pos_end is None and other.pos_end is None)
-                 or self.pos_end == other.pos_end)
+            and (
+                (self.pos_end is None and other.pos_end is None)
+                or self.pos_end == other.pos_end
+            )
         )
-
 
     def to_json_object(self):
         return self.nodelist
 
     def __repr__(self):
-        return 'LatexNodeList({nodelist!r}, pos={pos!r}, pos_end={pos_end!r})'.format(
-            nodelist=self.nodelist,
-            pos=self.pos,
-            pos_end=self.pos_end
+        return "LatexNodeList({nodelist!r}, pos={pos!r}, pos_end={pos_end!r})".format(
+            nodelist=self.nodelist, pos=self.pos, pos_end=self.pos_end
         )
 
 
-
 def _get_content_as_chars(nodelist):
-
     # having a separate global method protects against group nodes that might
     # have a list instead of a LatexNodeList instance as their `nodelist`
     # attribute, by accident...
 
     if nodelist is None:
-        return ''
+        return ""
 
     charslist = []
 
     for n in nodelist:
-
         if n is None:
             continue
 
@@ -1211,7 +1240,7 @@ def _get_content_as_chars(nodelist):
 
         if n.isNodeType(LatexGroupNode):
             # go recursively
-            charslist.append( _get_content_as_chars(n.nodelist) )
+            charslist.append(_get_content_as_chars(n.nodelist))
             continue
 
         if n.isNodeType(LatexCharsNode):
@@ -1220,18 +1249,16 @@ def _get_content_as_chars(nodelist):
 
         raise LatexWalkerParseError(
             "Expected simple characters only, got ‘{}’".format(n.__class__.__name__),
-            pos=n.pos
+            pos=n.pos,
         )
 
     return "".join(charslist)
-
 
 
 # ------------------------------------------------------------------------------
 
 
 def _update_posposend_from_nodelist(pos, pos_end, nodelist):
-
     if pos is None:
         for n in nodelist:
             if n is not None:
@@ -1249,8 +1276,6 @@ def _update_posposend_from_nodelist(pos, pos_end, nodelist):
             pos_end = None
 
     return pos, pos_end
-
-
 
 
 # ------------------------------------------------------------------------------
@@ -1303,10 +1328,8 @@ class LatexNodesVisitor(object):
     def visit_parsed_arguments(self, parsed_args):
         self.visit(parsed_args)
 
-
     def visit_unknown_node(self, node):
         self.visit(node)
-
 
     # --
 
@@ -1323,7 +1346,6 @@ class LatexNodesVisitor(object):
         You probably shouldn't override this method in your visitor subclass.
         """
         node.accept_node_visitor(self)
-
 
 
 #
@@ -1343,12 +1365,10 @@ latex_node_types = (
     LatexMacroNode,
     LatexEnvironmentNode,
     LatexSpecialsNode,
-    LatexMathNode
+    LatexMathNode,
 )
 
-__all__ = [ nc.__name__ for nc in latex_node_types ] + [
-    'LatexNodeList',
-    'LatexNodesVisitor',
+__all__ = [nc.__name__ for nc in latex_node_types] + [
+    "LatexNodeList",
+    "LatexNodesVisitor",
 ]
-
-

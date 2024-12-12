@@ -11,13 +11,13 @@ executor = ThreadPoolExecutor()
 
 
 class Summarizer:
-    """
-    """
+    """ """
+
     def __init__(self, config=None, run_func=None):
         self.config = config or get_config()
         self.run_func = run_func
 
-    async def run(self, content: str, question: str, url:str= None) -> str:
+    async def run(self, content: str, question: str, url: str = None) -> str:
         """Browse a website and return the answer and links to the user
 
         Args:
@@ -32,7 +32,9 @@ class Summarizer:
         executor = ThreadPoolExecutor(max_workers=8)
 
         try:
-            summary_text = await loop.run_in_executor(executor, self.summarize_text, content, question, url)
+            summary_text = await loop.run_in_executor(
+                executor, self.summarize_text, content, question, url
+            )
 
             return f"Information gathered from url {url}: {summary_text}"
         except Exception as e:
@@ -40,9 +42,7 @@ class Summarizer:
             raise e
             return f"Error processing the url {url}: {e}"
 
-    def summarize_text(
-            self, text: str, question: str, url: str
-    ) -> str:
+    def summarize_text(self, text: str, question: str, url: str) -> str:
         """Summarize text using the OpenAI API
 
         Args:
@@ -57,7 +57,9 @@ class Summarizer:
             return "Error: No text to summarize"
 
         summary, chunks = summarize_text(text, self.config, question=question)
-        summary = f"Question: {question}\n Source: {url}\n Content summary part#: {summary}"
+        summary = (
+            f"Question: {question}\n Source: {url}\n Content summary part#: {summary}"
+        )
 
         print(summary)
         return summary

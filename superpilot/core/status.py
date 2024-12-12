@@ -1,4 +1,5 @@
 """Temp Status Enum to keep track of our progress"""
+
 import dataclasses
 import enum
 from typing import List

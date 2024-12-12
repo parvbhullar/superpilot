@@ -1,4 +1,5 @@
 """Abstract interface for a message broker system."""
+
 import abc
 import enum
 from datetime import datetime
@@ -69,8 +70,7 @@ class MessageEmitter(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def __repr__(self):
-        ...
+    def __repr__(self): ...
 
 
 class MessageChannel(abc.ABC):
@@ -108,8 +108,7 @@ class MessageChannel(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def __repr__(self) -> str:
-        ...
+    def __repr__(self) -> str: ...
 
 
 class MessageBroker(abc.ABC):
@@ -173,5 +172,4 @@ class MessageBroker(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def __repr__(self):
-        ...
+    def __repr__(self): ...

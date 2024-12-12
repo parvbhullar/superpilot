@@ -1,5 +1,6 @@
 """This module contains functions to fix JSON strings using general programmatic approaches, suitable for addressing
 common JSON formatting issues."""
+
 from __future__ import annotations
 
 import contextlib
@@ -29,6 +30,7 @@ def extract_char_position(error_message: str) -> int:
         return int(match[1])
     else:
         raise ValueError("Character position not found in the error message.")
+
 
 def fix_invalid_escape(json_to_load: str, error_message: str) -> str:
     """Fix invalid escape sequences in JSON strings.

@@ -92,12 +92,10 @@ class ChatSequence:
     messages: list[Message] = field(default_factory=list[Message])
 
     @overload
-    def __getitem__(self, key: int) -> Message:
-        ...
+    def __getitem__(self, key: int) -> Message: ...
 
     @overload
-    def __getitem__(self: TChatSequence, key: slice) -> TChatSequence:
-        ...
+    def __getitem__(self: TChatSequence, key: slice) -> TChatSequence: ...
 
     def __getitem__(self: TChatSequence, key: int | slice) -> Message | TChatSequence:
         if isinstance(key, slice):

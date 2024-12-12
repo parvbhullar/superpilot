@@ -1,4 +1,5 @@
 """Functions for counting the number of tokens in a message or string."""
+
 from __future__ import annotations
 
 from typing import List, overload
@@ -10,13 +11,13 @@ from superpilot.framework.helpers.logs import logger
 
 
 @overload
-def count_message_tokens(messages: Message, model: str = "gpt-3.5-turbo") -> int:
-    ...
+def count_message_tokens(messages: Message, model: str = "gpt-3.5-turbo") -> int: ...
 
 
 @overload
-def count_message_tokens(messages: List[Message], model: str = "gpt-3.5-turbo") -> int:
-    ...
+def count_message_tokens(
+    messages: List[Message], model: str = "gpt-3.5-turbo"
+) -> int: ...
 
 
 def count_message_tokens(

@@ -35,7 +35,7 @@ async def run_superpilot(user_configuration: dict):
         # First we need to figure out what the user wants to do with the pilot.
         # We'll do this by asking the user for a prompt.
         # user_objective = click.prompt("What do you want Superpilot to do?")
-        user_objective = 'research on what is GST'
+        user_objective = "research on what is GST"
         # Ask a language model to determine a name and goals for a suitable pilot.
         name_and_goals = await ResearchAgent.determine_pilot_name_and_goals(
             user_objective,

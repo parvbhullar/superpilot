@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 #
 # The MIT License (MIT)
-# 
+#
 # Copyright (c) 2022 Philippe Faist
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,19 +35,19 @@ _basestring = str
 
 ### BEGIN_PYTHON2_SUPPORT_CODE
 import sys
+
 if sys.version_info.major == 2:
     # Py2
     _basestring = basestring
 ### END_PYTHON2_SUPPORT_CODE
 
 
-
 import logging
+
 logger = logging.getLogger(__name__)
 
 from .nodes import *
 from ._exctypes import LatexWalkerParseError
-
 
 
 class SingleParsedArgumentInfo(object):
@@ -64,6 +64,7 @@ class SingleParsedArgumentInfo(object):
 
        This class was introduced in `pylatexenc 3`.
     """
+
     def __init__(self, argument_node_object):
         super(SingleParsedArgumentInfo, self).__init__()
         self.argument_node_object = argument_node_object
@@ -74,10 +75,10 @@ class SingleParsedArgumentInfo(object):
         environment/specials) call, `False` if the argument was not provided.
         This only makes sense for optional arguments and will always return
         `True` for a mandatory argument that was provided.
-        
+
         Checks that the given node object `argument_node_object` is not `None`.
         """
-        return (self.argument_node_object is not None)
+        return self.argument_node_object is not None
 
     def get_content_nodelist(self):
         r"""
@@ -104,7 +105,6 @@ class SingleParsedArgumentInfo(object):
 
         return LatexNodeList([argument_node_object])
 
-
     def get_content_as_chars(self):
         r"""
         Return the argument contents as a single character string.
@@ -130,24 +130,16 @@ class SingleParsedArgumentInfo(object):
         nodelist = self.get_content_nodelist()
         return nodelist.get_content_as_chars()
 
-
     def __repr__(self):
-        return (
-            "{}(argument_node_object={!r})"
-            .format(
-                self.__class__.__name__,
-                self.argument_node_object,
-            )
+        return "{}(argument_node_object={!r})".format(
+            self.__class__.__name__,
+            self.argument_node_object,
         )
 
     def __eq__(self, other):
         return (
-            (self.argument_node_object is None and other.argument_node_object is None)
-            or self.argument_node_object == other.argument_node_object
-        )
-
-
-
+            self.argument_node_object is None and other.argument_node_object is None
+        ) or self.argument_node_object == other.argument_node_object
 
 
 class ParsedArgumentsInfo(object):
@@ -155,13 +147,14 @@ class ParsedArgumentsInfo(object):
     Utility class that can gather information about the arguments stored in a
     :py:class:`ParsedArguments` instance.
     """
+
     def __init__(self, parsed_arguments=None, node=None):
         super(ParsedArgumentsInfo, self).__init__()
         self.parsed_arguments = parsed_arguments
         self.node = node
         if self.node is not None:
             self.node_pos = self.node.pos
-            if self.parsed_arguments is None and hasattr(self.node, 'nodeargd'):
+            if self.parsed_arguments is None and hasattr(self.node, "nodeargd"):
                 self.parsed_arguments = self.node.nodeargd
             else:
                 self.parsed_arguments = None
@@ -169,8 +162,10 @@ class ParsedArgumentsInfo(object):
             self.node_pos = None
 
         if self.parsed_arguments is None and self.node is None:
-            logger.warning("You created ParsedArgumentsInfo with both node=None "
-                           "and parsed_arguments=None, might be a bug in your code?")
+            logger.warning(
+                "You created ParsedArgumentsInfo with both node=None "
+                "and parsed_arguments=None, might be a bug in your code?"
+            )
 
     def get_argument_info(self, arg):
         r"""
@@ -187,7 +182,7 @@ class ParsedArgumentsInfo(object):
         if self.parsed_arguments is None:
             raise LatexWalkerParseError(
                 "Cannot get argument information, there were no arguments specified",
-                pos=self.node_pos
+                pos=self.node_pos,
             )
 
         arg_i = arg
@@ -200,21 +195,23 @@ class ParsedArgumentsInfo(object):
                     break
             else:
                 raise LatexWalkerParseError(
-                    "Cannot find argument named ‘{}’".format(argname),
-                    pos=self.node_pos
+                    "Cannot find argument named ‘{}’".format(argname), pos=self.node_pos
                 )
 
         # arg_i is the index in the list of arguments
-        return SingleParsedArgumentInfo( self.parsed_arguments.argnlist[arg_i] )
+        return SingleParsedArgumentInfo(self.parsed_arguments.argnlist[arg_i])
 
-    def get_all_arguments_info(self, args=None,
-                               #*,
-                               allow_additional_arguments=False,
-                               skip_nonexistent_arguments=False,
-                               return_argnames_only=True):
+    def get_all_arguments_info(
+        self,
+        args=None,
+        # *,
+        allow_additional_arguments=False,
+        skip_nonexistent_arguments=False,
+        return_argnames_only=True,
+    ):
         r"""
         A helper function to return info objects for all arguments.
-    
+
         Here, `args` specifies which arguments to retrieve information for.  If
         `args=None`, then information about all known arguments are returned.
         Otherwise, you can specify a list wherein each item is an argument name
@@ -243,10 +240,7 @@ class ParsedArgumentsInfo(object):
             msg = "Missing arguments"
             if self.node is not None:
                 msg = "Missing arguments to {!r}".format(self.node)
-            raise LatexWalkerParseError(
-                msg,
-                self.node_pos
-            )
+            raise LatexWalkerParseError(msg, self.node_pos)
 
         args_info = {}
 
@@ -254,7 +248,6 @@ class ParsedArgumentsInfo(object):
         arg_i_seen = set()
 
         for j, arg_spec in enumerate(self.parsed_arguments.arguments_spec_list):
-            
             argument_node_object = self.parsed_arguments.argnlist[j]
 
             arg_requested = False
@@ -275,13 +268,15 @@ class ParsedArgumentsInfo(object):
                 if not allow_additional_arguments:
                     raise LatexWalkerParseError(
                         "Got unexpected argument ‘{}’".format(arg_spec.argname),
-                        pos=(argument_node_object.pos
-                             if argument_node_object is not None
-                             else None)
+                        pos=(
+                            argument_node_object.pos
+                            if argument_node_object is not None
+                            else None
+                        ),
                     )
                 continue
 
-            arg_info = SingleParsedArgumentInfo( argument_node_object )
+            arg_info = SingleParsedArgumentInfo(argument_node_object)
 
             if not return_argnames_only and arg_requested_by is not None:
                 args_info[arg_requested_by] = arg_info
@@ -295,12 +290,13 @@ class ParsedArgumentsInfo(object):
             for arg_x in args:
                 if arg_x not in arg_names_seen and arg_x not in arg_i_seen:
                     raise ValueError(
-                        "Missing argument {}"
-                        .format( ( '‘'+arg_x+'’'
-                                   if isinstance(arg_x, _basestring)
-                                   else str(arg_x) ) )
+                        "Missing argument {}".format(
+                            (
+                                "‘" + arg_x + "’"
+                                if isinstance(arg_x, _basestring)
+                                else str(arg_x)
+                            )
+                        )
                     )
-                
-        return args_info
 
-        
+        return args_info

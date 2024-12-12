@@ -1,4 +1,5 @@
 """Selenium web scraping module."""
+
 from __future__ import annotations
 
 import logging
@@ -23,7 +24,10 @@ from fastapi import WebSocket
 import superpilot.framework.helpers.processing.text as summary
 
 from superpilot.core.configuration import Config
-from superpilot.framework.helpers.processing.html import extract_hyperlinks, format_hyperlinks
+from superpilot.framework.helpers.processing.html import (
+    extract_hyperlinks,
+    format_hyperlinks,
+)
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -50,23 +54,34 @@ async def async_browse(url: str, question: str, websocket: WebSocket = None) -> 
     print(f"Scraping url {url} with question {question}")
     if websocket:
         await websocket.send_json(
-            {"type": "logs", "output": f"🔎 Browsing the {url} for relevant about: {question}..."})
+            {
+                "type": "logs",
+                "output": f"🔎 Browsing the {url} for relevant about: {question}...",
+            }
+        )
 
     try:
-        driver, text = await loop.run_in_executor(executor, scrape_text_with_selenium, url)
+        driver, text = await loop.run_in_executor(
+            executor, scrape_text_with_selenium, url
+        )
         await loop.run_in_executor(executor, add_header, driver)
-        summary_text = await loop.run_in_executor(executor, summary.summarize_text_web_driver, url, text, question)
+        summary_text = await loop.run_in_executor(
+            executor, summary.summarize_text_web_driver, url, text, question
+        )
 
         if websocket:
             await websocket.send_json(
-                {"type": "logs", "output": f"📝 Information gathered from url {url}: {summary_text}"})
+                {
+                    "type": "logs",
+                    "output": f"📝 Information gathered from url {url}: {summary_text}",
+                }
+            )
 
         return f"Information gathered from url {url}: {summary_text}"
     except Exception as e:
         print(f"An error occurred while processing the url {url}: {e}")
         raise e
         return f"Error processing the url {url}: {e}"
-
 
 
 def browse_website(url: str, question: str) -> tuple[str, WebDriver]:
@@ -118,13 +133,11 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
 
     options = options_available[CFG.selenium_web_browser]()
     options.add_argument(CFG.user_pilot)
-    options.add_argument('--headless')
+    options.add_argument("--headless")
 
     if CFG.selenium_web_browser == "firefox":
         service = Service(executable_path=GeckoDriverManager().install())
-        driver = webdriver.Firefox(
-            service=service, options=options
-        )
+        driver = webdriver.Firefox(service=service, options=options)
     elif CFG.selenium_web_browser == "safari":
         # Requires a bit more setup on the users end
         # See https://developer.apple.com/documentation/webkit/testing_with_webdriver_in_safari
@@ -134,9 +147,7 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--remote-debugging-port=9222")
         options.add_argument("--no-sandbox")
-        options.add_experimental_option(
-            "prefs", {"download_restrictions": 3}
-        )
+        options.add_experimental_option("prefs", {"download_restrictions": 3})
         driver = webdriver.Chrome(options=options)
     driver.get(url)
 
@@ -170,7 +181,7 @@ def get_text(soup):
         str: The text from the soup
     """
     text = ""
-    tags = ['h1', 'h2', 'h3', 'h4', 'h5', 'p']
+    tags = ["h1", "h2", "h3", "h4", "h5", "p"]
     for element in soup.find_all(tags):  # Find all the <p> elements
         text += element.text + "\n\n"
     return text

@@ -177,11 +177,13 @@ def create_chat_completion(
     return ChatModelResponse(
         model_info=OPEN_AI_CHAT_MODELS[model],
         content=content,
-        function_call=OpenAIFunctionCall(
-            name=function_call["name"], arguments=function_call["arguments"]
-        )
-        if function_call
-        else None,
+        function_call=(
+            OpenAIFunctionCall(
+                name=function_call["name"], arguments=function_call["arguments"]
+            )
+            if function_call
+            else None
+        ),
     )
 
 
