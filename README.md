@@ -1,158 +1,215 @@
 # Superpilot
-LLM based multi-model framework for AI apps. The SuperPilot Framework is a robust architecture designed to
-build and execute various LLM app using prompt, abilities like text summarization, web searching, and more.
-It leverages machine learning models from providers like OpenAI to perform these tasks. The framework consists of
-several key components including OpenAI Provider, SimplePrompt, AbilityRegistry, and SuperTaskPilot, which are essential for smooth operation.
+LLM based multi-model framework for AI applications. The SuperPilot Framework provides a robust architecture for
+building and executing various LLM-powered applications using a system of pilots, abilities, and task management.
+It leverages machine learning models from providers like OpenAI to perform complex tasks autonomously. The framework consists of
+several key components including SuperPilot, SuperTaskPilot, and SuperAbilityRegistry, which work together to enable
+autonomous task planning and execution.
 
 # SuperPilot Framework - Quickstart Guide
 
 ## Table of Contents
-1. [Initializing OpenAI Provider](#initializing-openai-provider)
-2. [Creating SimplePrompt](#creating-superprompt)
-3. [Setting Up AbilityRegistry](#setting-up-abilityregistry)
-4. [Executing SuperTaskPilot](#executing-supertaskpilot)
+1. [Core Components Overview](#core-components-overview)
+2. [Getting Started](#getting-started)
+3. [SuperPilot Usage](#superpilot-usage)
+4. [SuperTaskPilot Usage](#supertaskpilot-usage)
+5. [Working with Abilities](#working-with-abilities)
 
-## Initializing OpenAI Provider
+## Core Components Overview
 
-**Purpose:** To set up OpenAI as a model provider for handling language completions.
+### SuperPilot
+The main pilot class for autonomous task execution. It handles:
+- Autonomous task planning and execution
+- Integration with ability registry
+- Memory management
+- Task queue management
+- Model provider integration
 
-### Steps:
-1. Import the necessary modules.
-2. Use the `OpenAIProvider.factory()` method to create an OpenAI Provider instance.
-3. Store this instance in the `model_providers` dictionary for later use.
+### SuperTaskPilot
+Task-specific pilot implementation for executing individual tasks:
+- Supports sequential/parallel execution modes
+- Integrates with language models
+- Manages ability execution
+- Configurable execution strategies
 
-```python
-from superpilot.core.resource.model_providers import OpenAIProvider, ModelProviderName
-from superpilot.core.configuration import get_config
+### SuperAbilityRegistry
+Registry for managing and executing abilities:
+- Dynamic ability registration
+- Environment integration
+- Model provider management
+- Built-in ability support
 
-config = get_config()
-open_ai_provider = OpenAIProvider.factory(config.openai_api_key)
-model_providers = {ModelProviderName.OPENAI: open_ai_provider}
+## Getting Started
+
+### Prerequisites
+- Python 3.7+
+- OpenAI API key
+- Required packages installed
+
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/parvbhullar/superpilot.git
+cd superpilot
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install the package
+python setup.py install
 ```
 
-## Creating SimplePrompt
-
-**Purpose:** To generate the prompt that will be passed to the OpenAI model for completion.
-
-### Steps:
-1. Import the SimplePrompt class.
-2. Initialize a SimplePrompt object.
-3. Build the prompt using `build_prompt()` method.
-
+### Basic Setup
 ```python
-from superpilot.core.planning.strategies.simple import SimplePrompt
-
-super_prompt = SimplePrompt.factory()
-prompt = super_prompt.build_prompt("Your Query Here")
-```
-
-# Using SimpleTaskPilot
-
-## Initial Setup
-
-Before running any queries, make sure all necessary modules are imported and environment variables, including the OpenAI API key, are set up.
-
-## Making a Query
-
-To make a query, utilize the `test_pilot()` function. The `query` string parameter specifies the information you're seeking.
-
-### Example 1: Weather in Mumbai
-
-```python
-query = "What is the weather in Mumbai"
-```
-
-This query instructs SimpleTaskPilot to fetch weather information for Mumbai.
-
-### Example 2: Stock Market Analysis
-
-```python
-query = "Analyze the stock market for today"
-```
-
-This query prompts SimpleTaskPilot to provide an analysis of today's stock market.
-
-### Example 3: Email Summarization
-
-```python
-query = "Summarize the last 10 emails"
-```
-
-This query will lead SimpleTaskPilot to summarize the last 10 emails in your inbox.
-
-### Example 4: News Highlights
-
-```python
-query = "Summarize today's top 5 news"
-```
-
-This query tasks SimpleTaskPilot with fetching and summarizing the day's top 5 news articles.
-
-## Running the Query
-
-After setting your query string, execute it with the following code:
-
-```python
-from superpilot.core.context.schema import Context
-from superpilot.core.pilot.task.simple import SimpleTaskPilot
-from superpilot.core.resource.model_providers import (
-    ModelProviderName,
-    OpenAIProvider,
-    OpenAIModelName
-)
-
-context = Context()
-# Load Model Providers
-open_ai_provider = OpenAIProvider.factory(your_openai_api_key)
-model_providers = {ModelProviderName.OPENAI: open_ai_provider}
-
-task_pilot = SimpleTaskPilot(model_providers=model_providers)
-
-print("***************** Executing SimplePilot ******************************\n")
-query = "Summarize today's top 5 news"
-response = await task_pilot.execute(query, context)
-print(response)
-print("***************** Executing SimplePilot Completed ******************************\n")
-
-```
-
-The output should be displayed on the console.
-
-## Executing SuperTaskPilot
-
-**Purpose:** To execute tasks using the registered abilities and model providers.
-
-### Steps:
-1. Import the `SuperTaskPilot` class.
-2. Initialize it with the `super_ability_registry` and `model_providers`.
-
-
-## Setting Up AbilityRegistry
-
-**Purpose:** To manage and register the abilities that your application will use.
-
-### Steps:
-1. Import the `SuperAbilityRegistry` class.
-2. Initialize it with the allowed abilities.
-
-```python
+from superpilot.core.pilot import SuperPilot
 from superpilot.core.ability.super import SuperAbilityRegistry
+from superpilot.core.resource.model_providers import OpenAIProvider, ModelProviderName
 from superpilot.tests.test_env_simple import get_env
 
+# Initialize environment
 env = get_env({})
-ALLOWED_ABILITY = {
+planner = env.get("planning")
+ability_registry = env.get("ability_registry")
+
+# Create and initialize SuperPilot
+pilot = SuperPilot(SuperPilot.default_settings, ability_registry, planner, env)
+await pilot.initialize("Your objective here")
+```
+
+## SuperPilot Usage
+```python
+from typing import Dict, List
+from superpilot.core.pilot import SuperPilot
+from superpilot.core.ability.super import SuperAbilityRegistry
+from superpilot.core.resource.model_providers import OpenAIProvider, ModelProviderName
+from superpilot.core.context.schema import Context
+from superpilot.tests.test_env_simple import get_env
+
+async def run_superpilot(objective: str) -> Context:
+    """
+    Execute a task using SuperPilot with automatic task planning and execution.
+
+    Args:
+        objective: The high-level objective to accomplish
+
+    Returns:
+        Context object containing the execution results
+    """
+    # Initialize environment and components
+    env = get_env({})
+    planner = env.get("planning")
+    ability_registry = env.get("ability_registry")
+
+    # Create and initialize SuperPilot
+    pilot = SuperPilot(SuperPilot.default_settings, ability_registry, planner, env)
+    await pilot.initialize(objective)
+
+    # Execute the task and get results
+    context = await pilot.execute(objective)
+    return context
+
+# Example usage
+objective = "Summarize today's top 5 news articles"
+context = await run_superpilot(objective)
+print(context.format_numbered())
+```
+
+## SuperTaskPilot Usage
+```python
+from typing import Dict, List
+from superpilot.core.pilot.task.super import SuperTaskPilot
+from superpilot.core.ability.super import SuperAbilityRegistry
+from superpilot.core.resource.model_providers import OpenAIProvider, ModelProviderName
+from superpilot.core.context.schema import Context
+from superpilot.core.planning.schema import Task
+from superpilot.tests.test_env_simple import get_env
+
+async def execute_parallel_tasks(tasks: List[str]) -> List[Context]:
+    """
+    Execute multiple tasks in parallel using SuperTaskPilot.
+
+    Args:
+        tasks: List of task objectives to execute in parallel
+
+    Returns:
+        List of Context objects containing results for each task
+    """
+    # Initialize environment
+    env = get_env({})
+    ability_registry = env.get("ability_registry")
+    model_providers = {ModelProviderName.OPENAI: OpenAIProvider.factory()}
+
+    # Create task pilot
+    task_pilot = SuperTaskPilot(ability_registry, model_providers)
+
+    # Create Task objects
+    task_objects = [
+        Task(
+            objective=task,
+            priority=1,
+            type="text",
+            ready_criteria=[],
+            acceptance_criteria=[]
+        ) for task in tasks
+    ]
+
+    # Execute tasks in parallel
+    results = await asyncio.gather(*[
+        task_pilot.execute(task) for task in task_objects
+    ])
+    return results
+
+# Example usage
+tasks = [
+    "Analyze market trends",
+    "Summarize competitor news",
+    "Generate performance report"
+]
+results = await execute_parallel_tasks(tasks)
+for task, result in zip(tasks, results):
+    print(f"\nResults for {task}:")
+    print(result.format_numbered())
+```
+
+## Working with Abilities
+```python
+from typing import Dict, Any
+from superpilot.core.ability.super import SuperAbilityRegistry
+from superpilot.framework.abilities import TextSummarizeAbility
+from superpilot.tests.test_env_simple import get_env
+
+async def register_and_use_abilities(
+    abilities_config: Dict[str, Any]
+) -> SuperAbilityRegistry:
+    """
+    Register and configure abilities for use with SuperPilot.
+
+    Args:
+        abilities_config: Dictionary mapping ability names to their configurations
+
+    Returns:
+        Configured SuperAbilityRegistry instance
+    """
+    # Initialize environment
+    env = get_env({})
+
+    # Create ability registry with custom configuration
+    ability_registry = SuperAbilityRegistry.factory(env, abilities_config)
+
+    return ability_registry
+
+# Example usage
+abilities_config = {
     TextSummarizeAbility.name(): TextSummarizeAbility.default_configuration,
+    # Add more abilities with their configurations
 }
 
-super_ability_registry = SuperAbilityRegistry.factory(env, ALLOWED_ABILITY)
+registry = await register_and_use_abilities(abilities_config)
+ability = registry.get_ability("TextSummarizeAbility")
+result = await ability.execute(
+    query="Summarize the quarterly report",
+    max_tokens=500
+)
+print(result.content)
 ```
 
-```python
-from superpilot.core.pilot.task.super import SuperTaskPilot
-
-search_step = SuperTaskPilot(super_ability_registry, model_providers)
-```
-
-
-
-**Credits:** This framework relies on [AutoGPT's](https://github.com/Significant-Gravitas/Auto-GPT/tree/master/autogpt/core) core library for its underlying functionalities.
+**Credits:** This framework builds upon concepts from [AutoGPT's](https://github.com/Significant-Gravitas/Auto-GPT/tree/master/autogpt/core) core library while implementing its own unique architecture for autonomous task execution.
