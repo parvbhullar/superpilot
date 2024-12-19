@@ -1,4 +1,5 @@
 .env
+<<<<<<< Updated upstream
 *.pyc
 *.log
 final_response.xlsx
@@ -13,3 +14,30 @@ original/*
 Final/*
 final/*
 .cache
+=======
+
+# virtualenv
+.venv
+venv/
+ENV/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+
+# IDE settings
+.vscode/
+.idea/
+
+test.py
+SampleCSVFile_11kb.csv
+>>>>>>> Stashed changes
