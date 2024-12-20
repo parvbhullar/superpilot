@@ -13,3 +13,7 @@ original/*
 Final/*
 final/*
 .cache
+superpilot/vespa/my_application
+RCA.pdf
+env.local
+persona_output.jsonl
