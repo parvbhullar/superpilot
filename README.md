@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 # Superpilot
 LLM based multi-model framework for AI apps. The SuperPilot Framework is a robust architecture designed to 
 build and execute various LLM app using prompt, abilities like text summarization, web searching, and more. 
@@ -14,12 +13,9 @@ several key components including OpenAI Provider, SimplePrompt, AbilityRegistry,
 4. [Executing SuperTaskPilot](#executing-supertaskpilot)
 
 ## Initializing OpenAI Provider
-=======
->>>>>>> Stashed changes
 
 **Purpose:** To set up OpenAI as a model provider for handling language completions.
 
-<<<<<<< Updated upstream
 ### Steps:
 1. Import the necessary modules.
 2. Use the `OpenAIProvider.factory()` method to create an OpenAI Provider instance.
@@ -43,8 +39,6 @@ model_providers = {ModelProviderName.OPENAI: open_ai_provider}
 2. Initialize a SimplePrompt object.
 3. Build the prompt using `build_prompt()` method.
 
-=======
->>>>>>> Stashed changes
 ```python
 from superpilot.core.planning.strategies.simple import SimplePrompt
 
@@ -68,7 +62,6 @@ To make a query, utilize the `test_pilot()` function. The `query` string paramet
 query = "What is the weather in Mumbai"
 ```
 
-<<<<<<< Updated upstream
 This query instructs SimpleTaskPilot to fetch weather information for Mumbai.
 
 ### Example 2: Stock Market Analysis
@@ -163,5 +156,3 @@ search_step = SuperTaskPilot(super_ability_registry, model_providers)
 
 
 **Credits:** This framework relies on [AutoGPT's](https://github.com/Significant-Gravitas/Auto-GPT/tree/master/autogpt/core) core library for its underlying functionalities.
-=======
->>>>>>> Stashed changes
