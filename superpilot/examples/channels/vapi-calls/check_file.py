@@ -20,3 +20,4 @@ def checkMerge(res_file_location, input_location, run_timestamp):
     final_name, _ = os.path.splitext(final_name)
     final_name = f"Final/merge_files_{final_name}_Sheet_version_{run_timestamp}.csv"
     merge_files.to_csv(final_name, index=False)
+    print(merge_files)
