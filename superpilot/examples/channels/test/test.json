@@ -1,0 +1,198 @@
+[
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Hello sir, mera naam Rahul hai aur kya main aapka kuch samay le sakta hoon?" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Haan, bilkul boliye" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Sir, mujhe pata chala hai ki aap car ki talash mein hain, toh main aapke liye kuch acchi options laaya hoon." }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Theek hai, bataiye" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Mujhe yeh bhi pata chala hai ki aapko ek bade ghar ki zaroorat hai, main kuch aise ghar dikhana chahta hoon jo apke budget mein ho." }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Haan, yeh accha hai" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Sir, aapko kis area mein ghar chahiye?" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Main central location mein ghar chahata hoon" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Accha, toh main aapko city center ke aas-paas kuch properties dikhata hoon" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Bilkul, dekhiye mujhe" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Sir, kya aapko gated community mein rehna pasand hai?" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Haan, yeh achha rahega" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Main aapko ek achhi gated community mein ghar dikhata hoon" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Kya usmein park hai?" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Haan, uss community mein park bhi hai aur facilities bhi" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Bahut accha, aur parking ki facility?" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Haan, parking ka bhi achha system hai" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Mujhe uske prices ke baare mein bataiye" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Prices thoda high hain, lekin yeh location aur amenities ke hisaab se sahi hain" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Theek hai, thoda aur details dikhaiye" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Main apko property ke photos aur floor plans bhejta hoon" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Zaroor, mujhe dekhna hai" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Yeh lo, aapke liye property details" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Yeh kaafi accha lag raha hai" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Aapko ek aur option dikhata hoon" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Bilkul, dikhaiye" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Yeh bhi ek acchi location mein hai aur price thoda kam hai" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Iska location kya hai?" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Yeh location city ke outskirts mein hai, lekin transport facility achhi hai" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Okay, parking ka system kya hai?" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Parking ka bhi achha system hai, har apartment ke paas dedicated parking hai" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Yeh mujhe pasand aa raha hai" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Aapko yeh confirm karne ke liye site visit karna hoga" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Kab jaa sakte hain?" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Aapke liye kal ka din accha rahega?" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Haan, kal theek rahega" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Main aapka appointment book kar leta hoon" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Shukriya" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Aapka swagat hai, main kal aapko milne ke liye ready rahunga" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Main apna schedule confirm kar lunga" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Accha, aapko kabhi bhi koi aur sawal ho toh pooch sakte hain" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Thank you for your help" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "You're welcome! Have a great day!" }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "I will contact you after reviewing the options" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Sure, take your time. I'll be here if you need further assistance." }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "Thank you, I appreciate your help" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "It’s my pleasure! Don’t hesitate to reach out anytime." }]
+  },
+  {
+    "role": "user",
+    "content": [{ "type": "text", "text": "I will let you know my decision soon" }]
+  },
+  {
+    "role": "assistant",
+    "content": [{ "type": "text", "text": "Looking forward to hearing from you. Take care!" }]
+  }
+]

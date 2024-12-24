@@ -10,8 +10,9 @@ from livekit.agents import (
 )
 from livekit.agents.pipeline import VoicePipelineAgent
 from livekit.plugins import openai, deepgram, silero
-from livekit.agents._exceptions import AssignmentTimeoutError  # Import AssignmentTimeoutError
+from livekit.agents._exceptions import AssignmentTimeoutError  
 import asyncio
+import json
 
 load_dotenv(dotenv_path=".env.local")
 logger = logging.getLogger("voice-agent")
@@ -26,17 +27,14 @@ async def entrypoint(ctx: JobContext):
         logger.info("Starting connection process...")
         initial_ctx = llm.ChatContext()
 
-        # Update system message for real estate app experience
         initial_ctx.append(
             role="system",
             text=(
                 "Aap ek voice assistant hain jo LiveKit dwara banaya gaya hai. Aapka naam Meera hai aur aap ek professional property advisor hain. "
                 "Aapka kaam customer ki property requirements ko samajhna aur unhe unke requirements ke anusar options provide karna hai."
             ),
-        )
-        
+        ) 
         initial_ctx.append(role="system", text="Namaste, main Meera hoon, ek professional property advisor. Main aapko property dhoondhne mein madad kar sakti hoon.")
-
         questions = [
 
         {"type": "property_type", "message": "Aap kis tarah ki property dhoond rahe hain? (Flat, Independent House, Plot ya Commercial Space)"},
@@ -76,7 +74,11 @@ async def entrypoint(ctx: JobContext):
         
         for question in questions:
             initial_ctx.append(role="system", text=question["message"])
-        
+
+        # Open and load the JSON file for messages
+        with open("/home/dev2/projects/super-pilot/super-pilot/work/superpilot/superpilot/superpilot/examples/channels/test/test.json", "r") as file:
+            json_data = json.load(file)
+
         logger.info(f"Connecting to room {ctx.room.name}")
         await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
@@ -88,18 +90,17 @@ async def entrypoint(ctx: JobContext):
             logger.error("Timeout occurred while waiting for participant to connect.")
             return
 
+        # Initialize the VoicePipelineAgent with the loaded JSON data
         agent = VoicePipelineAgent(
             vad=ctx.proc.userdata["vad"],
-            stt=deepgram.STT(language="hi-IN"), 
-            llm=openai.LLM(model="gpt-4o-mini"),
-            voice_name="hi-IN-Wavenet-A", 
-
-            tts=openai.TTS(), 
+            stt=deepgram.STT(),
+            llm=openai.LLM(model="gpt-4o-mini", messages=json_data),  
+            tts=openai.TTS(),
             chat_ctx=initial_ctx,
         )
 
         agent.start(ctx.room, participant)
-
+        agent.llm.load_messages(json_data)
         await agent.say("Namaste, main Meera hoon, ek professional property advisor. Main aapko property dhoondhne mein madad kar sakti hoon.", allow_interruptions=True)
 
         for question in questions:
@@ -114,6 +115,11 @@ async def entrypoint(ctx: JobContext):
 
 
 if __name__ == "__main__":
+    with open("/home/dev2/projects/super-pilot/super-pilot/work/superpilot/superpilot/superpilot/examples/channels/test/test.json", "r") as file:
+        json_data = json.load(file)
+        print(f'Message \n:\n{json_data}')
+
+
     cli.run_app(
         WorkerOptions(
             entrypoint_fnc=entrypoint,
