@@ -1,0 +1,26 @@
+[
+    {
+        "role": "user",
+        "message": "Yojana registration"
+    },
+    {
+        "role": "agent",
+        "message": "I'm here to assist you with your property inquiries. Could you please provide more details about your requirements?"
+    },
+    {
+        "role": "user",
+        "message": "ji han boliye"
+    },
+    {
+        "role": "agent",
+        "message": "I'm here to assist you with your property inquiries. Could you please provide more details about your requirements?"
+    },
+    {
+        "role": "user",
+        "message": "Mera budget"
+    },
+    {
+        "role": "agent",
+        "message": "I'm here to assist you with your property inquiries. Could you please provide more details about your requirements?"
+    }
+]
