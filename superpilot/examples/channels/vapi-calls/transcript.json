@@ -1,26 +1,17 @@
 [
     {
         "role": "user",
-        "message": "Yojana registration"
-    },
-    {
-        "role": "agent",
-        "message": "I'm here to assist you with your property inquiries. Could you please provide more details about your requirements?"
+        "message": "namaste Mera Naam",
+        "timestamp": "2024-12-31T14:20:55.163841"
     },
     {
         "role": "user",
-        "message": "ji han boliye"
+        "message": "ji han boliye",
+        "timestamp": "2024-12-31T14:21:06.021453"
     },
     {
-        "role": "agent",
-        "message": "I'm here to assist you with your property inquiries. Could you please provide more details about your requirements?"
-    },
-    {
-        "role": "user",
-        "message": "Mera budget"
-    },
-    {
-        "role": "agent",
-        "message": "I'm here to assist you with your property inquiries. Could you please provide more details about your requirements?"
+        "role": "system",
+        "message": "Call forwarded to +918872781496",
+        "timestamp": "2024-12-31T14:21:12.668524"
     }
 ]

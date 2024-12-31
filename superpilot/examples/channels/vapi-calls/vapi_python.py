@@ -1,44 +1,82 @@
+import gradio as gr
+import re
 import pyttsx3
-import time
 import requests
-import csv
+import openai
 import json
 import speech_recognition as sr
 from daily_call import DailyCall
-from twilio.rest import Client
-import openai
 from daily import *
+from datetime import datetime
+import threading
+import time
+import os
+from twilio.rest import Client
 
 class Vapi:
-    def __init__(self, *, api_key, api_url="https://api.vapi.ai", twilio_sid=None, twilio_auth_token=None, twilio_phone_number=None, openai_api_key=None):
-        self.api_key = api_key
-        self.api_url = api_url
-        self.twilio_sid = twilio_sid
-        self.twilio_auth_token = twilio_auth_token
-        self.twilio_phone_number = twilio_phone_number
-        self.openai_api_key = openai_api_key
-        self.speaker = pyttsx3.init()
-        self._client = None
-        self.conversation_log = []
-        print("Vapi initialized with API key:", self.api_key)
+    _instance = None
+    
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+        
+    def __init__(self, api_key=None):
+        if not hasattr(self, 'initialized'):
+            self.api_key = api_key
+            self.api_url = "https://api.vapi.ai"
+            self.openai_api_key = None
+            self._client = None
+            self.__app_quit = False
+            self.conversation_log = []
+            
+            try:
+                self.speaker = pyttsx3.init()
+                # Configure voice properties
+                self.speaker.setProperty('rate', 150)    # Speed of speech
+                self.speaker.setProperty('volume', 0.9)  # Volume (0.0 to 1.0)
+                voices = self.speaker.getProperty('voices')
+                # Try to set a female voice if available
+                for voice in voices:
+                    if "female" in voice.name.lower():
+                        self.speaker.setProperty('voice', voice.id)
+                        break
+                print("Text-to-speech engine initialized successfully")
+            except Exception as e:
+                print(f"Error initializing text-to-speech: {str(e)}")
+                self.speaker = None
+            
+            self.current_call_id = None
+            self.current_url = None
+            
+            # Initialize Twilio
+            self.twilio_account_sid = ""  
+            self.twilio_auth_token = ""  
+            self.twilio_phone_number = ""
+            self.target_phone = ""  
+            try:
+                self.twilio_client = Client(self.twilio_account_sid, self.twilio_auth_token)
+                print("Twilio client initialized successfully")
+            except Exception as e:
+                print(f"Error initializing Twilio: {str(e)}")
+                self.twilio_client = None
+            
+            if self.openai_api_key:
+                openai.api_key = self.openai_api_key
+            
+            self.initialized = True
+            print("Vapi initialized with API key:", self.api_key)
 
-        if self.twilio_sid and self.twilio_auth_token:
-            self.twilio_client = Client(self.twilio_sid, self.twilio_auth_token)
-
-        # Set up OpenAI API key
-        if self.openai_api_key:
-            openai.api_key = self.openai_api_key
-
-    def start(self, *, assistant_id=None, assistant=None, assistant_overrides=None, squad_id=None, squad=None, outbound_numbers=None):
+    def start(self, *, assistant_id=None, assistant=None, assistant_overrides=None, squad_id=None, squad=None):
         print("Starting call...")
-        if self._client:  
+        if self._client:
             print("Stopping active call before starting a new one.")
             self.stop()
 
         if assistant_id:
-            payload = {'assistantId': assistant_id, 'assistantOverrides': assistant_overrides}
+            payload = {'assistantId': assistant_id}
         elif assistant:
-            payload = {'assistant': assistant, 'assistantOverrides': assistant_overrides}
+            payload = {'assistant': assistant}
         elif squad_id:
             payload = {'squadId': squad_id}
         elif squad:
@@ -47,114 +85,195 @@ class Vapi:
             raise Exception("Error: No assistant specified.")
         
         print(f"Making API call with payload: {payload}")
-
+        
         try:
+            # Create call and store details
             call_id, web_call_url = self.create_web_call(payload)
             print(f"Received call ID: {call_id}, Web call URL: {web_call_url}")
-
-            if not web_call_url:
-                raise Exception("Error: Unable to create call.")
             
-            print(f"Joining call with ID {call_id}...")
-            self._client = DailyCall() 
+            self._client = DailyCall()
+            
+            def on_app_message(event):
+                try:
+                    print(f"Raw event received: {event}")
+                    if isinstance(event, str):
+                        print("Processing string message...")
+                        self.handle_agent_message(event)
+                        return
+                        
+                    if isinstance(event, dict):
+                        print("Processing dict message...")
+                        if 'text' in event:
+                            msg = event['text']
+                            print(f"Found text message: {msg}")
+                            self.handle_agent_message(msg)
+                            return
+                            
+                        if 'action' in event:
+                            action = event['action']
+                            print(f"Found action: {action}")
+                            self.append_to_transcript("agent_action", action)
+                            return
+                            
+                        if 'data' in event:
+                            print("Found data field...")
+                            data = event['data']
+                            if isinstance(data, dict) and 'text' in data:
+                                msg = data['text']
+                                print(f"Found text in data: {msg}")
+                                self.handle_agent_message(msg)
+                                return
+                                
+                        print("No recognized message format found in dict")
+                        print(f"Dict keys: {event.keys()}")
+                                
+                    print(f"Unhandled event type: {type(event)}")
+                except Exception as e:
+                    print(f"Error in message handler: {str(e)}")
+                    print(f"Error type: {type(e)}")
+                    import traceback
+                    print(f"Traceback: {traceback.format_exc()}")
+                    self.append_to_transcript("error", f"Message handling error: {str(e)}")
+            
+            print("\nSetting up event handlers...")
+            self._client.on_app_message = on_app_message
+            
+            print("\nJoining call...")
             self._client.join(web_call_url)
-            print("Successfully joined the call.")
-
-            self.speak_text("Call successfully joined! I'm ready to assist.") 
-
-            if outbound_numbers:
-                for number in outbound_numbers:
-                    self.make_outbound_call(number)
-
-            self.listen_for_conversation()
-
+            print("Successfully joined the call")
+            
+            print("\nStarting conversation listener...")
+            threading.Thread(target=self.listen_for_conversation, daemon=True).start()
+            
+            return call_id, web_call_url
+            
         except Exception as e:
-            print(f"Error during call creation: {e}")
+            print(f"Error starting call: {e}")
+            raise
 
     def speak_text(self, text):
-        """
-        Convert the given text to speech and play it.
-        """
-        print(f"Speaking: {text}")
-        self.speaker.say(text)
-        self.speaker.runAndWait()  
+        """Speak the given text using text-to-speech"""
+        try:
+            if self.speaker is None:
+                print("\nERROR: Text-to-speech not initialized")
+                return
+                
+            print(f"\n=== SPEAKING TEXT ===")
+            print(f"Text to speak: {text}")
+            self.speaker.say(text)
+            print("Running speech...")
+            self.speaker.runAndWait()
+            print("Speech completed")
+        except Exception as e:
+            print(f"\nERROR in text-to-speech: {str(e)}")
+            print(f"Error type: {type(e)}")
+            import traceback
+            print(f"Traceback: {traceback.format_exc()}")
+
+    def handle_agent_message(self, msg):
+        """Handle and speak agent messages"""
+        try:
+            print("\n=== HANDLING AGENT MESSAGE ===")
+            print(f"Original message: {msg}")
+            
+            self.append_to_transcript("agent", msg)
+            print("Message added to transcript")
+            
+            clean_msg = msg.replace('*', '').replace('#', '').replace('_', '')
+            print(f"Cleaned message: {clean_msg}")
+            
+            print("Attempting to speak message...")
+            self.speak_text(clean_msg)
+            print("Message handling complete")
+            
+        except Exception as e:
+            print(f"\nERROR handling agent message: {str(e)}")
+            print(f"Error type: {type(e)}")
+            import traceback
+            print(f"Traceback: {traceback.format_exc()}")
+            self.append_to_transcript("error", f"Message handling error: {str(e)}")
+
+    def append_to_transcript(self, role, message):
+        """Append a message to the conversation log"""
+        timestamp = datetime.now().isoformat()
+        message_obj = {
+            "role": role,
+            "message": message,
+            "timestamp": timestamp
+        }
+        self.conversation_log.append(message_obj)
+        self.save_transcript()
+        print(f"Added to transcript - {role}: {message}")
+
+    def save_transcript(self):
+        """Save the conversation log to transcript.json"""
+        transcript_path = "transcript.json"
+        try:
+            try:
+                with open(transcript_path, 'r') as f:
+                    existing_log = json.load(f)
+            except (FileNotFoundError, json.JSONDecodeError):
+                existing_log = []
+            
+            with open(transcript_path, 'w') as f:
+                json.dump(self.conversation_log, f, indent=4)
+            print(f"Saved {len(self.conversation_log)} messages to transcript")
+        except Exception as e:
+            print(f"Error saving transcript: {e}")
 
     def stop(self):
-        print("Stopping call...")
-        if self._client:
-            try:
-                self._client.leave()
-                print("Left the call successfully.")
-            except Exception as e:
-                print(f"Error stopping call: {e}")
-            finally:
-                self.save_conversation_log()  
-                self.download_conversation_log()  
+        """Stop the current call"""
+        try:
+            print("Stopping call...")
+            self.__app_quit = True
+            if self._client:
+                try:
+                    self._client.leave()
+                except Exception as e:
+                    print(f"Error in leave: {e}")
                 self._client = None
-                print("Client reset.")
-                self.forward_call()
-        else:
-            print("No active call to stop.")
-
-    def forward_call(self):
-        print("Forwarding call...")
-    
-        try:
-            forward_to_number = "+918872781496"  
-            self.twilio_client.calls.create(
-                to=forward_to_number,
-                from_=self.twilio_phone_number,
-                url=self._client.web_call_url
-            )               
-            print(f"Call forwarded to {forward_to_number}")
+            
+            self.save_transcript()
+            print("Call stopped and conversation saved")
         except Exception as e:
-            print(f"Error forwarding call: {e}")
-
-    def send(self, message):
-        if not self._client:
-            raise Exception("Call not started. Please start the call first.")
-        
-        if not isinstance(message, dict) or 'type' not in message:
-            raise ValueError("Invalid message format.")
-
-        try:
-            self._client.send_app_message(message)
-            print(f"Message sent: {message}")
-        except Exception as e:
-            print(f"Failed to send message: {e}")
-
-    def add_message(self, role, content):
-        message = {
-            'type': 'add-message',
-            'message': {
-                'role': role,
-                'content': content
-            }
-        }
-        self.send(message)
+            print(f"Error stopping call: {e}")
 
     def create_web_call(self, payload):
-        print(f"Making API request with payload: {payload}")
-        url = f"{self.api_url}/call/web"
-        headers = {
-            'Authorization': 'Bearer ' + self.api_key,
-            'Content-Type': 'application/json'
-        }
-        response = requests.post(url, headers=headers, json=payload)
-        print(f"API response status: {response.status_code}")
-
-        if response.status_code == 201:
+        """Create a web call with the given payload"""
+        try:
+            url = "https://api.vapi.ai/call/web"  
+            headers = {
+                'Authorization': f'Bearer {self.api_key}',
+                'Content-Type': 'application/json'
+            }
+            response = requests.post(
+                url,
+                headers=headers,
+                json=payload
+            )
+            response.raise_for_status()
             data = response.json()
+            
             call_id = data.get('id')
             web_call_url = data.get('webCallUrl')
-            if call_id and web_call_url:
-                return call_id, web_call_url
-            else:
-                raise Exception("Error: Missing call ID or web call URL.")
-        else:
-            raise Exception(f"Error: {response.json().get('message', 'Unknown error occurred')}")
+            
+            if not call_id or not web_call_url:
+                raise Exception("Missing call ID or URL in response")
+                
+            print(f"Created call - ID: {call_id}, URL: {web_call_url}")
+            self.current_call_id = call_id
+            self.current_url = web_call_url
+            return call_id, web_call_url
+            
+        except requests.exceptions.HTTPError as e:
+            print(f"HTTP Error: {e.response.status_code} - {e.response.text}")
+            raise
+        except Exception as e:
+            print(f"Error creating web call: {e}")
+            raise
 
     def listen_for_conversation(self):
+        """Listen for conversation using speech recognition"""
         recognizer = sr.Recognizer()
         microphone = sr.Microphone()
 
@@ -162,43 +281,19 @@ class Vapi:
             recognizer.adjust_for_ambient_noise(source, duration=1)
             print("Listening for speech... (Say 'stop' to end)")
 
-            user_gender = None
-
             while True:
                 try:
                     audio = recognizer.listen(source, timeout=5, phrase_time_limit=10)
                     text = recognizer.recognize_google(audio)
                     print(f"Recognized speech: {text}")
 
-                    if user_gender is None:
-                        user_gender = self.recognize_gender(audio)
-                        print(f"Detected gender: {user_gender}")
-
                     if any(phrase in text.lower() for phrase in ["stop", "no", "not interested", "no thanks"]):
-                        print("User is not interested. Disconnecting call.")
+                        print("User wants to end the call.")
                         self.stop()
                         break
 
-                    if "yes" in text.lower():
-                        print("User is interested. Continuing communication.")
-
-                    if "budget" in text.lower() or "lakhs" in text.lower():
-                        print("Budget keyword detected in user input.")
-                        budget_amount = self.extract_budget_amount(text)
-                        print(f"Extracted budget amount: {budget_amount}")
-                        if budget_amount < 4000000:  
-                            print("Budget is less than 40 lakhs. Asking to increase budget.")
-                            self.speak_text("Your budget is less than 40 lakhs. Could you please increase your budget?")
-                        else:
-                            print("Budget confirmed. Proceeding with details.")
-                            self.speak_text("Thank you for confirming your budget. Please stay on the call while I transfer you to one of our senior representatives.")
-                            self.forward_call()
-                            break
-
                     self.append_to_transcript("user", text)
-                    agent_response = self.generate_agent_response(text, user_gender)
-                    print(f"Agent: {agent_response}")
-                    self.append_to_transcript("agent", agent_response)
+                    print(f"User said: {text}")
 
                 except sr.WaitTimeoutError:
                     print("Listening timeout. Please speak again.")
@@ -207,137 +302,89 @@ class Vapi:
                 except sr.RequestError as e:
                     print(f"Could not request results from the speech recognition service; {e}")
 
-    def extract_budget_amount(self, text):
-        words = text.split()
-        for i, word in enumerate(words):
-            if word.isdigit():
-                amount = int(word)
-                if i+1 < len(words) and words[i+1].lower() == "lakhs":
-                    return amount * 100000
-                return amount
-        return 0
-
-    def recognize_gender(self, audio):
-        print("Analyzing voice for gender recognition...")
-        response = self.call_voice_analysis_api(audio)
-        gender = response.get('gender', 'unknown')
-        print(f"Detected gender: {gender}")
-        return gender
-
-    def call_voice_analysis_api(self, audio):
-       
-        return {'gender': 'male'}  
-
-    def load_agent_script(self):
-        script_path = "/home/dev2/projects/super-pilot/super-pilot/work/superpilot/superpilot/superpilot/examples/channels/vapi-calls/script.json"
+    def forward_call(self):
+        """Forward the call to the target phone number using Twilio"""
         try:
-            with open(script_path, "r", encoding="utf-8") as f:
-                agent_script = json.load(f)
-            print("Agent script loaded successfully.")
-            return agent_script
-        except FileNotFoundError:
-            print(f"Error: File not found at {script_path}")
-        except json.JSONDecodeError as e:
-            print(f"Error decoding JSON from script: {e}")
+            print("Starting call forward process...")
+            print(f"Forwarding call to: {self.target_phone}")
+            
+            if not self.twilio_client:
+                error_msg = "Twilio client not initialized"
+                print(error_msg)
+                self.append_to_transcript("error", error_msg)
+                return error_msg
+            
+            print("Stopping current call...")
+            self.__app_quit = True
+            if self._client:
+                try:
+                    self._client.leave()
+                except Exception as e:
+                    print(f"Error in leave: {e}")
+                self._client = None
+            
+            try:
+                twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
+                <Response>
+                    <Say>Forwarding your call</Say>
+                    <Dial>{self.target_phone}</Dial>
+                </Response>"""
+                
+                # Create Twilio call
+                call = self.twilio_client.calls.create(
+                    to=self.target_phone,
+                    from_=self.twilio_phone_number,
+                    twiml=twiml
+                )
+                
+                print(f"Twilio call initiated - SID: {call.sid}")
+                self.append_to_transcript("system", f"Call forwarded to {self.target_phone}")
+                return f"Call successfully forwarded to {self.target_phone}"
+                
+            except Exception as e:
+                error_msg = f"Error making Twilio call: {str(e)}"
+                print(error_msg)
+                self.append_to_transcript("error", error_msg)
+                return error_msg
+            
         except Exception as e:
-            print(f"Unexpected error loading script: {e}")
-        return []
-    
-    def generate_agent_response(self, user_input, user_gender):
-        """
-        Generate a response from the agent based on user input, gender, and script content.
-        """
-        interest = self.analyze_user_interest(user_input)
-        if interest == "start_pitch":
-            return "Hey, I'm an A.I. assistant for real estate. I can help you find the perfect property. What are you looking for?"
-        elif interest == "ask_for_time_and_requirements":
-            return "Sure, when would be a good time for us to discuss your property needs?"
-        else:
-            return "I'm here to assist you with your property inquiries. Could you please provide more details about your requirements?"
+            error_msg = f"Error in call forwarding: {str(e)}"
+            print(error_msg)
+            self.append_to_transcript("error", error_msg)
+            return error_msg
+
+def start_vapi_call():
+    api_key = ""
+    assistant_id = ""
+    vapi = Vapi(api_key=api_key)
+    vapi.start(assistant_id=assistant_id)
+    return "VAPI call has been started and joined successfully!"
+
+def disconnect_vapi_call():
+    vapi = Vapi(api_key="")
+    vapi.stop()
+    return "VAPI call has been disconnected and conversation transcript saved successfully!"
+
+def forward_vapi_call():
+    vapi = Vapi(api_key="")
+    return vapi.forward_call()
+
+#update your fronted
+def launch_gradio_interface():
+    with gr.Blocks() as demo:
+        gr.Markdown("### VAPI Automation with Gradio")
         
+        output_text = gr.Textbox(label="Output", placeholder="Status message will be displayed here", interactive=False)
         
-    def simulate_conversation(self):
-        agent_script = self.load_agent_script()
-
-        if not agent_script:
-            print("Error: Agent script is empty or not loaded.")
-            return
-
-        for question in agent_script:
-            if question['role'] == 'agent':
-                print(f"Agent: {question['message']}")
-                self.append_to_transcript("agent", question['message'])
-                user_response = input("User: ")  
-                self.append_to_transcript("user", user_response)
-
-                agent_response = self.generate_agent_response(user_response, "unknown")  
-                print(f"Agent: {agent_response}")
-                self.append_to_transcript("agent", agent_response)
-
-        transcript_json_path = "/home/dev2/projects/super-pilot/super-pilot/work/superpilot/superpilot/superpilot/examples/channels/vapi-calls/transcript.json"
-        with open(transcript_json_path, "w", encoding="utf-8") as json_file:
-            json.dump(self.conversation_log, json_file, ensure_ascii=False, indent=4)
-
-        self.download_conversation_log()
-
-    def append_to_transcript(self, role, message):
-        print(f"Appending to transcript: {role}: {message}")  
-        self.conversation_log.append({"role": role, "message": message})
-
-        transcript_json_path = "/home/dev2/projects/super-pilot/super-pilot/work/superpilot/superpilot/superpilot/examples/channels/vapi-calls/transcript.json"
-        with open(transcript_json_path, "w", encoding="utf-8") as json_file:
-            json.dump(self.conversation_log, json_file, ensure_ascii=False, indent=4)
-
-    def analyze_user_interest(self, user_input):
-        """
-        Analyze user interest based on their response.
-        """
-        if "yes" in user_input.lower() or "ok" in user_input.lower():
-            return "start_pitch"
-        elif "no" in user_input.lower():
-            return "ask_for_time_and_requirements"
-        else:
-            return "undecided"
-
+        with gr.Row():
+            start_button = gr.Button("Start Web Call")
+            disconnect_button = gr.Button("Disconnect Call")
+            forward_button = gr.Button("Forward Call")
+        
+        start_button.click(start_vapi_call, outputs=output_text)
+        disconnect_button.click(disconnect_vapi_call, outputs=output_text)
+        forward_button.click(forward_vapi_call, outputs=output_text)
     
+    demo.launch()
 
-    def download_conversation_log(self):
-        """
-        Save the conversation log to a text file.
-        """
-        try:
-            download_path = "/home/dev2/projects/super-pilot/conversation_download.txt"
-            with open(download_path, "w", encoding="utf-8") as f:
-                for entry in self.conversation_log:
-                    f.write(f"{entry['role'].capitalize()}: {entry['message']}\n")
-            print(f"Conversation log downloaded to {download_path}")
-        except Exception as e:
-            print(f"Error downloading conversation log: {e}")
-
-assistant_id = ''
-
-assistant = {
-    'firstMessage': 'Hello, welcome to Real Estate Assistant! How can I assist you today?',
-    'context': 'You are a virtual assistant helping customers find properties.',
-    'model': 'gpt-3.5-turbo',
-    'voice': 'Hinglish Speaking Lady',
-    "recordingEnabled": True,
-    "interruptionsEnabled": False
-}
-
-vapi = Vapi(
-    api_key='',
-    twilio_sid='',
-    twilio_auth_token='',
-    twilio_phone_number=''
-)
-
-script_content = vapi.load_agent_script()
-print("Loaded script content:")
-print(script_content)
-
-vapi.start(assistant_id=assistant_id)
-
-vapi.simulate_conversation()
-
-vapi.save_conversation_log()
+launch_gradio_interface()
