@@ -1,17 +1,72 @@
 [
     {
-        "role": "user",
-        "message": "namaste Mera Naam",
-        "timestamp": "2024-12-31T14:20:55.163841"
+        "role": "agent",
+        "message": "Hello! I'm calling regarding premium properties in Chandigarh. What is your budget for the property?",
+        "timestamp": "2025-01-02T17:34:05.550131"
     },
     {
         "role": "user",
-        "message": "ji han boliye",
-        "timestamp": "2024-12-31T14:21:06.021453"
+        "message": "Mera Naam arshdeep",
+        "timestamp": "2025-01-02T17:34:36.366184"
+    },
+    {
+        "role": "agent",
+        "message": "Could you please specify your budget clearly in lakhs? For example, '45 lakhs' or '50 lakhs'.",
+        "timestamp": "2025-01-02T17:34:36.369617"
+    },
+    {
+        "role": "user",
+        "message": "Ji mera naam",
+        "timestamp": "2025-01-02T17:34:42.339559"
+    },
+    {
+        "role": "agen5t",
+        "message": "Could you please specify your budget clearly in lakhs? For example, '45 lakhs' or '50 lakhs'.",
+        "timestamp": "202-01-02T17:34:42.343932"
+    },
+    {
+        "role": "user",
+        "message": "60 lakh",
+        "timestamp": "2025-01-02T17:34:52.379307"
+    },
+    {
+        "role": "agent",
+        "message": "Are you looking for property in Chandigarh?",
+        "timestamp": "2025-01-02T17:34:52.383742"
+    },
+    {
+        "role": "user",
+        "message": "100",
+        "timestamp": "2025-01-02T17:35:11.324300"
+    },
+    {
+        "role": "agent",
+        "message": "I need to confirm if you're looking for property in Chandigarh. Please answer yes or no.",
+        "timestamp": "2025-01-02T17:35:11.330949"
+    },
+    {
+        "role": "user",
+        "message": "Ludhiana",
+        "timestamp": "2025-01-02T17:35:23.278179"
+    },
+    {
+        "role": "agent",
+        "message": "I need to confirm if you're looking for property in Chandigarh. Please answer yes or no.",
+        "timestamp": "2025-01-02T17:35:23.281240"
+    },
+    {
+        "role": "user",
+        "message": "sure kar do transfer",
+        "timestamp": "2025-01-02T17:36:03.715111"
+    },
+    {
+        "role": "agent",
+        "message": "I apologize, but we currently only have properties in Chandigarh. We will contact you when we expand to other areas. Thank you for your time.",
+        "timestamp": "2025-01-02T17:36:03.720178"
     },
     {
         "role": "system",
-        "message": "Call forwarded to +918872781496",
-        "timestamp": "2024-12-31T14:21:12.668524"
+        "message": "Call disconnected: Location not in Chandigarh after multiple attempts",
+        "timestamp": "2025-01-02T17:36:03.780484"
     }
 ]
