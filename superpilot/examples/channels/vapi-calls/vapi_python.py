@@ -35,12 +35,8 @@ class Vapi:
             self.openai_api_key = None
             self._client = None
             self.__app_quit = False
-            
-            # Contact details
             self.contact_name = None
             self.contact_number = None
-            
-            # Audio recording settings
             self.audio_recording = []
             self.is_recording = False
             self.recording_thread = None
@@ -60,7 +56,6 @@ class Vapi:
             )
             print("Audio recording initialized successfully")
                 
-            # Qualification tracking
             self.user_budget = None
             self.user_profession = None
             self.user_location = None
@@ -70,7 +65,6 @@ class Vapi:
             self.current_question = None
             self.verification_stage = 0
             
-            # MongoDB setup
             try:
                 self.mongo_client = MongoClient("mongodb://localhost:27017/")
                 self.db = self.mongo_client["vapi-script"]
@@ -101,11 +95,10 @@ class Vapi:
                 print(f"Error initializing audio: {e}")
                 self.audio = None
 
-            # Add attempt counters
             self.budget_attempts = 0
             self.location_attempts = 0
             self.profession_attempts = 0
-            self.MAX_ATTEMPTS = 3  # Maximum attempts for each requirement
+            self.MAX_ATTEMPTS = 3  
             
             self.initialized = True
 
@@ -152,7 +145,6 @@ class Vapi:
 
             print("Conversation recording stopped")
 
-        # Start recording the conversation audio in a separate thread
         self.recording_thread = threading.Thread(target=record)
         self.recording_thread.start()
         print("Recording thread started")
@@ -164,11 +156,10 @@ class Vapi:
             print("Recording is not in progress")
             return
 
-        self.is_recording = False  # Stop the recording loop
+        self.is_recording = False 
         if self.recording_thread:
-            self.recording_thread.join()  # Ensure the recording thread finishes
+            self.recording_thread.join()  
         
-        # Save the recorded audio after stopping
         self.save_audio_recording()
 
     def save_audio_recording(self):
@@ -177,10 +168,8 @@ class Vapi:
             return "No audio recording found"
 
         try:
-            # Ensure the audio directory exists
             os.makedirs(self.audio_dir, exist_ok=True)
 
-            # Generate filename with timestamp
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             wav_filename = f"{self.audio_dir}/conversation_{timestamp}.wav"
             mp3_filename = f"{self.audio_dir}/conversation_{timestamp}.mp3"
@@ -199,9 +188,7 @@ class Vapi:
                 audio.export(mp3_filename, format="mp3")
                 print(f"Audio converted to MP3: {mp3_filename}")
 
-                # Save to MongoDB
                 if self.mongo_client:
-                    # Save both WAV and MP3 files
                     with open(wav_filename, 'rb') as wav_file, open(mp3_filename, 'rb') as mp3_file:
                         audio_doc = {
                             'wav_data': Binary(wav_file.read()),
@@ -217,7 +204,6 @@ class Vapi:
 
             except Exception as e:
                 print(f"Error converting to MP3: {e}")
-                # Still save WAV to MongoDB if MP3 conversion fails
                 if self.mongo_client:
                     with open(wav_filename, 'rb') as wav_file:
                         audio_doc = {
@@ -263,7 +249,6 @@ class Vapi:
             print("\n=== HANDLING AGENT MESSAGE ===")
             print(f"Original message: {msg}")
             
-            # Save agent message to transcript
             self.append_to_transcript("agent", msg)
             print("Message added to transcript")
             
@@ -298,7 +283,6 @@ class Vapi:
     def append_to_transcript(self, role, message):
         """Append a message to the conversation log and MongoDB"""
         try:
-            # Create message object with full details for MongoDB
             message_obj = {
                 "conversation_id": self.current_conversation_id,
                 "role": role,
@@ -307,17 +291,14 @@ class Vapi:
                 "call_id": self.current_call_id
             }
 
-            # Create simplified message for transcript.json
             formatted_message = {
                 "role": role,
                 "message": message,
                 "timestamp": datetime.now().isoformat()
             }
 
-            # Add to local conversation log
             self.conversation_log.append(formatted_message)
 
-            # Save to MongoDB if available
             if self.mongo_client:
                 try:
                     self.transcript_collection.insert_one(message_obj)
@@ -325,7 +306,6 @@ class Vapi:
                 except Exception as e:
                     print(f"Error saving to MongoDB: {e}")
 
-            # Save to local transcript file
             self.save_transcript()
             
             print(f"Added to transcript - {role}: {message}")
@@ -340,7 +320,6 @@ class Vapi:
         try:
             transcript_path = "transcript.json"
             
-            # Write to JSON file with proper formatting
             with open(transcript_path, 'w') as f:
                 json.dump(self.conversation_log, f, indent=4)
             print(f"Saved {len(self.conversation_log)} messages to transcript.json")
@@ -351,16 +330,13 @@ class Vapi:
     def handle_user_message(self, message):
         """Handle incoming user message with sequential qualification checks"""
         try:
-            # Save message to transcript
             self.append_to_transcript("user", message)
             
-            # Start qualification process if not started
             if self.verification_stage == 0:
                 self.append_to_transcript("agent", "Before we start, may I have your permission to ask a few questions about your property preferences?")
                 self.current_question = "permission"
                 return
             
-            # Handle permission response
             if self.current_question == "permission":
                 if "no" in message.lower():
                     self.append_to_transcript("agent", "Apka shukriya! We appreciate your time. Have a great day!")
@@ -373,7 +349,6 @@ class Vapi:
                     self.append_to_transcript("agent", "Could you please respond with yes or no regarding my question?")
                     return
 
-            # Handle each verification stage
             if self.current_question == "budget":
                 budget = self.extract_budget_from_text(message)
                 if budget:
@@ -436,11 +411,9 @@ class Vapi:
             print("Client already exists")
             return None, None
         
-        # Start recording before initializing the call
         self.start_recording()
         
         try:
-            # Prepare payload based on input
             if assistant_id:
                 payload = {'assistantId': assistant_id}
             elif assistant:
@@ -454,14 +427,12 @@ class Vapi:
             
             print(f"Making API call with payload: {payload}")
             
-            # Create call and store details
             call_id, web_call_url = self.create_web_call(payload)
             if not call_id or not web_call_url:
                 raise Exception("Failed to get valid call ID or URL")
                 
             print(f"Received call ID: {call_id}, Web call URL: {web_call_url}")
             
-            # Initialize client
             self._client = DailyCall()
             
             def on_app_message(event):
@@ -518,14 +489,13 @@ class Vapi:
             print("\nStarting conversation listener...")
             threading.Thread(target=self.listen_for_conversation, daemon=True).start()
             
-            # Start qualification process after joining
             self.start_qualification_process()
             
             return call_id, web_call_url
             
         except Exception as e:
             print(f"Error in start: {str(e)}")
-            self.stop_recording()  # Stop recording if call fails
+            self.stop_recording() 
             if self._client:
                 try:
                     self._client.leave()
@@ -540,13 +510,10 @@ class Vapi:
             print("Stopping call...")
             self.__app_quit = True
             
-            # Stop and save the recording first
-            if self.is_recording:  # Check if recording is in progress
+            if self.is_recording:  
                 print("Stopping audio recording...")
                 self.stop_recording()
-                self.save_audio_recording()  # Ensure audio is saved after stopping
-
-            # Leave the client if it's connected
+                self.save_audio_recording()  
             if self._client:
                 try:
                     self._client.leave()
@@ -556,7 +523,6 @@ class Vapi:
                 finally:
                     self._client = None
             
-            # Save transcript
             self.save_transcript()
             print("Call stopped, conversation and audio saved.")
             
@@ -573,7 +539,6 @@ class Vapi:
                 'Content-Type': 'application/json'
             }
             
-            # Make API request
             response = requests.post(url, headers=headers, json=payload)
             response.raise_for_status()
             data = response.json()
@@ -584,7 +549,6 @@ class Vapi:
             if not call_id or not web_call_url:
                 raise Exception("Missing call ID or URL in response.")
             
-            # Save web call details to MongoDB
             web_call_doc = {
                 'call_id': call_id,
                 'web_call_url': web_call_url,
@@ -647,17 +611,14 @@ class Vapi:
     def extract_budget_from_text(self, text):
         """Extract budget amount from text"""
         text = text.lower()
-        # Look for numbers followed by variations of 'lakh'
         match = re.search(r'(\d+)(?:\s*(?:lakh|lac|l|lakhs)s?)', text)
         if match:
-            return float(match.group(1)) * 100000  # Convert lakhs to rupees
+            return float(match.group(1)) * 100000  
         
-        # Look for numbers followed by 'cr' or 'crore'
         match = re.search(r'(\d+(?:\.\d+)?)(?:\s*(?:cr|crore|crores))', text)
         if match:
             return float(match.group(1)) * 10000000  # Convert crores to rupees
             
-        # Look for just numbers (assume lakhs)
         match = re.search(r'(\d+)', text)
         if match:
             return float(match.group(1)) * 100000
@@ -673,11 +634,10 @@ class Vapi:
             self.user_budget = budget
             if self.user_budget < self.min_budget:
                 response_message = "Apke budget ke anusar property khoj kr apko call back krwati hu."
-                print(response_message)  # Replace with your method to send this message to the user
-                self.disconnect_call()  # Call your method to disconnect
+                print(response_message)  
+                self.disconnect_call() 
                 return response_message
 
-            # Additional logic for handling budgets within range can be added here
             print(f"User's budget is {self.user_budget}, which is within acceptable limits.")
             return "Thank you for providing your budget."
 
@@ -712,7 +672,6 @@ class Vapi:
             response = requests.post(url, headers=headers, json=payload)
             response.raise_for_status()
             
-            # Save forwarding details to MongoDB
             if self.mongo_client:
                 forward_doc = {
                     'original_call_id': self.current_call_id,
@@ -748,19 +707,15 @@ def start_vapi_call(selected_agent, contact_name=None, contact_number=None):
         if not selected_agent:
             return "Please select an agent first"
             
-        # Extract agent ID from selection
         agent_id = selected_agent.split(" ")[0].strip()
         print(f"Starting call with agent ID: {agent_id}")
         
-        # Initialize VAPI with recording
         vapi = Vapi(api_key="")
         
-        # Save contact details
         vapi.contact_name = contact_name
         vapi.contact_number = contact_number
         vapi.save_contact_details(contact_name, contact_number)
         
-        # Start call with selected agent
         call_id, web_call_url = vapi.start(assistant_id=agent_id)
         
         if call_id and web_call_url:
@@ -787,7 +742,6 @@ def forward_vapi_call(target_agent):
         if not target_agent:
             return "Please select a target agent first"
             
-        # Extract agent ID from selection
         target_agent_id = target_agent.split(" ")[0].strip()
         
         vapi = Vapi(api_key="")
@@ -804,14 +758,12 @@ def launch_gradio_interface():
     with gr.Blocks() as demo:
         gr.Markdown("# VAPI Call Interface")
         
-        # Output text area
         output_text = gr.Textbox(
             label="Status",
             placeholder="Call status will appear here...",
             interactive=False
         )
         
-        # Agent selector
         agent_selector = gr.Dropdown(
             choices=[
                 " Anchal Hindi",
@@ -822,7 +774,6 @@ def launch_gradio_interface():
             interactive=True
         )
         
-        # Forward agent selector
         forward_agent_selector = gr.Dropdown(
             choices=[
                 " Anchal Hindi",
@@ -834,7 +785,6 @@ def launch_gradio_interface():
             interactive=True
         )
         
-        # Contact details inputs
         contact_name = gr.Textbox(
             label="Contact Name",
             placeholder="Enter contact name",
@@ -847,13 +797,11 @@ def launch_gradio_interface():
             interactive=True
         )
         
-        # Control buttons
         with gr.Row():
             start_button = gr.Button("Start Call", variant="primary")
             disconnect_button = gr.Button("Disconnect", variant="stop")
             forward_button = gr.Button("Forward Call", variant="secondary")
         
-        # Button click handlers
         start_button.click(
             fn=start_vapi_call,
             inputs=[agent_selector, contact_name, contact_number],
@@ -877,6 +825,5 @@ def launch_gradio_interface():
     
     demo.launch(server_name="0.0.0.0", server_port=7860)
 
-# Start the interface
 if __name__ == "__main__":
     launch_gradio_interface()
