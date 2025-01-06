@@ -127,7 +127,7 @@ class Vapi:
 
     def load_agent_vocabulary(self):
         """Load bilingual vocabulary from CSV"""
-        csv_path = "/home/dev2/projects/super-pilot/super-pilot/work/superpilot/superpilot/superpilot/examples/channels/vapi-calls/Hinglish Vocab - Hinglish Vocab.csv"
+        csv_path = "absolute_path_to_your_csv"
         
         vocabulary = {}
         df = pd.read_csv(csv_path)
