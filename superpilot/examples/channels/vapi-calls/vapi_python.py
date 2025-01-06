@@ -19,7 +19,11 @@ from pydub import AudioSegment
 import wave
 import io
 from bson import Binary
+import pandas as pd
+import random
+from dotenv import load_dotenv
 
+load_dotenv()
 class Vapi:
     _instance = None
     
@@ -30,13 +34,45 @@ class Vapi:
         
     def __init__(self, api_key=None):
         if not hasattr(self, 'initialized'):
+            # API and client setup
             self.api_key = api_key
             self.api_url = "https://api.vapi.ai"
             self.openai_api_key = None
             self._client = None
+            
+            self.conversation_vocabulary = {
+                'greetings': {
+                    'hello': 'नमस्ते',
+                    'welcome': 'स्वागत है',
+                    'thank you': 'धन्यवाद'
+                },
+                'property_terms': {
+                    'budget': 'बजट',
+                    'property': 'प्रॉपर्टी',
+                    'location': 'स्थान',
+                    'size': 'आकार',
+                    'price': 'कीमत',
+                    'land': 'जमीन',
+                    'area': 'क्षेत्र'
+                },
+                'responses': {
+                    'yes': 'हाँ',
+                    'no': 'नहीं',
+                    'great': 'बहुत अच्छा',
+                    'excellent': 'उत्कृष्ट'
+                }
+            }
+            
+            self.translations = {}
+            for category in self.conversation_vocabulary.values():
+                self.translations.update({v: k for k, v in category.items()})
+            
+            self.agent_vocabulary = self.load_agent_vocabulary()
             self.__app_quit = False
+
             self.contact_name = None
             self.contact_number = None
+
             self.audio_recording = []
             self.is_recording = False
             self.recording_thread = None
@@ -46,6 +82,7 @@ class Vapi:
             self.RATE = 16000
             self.audio_dir = "recorded_conversations"
             os.makedirs(self.audio_dir, exist_ok=True)
+            
             self.audio = pyaudio.PyAudio()
             self.stream = self.audio.open(
                 format=self.FORMAT,
@@ -55,16 +92,17 @@ class Vapi:
                 frames_per_buffer=self.CHUNK
             )
             print("Audio recording initialized successfully")
-                
+
             self.user_budget = None
             self.user_profession = None
             self.user_location = None
             self.qualification_checked = False
-            self.min_budget = 4000000  # 40 lakhs
-            self.max_budget = 5000000  # 50 lakhs
+            self.min_budget = 4000000  
+            self.max_budget = 5000000  
             self.current_question = None
             self.verification_stage = 0
-            
+
+            # MongoDB setup
             try:
                 self.mongo_client = MongoClient("mongodb://localhost:27017/")
                 self.db = self.mongo_client["vapi-script"]
@@ -74,34 +112,58 @@ class Vapi:
                 self.web_calls_collection = self.db["web_calls"]
                 print("MongoDB connected successfully")
             except Exception as e:
-                print(f"Error connecting to MongoDB: {e}")
+                print(f"MongoDB connection note: {e}")
                 self.mongo_client = None
-                
+
             self.conversation_log = []
             self.current_conversation_id = str(datetime.now().timestamp())
-            
-            # Initialize PyAudio
-            try:
-                self.audio = pyaudio.PyAudio()
-                self.stream = self.audio.open(
-                    format=self.FORMAT,
-                    channels=self.CHANNELS,
-                    rate=self.RATE,
-                    input=True,
-                    frames_per_buffer=self.CHUNK
-                )
-                print("Audio recording initialized successfully")
-            except Exception as e:
-                print(f"Error initializing audio: {e}")
-                self.audio = None
 
             self.budget_attempts = 0
             self.location_attempts = 0
             self.profession_attempts = 0
             self.MAX_ATTEMPTS = 3  
-            
+
             self.initialized = True
 
+    def load_agent_vocabulary(self):
+        """Load bilingual vocabulary from CSV"""
+        csv_path = "/home/dev2/projects/super-pilot/super-pilot/work/superpilot/superpilot/superpilot/examples/channels/vapi-calls/Hinglish Vocab - Hinglish Vocab.csv"
+        
+        vocabulary = {}
+        df = pd.read_csv(csv_path)
+        
+        for _, row in df.iterrows():
+            english = row['अंग्रेज़ी शब्द']
+            hindi = row['हिंदी शब्द']
+            vocabulary[english] = hindi
+        
+        self.translations = {v: k for k, v in vocabulary.items()}
+        
+        print("Vocabulary loaded successfully from CSV")
+        return vocabulary
+
+
+    def enhance_agent_message(self, message):
+        """Replace Hindi terms with bilingual pairs"""
+        enhanced_message = message
+        for hindi_word, english_word in self.translations.items():
+            if hindi_word in message:
+                enhanced_message = enhanced_message.replace(hindi_word, f"{english_word} ({hindi_word})")
+        return enhanced_message
+
+    def translate_text(self, text):
+        """Enhance text with bilingual vocabulary"""
+        if not text:
+            return text
+            
+        translated = text
+        for hindi, english in self.translations.items():
+            translated = translated.replace(hindi, f"{english} ({hindi})")
+        
+        print(f"Enhanced bilingual text: {translated}")
+        return translated
+
+        
     def save_contact_details(self, name=None, number=None):
         """Save contact details to MongoDB"""
         try:
@@ -122,6 +184,7 @@ class Vapi:
         except Exception as e:
             print(f"Error saving contact details: {e}")
             return f"Error saving contact details: {str(e)}"
+        
 
     def start_recording(self):
         """Start recording audio in a separate thread"""
@@ -145,6 +208,7 @@ class Vapi:
 
             print("Conversation recording stopped")
 
+        # Start recording the conversation audio in a separate thread
         self.recording_thread = threading.Thread(target=record)
         self.recording_thread.start()
         print("Recording thread started")
@@ -156,7 +220,7 @@ class Vapi:
             print("Recording is not in progress")
             return
 
-        self.is_recording = False 
+        self.is_recording = False  
         if self.recording_thread:
             self.recording_thread.join()  
         
@@ -174,7 +238,6 @@ class Vapi:
             wav_filename = f"{self.audio_dir}/conversation_{timestamp}.wav"
             mp3_filename = f"{self.audio_dir}/conversation_{timestamp}.mp3"
 
-            # Save as WAV first
             with wave.open(wav_filename, 'wb') as wf:
                 wf.setnchannels(self.CHANNELS)
                 wf.setsampwidth(pyaudio.get_sample_size(pyaudio.paInt16))
@@ -182,7 +245,6 @@ class Vapi:
                 wf.writeframes(b''.join(self.audio_recording))
             print(f"Audio saved as WAV: {wav_filename}")
 
-            # Convert to MP3
             try:
                 audio = AudioSegment.from_wav(wav_filename)
                 audio.export(mp3_filename, format="mp3")
@@ -237,27 +299,49 @@ class Vapi:
         print("Audio recording thread stopped")
 
     def start_qualification_process(self):
-        """Start the qualification process with initial greeting"""
-        self.verification_stage = 0
-        self.append_to_transcript("agent", "Hello! I'm calling regarding premium properties in Chandigarh. What is your budget for the property?")
+        prompts = [
+            f"May I discuss some Property Type ({self.agent_vocabulary['Property Type']}) options with you?",
+            f"Please share your Name ({self.agent_vocabulary['Name']}) for our records.",
+            f"What's your Budget ({self.agent_vocabulary['Budget']}) range for the property?",
+            f"What Land Size ({self.agent_vocabulary['Land Size']}) are you looking for?",
+            f"Which Area ({self.agent_vocabulary['Area']}) interests you?"
+        ]
+        
         self.verification_stage = 1
-        self.current_question = "budget"
+        self.append_to_transcript("agent", prompts[0])
+        self.current_question = "permission"
+
+
 
     def handle_agent_message(self, msg):
-        """Handle agent messages without text-to-speech"""
         try:
             print("\n=== HANDLING AGENT MESSAGE ===")
-            print(f"Original message: {msg}")
             
-            self.append_to_transcript("agent", msg)
-            print("Message added to transcript")
+            context = "greetings"
+            if "budget" in msg.lower() or "price" in msg.lower():
+                context = "property_terms"
+            elif "location" in msg.lower() or "area" in msg.lower():
+                context = "property_terms"
+            
+            words = msg.split()
+            enhanced_words = []
+            for word in words:
+                if word in self.translations:
+                    english_word = self.translations[word]
+                    enhanced_words.append(f"{english_word} ({word})")
+                else:
+                    enhanced_words.append(word)
+            
+            enhanced_msg = " ".join(enhanced_words)
+            print(f"Enhanced bilingual message: {enhanced_msg}")
+            
+            self.append_to_transcript("agent_original", msg)
+            self.append_to_transcript("agent_enhanced", enhanced_msg)
             
         except Exception as e:
-            print(f"\nERROR handling agent message: {str(e)}")
-            print(f"Error type: {type(e)}")
-            import traceback
-            print(f"Traceback: {traceback.format_exc()}")
-            self.append_to_transcript("error", f"Message handling error: {str(e)}")
+            print(f"Message enhancement note: {e}")
+            self.append_to_transcript("agent", msg)
+
 
     def disconnect_call(self, reason=""):
         """Disconnect the call with a reason"""
@@ -328,80 +412,85 @@ class Vapi:
             print(f"Error saving transcript: {e}")
 
     def handle_user_message(self, message):
-        """Handle incoming user message with sequential qualification checks"""
-        try:
-            self.append_to_transcript("user", message)
-            
-            if self.verification_stage == 0:
-                self.append_to_transcript("agent", "Before we start, may I have your permission to ask a few questions about your property preferences?")
-                self.current_question = "permission"
-                return
-            
-            if self.current_question == "permission":
-                if "no" in message.lower():
-                    self.append_to_transcript("agent", "Apka shukriya! We appreciate your time. Have a great day!")
-                    self.disconnect_call("User declined permission")
-                    return
-                elif "yes" in message.lower():
-                    self.start_qualification_process()
-                    return
-                else:
-                    self.append_to_transcript("agent", "Could you please respond with yes or no regarding my question?")
-                    return
+        """Handle incoming user message with professional responses"""
+        translated_message = self.translate_text(message)
+        print(f"Original message: {message}")
+        print(f"Translated message: {translated_message}")
 
-            if self.current_question == "budget":
-                budget = self.extract_budget_from_text(message)
-                if budget:
-                    self.user_budget = budget
-                    if budget < self.min_budget:
-                        self.append_to_transcript("agent", "I apologize, but your budget is below our minimum requirement of 40 lakhs. We will contact you when we have properties in your budget range. Thank you for your time.")
-                        self.disconnect_call("Budget below minimum requirement")
-                        return
-                    
+        self.append_to_transcript("user_original", message)
+        self.append_to_transcript("user_translated", translated_message)
+
+        # Initial welcome
+        if self.verification_stage == 0:
+            welcome_msg = "Welcome! I'm excited to help you find your dream Property (प्रॉपर्टी). Would you like to explore our premium options?"
+            self.append_to_transcript("agent", welcome_msg)
+            self.current_question = "permission"
+            return
+
+        # Handle permission
+        if self.current_question == "permission":
+            if "no" in translated_message.lower():
+                self.append_to_transcript("agent", "Thank you for your interest! Feel free to reach out when you'd like to explore our premium Properties (प्रॉपर्टी).")
+                self.disconnect_call("User chose to explore later")
+                return
+            if "yes" in translated_message.lower():
+                self.start_qualification_process()
+                return
+            self.append_to_transcript("agent", "Great! A simple yes will help us start finding your perfect Property (प्रॉपर्टी).")
+            return
+
+        # Handle budget discussion
+        if self.current_question == "budget":
+            budget = self.extract_budget_from_text(translated_message)
+            if budget:
+                self.user_budget = budget
+                if budget >= self.min_budget:
                     self.verification_stage = 2
                     self.current_question = "location"
-                    self.append_to_transcript("agent", "Are you looking for property in Chandigarh?")
+                    self.append_to_transcript("agent", "Excellent Budget (बजट) range! Would you like to explore Properties (प्रॉपर्टी) in Chandigarh (चंडीगढ़)?")
                 else:
-                    self.budget_attempts += 1
-                    if self.budget_attempts >= self.MAX_ATTEMPTS:
-                        self.append_to_transcript("agent", "I apologize, but I'm having trouble understanding your budget. Please contact us back when you have a specific budget in mind. Thank you for your time.")
-                        self.disconnect_call("Unable to determine budget after multiple attempts")
-                        return
-                    self.append_to_transcript("agent", "Could you please specify your budget clearly in lakhs? For example, '45 lakhs' or '50 lakhs'.")
-                    
-            elif self.current_question == "location":
-                if self.check_location(message):
-                    self.user_location = "Chandigarh"
-                    self.verification_stage = 3
-                    self.current_question = "profession"
-                    self.append_to_transcript("agent", "Do you work in an IT company? What is your profession?")
+                    self.append_to_transcript("agent", "Our premium Properties (प्रॉपर्टी) start from 40 lakhs. What's your preferred Budget (बजट) range?")
+            else:
+                self.budget_attempts += 1
+                if self.budget_attempts >= self.MAX_ATTEMPTS:
+                    self.budget_attempts = 0  # Reset for continued conversation
+                    self.append_to_transcript("agent", "Let's make this easier! Please share your Budget (बजट) like '45 lakhs' or '50 lakhs'.")
                 else:
-                    self.location_attempts += 1
-                    if self.location_attempts >= self.MAX_ATTEMPTS:
-                        self.append_to_transcript("agent", "I apologize, but we currently only have properties in Chandigarh. We will contact you when we expand to other areas. Thank you for your time.")
-                        self.disconnect_call("Location not in Chandigarh after multiple attempts")
-                        return
-                    self.append_to_transcript("agent", "I need to confirm if you're looking for property in Chandigarh. Please answer yes or no.")
-                    
-            elif self.current_question == "profession":
-                if self.check_profession(message):
-                    self.user_profession = "IT"
-                    self.verification_stage = 4
-                    self.current_question = "qualified"
-                    self.append_to_transcript("agent", "Perfect! You qualify for our premium properties. Let me tell you about our offerings.")
+                    self.append_to_transcript("agent", "To find the perfect Property (प्रॉपर्टी), what's your Budget (बजट) in lakhs?")
+
+        # Handle location preference
+        elif self.current_question == "location":
+            if self.check_location(translated_message):
+                self.user_location = "Chandigarh"
+                self.verification_stage = 3
+                self.current_question = "profession"
+                self.append_to_transcript("agent", "Wonderful choice! Chandigarh (चंडीगढ़) has excellent Properties (प्रॉपर्टी). What's your Profession (पेशा)? Are you in the IT sector?")
+            else:
+                self.location_attempts += 1
+                if self.location_attempts >= self.MAX_ATTEMPTS:
+                    self.location_attempts = 0  # Reset for continued conversation
+                    self.append_to_transcript("agent", "Let's focus on Chandigarh (चंडीगढ़) - it's where our premium Properties (प्रॉपर्टी) are located. Would you like to explore options here?")
                 else:
-                    self.profession_attempts += 1
-                    if self.profession_attempts >= self.MAX_ATTEMPTS:
-                        self.append_to_transcript("agent", "I apologize, but this property is specifically for IT professionals. We will contact you when we have suitable options for other professions. Thank you for your time.")
-                        self.disconnect_call("Not in IT profession after multiple attempts")
-                        return
-                    self.append_to_transcript("agent", "Could you please specify if you work in the IT sector and what your role is?")
-            
-            print(f"Processing user message: {message}")
-            
-        except Exception as e:
-            print(f"Error handling user message: {e}")
-            self.append_to_transcript("error", f"Error handling message: {str(e)}")
+                    self.append_to_transcript("agent", "Are you interested in Properties (प्रॉपर्टी) in Chandigarh (चंडीगढ़)? A simple yes or no will help.")
+
+        # Handle profession information
+        elif self.current_question == "profession":
+            if self.check_profession(translated_message):
+                self.user_profession = "IT"
+                self.verification_stage = 4
+                self.current_question = "qualified"
+                self.append_to_transcript("agent", "Perfect match! You'll love our premium Properties (प्रॉपर्टी). Let me share some exciting options with you!")
+            else:
+                self.profession_attempts += 1
+                if self.profession_attempts >= self.MAX_ATTEMPTS:
+                    self.profession_attempts = 0  # Reset for continued conversation
+                    self.append_to_transcript("agent", "Tell me more about your work in the IT sector - we have special offers for IT professionals!")
+                else:
+                    self.append_to_transcript("agent", "Do you work in the IT sector? What's your role?")
+
+        print(f"Processing user message: {message}")
+
+
 
 
     def start(self, *, assistant_id=None, assistant=None, assistant_overrides=None, squad_id=None, squad=None):
@@ -411,9 +500,11 @@ class Vapi:
             print("Client already exists")
             return None, None
         
+        # Start recording before initializing the call
         self.start_recording()
         
         try:
+            # Prepare payload based on input
             if assistant_id:
                 payload = {'assistantId': assistant_id}
             elif assistant:
@@ -427,12 +518,14 @@ class Vapi:
             
             print(f"Making API call with payload: {payload}")
             
+            # Create call and store details
             call_id, web_call_url = self.create_web_call(payload)
             if not call_id or not web_call_url:
                 raise Exception("Failed to get valid call ID or URL")
                 
             print(f"Received call ID: {call_id}, Web call URL: {web_call_url}")
             
+            # Initialize client
             self._client = DailyCall()
             
             def on_app_message(event):
@@ -489,13 +582,14 @@ class Vapi:
             print("\nStarting conversation listener...")
             threading.Thread(target=self.listen_for_conversation, daemon=True).start()
             
+            # Start qualification process after joining
             self.start_qualification_process()
             
             return call_id, web_call_url
             
         except Exception as e:
             print(f"Error in start: {str(e)}")
-            self.stop_recording() 
+            self.stop_recording()  # Stop recording if call fails
             if self._client:
                 try:
                     self._client.leave()
@@ -510,10 +604,13 @@ class Vapi:
             print("Stopping call...")
             self.__app_quit = True
             
-            if self.is_recording:  
+            # Stop and save the recording first
+            if self.is_recording:  # Check if recording is in progress
                 print("Stopping audio recording...")
                 self.stop_recording()
-                self.save_audio_recording()  
+                self.save_audio_recording()  # Ensure audio is saved after stopping
+
+            # Leave the client if it's connected
             if self._client:
                 try:
                     self._client.leave()
@@ -523,6 +620,7 @@ class Vapi:
                 finally:
                     self._client = None
             
+            # Save transcript
             self.save_transcript()
             print("Call stopped, conversation and audio saved.")
             
@@ -539,6 +637,7 @@ class Vapi:
                 'Content-Type': 'application/json'
             }
             
+            # Make API request
             response = requests.post(url, headers=headers, json=payload)
             response.raise_for_status()
             data = response.json()
@@ -549,6 +648,7 @@ class Vapi:
             if not call_id or not web_call_url:
                 raise Exception("Missing call ID or URL in response.")
             
+            # Save web call details to MongoDB
             web_call_doc = {
                 'call_id': call_id,
                 'web_call_url': web_call_url,
@@ -611,14 +711,17 @@ class Vapi:
     def extract_budget_from_text(self, text):
         """Extract budget amount from text"""
         text = text.lower()
+        # Look for numbers followed by variations of 'lakh'
         match = re.search(r'(\d+)(?:\s*(?:lakh|lac|l|lakhs)s?)', text)
         if match:
-            return float(match.group(1)) * 100000  
+            return float(match.group(1)) * 100000  # Convert lakhs to rupees
         
+        # Look for numbers followed by 'cr' or 'crore'
         match = re.search(r'(\d+(?:\.\d+)?)(?:\s*(?:cr|crore|crores))', text)
         if match:
             return float(match.group(1)) * 10000000  # Convert crores to rupees
             
+        # Look for just numbers (assume lakhs)
         match = re.search(r'(\d+)', text)
         if match:
             return float(match.group(1)) * 100000
@@ -634,10 +737,11 @@ class Vapi:
             self.user_budget = budget
             if self.user_budget < self.min_budget:
                 response_message = "Apke budget ke anusar property khoj kr apko call back krwati hu."
-                print(response_message)  
-                self.disconnect_call() 
+                print(response_message)  # Replace with your method to send this message to the user
+                self.disconnect_call()  # Call your method to disconnect
                 return response_message
 
+            # Additional logic for handling budgets within range can be added here
             print(f"User's budget is {self.user_budget}, which is within acceptable limits.")
             return "Thank you for providing your budget."
 
@@ -672,6 +776,7 @@ class Vapi:
             response = requests.post(url, headers=headers, json=payload)
             response.raise_for_status()
             
+            # Save forwarding details to MongoDB
             if self.mongo_client:
                 forward_doc = {
                     'original_call_id': self.current_call_id,
@@ -686,6 +791,30 @@ class Vapi:
         except Exception as e:
             print(f"Error forwarding call: {e}")
             return f"Error forwarding call: {str(e)}"
+
+    def save_remarks(self, csv_data, remarks_text):
+        """Save CSV data and remarks to MongoDB"""
+        try:
+            csv_dict = csv_data.to_dict('records')
+            
+            doc = {
+                'csv_data': csv_dict,
+                'remarks': remarks_text,
+                'timestamp': datetime.now(),
+                'conversation_id': self.current_conversation_id
+            }
+            
+            # Save to MongoDB
+            if self.mongo_client:
+                remarks_collection = self.db['remarks']
+                result = remarks_collection.insert_one(doc)
+                print(f"Remarks and CSV data saved with ID: {result.inserted_id}")
+                return str(result.inserted_id)
+            return None
+            
+        except Exception as e:
+            print(f"Error saving remarks and CSV: {e}")
+            return None
 
 def save_contact_number(self, contact_number):
         """Save the contact number to MongoDB."""
@@ -702,30 +831,61 @@ def save_contact_number(self, contact_number):
         return "No contact number provided."
 
 def start_vapi_call(selected_agent, contact_name=None, contact_number=None):
-    """Start a VAPI call with selected agent"""
+    """Start a VAPI call and connect to user's contact number"""
     try:
-        if not selected_agent:
-            return "Please select an agent first"
-            
-        agent_id = selected_agent.split(" ")[0].strip()
-        print(f"Starting call with agent ID: {agent_id}")
-        
+        if not selected_agent or not contact_number:
+            return "Please provide both agent and contact number"
+
+        # Initialize VAPI client
         vapi = Vapi(api_key="")
         
-        vapi.contact_name = contact_name
-        vapi.contact_number = contact_number
-        vapi.save_contact_details(contact_name, contact_number)
+        # Initialize Twilio client
+        twilio_client = Client(
+            "",
+            ""
+        )
         
+        # Extract agent ID
+        agent_id = selected_agent.split(" ")[0].strip()
+        print(f"Starting call with agent ID: {agent_id} to number: {contact_number}")
+
+        # Start VAPI call first
         call_id, web_call_url = vapi.start(assistant_id=agent_id)
         
         if call_id and web_call_url:
-            return f"Call started successfully with agent {selected_agent}"
+            # Save contact details
+            vapi.contact_name = contact_name
+            vapi.contact_number = contact_number
+            vapi.save_contact_details(contact_name, contact_number)
+            
+            # Make outbound call via Twilio
+            call = twilio_client.calls.create(
+                url=web_call_url,
+                to=contact_number,
+                from_="+1234567890",  # Your Twilio phone number
+                status_callback='https://your-domain.com/call-status'
+            )
+            
+            # Save call details to MongoDB
+            call_doc = {
+                'vapi_call_id': call_id,
+                'twilio_call_sid': call.sid,
+                'contact_name': contact_name,
+                'contact_number': contact_number,
+                'agent_id': agent_id,
+                'timestamp': datetime.now(),
+                'status': 'initiated'
+            }
+            vapi.web_calls_collection.insert_one(call_doc)
+            
+            return f"Call initiated successfully to {contact_number}"
         else:
-            return "Failed to start call. Please try again."
+            return "Failed to start VAPI call"
             
     except Exception as e:
         print(f"Error in start_vapi_call: {str(e)}")
         return f"Error starting call: {str(e)}"
+
 
 def disconnect_vapi_call():
     """Disconnect the VAPI call and save recordings"""
@@ -742,6 +902,7 @@ def forward_vapi_call(target_agent):
         if not target_agent:
             return "Please select a target agent first"
             
+        # Extract agent ID from selection
         target_agent_id = target_agent.split(" ")[0].strip()
         
         vapi = Vapi(api_key="")
@@ -758,15 +919,17 @@ def launch_gradio_interface():
     with gr.Blocks() as demo:
         gr.Markdown("# VAPI Call Interface")
         
+        # Output text area
         output_text = gr.Textbox(
             label="Status",
             placeholder="Call status will appear here...",
             interactive=False
         )
         
+        # Agent selector
         agent_selector = gr.Dropdown(
             choices=[
-                " Anchal Hindi",
+                "health-insurance",
                 "Anchal English"
             ],
             label="Select Agent",
@@ -774,17 +937,19 @@ def launch_gradio_interface():
             interactive=True
         )
         
+        # Forward agent selector
         forward_agent_selector = gr.Dropdown(
             choices=[
-                " Anchal Hindi",
-                "Anchal English"
+                " health-insurance",
+                " Anchal English"
             ],
             label="Forward to Agent",
-            value="Anchal English",
+            value="health-insurance",
             visible=True,
             interactive=True
         )
         
+        # Contact details inputs
         contact_name = gr.Textbox(
             label="Contact Name",
             placeholder="Enter contact name",
@@ -797,11 +962,99 @@ def launch_gradio_interface():
             interactive=True
         )
         
+        # CSV upload and remarks section
+        with gr.Row():
+            csv_file = gr.File(
+                label="Upload CSV File",
+                file_types=[".csv"],
+                type="filepath"
+            )
+            remarks = gr.Textbox(
+                label="Enter Remarks",
+                placeholder="Add any additional notes or remarks here...",
+                lines=3,
+                interactive=True
+            )
+        
+        # Control buttons
         with gr.Row():
             start_button = gr.Button("Start Call", variant="primary")
             disconnect_button = gr.Button("Disconnect", variant="stop")
             forward_button = gr.Button("Forward Call", variant="secondary")
+            submit_remarks_button = gr.Button("Submit CSV and Remarks", variant="primary")
         
+        def handle_csv_submit(file, remarks_text):
+            if file is None:
+                return "Please upload a CSV file"
+            try:
+                df = pd.read_csv(file.name)
+                
+                twilio_client = Client(
+                    "",
+                    ""
+                )
+                
+                vapi = Vapi(api_key="")
+                
+                call_results = []
+                
+                for index, row in df.iterrows():
+                    contact_number = row['contact_number']  # Adjust column name as per your CSV
+                    
+                    try:
+                        # Start VAPI call first
+                        call_id, web_call_url = vapi.start(assistant_id="")
+                        
+                        if call_id and web_call_url:
+                            # Make Twilio call
+                            call = twilio_client.calls.create(
+                                url=web_call_url,  # VAPI call URL
+                                to=contact_number,
+                                from_="YOUR_TWILIO_PHONE_NUMBER",
+                                status_callback='http://your-callback-url.com/events'
+                            )
+                            
+                            call_results.append({
+                                'number': contact_number,
+                                'status': 'success',
+                                'call_sid': call.sid,
+                                'vapi_call_id': call_id
+                            })
+                            
+                            vapi.web_calls_collection.insert_one({
+                                'contact_number': contact_number,
+                                'twilio_call_sid': call.sid,
+                                'vapi_call_id': call_id,
+                                'timestamp': datetime.now(),
+                                'status': 'initiated'
+                            })
+                            
+                    except Exception as e:
+                        call_results.append({
+                            'number': contact_number,
+                            'status': 'failed',
+                            'error': str(e)
+                        })
+                        
+                # Save remarks and results
+                doc = {
+                    'csv_data': df.to_dict('records'),
+                    'remarks': remarks_text,
+                    'call_results': call_results,
+                    'timestamp': datetime.now()
+                }
+                
+                result = vapi.db['batch_calls'].insert_one(doc)
+                
+                # Return summary
+                success_calls = len([r for r in call_results if r['status'] == 'success'])
+                return f"Processed {len(call_results)} numbers. Successfully initiated {success_calls} calls."
+                
+            except Exception as e:
+                return f"Error processing file: {str(e)}"
+
+        
+        # Button click handlers
         start_button.click(
             fn=start_vapi_call,
             inputs=[agent_selector, contact_name, contact_number],
@@ -822,8 +1075,16 @@ def launch_gradio_interface():
             outputs=output_text,
             api_name="forward_call"
         )
+        
+        submit_remarks_button.click(
+            fn=handle_csv_submit,
+            inputs=[csv_file, remarks],
+            outputs=output_text,
+            api_name="submit_csv"
+        )
     
     demo.launch(server_name="0.0.0.0", server_port=7860)
 
+# Start the interface
 if __name__ == "__main__":
     launch_gradio_interface()

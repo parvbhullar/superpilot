@@ -1,7 +1,0 @@
-.env.local
-venv/
-.DS_Store
-dispatch.json
-inbound.json
-renovate.json
-sip-participant.json

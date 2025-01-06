@@ -26,9 +26,10 @@ def get_openai_response(user_input):
     response = openai.Completion.create(
         model="gpt-3.5-turbo",  # or other models as required
         prompt=user_input,
-        max_tokens=150
+        max_tokens=150  
     )
     return response.choices[0].text.strip()
+##please update this code
 
 # Function to send message to VAPI and get response (using GET request)
 def send_message_to_agent():

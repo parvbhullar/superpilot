@@ -1,0 +1,9 @@
+{
+    "trunk": {
+      "name": "My outbound trunk",
+      "address": "testvapi.pstn.twilio.com",
+      "numbers": ["+13183739895"],
+      "auth_username": "vapi",
+      "auth_password": "Vapi@12345678"
+    }
+  }
