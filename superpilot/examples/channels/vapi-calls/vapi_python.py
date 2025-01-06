@@ -862,7 +862,7 @@ def start_vapi_call(selected_agent, contact_name=None, contact_number=None):
             call = twilio_client.calls.create(
                 url=web_call_url,
                 to=contact_number,
-                from_="+1234567890",  # Your Twilio phone number
+                from_="",  # Your Twilio phone number
                 status_callback='https://your-domain.com/call-status'
             )
             
