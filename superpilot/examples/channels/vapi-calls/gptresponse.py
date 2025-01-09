@@ -15,7 +15,7 @@ TWILIO_AUTH_TOKEN = ''
 TWILIO_PHONE_NUMBER = ''
 
 # VAPI API endpoint
-VAPI_URL = 'https://vapi.ai?demo=true&shareKey=8c3e405d-060c-4497-9ee5-67b5a62505ce&assistantId=de8fe3dc-17e1-40d0-80ea-194ef678018f'
+VAPI_URL = ''
 
 # Initial message to the user via agent
 initial_content = "app ek ai agent hai apko sales ka bhut acha experience hai or app property sale purchase krwate hai app ek behtar vikalp laye hai for agent ."

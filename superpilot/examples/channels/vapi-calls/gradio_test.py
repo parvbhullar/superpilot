@@ -78,7 +78,7 @@ class Vapi:
             self.conversation_log = []
 
             # Initialize vocabulary path and load vocabulary
-            self.hinglish_vocab_path = '/home/dev2/projects/super-pilot/super-pilot/work/superpilot/superpilot/superpilot/examples/channels/vapi-calls/Hinglish Vocab - Hinglish Vocab.csv'
+            self.hinglish_vocab_path = 'absolute path to your hinglish vocabulary CSV file'
             self.hinglish_vocab = {}
             self.load_hinglish_vocabulary()
 
@@ -109,7 +109,7 @@ class Vapi:
 
     def load_hinglish_vocabulary(self):
         """Load Hinglish vocabulary from the specified CSV file"""
-        file_path = "/home/dev2/projects/super-pilot/super-pilot/work/superpilot/superpilot/superpilot/examples/channels/vapi-calls/Hinglish Vocab - Hinglish Vocab.csv"
+        file_path = "absolute path to your hinglish vocabulary CSV file"
         try:
             self.vocab_df = pd.read_csv(file_path)
             self.hindi_to_english = dict(zip(self.vocab_df['Hindi Word'], self.vocab_df['English Translation']))
@@ -655,8 +655,6 @@ class Vapi:
                 print("Stopping audio recording...")
                 self.stop_recording()
                 self.save_audio_recording()  # Ensure audio is saved after stopping
-
-            # Leave the client if it's connected
             if self._client:
                 try:
                     self._client.leave()
@@ -683,7 +681,6 @@ class Vapi:
                 'Content-Type': 'application/json'
             }
             
-            # Make API request
             response = requests.post(url, headers=headers, json=payload)
             response.raise_for_status()
             data = response.json()
@@ -694,7 +691,6 @@ class Vapi:
             if not call_id or not web_call_url:
                 raise Exception("Missing call ID or URL in response.")
             
-            # Save web call details to MongoDB
             web_call_doc = {
                 'call_id': call_id,
                 'web_call_url': web_call_url,
@@ -727,15 +723,13 @@ class Vapi:
     def extract_budget_from_text(self, text):
         """Extract budget amount from text"""
         text = text.lower()
-        # Look for numbers followed by variations of 'lakh'
         match = re.search(r'(\d+)(?:\s*(?:lakh|lac|l|lakhs)s?)', text)
         if match:
             return float(match.group(1)) * 100000  # Convert lakhs to rupees
         
-        # Look for numbers followed by 'cr' or 'crore'
         match = re.search(r'(\d+(?:\.\d+)?)(?:\s*(?:cr|crore|crores))', text)
         if match:
-            return float(match.group(1)) * 10000000  # Convert crores to rupees
+            return float(match.group(1)) * 10000000 
             
         # Look for just numbers (assume lakhs)
         match = re.search(r'(\d+)', text)
@@ -753,11 +747,10 @@ class Vapi:
             self.user_budget = budget
             if self.user_budget < self.min_budget:
                 response_message = "Apke budget ke anusar property khoj kr apko call back krwati hu."
-                print(response_message)  # Replace with your method to send this message to the user
-                self.disconnect_call()  # Call your method to disconnect
+                print(response_message)  
+                self.disconnect_call()  
                 return response_message
 
-            # Additional logic for handling budgets within range can be added here
             print(f"User's budget is {self.user_budget}, which is within acceptable limits.")
             return "Thank you for providing your budget."
 
@@ -792,7 +785,6 @@ class Vapi:
             response = requests.post(url, headers=headers, json=payload)
             response.raise_for_status()
             
-            # Save forwarding details to MongoDB
             if self.mongo_client:
                 forward_doc = {
                     'original_call_id': self.current_call_id,
@@ -824,7 +816,7 @@ class Vapi:
     def call_all_contacts(self, agent_id):
         """Initiate calls to all contacts in the contact list and allow agent to talk"""
         predefined_contacts = [
-            {'Name': 'Arshdeep', 'Number': '918872781496'},
+            {'Name': 'AK', 'Number': '12345'},
             # Add more predefined contacts as needed
         ]
         for contact in predefined_contacts:
@@ -858,11 +850,11 @@ def start_vapi_call(selected_agent, name=None, number=None):
             return "Please select an agent first"
             
         # Extract agent ID from selection
-        agent_id = '93d948c4-1e41-4020-bc77-7a303dec4ed6'
+        agent_id = ''
         print(f"Starting call with agent ID: {agent_id}")
         
         # Initialize VAPI with recording
-        vapi = Vapi(api_key="8c3e405d-060c-4497-9ee5-67b5a62505ce")
+        vapi = Vapi(api_key="")
         
         # Save contact details
         vapi.name = name
@@ -884,7 +876,7 @@ def start_vapi_call(selected_agent, name=None, number=None):
 def disconnect_vapi_call():
     """Disconnect the VAPI call and save recordings"""
     try:
-        vapi = Vapi(api_key="8c3e405d-060c-4497-9ee5-67b5a62505ce")
+        vapi = Vapi(api_key="")
         vapi.stop()
         return "Call disconnected and recordings saved successfully!"
     except Exception as e:
@@ -899,7 +891,7 @@ def forward_vapi_call(target_agent):
         # Extract agent ID from selection
         target_agent_id = target_agent.split(" ")[0].strip()
         
-        vapi = Vapi(api_key="8c3e405d-060c-4497-9ee5-67b5a62505ce")
+        vapi = Vapi(api_key="")
         result = vapi.forward_call(target_agent_id)
         
         return result
@@ -910,7 +902,7 @@ def forward_vapi_call(target_agent):
 
 def launch_gradio_interface():
     """Launch the Gradio interface for VAPI calls"""
-    vapi = Vapi(api_key="vapi-ai-3d9c1c2e-0fb8-4f36-9d89-3c4c6f9f5a7c")
+    vapi = Vapi(api_key="")
     vapi.load_hinglish_vocabulary()
     
     def upload_csv(file):
@@ -951,7 +943,7 @@ def launch_gradio_interface():
         
         def start_call(agent):
             # Use the provided agent ID
-            agent_id = '93d948c4-1e41-4020-bc77-7a303dec4ed6'
+            agent_id = ''
             remarks = caller_remarks.value
             # Add logic to save remarks to the database here
             pass

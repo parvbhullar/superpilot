@@ -22,6 +22,7 @@ from bson import Binary
 import pandas as pd
 import random
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 class Vapi:
@@ -40,6 +41,7 @@ class Vapi:
             self.openai_api_key = None
             self._client = None
             
+            # Conversation vocabulary setup
             self.conversation_vocabulary = {
                 'greetings': {
                     'hello': 'नमस्ते',
@@ -63,6 +65,7 @@ class Vapi:
                 }
             }
             
+            # Create translations mapping
             self.translations = {}
             for category in self.conversation_vocabulary.values():
                 self.translations.update({v: k for k, v in category.items()})
@@ -72,7 +75,6 @@ class Vapi:
 
             self.contact_name = None
             self.contact_number = None
-
             self.audio_recording = []
             self.is_recording = False
             self.recording_thread = None
@@ -93,12 +95,13 @@ class Vapi:
             )
             print("Audio recording initialized successfully")
 
+            # Qualification tracking
             self.user_budget = None
             self.user_profession = None
             self.user_location = None
             self.qualification_checked = False
-            self.min_budget = 4000000  
-            self.max_budget = 5000000  
+            self.min_budget = 4000000  # 40 lakhs
+            self.max_budget = 5000000  # 50 lakhs
             self.current_question = None
             self.verification_stage = 0
 
@@ -121,14 +124,13 @@ class Vapi:
             self.budget_attempts = 0
             self.location_attempts = 0
             self.profession_attempts = 0
-            self.MAX_ATTEMPTS = 3  
+            self.MAX_ATTEMPTS = 3 
 
             self.initialized = True
 
     def load_agent_vocabulary(self):
         """Load bilingual vocabulary from CSV"""
-        csv_path = "absolute_path_to_your_csv"
-        
+        csv_path = "absolute_path_to_your_csv_file.csv"
         vocabulary = {}
         df = pd.read_csv(csv_path)
         
@@ -155,7 +157,6 @@ class Vapi:
         """Enhance text with bilingual vocabulary"""
         if not text:
             return text
-            
         translated = text
         for hindi, english in self.translations.items():
             translated = translated.replace(hindi, f"{english} ({hindi})")
@@ -208,7 +209,6 @@ class Vapi:
 
             print("Conversation recording stopped")
 
-        # Start recording the conversation audio in a separate thread
         self.recording_thread = threading.Thread(target=record)
         self.recording_thread.start()
         print("Recording thread started")
@@ -250,7 +250,9 @@ class Vapi:
                 audio.export(mp3_filename, format="mp3")
                 print(f"Audio converted to MP3: {mp3_filename}")
 
+                # Save to MongoDB
                 if self.mongo_client:
+                    # Save both WAV and MP3 files
                     with open(wav_filename, 'rb') as wav_file, open(mp3_filename, 'rb') as mp3_file:
                         audio_doc = {
                             'wav_data': Binary(wav_file.read()),
@@ -335,6 +337,7 @@ class Vapi:
             enhanced_msg = " ".join(enhanced_words)
             print(f"Enhanced bilingual message: {enhanced_msg}")
             
+            # Save both versions to transcript
             self.append_to_transcript("agent_original", msg)
             self.append_to_transcript("agent_enhanced", enhanced_msg)
             
@@ -439,7 +442,6 @@ class Vapi:
             self.append_to_transcript("agent", "Great! A simple yes will help us start finding your perfect Property (प्रॉपर्टी).")
             return
 
-        # Handle budget discussion
         if self.current_question == "budget":
             budget = self.extract_budget_from_text(translated_message)
             if budget:
@@ -453,12 +455,11 @@ class Vapi:
             else:
                 self.budget_attempts += 1
                 if self.budget_attempts >= self.MAX_ATTEMPTS:
-                    self.budget_attempts = 0  # Reset for continued conversation
+                    self.budget_attempts = 0  
                     self.append_to_transcript("agent", "Let's make this easier! Please share your Budget (बजट) like '45 lakhs' or '50 lakhs'.")
                 else:
                     self.append_to_transcript("agent", "To find the perfect Property (प्रॉपर्टी), what's your Budget (बजट) in lakhs?")
 
-        # Handle location preference
         elif self.current_question == "location":
             if self.check_location(translated_message):
                 self.user_location = "Chandigarh"
@@ -468,12 +469,11 @@ class Vapi:
             else:
                 self.location_attempts += 1
                 if self.location_attempts >= self.MAX_ATTEMPTS:
-                    self.location_attempts = 0  # Reset for continued conversation
+                    self.location_attempts = 0 
                     self.append_to_transcript("agent", "Let's focus on Chandigarh (चंडीगढ़) - it's where our premium Properties (प्रॉपर्टी) are located. Would you like to explore options here?")
                 else:
                     self.append_to_transcript("agent", "Are you interested in Properties (प्रॉपर्टी) in Chandigarh (चंडीगढ़)? A simple yes or no will help.")
 
-        # Handle profession information
         elif self.current_question == "profession":
             if self.check_profession(translated_message):
                 self.user_profession = "IT"
@@ -483,14 +483,12 @@ class Vapi:
             else:
                 self.profession_attempts += 1
                 if self.profession_attempts >= self.MAX_ATTEMPTS:
-                    self.profession_attempts = 0  # Reset for continued conversation
+                    self.profession_attempts = 0 
                     self.append_to_transcript("agent", "Tell me more about your work in the IT sector - we have special offers for IT professionals!")
                 else:
                     self.append_to_transcript("agent", "Do you work in the IT sector? What's your role?")
 
         print(f"Processing user message: {message}")
-
-
 
 
     def start(self, *, assistant_id=None, assistant=None, assistant_overrides=None, squad_id=None, squad=None):
@@ -500,11 +498,9 @@ class Vapi:
             print("Client already exists")
             return None, None
         
-        # Start recording before initializing the call
         self.start_recording()
         
         try:
-            # Prepare payload based on input
             if assistant_id:
                 payload = {'assistantId': assistant_id}
             elif assistant:
@@ -518,14 +514,12 @@ class Vapi:
             
             print(f"Making API call with payload: {payload}")
             
-            # Create call and store details
             call_id, web_call_url = self.create_web_call(payload)
             if not call_id or not web_call_url:
                 raise Exception("Failed to get valid call ID or URL")
                 
             print(f"Received call ID: {call_id}, Web call URL: {web_call_url}")
             
-            # Initialize client
             self._client = DailyCall()
             
             def on_app_message(event):
@@ -582,14 +576,13 @@ class Vapi:
             print("\nStarting conversation listener...")
             threading.Thread(target=self.listen_for_conversation, daemon=True).start()
             
-            # Start qualification process after joining
             self.start_qualification_process()
             
             return call_id, web_call_url
             
         except Exception as e:
             print(f"Error in start: {str(e)}")
-            self.stop_recording()  # Stop recording if call fails
+            self.stop_recording()  
             if self._client:
                 try:
                     self._client.leave()
@@ -604,13 +597,11 @@ class Vapi:
             print("Stopping call...")
             self.__app_quit = True
             
-            # Stop and save the recording first
-            if self.is_recording:  # Check if recording is in progress
+            if self.is_recording: 
                 print("Stopping audio recording...")
                 self.stop_recording()
-                self.save_audio_recording()  # Ensure audio is saved after stopping
+                self.save_audio_recording() 
 
-            # Leave the client if it's connected
             if self._client:
                 try:
                     self._client.leave()
@@ -711,17 +702,14 @@ class Vapi:
     def extract_budget_from_text(self, text):
         """Extract budget amount from text"""
         text = text.lower()
-        # Look for numbers followed by variations of 'lakh'
         match = re.search(r'(\d+)(?:\s*(?:lakh|lac|l|lakhs)s?)', text)
         if match:
             return float(match.group(1)) * 100000  # Convert lakhs to rupees
         
-        # Look for numbers followed by 'cr' or 'crore'
         match = re.search(r'(\d+(?:\.\d+)?)(?:\s*(?:cr|crore|crores))', text)
         if match:
             return float(match.group(1)) * 10000000  # Convert crores to rupees
             
-        # Look for just numbers (assume lakhs)
         match = re.search(r'(\d+)', text)
         if match:
             return float(match.group(1)) * 100000
@@ -737,11 +725,10 @@ class Vapi:
             self.user_budget = budget
             if self.user_budget < self.min_budget:
                 response_message = "Apke budget ke anusar property khoj kr apko call back krwati hu."
-                print(response_message)  # Replace with your method to send this message to the user
-                self.disconnect_call()  # Call your method to disconnect
+                print(response_message) 
+                self.disconnect_call()  
                 return response_message
 
-            # Additional logic for handling budgets within range can be added here
             print(f"User's budget is {self.user_budget}, which is within acceptable limits.")
             return "Thank you for providing your budget."
 
@@ -776,7 +763,6 @@ class Vapi:
             response = requests.post(url, headers=headers, json=payload)
             response.raise_for_status()
             
-            # Save forwarding details to MongoDB
             if self.mongo_client:
                 forward_doc = {
                     'original_call_id': self.current_call_id,
@@ -804,7 +790,6 @@ class Vapi:
                 'conversation_id': self.current_conversation_id
             }
             
-            # Save to MongoDB
             if self.mongo_client:
                 remarks_collection = self.db['remarks']
                 result = remarks_collection.insert_one(doc)
@@ -830,62 +815,155 @@ def save_contact_number(self, contact_number):
                 return f"Error saving contact number: {e}"
         return "No contact number provided."
 
-def start_vapi_call(selected_agent, contact_name=None, contact_number=None):
+auth_token = ''
+phone_number_id = ''
+twilio_client = Client("", "")
+
+def start_vapi_call(selected_agent, contact_name, contact_number):
     """Start a VAPI call and connect to user's contact number"""
     try:
         if not selected_agent or not contact_number:
             return "Please provide both agent and contact number"
 
-        # Initialize VAPI client
-        vapi = Vapi(api_key="")
-        
-        # Initialize Twilio client
-        twilio_client = Client(
-            "",
-            ""
-        )
-        
-        # Extract agent ID
         agent_id = selected_agent.split(" ")[0].strip()
         print(f"Starting call with agent ID: {agent_id} to number: {contact_number}")
 
-        # Start VAPI call first
-        call_id, web_call_url = vapi.start(assistant_id=agent_id)
-        
-        if call_id and web_call_url:
-            # Save contact details
-            vapi.contact_name = contact_name
-            vapi.contact_number = contact_number
-            vapi.save_contact_details(contact_name, contact_number)
-            
-            # Make outbound call via Twilio
-            call = twilio_client.calls.create(
-                url=web_call_url,
-                to=contact_number,
-                from_="",  # Your Twilio phone number
-                status_callback='https://your-domain.com/call-status'
-            )
-            
-            # Save call details to MongoDB
-            call_doc = {
-                'vapi_call_id': call_id,
-                'twilio_call_sid': call.sid,
-                'contact_name': contact_name,
-                'contact_number': contact_number,
-                'agent_id': agent_id,
-                'timestamp': datetime.now(),
-                'status': 'initiated'
+        auth_token = ''
+        phone_number_id = ''
+
+        headers = {
+            'Authorization': f'Bearer {auth_token}',
+            'Content-Type': 'application/json',
+        }
+
+        data = {
+            'assistantId': agent_id,
+            'phoneNumberId': phone_number_id,
+            'customer': {
+                'number': contact_number,
             }
-            vapi.web_calls_collection.insert_one(call_doc)
+        }
+
+        print(f"Making call to {contact_number}")
+        
+        # Make the POST request to Vapi to create the phone call
+        response = requests.post(
+            'https://api.vapi.ai/call/phone', headers=headers, json=data)
+
+        # Check if the request was successful
+        if response.status_code == 201:
+            print(f'VAPI call created successfully for {contact_number}')
+            vapi_call_info = response.json()
+            call_id = vapi_call_info.get('id')
             
+            # Start polling for call updates
+            def poll_call_status():
+                while True:
+                    try:
+                        status_response = requests.get(
+                            f'https://api.vapi.ai/call/{call_id}',
+                            headers=headers
+                        )
+                        if status_response.status_code == 200:
+                            call_data = status_response.json()
+                            if call_data.get('status') == 'completed':
+                                print(f"Call completed for {contact_number}")
+                                break
+                    except Exception as e:
+                        print(f"Error polling call status: {str(e)}")
+                    time.sleep(5)
+            
+            # Start polling in a separate thread
+            threading.Thread(target=poll_call_status, daemon=True).start()
+
             return f"Call initiated successfully to {contact_number}"
         else:
-            return "Failed to start VAPI call"
-            
-    except Exception as e:
-        print(f"Error in start_vapi_call: {str(e)}")
-        return f"Error starting call: {str(e)}"
+            error_msg = f"Failed to create VAPI call for {contact_number}: {response.text}"
+            print(error_msg)
+            return error_msg
 
+    except Exception as e:
+        error_msg = f"Error starting call to {contact_number}: {str(e)}"
+        print(error_msg)
+        return error_msg
+
+def process_csv_and_make_calls(file_path, selected_agent):
+    """Process CSV file and initiate calls to all contact numbers"""
+    try:
+        # Read CSV file
+        df = pd.read_csv(file_path)
+        results = []
+        
+        for index, row in df.iterrows():
+            try:
+                contact_number = str(row['contact_number']).strip()
+                contact_name = str(row.get('contact_name', ''))
+                
+                # Ensure number is in E.164 format
+                if not contact_number.startswith('+'):
+                    contact_number = '+' + contact_number
+                
+                result = start_vapi_call(selected_agent, contact_name, contact_number)
+                
+                results.append({
+                    'number': contact_number,
+                    'name': contact_name,
+                    'status': 'success' if 'successfully' in result else 'failed',
+                    'message': result
+                })
+                
+                time.sleep(2)
+                
+            except Exception as e:
+                results.append({
+                    'number': contact_number if 'contact_number' in locals() else 'Unknown',
+                    'name': contact_name if 'contact_name' in locals() else 'Unknown',
+                    'status': 'failed',
+                    'message': str(e)
+                })
+        
+        return results
+    
+    except Exception as e:
+        print(f"Error processing CSV: {str(e)}")
+        return []
+
+def handle_csv_submit(file, selected_agent):
+    """Handle CSV file submission from Gradio interface"""
+    if file is None:
+        return "Please upload a CSV file"
+        
+    try:
+        results = process_csv_and_make_calls(file.name, selected_agent)
+        
+        output = "Call Results:\n"
+        for result in results:
+            output += f"\nNumber: {result['number']}"
+            if result['name']:
+                output += f"\nName: {result['name']}"
+            output += f"\nStatus: {result['status']}"
+            output += f"\nMessage: {result['message']}\n"
+            output += "-" * 40
+        
+        return output
+        
+    except Exception as e:
+        return f"Error processing CSV file: {str(e)}"
+
+def save_transcript(call_id, messages):
+    """Save the transcript of the conversation to a JSON file"""
+    try:
+        transcript = {
+            'call_id': call_id,
+            'timestamp': datetime.now().isoformat(),
+            'messages': messages
+        }
+        
+        with open('transcript.json', 'w') as f:
+            json.dump(transcript, f, indent=2)
+        print(f"Transcript saved successfully for call {call_id}")
+    except Exception as e:
+        print(f"Error saving transcript: {str(e)}")
 
 def disconnect_vapi_call():
     """Disconnect the VAPI call and save recordings"""
@@ -902,7 +980,6 @@ def forward_vapi_call(target_agent):
         if not target_agent:
             return "Please select a target agent first"
             
-        # Extract agent ID from selection
         target_agent_id = target_agent.split(" ")[0].strip()
         
         vapi = Vapi(api_key="")
@@ -919,37 +996,33 @@ def launch_gradio_interface():
     with gr.Blocks() as demo:
         gr.Markdown("# VAPI Call Interface")
         
-        # Output text area
         output_text = gr.Textbox(
             label="Status",
             placeholder="Call status will appear here...",
             interactive=False
         )
         
-        # Agent selector
         agent_selector = gr.Dropdown(
             choices=[
-                "health-insurance",
-                "Anchal English"
+                "",
+                ""
             ],
             label="Select Agent",
-            value=" Anchal Hindi",
+            value="",
             interactive=True
         )
         
-        # Forward agent selector
         forward_agent_selector = gr.Dropdown(
             choices=[
-                " health-insurance",
-                " Anchal English"
+                "",
+                ""
             ],
             label="Forward to Agent",
-            value="health-insurance",
+            value="",
             visible=True,
             interactive=True
         )
         
-        # Contact details inputs
         contact_name = gr.Textbox(
             label="Contact Name",
             placeholder="Enter contact name",
@@ -962,7 +1035,6 @@ def launch_gradio_interface():
             interactive=True
         )
         
-        # CSV upload and remarks section
         with gr.Row():
             csv_file = gr.File(
                 label="Upload CSV File",
@@ -976,85 +1048,34 @@ def launch_gradio_interface():
                 interactive=True
             )
         
-        # Control buttons
         with gr.Row():
             start_button = gr.Button("Start Call", variant="primary")
             disconnect_button = gr.Button("Disconnect", variant="stop")
             forward_button = gr.Button("Forward Call", variant="secondary")
             submit_remarks_button = gr.Button("Submit CSV and Remarks", variant="primary")
         
-        def handle_csv_submit(file, remarks_text):
+        def handle_csv_submit(file, selected_agent):
             if file is None:
                 return "Please upload a CSV file"
+            
             try:
-                df = pd.read_csv(file.name)
+                results = process_csv_and_make_calls(file.name, selected_agent)
                 
-                twilio_client = Client(
-                    "",
-                    ""
-                )
+                output = "Call Results:\n"
+                for result in results:
+                    output += f"\nNumber: {result['number']}"
+                    if result['name']:
+                        output += f"\nName: {result['name']}"
+                    output += f"\nStatus: {result['status']}"
+                    output += f"\nMessage: {result['message']}\n"
+                    output += "-" * 40
                 
-                vapi = Vapi(api_key="")
-                
-                call_results = []
-                
-                for index, row in df.iterrows():
-                    contact_number = row['contact_number']  # Adjust column name as per your CSV
-                    
-                    try:
-                        # Start VAPI call first
-                        call_id, web_call_url = vapi.start(assistant_id="")
-                        
-                        if call_id and web_call_url:
-                            # Make Twilio call
-                            call = twilio_client.calls.create(
-                                url=web_call_url,  # VAPI call URL
-                                to=contact_number,
-                                from_="YOUR_TWILIO_PHONE_NUMBER",
-                                status_callback='http://your-callback-url.com/events'
-                            )
-                            
-                            call_results.append({
-                                'number': contact_number,
-                                'status': 'success',
-                                'call_sid': call.sid,
-                                'vapi_call_id': call_id
-                            })
-                            
-                            vapi.web_calls_collection.insert_one({
-                                'contact_number': contact_number,
-                                'twilio_call_sid': call.sid,
-                                'vapi_call_id': call_id,
-                                'timestamp': datetime.now(),
-                                'status': 'initiated'
-                            })
-                            
-                    except Exception as e:
-                        call_results.append({
-                            'number': contact_number,
-                            'status': 'failed',
-                            'error': str(e)
-                        })
-                        
-                # Save remarks and results
-                doc = {
-                    'csv_data': df.to_dict('records'),
-                    'remarks': remarks_text,
-                    'call_results': call_results,
-                    'timestamp': datetime.now()
-                }
-                
-                result = vapi.db['batch_calls'].insert_one(doc)
-                
-                # Return summary
-                success_calls = len([r for r in call_results if r['status'] == 'success'])
-                return f"Processed {len(call_results)} numbers. Successfully initiated {success_calls} calls."
+                return output
                 
             except Exception as e:
-                return f"Error processing file: {str(e)}"
+                return f"Error processing CSV file: {str(e)}"
 
         
-        # Button click handlers
         start_button.click(
             fn=start_vapi_call,
             inputs=[agent_selector, contact_name, contact_number],
@@ -1078,13 +1099,12 @@ def launch_gradio_interface():
         
         submit_remarks_button.click(
             fn=handle_csv_submit,
-            inputs=[csv_file, remarks],
+            inputs=[csv_file, agent_selector],
             outputs=output_text,
             api_name="submit_csv"
         )
     
     demo.launch(server_name="0.0.0.0", server_port=7860)
 
-# Start the interface
 if __name__ == "__main__":
     launch_gradio_interface()
