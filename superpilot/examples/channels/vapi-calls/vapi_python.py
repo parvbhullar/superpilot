@@ -1,17 +1,26 @@
-import gradio as gr
-import re
-import requests
-import openai
+import os
 import json
-import speech_recognition as sr
+import time
+import threading
+import requests
+import pandas as pd
+import gradio as gr
+from datetime import datetime
+from pymongo import MongoClient
+from dotenv import load_dotenv
 from daily_call import DailyCall
 from daily import *
-from datetime import datetime
-import threading
-import time
-import os
-from twilio.rest import Client
-from pymongo import MongoClient
+# from speech_recognition as sr
+import pyaudio
+import wave
+import re
+from pydub import AudioSegment
+import wave
+import io
+from bson import Binary
+import random
+import openai
+import speech_recognition as sr
 import pyaudio
 import wave
 import re
@@ -23,8 +32,56 @@ import pandas as pd
 import random
 from dotenv import load_dotenv
 import os
+import websockets
+import asyncio
+import base64
 
+# Load environment variables
 load_dotenv()
+
+# MongoDB Connection
+MONGODB_URI = "mongodb://localhost:27017/"
+MONGODB_DB = "vapi-script"
+
+def get_mongodb_connection():
+    """Get MongoDB connection"""
+    try:
+        client = MongoClient(MONGODB_URI)
+        db = client[MONGODB_DB]
+        return db
+    except Exception as e:
+        print(f"Error connecting to MongoDB: {str(e)}")
+        return None
+
+def save_transcript_to_mongodb(call_id, agent_id, customer_name, customer_number, transcript_data):
+    """Save transcript to MongoDB"""
+    try:
+        db = get_mongodb_connection()
+        if not db:
+            return False
+
+        # Create call record
+        call_record = {
+            'call_id': call_id,
+            'agent_id': agent_id,
+            'customer_name': customer_name,
+            'customer_number': customer_number,
+            'timestamp': datetime.now(),
+            'transcript': transcript_data,
+            'status': 'completed'
+        }
+
+        # Update or insert into MongoDB
+        result = db.calls.update_one(
+            {'call_id': call_id},
+            {'$set': call_record},
+            upsert=True
+        )
+        print(f"Transcript saved to MongoDB with ID: {result.upserted_id if result.upserted_id else call_id}")
+        return True
+    except Exception as e:
+        print(f"Error saving to MongoDB: {str(e)}")
+        return False
 
 class Vapi:
     _instance = None
@@ -863,7 +920,7 @@ def generate_readable_transcript(self, messages, output_format="txt"):
         
         # Save to file
         filename = f"transcript_{timestamp}.txt"
-        filepath = os.path.join(self.transcript_dir, filename)
+        filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(output)
         
@@ -877,7 +934,7 @@ def generate_readable_transcript(self, messages, output_format="txt"):
         
         # Save to file
         filename = f"transcript_{timestamp}.json"
-        filepath = os.path.join(self.transcript_dir, filename)
+        filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(output, f, indent=2)
         
@@ -929,8 +986,9 @@ def save_transcript(call_id, messages):
             
         # 3. Use TranscriptExtractor to generate readable formats
         extractor = TranscriptExtractor()
-        txt_output = extractor.generate_readable_transcript(messages, "txt")
-        json_output = extractor.generate_readable_transcript(messages, "json")
+        txt_output = extractor.generate_readable_transcript(messages, call_id, "txt")
+        json_output = extractor.generate_readable_transcript(messages, call_id, "json")
+        print(f"Generated transcript files: \nTXT: {txt_output}\nJSON: {json_output}")
         
         print(f"Transcript saved successfully for call {call_id}")
         print(f"Generated TXT transcript: {txt_output}")
@@ -940,15 +998,34 @@ def save_transcript(call_id, messages):
         print(f"Error saving transcript: {str(e)}")
 
 def disconnect_vapi_call():
-    """Disconnect the VAPI call and save recordings"""
+    """Disconnect the current VAPI call"""
     try:
+        global current_call_id
+        if not current_call_id:
+            return "No active call to disconnect"
+            
         auth_token = os.getenv('VAPI_AUTH_TOKEN')
         if not auth_token:
-            return "Missing VAPI authentication token"
+            return "Missing VAPI credentials in environment variables"
             
-        vapi = Vapi(api_key=auth_token)
-        vapi.stop()
-        return "Call disconnected and recordings saved successfully!"
+        headers = {
+            'Authorization': f'Bearer {auth_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        response = requests.post(
+            f'https://api.vapi.ai/call/{current_call_id}/hangup',
+            headers=headers
+        )
+        
+        if response.status_code in [200, 201]:
+            current_call_id = None
+            return "Call disconnected successfully. Conversation was successful."
+        else:
+            error_msg = f"Failed to disconnect call: {response.text}"
+            print(error_msg)
+            return error_msg
+            
     except Exception as e:
         return f"Error disconnecting call: {str(e)}"
 
@@ -996,26 +1073,24 @@ def start_vapi_call(selected_agent, contact_name, contact_number):
         print(f"Making call to {contact_number}")
         print(f"Using agent ID: {agent_id}")
         print(f"Using phone number ID: {vapi_phone_number_id}")
+        print(f"Customer Name: {contact_name}")
         
-        # Set up headers for VAPI API request
         headers = {
             'Authorization': f'Bearer {auth_token}',
             'Content-Type': 'application/json'
         }
         
-        # Prepare request data
         data = {
             'assistantId': agent_id,
             'phoneNumberId': vapi_phone_number_id,
             'customer': {
-                'name': contact_name if contact_name else "User",
-                'number': contact_number
+                'name': str(contact_name),
+                'number': str(contact_number)
             }
         }
 
         print(f"Request data: {json.dumps(data, indent=2)}")
         
-        # Make the API request
         response = requests.post(
             'https://api.vapi.ai/call/phone',
             headers=headers,
@@ -1025,36 +1100,20 @@ def start_vapi_call(selected_agent, contact_name, contact_number):
         print(f"Response status: {response.status_code}")
         print(f"Response body: {response.text}")
         
-        # Check if the request was successful
-        if response.status_code == 201 or response.status_code == 200:
-            print(f'VAPI call created successfully for {contact_number}')
-            vapi_call_info = response.json()
-            call_id = vapi_call_info.get('id')
-            
-            # Start polling for call updates and transcript
-            def poll_call_status():
-                while True:
-                    try:
-                        status_response = requests.get(
-                            f'https://api.vapi.ai/call/{call_id}',
-                            headers=headers
-                        )
-                        if status_response.status_code == 200:
-                            call_data = status_response.json()
-                            if call_data.get('status') == 'completed':
-                                messages = call_data.get('transcript', [])
-                                save_transcript(call_id, messages)
-                                break
-                    except Exception as e:
-                        print(f"Error polling call status: {str(e)}")
-                    time.sleep(10)
+        if response.status_code in [200, 201]:
+            global current_call_id
+            current_call_id = response.json().get('id')
+            print(f'Current Call ID set to: {current_call_id}')
             
             # Start polling in a separate thread
-            polling_thread = threading.Thread(target=poll_call_status)
+            polling_thread = threading.Thread(
+                target=poll_call_status,
+                args=(current_call_id, agent_id, contact_name, contact_number, headers)
+            )
             polling_thread.daemon = True
             polling_thread.start()
             
-            return f"Call initiated successfully to {contact_number}"
+            return f"Call initiated successfully to {contact_number} for {contact_name}"
         else:
             error_msg = f"Failed to create VAPI call for {contact_number}: {response.text}"
             print(error_msg)
@@ -1066,19 +1125,29 @@ def start_vapi_call(selected_agent, contact_name, contact_number):
         return error_msg
 
 def process_csv_and_make_calls(file_path, selected_agent):
-    """Process CSV file and initiate calls to all contact numbers"""
+    """Process CSV file and make calls to each number"""
     try:
-        df = pd.read_csv(file_path)
+        if not file_path:
+            return "Please upload a CSV file"
+            
+        df = pd.read_csv(file_path.name)
         results = []
+        
+        # Verify required columns exist
+        required_columns = ['contact_number', 'contact_name']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            return f"Missing required columns in CSV: {', '.join(missing_columns)}"
         
         for index, row in df.iterrows():
             try:
                 contact_number = str(row['contact_number']).strip()
-                contact_name = str(row.get('contact_name', ''))
+                contact_name = str(row['contact_name']).strip()
                 
                 if not contact_number.startswith('+'):
                     contact_number = '+' + contact_number
                 
+                # Start the VAPI call with the extracted client name
                 result = start_vapi_call(selected_agent, contact_name, contact_number)
                 
                 results.append({
@@ -1088,7 +1157,7 @@ def process_csv_and_make_calls(file_path, selected_agent):
                     'message': result
                 })
                 
-                time.sleep(2)
+                time.sleep(2)  # Optional delay between calls
                 
             except Exception as e:
                 results.append({
@@ -1098,50 +1167,38 @@ def process_csv_and_make_calls(file_path, selected_agent):
                     'message': str(e)
                 })
         
-        return results
-    
-    except Exception as e:
-        print(f"Error processing CSV: {str(e)}")
-        return []
-
-def handle_csv_submit(file, selected_agent):
-    """Handle CSV file submission from Gradio interface"""
-    if file is None:
-        return "Please upload a CSV file"
-        
-    try:
-        results = process_csv_and_make_calls(file.name, selected_agent)
-        
-        output = "Call Results:\n"
+        # Format results for display
+        output = "CSV Processing Results:\n\n"
         for result in results:
-            output += f"\nNumber: {result['number']}"
-            if result['name']:
-                output += f"\nName: {result['name']}"
-            output += f"\nStatus: {result['status']}"
-            output += f"\nMessage: {result['message']}\n"
-            output += "-" * 40
+            output += f"Name: {result['name']}\n"
+            output += f"Number: {result['number']}\n"
+            output += f"Status: {result['status']}\n"
+            output += f"Message: {result['message']}\n"
+            output += "-" * 50 + "\n"
         
         return output
-        
+    
     except Exception as e:
-        return f"Error processing CSV file: {str(e)}"
+        error_msg = f"Error processing CSV: {str(e)}"
+        print(error_msg)
+        return error_msg
 
 def get_agent_id(agent_name):
     """Get agent ID from environment variables based on agent name"""
-    # Map agent names to their environment variable names
     agent_env_map = {
-        "unpod-English": "unpod-english",  # Direct mapping as in .env
-        "health-insurance": "HEALTH_INSURANCE_ID",
-        "unpod-hindi": "UNPOD_HINDI_ID",
-        "Quriouskid-English": "QURIOSKID_ENGLISH_ID",
-        "Quriouskid-script-hindi": "QURIOSKID_SCRIPT_HINDI_ID",
-        "Realestate-hindi": "VAPI_ASSISTANT_ID",  # Using the default assistant ID
-        "Realestate-english": "ANCHAL_ENGLISH_ID"
+        "unpod-English": "AGENT_UNPOD_ENGLISH",
+        "health-insurance": "AGENT_HEALTH_INSURANCE",
+        "unpod-hindi": "AGENT_UNPOD_HINDI",
+        "Quriouskid-English": "AGENT_QURIOUSKID_ENGLISH",
+        "Quriouskid-script-hindi": "AGENT_QURIOUSKID_SCRIPT_HINDI",
+        "Realestate-hindi": "AGENT_REALESTATE_HINDI",
+        "Realestate-english": "AGENT_REALESTATE_ENGLISH"
     }
     
     env_key = agent_env_map.get(agent_name)
     if not env_key:
         return None
+    
     return os.getenv(env_key)
 
 def launch_gradio_interface():
@@ -1149,188 +1206,384 @@ def launch_gradio_interface():
     with gr.Blocks() as demo:
         gr.Markdown("# VAPI Call Interface")
         
-        output_text = gr.Textbox(
-            label="Status",
-            placeholder="Call status will appear here...",
-            interactive=False
-        )
-        
-        # Load agent names from environment variables
-        agent_choices = [
-            "unpod-English",
-            "health-insurance",
-            "unpod-hindi",
-            "Quriouskid-English",
-            "Quriouskid-script-hindi",
-            "Realestate-hindi",
-            "Realestate-english"
-        ]
-        
-        agent_selector = gr.Dropdown(
-            choices=agent_choices,
-            label="Select Agent",
-            value="unpod-English",
-            interactive=True
-        )
-        
-        forward_agent_selector = gr.Dropdown(
-            choices=[
-                "health-insurance",
-                "Anchal English"
-            ],
-            label="Forward to Agent",
-            value="health-insurance",
-            visible=True,
-            interactive=True
-        )
-        
-        contact_name = gr.Textbox(
-            label="Contact Name",
-            placeholder="Enter contact name",
-            interactive=True
-        ) 
-        
-        contact_number = gr.Textbox(
-            label="Contact Number",
-            placeholder="Enter contact number",
-            interactive=True
-        )
-        
         with gr.Row():
+            agent_selector = gr.Dropdown(
+                choices=[
+                    "unpod-English",
+                    "health-insurance",
+                    "unpod-hindi",
+                    "Quriouskid-English",
+                    "Quriouskid-script-hindi",
+                    "Realestate-hindi",
+                    "Realestate-english"
+                ],
+                label="Select Agent",
+                value="unpod-English"
+            )
+
+        with gr.Tab("Single Call"):
+            contact_number = gr.Textbox(
+                label="Contact Number",
+                placeholder="Enter contact number (e.g., +1234567890)",
+                interactive=True
+            )
+            contact_name = gr.Textbox(
+                label="Contact Name",
+                placeholder="Enter contact name",
+                interactive=True
+            )
+            with gr.Row():
+                start_button = gr.Button("Start Call", variant="primary")
+                disconnect_button = gr.Button("Disconnect Call", variant="stop")
+
+        with gr.Tab("Bulk Calls from CSV"):
             csv_file = gr.File(
-                label="Upload CSV File",
+                label="Upload CSV File (should have contact_name and contact_number columns)",
                 file_types=[".csv"],
                 type="filepath"
             )
-            remarks = gr.Textbox(
-                label="Enter Remarks",
-                placeholder="Add any additional notes or remarks here...",
-                lines=3,
-                interactive=True
-            )
-        
-        with gr.Row():
-            start_button = gr.Button("Start Call", variant="primary")
-            disconnect_button = gr.Button("Disconnect", variant="stop")
-            forward_button = gr.Button("Forward Call", variant="secondary")
-            submit_remarks_button = gr.Button("Submit CSV and Remarks", variant="primary")
-        
-        def handle_csv_submit(file, selected_agent):
-            if file is None:
-                return "Please upload a CSV file"
-            
-            try:
-                # Process CSV and make calls
-                results = process_csv_and_make_calls(file.name, selected_agent)
-                
-                output = "Call Results:\n"
-                for result in results:
-                    output += f"\nNumber: {result['number']}"
-                    if result['name']:
-                        output += f"\nName: {result['name']}"
-                    output += f"\nStatus: {result['status']}"
-                    output += f"\nMessage: {result['message']}\n"
-                    output += "-" * 40
-                
-                return output
-                
-            except Exception as e:
-                return f"Error processing CSV file: {str(e)}"
-        
+            with gr.Row():
+                start_csv_button = gr.Button("Start Calls from CSV", variant="primary")
+                disconnect_csv_button = gr.Button("Disconnect Current Call", variant="stop")
 
-        
-        # Button click handlers
+        output_text = gr.Textbox(
+            label="Status",
+            placeholder="Call status will appear here...",
+            interactive=False,
+            lines=10
+        )
+
+        # Handle single call
         start_button.click(
             fn=start_vapi_call,
             inputs=[agent_selector, contact_name, contact_number],
-            outputs=output_text,
-            api_name="start_call"
+            outputs=output_text
         )
-        
+
+        # Handle CSV bulk calls
+        start_csv_button.click(
+            fn=process_csv_and_make_calls,
+            inputs=[csv_file, agent_selector],
+            outputs=output_text
+        )
+
+        # Handle disconnect buttons
         disconnect_button.click(
             fn=disconnect_vapi_call,
             inputs=None,
-            outputs=output_text,
-            api_name="disconnect_call"
+            outputs=output_text
         )
         
-        forward_button.click(
-            fn=forward_vapi_call,
-            inputs=forward_agent_selector,
-            outputs=output_text,
-            api_name="forward_call"
+        disconnect_csv_button.click(
+            fn=disconnect_vapi_call,
+            inputs=None,
+            outputs=output_text
         )
-        
-        submit_remarks_button.click(
-            fn=handle_csv_submit,
-            inputs=[csv_file, agent_selector],
-            outputs=output_text,
-            api_name="submit_csv"
-        )
+
+    demo.launch(share=True)
+
+class CallRecorder:
+    def __init__(self, call_id, agent_id, customer_name, customer_number):
+        self.call_id = call_id
+        self.agent_id = agent_id
+        self.customer_name = customer_name
+        self.customer_number = customer_number
+        self.pcm_buffer = bytearray()
+        self.recording_path = None
+        self.is_recording = True
+
+    def save_recording_to_mongodb(self):
+        """Save recording metadata and binary data to MongoDB"""
+        try:
+            db = get_mongodb_connection()
+            if not db:
+                return False
+
+            # Convert PCM buffer to base64 for MongoDB storage
+            audio_base64 = base64.b64encode(self.pcm_buffer).decode('utf-8')
+            
+            # Create recording document
+            recording_doc = {
+                'call_id': self.call_id,
+                'agent_id': self.agent_id,
+                'customer_name': self.customer_name,
+                'customer_number': self.customer_number,
+                'timestamp': datetime.now(),
+                'audio_data': audio_base64,
+                'audio_format': 'pcm',
+                'file_path': self.recording_path
+            }
+
+            # Save to MongoDB recordings collection
+            result = db.recordings.update_one(
+                {'call_id': self.call_id},
+                {'$set': recording_doc},
+                upsert=True
+            )
+            print(f"Recording saved to MongoDB with ID: {result.upserted_id if result.upserted_id else self.call_id}")
+            return True
+        except Exception as e:
+            print(f"Error saving recording to MongoDB: {str(e)}")
+            return False
+
+    def save_recording_to_file(self):
+        """Save PCM buffer to file"""
+        try:
+            # Create recordings directory if it doesn't exist
+            recordings_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recordings')
+            os.makedirs(recordings_dir, exist_ok=True)
+            
+            # Save PCM file
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"recording_{self.call_id}_{timestamp}.pcm"
+            self.recording_path = os.path.join(recordings_dir, filename)
+            
+            with open(self.recording_path, 'wb') as f:
+                f.write(self.pcm_buffer)
+            print(f"Recording saved to: {self.recording_path}")
+            return True
+        except Exception as e:
+            print(f"Error saving recording to file: {str(e)}")
+            return False
+
+    async def start_recording(self):
+        """Start WebSocket connection and record audio"""
+        ws_url = f"wss://aws-us-west-2-production1-phone-call-websocket.vapi.ai/{self.call_id}/transport"
+        try:
+            async with websockets.connect(ws_url) as websocket:
+                print(f"WebSocket connection established for call {self.call_id}")
+                
+                while self.is_recording:
+                    try:
+                        message = await websocket.recv()
+                        
+                        if isinstance(message, bytes):
+                            self.pcm_buffer.extend(message)
+                            print(f"Received PCM data, buffer size: {len(self.pcm_buffer)}")
+                        else:
+                            print('Received message:', message)
+                            
+                    except websockets.exceptions.ConnectionClosed:
+                        print("WebSocket connection closed")
+                        break
+                    except Exception as e:
+                        print(f"Error receiving data: {str(e)}")
+                        break
+                
+                # Save recording when done
+                if len(self.pcm_buffer) > 0:
+                    self.save_recording_to_file()
+                    self.save_recording_to_mongodb()
+                    
+        except Exception as e:
+            print(f"WebSocket connection error: {str(e)}")
+
+    def stop_recording(self):
+        """Stop the recording"""
+        self.is_recording = False
+
+async def start_call_recording(call_id, agent_id, customer_name, customer_number):
+    """Start recording a call"""
+    recorder = CallRecorder(call_id, agent_id, customer_name, customer_number)
+    await recorder.start_recording()
+    return recorder
+
+def poll_call_status(call_id, agent_id, customer_name, customer_number, headers):
+    """Poll call status and save transcript"""
+    start_time = int(time.time() * 1000)
+    transcript = []
+    last_message_count = 0
+    transcript_extractor = TranscriptExtractor()
     
-    demo.launch(server_name="0.0.0.0", server_port=7861)
+    # Start recording in a separate thread
+    recorder = None
+    recording_task = None
+    
+    async def setup_recording():
+        nonlocal recorder
+        recorder = await start_call_recording(call_id, agent_id, customer_name, customer_number)
+    
+    # Create event loop in the thread
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
+    # Start recording
+    recording_task = loop.create_task(setup_recording())
+    
+    while True:
+        try:
+            # Rest of your existing polling code...
+            status_response = requests.get(
+                f'https://api.vapi.ai/call/{call_id}',
+                headers=headers
+            )
+            
+            if status_response.status_code == 200:
+                call_data = status_response.json()
+                current_status = call_data.get('status')
+                print(f"Call Status: {current_status}")
+                
+                # Get messages from the call
+                messages_response = requests.get(
+                    f'https://api.vapi.ai/call/{call_id}/messages',
+                    headers=headers
+                )
+                
+                if messages_response.status_code == 200:
+                    messages = messages_response.json()
+                    
+                    # Process new messages
+                    if len(messages) > last_message_count:
+                        for msg in messages[last_message_count:]:
+                            formatted_msg = {
+                                "role": "bot" if msg.get('role') == 'assistant' else "user",
+                                "time": int(msg.get('timestamp', start_time)),
+                                "source": msg.get('source', ''),
+                                "endTime": int(msg.get('timestamp', start_time)) + (msg.get('duration', 0) * 1000),
+                                "message": msg.get('text', ''),
+                                "duration": float(msg.get('duration', 0)) * 1000,
+                                "secondsFromStart": (int(msg.get('timestamp', start_time)) - start_time) / 1000
+                            }
+                            transcript.append(formatted_msg)
+                            print(f"New message: {formatted_msg}")
+                        
+                        last_message_count = len(messages)
+                        
+                        # Save to MongoDB
+                        save_transcript_to_mongodb(call_id, agent_id, customer_name, customer_number, transcript)
+                        
+                        # Generate readable transcripts
+                        extracted_messages = transcript_extractor.extract_messages(transcript)
+                        txt_path = transcript_extractor.generate_readable_transcript(extracted_messages, call_id, "txt")
+                        json_path = transcript_extractor.generate_readable_transcript(extracted_messages, call_id, "json")
+                        print(f"Generated transcript files: \nTXT: {txt_path}\nJSON: {json_path}")
+                
+                if current_status in ['completed', 'failed']:
+                    # Stop recording
+                    if recorder:
+                        recorder.stop_recording()
+                    if recording_task:
+                        loop.run_until_complete(recording_task)
+                    loop.close()
+                    
+                    print(f"Call {current_status}. Final transcript and recording saved.")
+                    break
+                    
+            time.sleep(2)
+            
+        except Exception as e:
+            print(f"Error polling call status: {str(e)}")
+            time.sleep(2)
+            
+        finally:
+            if current_status in ['completed', 'failed']:
+                # Ensure recording is stopped
+                if recorder:
+                    recorder.stop_recording()
+                if recording_task:
+                    loop.run_until_complete(recording_task)
+                loop.close()
+
+class TranscriptExtractor:
+    def __init__(self):
+        # Use the current directory for saving transcripts
+        self.transcript_dir = os.path.dirname(os.path.abspath(__file__))
+
+    def extract_messages(self, transcript_json):
+        """Extract user and agent messages from VAPI transcript"""
+        messages = []
+        try:
+            if isinstance(transcript_json, str):
+                transcript_data = json.loads(transcript_json)
+            else:
+                transcript_data = transcript_json
+
+            for message in transcript_data:
+                role = "assistant" if message.get("role") == "bot" else "user"
+                content = message.get("message", "")
+                timestamp = message.get("time", "")
+                
+                if content:
+                    messages.append({
+                        "role": role,
+                        "content": content,
+                        "timestamp": timestamp
+                    })
+        except Exception as e:
+            print(f"Error extracting messages: {str(e)}")
+        
+        return messages
+
+    def generate_readable_transcript(self, messages, call_id, output_format="txt"):
+        """Generate a readable transcript from extracted messages"""
+        if not messages:
+            return "No messages found in transcript"
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        if output_format == "txt":
+            output = f"Conversation Transcript (Generated at {timestamp})\n"
+            output += f"Call ID: {call_id}\n"
+            output += "=" * 50 + "\n\n"
+            
+            for msg in messages:
+                role = msg["role"].capitalize()
+                content = msg["content"]
+                msg_time = datetime.fromtimestamp(msg["timestamp"]/1000).strftime("%Y-%m-%d %H:%M:%S")
+                
+                output += f"{role}: {content}\n"
+                output += f"Time: {msg_time}\n"
+                output += "-" * 30 + "\n"
+            
+            filename = f"transcript_{call_id}.txt"
+            filepath = os.path.join(self.transcript_dir, filename)
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(output)
+            
+            return filepath
+        
+        elif output_format == "json":
+            output = {
+                "call_id": call_id,
+                "generated_at": timestamp,
+                "messages": messages
+            }
+            
+            filename = f"transcript_{call_id}.json"
+            filepath = os.path.join(self.transcript_dir, filename)
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(output, f, indent=2, ensure_ascii=False)
+            
+            return filepath
+
+def save_transcript_to_file(call_id, transcript):
+    """Save transcript to a JSON file"""
+    try:
+        filename = f'transcript_{call_id}.json'
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(transcript, f, ensure_ascii=False, indent=2)
+        print(f"Transcript saved to file: {filename}")
+    except Exception as e:
+        print(f"Error saving transcript to file: {str(e)}")
+
+def read_contacts_from_csv(file_path):
+    contacts = pd.read_csv(file_path)
+    required_columns = ['Mobile Number', 'Contact Name']
+    missing_columns = [col for col in required_columns if col not in contacts.columns]
+    
+    if missing_columns:
+        raise ValueError(f"Missing required columns in CSV: {missing_columns}")
+    
+    return contacts[required_columns].to_dict(orient='records')
+
+contacts = read_contacts_from_csv('Hinglish Vocab - Hinglish Vocab.csv')  # Adjust the path as needed
+
+if contacts:
+    mobile_number = contacts[0]['Mobile Number']
+    contact_name = contacts[0]['Contact Name']
+    print(f"Using Mobile Number: {mobile_number}, Contact Name: {contact_name}")
+else:
+    print("No contacts found in the CSV file.")
 
 if __name__ == "__main__":
     launch_gradio_interface()
-
-def fetch_and_save_vapi_transcript(call_id=None, api_token=None):
-    """
-    Fetch transcript from VAPI API and save it using TranscriptExtractor
-    
-    Args:
-        call_id (str): Optional specific call ID to fetch
-        api_token (str): VAPI API token
-    """
-    try:
-        if not api_token:
-            api_token = os.getenv('VAPI_AUTH_TOKEN')  # Default token
-            
-        base_url = "https://api.vapi.ai/call"
-        url = f"{base_url}/{call_id}" if call_id else base_url
-        headers = {"Authorization": f"Bearer {api_token}"}
-        
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        
-        # Extract call data
-        calls_data = response.json()    
-        if not calls_data:
-            print("No calls data found")
-            return
-            
-        # Handle both single call and multiple calls
-        calls = [calls_data] if call_id else calls_data.get("calls", [])
-        
-        for call in calls:
-            call_id = call.get("id")
-            messages = []
-            
-            # Extract messages from the call
-            transcript = call.get("transcript", [])
-            for msg in transcript:
-                message = {
-                    "role": "agent" if msg.get("is_agent") else "user",
-                    "content": msg.get("text", ""),
-                    "timestamp": msg.get("timestamp", "")
-                }
-                messages.append(message)
-            
-            if messages:
-                # Use our TranscriptExtractor to save in multiple formats
-                extractor = TranscriptExtractor()
-                txt_output = extractor.generate_readable_transcript(messages, "txt")
-                json_output = extractor.generate_readable_transcript(messages, "json")
-                
-                # Also save to transcript.json for compatibility
-                save_transcript(call_id, messages)
-                
-                print(f"Processed call {call_id}:")
-                print(f"- TXT transcript: {txt_output}")
-                print(f"- JSON transcript: {json_output}")
-            else:
-                print(f"No messages found for call {call_id}")
-                
-    except requests.exceptions.RequestException as e:
-        print(f"API request error: {str(e)}")
-    except Exception as e:
-        print(f"Error processing transcript: {str(e)}")
