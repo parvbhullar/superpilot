@@ -1,5 +1,3 @@
-
-
 import os
 from twilio.rest import Client
 from datetime import datetime
@@ -18,10 +16,30 @@ class TwilioManager:
 
     def __init__(self):
         if not hasattr(self, 'initialized'):
+            # Get credentials from environment
             self.account_sid = os.getenv('TWILIO_ACCOUNT_SID')
             self.auth_token = os.getenv('TWILIO_AUTH_TOKEN')
             self.phone_number = os.getenv('TWILIO_PHONE_NUMBER')
-            self.client = Client(self.account_sid, self.auth_token)
+            
+            # Validate credentials
+            if not all([self.account_sid, self.auth_token, self.phone_number]):
+                missing = []
+                if not self.account_sid:
+                    missing.append("TWILIO_ACCOUNT_SID")
+                if not self.auth_token:
+                    missing.append("TWILIO_AUTH_TOKEN")
+                if not self.phone_number:
+                    missing.append("TWILIO_PHONE_NUMBER")
+                print(f"Warning: Missing Twilio credentials: {', '.join(missing)}")
+            else:
+                try:
+                    self.client = Client(self.account_sid, self.auth_token)
+                    print("Twilio client initialized successfully")
+                    print(f"Using phone number: {self.phone_number}")
+                except Exception as e:
+                    print(f"Error initializing Twilio client: {str(e)}")
+                    self.client = None
+            
             self.initialized = True
 
     def initiate_call(self, web_call_url, to_number, callback_url=None):
@@ -50,6 +68,18 @@ class TwilioManager:
 
         except Exception as e:
             return False, f"Error initiating Twilio call: {str(e)}"
+
+    def stop(self):
+        """Stop the current call and clean up resources."""
+        try:
+            print("Stopping call...")
+            if self._client:
+                self._client.leave()  # Leave the call if connected
+                print("Successfully left the call.")
+            self._client = None
+            print("Call stopped.")
+        except Exception as e:
+            print(f"Error stopping call: {e}")
 
     def end_call(self, call_sid):
         """

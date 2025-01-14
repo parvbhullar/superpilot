@@ -25,6 +25,7 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
+
 class Vapi:
     _instance = None
     
@@ -35,13 +36,11 @@ class Vapi:
         
     def __init__(self, api_key=None):
         if not hasattr(self, 'initialized'):
-            # API and client setup
             self.api_key = api_key
             self.api_url = "https://api.vapi.ai"
             self.openai_api_key = None
             self._client = None
             
-            # Conversation vocabulary setup
             self.conversation_vocabulary = {
                 'greetings': {
                     'hello': 'नमस्ते',
@@ -65,7 +64,6 @@ class Vapi:
                 }
             }
             
-            # Create translations mapping
             self.translations = {}
             for category in self.conversation_vocabulary.values():
                 self.translations.update({v: k for k, v in category.items()})
@@ -95,7 +93,6 @@ class Vapi:
             )
             print("Audio recording initialized successfully")
 
-            # Qualification tracking
             self.user_budget = None
             self.user_profession = None
             self.user_location = None
@@ -105,7 +102,6 @@ class Vapi:
             self.current_question = None
             self.verification_stage = 0
 
-            # MongoDB setup
             try:
                 self.mongo_client = MongoClient("mongodb://localhost:27017/")
                 self.db = self.mongo_client["vapi-script"]
@@ -130,7 +126,8 @@ class Vapi:
 
     def load_agent_vocabulary(self):
         """Load bilingual vocabulary from CSV"""
-        csv_path = "absolute_path_to_your_csv_file.csv"
+        csv_path = "/home/dev2/projects/super-pilot/super-pilot/work/superpilot/superpilot/superpilot/examples/channels/vapi-calls/Hinglish Vocab - Hinglish Vocab.csv"
+        
         vocabulary = {}
         df = pd.read_csv(csv_path)
         
@@ -232,6 +229,7 @@ class Vapi:
             return "No audio recording found"
 
         try:
+
             os.makedirs(self.audio_dir, exist_ok=True)
 
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -250,9 +248,7 @@ class Vapi:
                 audio.export(mp3_filename, format="mp3")
                 print(f"Audio converted to MP3: {mp3_filename}")
 
-                # Save to MongoDB
                 if self.mongo_client:
-                    # Save both WAV and MP3 files
                     with open(wav_filename, 'rb') as wav_file, open(mp3_filename, 'rb') as mp3_file:
                         audio_doc = {
                             'wav_data': Binary(wav_file.read()),
@@ -337,7 +333,6 @@ class Vapi:
             enhanced_msg = " ".join(enhanced_words)
             print(f"Enhanced bilingual message: {enhanced_msg}")
             
-            # Save both versions to transcript
             self.append_to_transcript("agent_original", msg)
             self.append_to_transcript("agent_enhanced", enhanced_msg)
             
@@ -413,6 +408,7 @@ class Vapi:
             
         except Exception as e:
             print(f"Error saving transcript: {e}")
+
 
     def handle_user_message(self, message):
         """Handle incoming user message with professional responses"""
@@ -582,7 +578,7 @@ class Vapi:
             
         except Exception as e:
             print(f"Error in start: {str(e)}")
-            self.stop_recording()  
+            self.stop_recording()  # Stop recording if call fails
             if self._client:
                 try:
                     self._client.leave()
@@ -597,11 +593,12 @@ class Vapi:
             print("Stopping call...")
             self.__app_quit = True
             
-            if self.is_recording: 
+            if self.is_recording:  
                 print("Stopping audio recording...")
                 self.stop_recording()
-                self.save_audio_recording() 
+                self.save_audio_recording()  # Ensure audio is saved after stopping
 
+            # Leave the client if it's connected
             if self._client:
                 try:
                     self._client.leave()
@@ -639,7 +636,6 @@ class Vapi:
             if not call_id or not web_call_url:
                 raise Exception("Missing call ID or URL in response.")
             
-            # Save web call details to MongoDB
             web_call_doc = {
                 'call_id': call_id,
                 'web_call_url': web_call_url,
@@ -704,7 +700,7 @@ class Vapi:
         text = text.lower()
         match = re.search(r'(\d+)(?:\s*(?:lakh|lac|l|lakhs)s?)', text)
         if match:
-            return float(match.group(1)) * 100000  # Convert lakhs to rupees
+            return float(match.group(1)) * 100000  
         
         match = re.search(r'(\d+(?:\.\d+)?)(?:\s*(?:cr|crore|crores))', text)
         if match:
@@ -716,7 +712,6 @@ class Vapi:
             
         return None
 
-
     def handle_user_budget(self, message):
         """Handle user budget input"""
         budget = self.extract_budget_from_text(message)
@@ -725,7 +720,7 @@ class Vapi:
             self.user_budget = budget
             if self.user_budget < self.min_budget:
                 response_message = "Apke budget ke anusar property khoj kr apko call back krwati hu."
-                print(response_message) 
+                print(response_message)  
                 self.disconnect_call()  
                 return response_message
 
@@ -815,48 +810,228 @@ def save_contact_number(self, contact_number):
                 return f"Error saving contact number: {e}"
         return "No contact number provided."
 
-auth_token = ''
-phone_number_id = ''
-twilio_client = Client("", "")
+
+def extract_messages(self, transcript_json):
+    """
+    Extract user and agent messages from VAPI transcript
+    """
+    messages = []
+    try:
+        if isinstance(transcript_json, str):
+            transcript_data = json.loads(transcript_json)
+        else:
+            transcript_data = transcript_json
+
+        for message in transcript_data.get("messages", []):
+            role = message.get("role", "")
+            content = message.get("content", "")
+            timestamp = message.get("timestamp", "")
+            
+            if role and content:
+                messages.append({
+                    "role": role,
+                    "content": content,
+                    "timestamp": timestamp
+                })
+    except Exception as e:
+        print(f"Error extracting messages: {str(e)}")
+    
+    return messages
+
+def generate_readable_transcript(self, messages, output_format="txt"):
+    """
+    Generate a readable transcript from extracted messages
+    """
+    if not messages:
+        return "No messages found in transcript"
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    if output_format == "txt":
+        output = f"Conversation Transcript (Generated at {timestamp})\n"
+        output += "=" * 50 + "\n\n"
+        
+        for msg in messages:
+            role = msg["role"].capitalize()
+            content = msg["content"]
+            msg_time = msg.get("timestamp", "")
+            
+            output += f"{role}: {content}\n"
+            if msg_time:
+                output += f"Time: {msg_time}\n"
+            output += "-" * 30 + "\n"
+        
+        # Save to file
+        filename = f"transcript_{timestamp}.txt"
+        filepath = os.path.join(self.transcript_dir, filename)
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(output)
+        
+        return filepath
+    
+    elif output_format == "json":
+        output = {
+            "generated_at": timestamp,
+            "messages": messages
+        }
+        
+        # Save to file
+        filename = f"transcript_{timestamp}.json"
+        filepath = os.path.join(self.transcript_dir, filename)
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(output, f, indent=2)
+        
+        return filepath
+
+def save_transcript(call_id, messages):
+    """Save the transcript of the conversation to JSON, TXT formats and MongoDB"""
+    try:
+        timestamp = datetime.now().isoformat()
+        
+        # Create transcript data
+        transcript = {
+            'call_id': call_id,
+            'timestamp': timestamp,
+            'messages': messages
+        }
+        
+        # 1. Save/Append to transcript.json
+        existing_transcripts = []
+        try:
+            if os.path.exists('transcript.json'):
+                with open('transcript.json', 'r') as f:
+                    existing_data = json.load(f)
+                    if isinstance(existing_data, list):
+                        existing_transcripts = existing_data
+                    elif isinstance(existing_data, dict):
+                        existing_transcripts = [existing_data]
+        except Exception as e:
+            print(f"Error reading existing transcript.json: {str(e)}")
+        
+        # Add new transcript
+        existing_transcripts.append(transcript)
+        
+        # Save updated transcripts
+        with open('transcript.json', 'w') as f:
+            json.dump(existing_transcripts, f, indent=2)
+            
+        # 2. Save to MongoDB
+        try:
+            if hasattr(Vapi._instance, 'transcript_collection') and Vapi._instance.transcript_collection:
+                Vapi._instance.transcript_collection.insert_one({
+                    'call_id': call_id,
+                    'timestamp': timestamp,
+                    'messages': messages
+                })
+                print(f"Transcript saved to MongoDB for call {call_id}")
+        except Exception as e:
+            print(f"Error saving to MongoDB: {str(e)}")
+            
+        # 3. Use TranscriptExtractor to generate readable formats
+        extractor = TranscriptExtractor()
+        txt_output = extractor.generate_readable_transcript(messages, "txt")
+        json_output = extractor.generate_readable_transcript(messages, "json")
+        
+        print(f"Transcript saved successfully for call {call_id}")
+        print(f"Generated TXT transcript: {txt_output}")
+        print(f"Generated JSON transcript: {json_output}")
+        
+    except Exception as e:
+        print(f"Error saving transcript: {str(e)}")
+
+def disconnect_vapi_call():
+    """Disconnect the VAPI call and save recordings"""
+    try:
+        auth_token = os.getenv('VAPI_AUTH_TOKEN')
+        if not auth_token:
+            return "Missing VAPI authentication token"
+            
+        vapi = Vapi(api_key=auth_token)
+        vapi.stop()
+        return "Call disconnected and recordings saved successfully!"
+    except Exception as e:
+        return f"Error disconnecting call: {str(e)}"
+
+def forward_vapi_call(target_agent):
+    """Forward the current VAPI call to another agent"""
+    try:
+        if not target_agent:
+            return "Please select a target agent first"
+            
+        auth_token = os.getenv('VAPI_AUTH_TOKEN')
+        if not auth_token:
+            return "Missing VAPI authentication token"
+            
+        target_agent_id = get_agent_id(target_agent)
+        if not target_agent_id:
+            return f"Agent ID not found for {target_agent}"
+        
+        vapi = Vapi(api_key=auth_token)
+        result = vapi.forward_call(target_agent_id)
+        
+        return result
+        
+    except Exception as e:
+        print(f"Error in forward_vapi_call: {str(e)}")
+        return f"Error forwarding call: {str(e)}"
 
 def start_vapi_call(selected_agent, contact_name, contact_number):
     """Start a VAPI call and connect to user's contact number"""
     try:
-        if not selected_agent or not contact_number:
-            return "Please provide both agent and contact number"
+        if not selected_agent:
+            return "Please select an agent first"
+        if not contact_number:
+            return "Please provide a contact number"
 
-        agent_id = selected_agent.split(" ")[0].strip()
-        print(f"Starting call with agent ID: {agent_id} to number: {contact_number}")
-
-        auth_token = ''
-        phone_number_id = ''
-
+        agent_id = get_agent_id(selected_agent)
+        if not agent_id:
+            return f"Agent ID not found for {selected_agent}"
+        
+        auth_token = os.getenv('VAPI_AUTH_TOKEN')
+        vapi_phone_number_id = os.getenv('VAPI_PHONE_NUMBER_ID')
+            
+        if not auth_token or not vapi_phone_number_id:
+            return "Missing VAPI credentials in environment variables"
+            
+        print(f"Making call to {contact_number}")
+        print(f"Using agent ID: {agent_id}")
+        print(f"Using phone number ID: {vapi_phone_number_id}")
+        
+        # Set up headers for VAPI API request
         headers = {
             'Authorization': f'Bearer {auth_token}',
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
         }
-
+        
+        # Prepare request data
         data = {
             'assistantId': agent_id,
-            'phoneNumberId': phone_number_id,
+            'phoneNumberId': vapi_phone_number_id,
             'customer': {
-                'number': contact_number,
+                'name': contact_name if contact_name else "User",
+                'number': contact_number
             }
         }
 
-        print(f"Making call to {contact_number}")
+        print(f"Request data: {json.dumps(data, indent=2)}")
         
-        # Make the POST request to Vapi to create the phone call
+        # Make the API request
         response = requests.post(
-            'https://api.vapi.ai/call/phone', headers=headers, json=data)
-
+            'https://api.vapi.ai/call/phone',
+            headers=headers,
+            json=data
+        )
+        
+        print(f"Response status: {response.status_code}")
+        print(f"Response body: {response.text}")
+        
         # Check if the request was successful
-        if response.status_code == 201:
+        if response.status_code == 201 or response.status_code == 200:
             print(f'VAPI call created successfully for {contact_number}')
             vapi_call_info = response.json()
             call_id = vapi_call_info.get('id')
             
-            # Start polling for call updates
+            # Start polling for call updates and transcript
             def poll_call_status():
                 while True:
                     try:
@@ -867,30 +1042,32 @@ def start_vapi_call(selected_agent, contact_name, contact_number):
                         if status_response.status_code == 200:
                             call_data = status_response.json()
                             if call_data.get('status') == 'completed':
-                                print(f"Call completed for {contact_number}")
+                                messages = call_data.get('transcript', [])
+                                save_transcript(call_id, messages)
                                 break
                     except Exception as e:
                         print(f"Error polling call status: {str(e)}")
-                    time.sleep(5)
+                    time.sleep(10)
             
             # Start polling in a separate thread
-            threading.Thread(target=poll_call_status, daemon=True).start()
-
+            polling_thread = threading.Thread(target=poll_call_status)
+            polling_thread.daemon = True
+            polling_thread.start()
+            
             return f"Call initiated successfully to {contact_number}"
         else:
             error_msg = f"Failed to create VAPI call for {contact_number}: {response.text}"
             print(error_msg)
             return error_msg
-
+            
     except Exception as e:
-        error_msg = f"Error starting call to {contact_number}: {str(e)}"
+        error_msg = f"Error starting VAPI call: {str(e)}"
         print(error_msg)
         return error_msg
 
 def process_csv_and_make_calls(file_path, selected_agent):
     """Process CSV file and initiate calls to all contact numbers"""
     try:
-        # Read CSV file
         df = pd.read_csv(file_path)
         results = []
         
@@ -899,7 +1076,6 @@ def process_csv_and_make_calls(file_path, selected_agent):
                 contact_number = str(row['contact_number']).strip()
                 contact_name = str(row.get('contact_name', ''))
                 
-                # Ensure number is in E.164 format
                 if not contact_number.startswith('+'):
                     contact_number = '+' + contact_number
                 
@@ -950,46 +1126,23 @@ def handle_csv_submit(file, selected_agent):
     except Exception as e:
         return f"Error processing CSV file: {str(e)}"
 
-def save_transcript(call_id, messages):
-    """Save the transcript of the conversation to a JSON file"""
-    try:
-        transcript = {
-            'call_id': call_id,
-            'timestamp': datetime.now().isoformat(),
-            'messages': messages
-        }
-        
-        with open('transcript.json', 'w') as f:
-            json.dump(transcript, f, indent=2)
-        print(f"Transcript saved successfully for call {call_id}")
-    except Exception as e:
-        print(f"Error saving transcript: {str(e)}")
-
-def disconnect_vapi_call():
-    """Disconnect the VAPI call and save recordings"""
-    try:
-        vapi = Vapi(api_key="")
-        vapi.stop()
-        return "Call disconnected and recordings saved successfully!"
-    except Exception as e:
-        return f"Error disconnecting call: {str(e)}"
-
-def forward_vapi_call(target_agent):
-    """Forward the current VAPI call to another agent"""
-    try:
-        if not target_agent:
-            return "Please select a target agent first"
-            
-        target_agent_id = target_agent.split(" ")[0].strip()
-        
-        vapi = Vapi(api_key="")
-        result = vapi.forward_call(target_agent_id)
-        
-        return result
-        
-    except Exception as e:
-        print(f"Error in forward_vapi_call: {str(e)}")
-        return f"Error forwarding call: {str(e)}"
+def get_agent_id(agent_name):
+    """Get agent ID from environment variables based on agent name"""
+    # Map agent names to their environment variable names
+    agent_env_map = {
+        "unpod-English": "unpod-english",  # Direct mapping as in .env
+        "health-insurance": "HEALTH_INSURANCE_ID",
+        "unpod-hindi": "UNPOD_HINDI_ID",
+        "Quriouskid-English": "QURIOSKID_ENGLISH_ID",
+        "Quriouskid-script-hindi": "QURIOSKID_SCRIPT_HINDI_ID",
+        "Realestate-hindi": "VAPI_ASSISTANT_ID",  # Using the default assistant ID
+        "Realestate-english": "ANCHAL_ENGLISH_ID"
+    }
+    
+    env_key = agent_env_map.get(agent_name)
+    if not env_key:
+        return None
+    return os.getenv(env_key)
 
 def launch_gradio_interface():
     """Launch the Gradio interface for VAPI calls"""
@@ -1002,23 +1155,31 @@ def launch_gradio_interface():
             interactive=False
         )
         
+        # Load agent names from environment variables
+        agent_choices = [
+            "unpod-English",
+            "health-insurance",
+            "unpod-hindi",
+            "Quriouskid-English",
+            "Quriouskid-script-hindi",
+            "Realestate-hindi",
+            "Realestate-english"
+        ]
+        
         agent_selector = gr.Dropdown(
-            choices=[
-                "",
-                ""
-            ],
+            choices=agent_choices,
             label="Select Agent",
-            value="",
+            value="unpod-English",
             interactive=True
         )
         
         forward_agent_selector = gr.Dropdown(
             choices=[
-                "",
-                ""
+                "health-insurance",
+                "Anchal English"
             ],
             label="Forward to Agent",
-            value="",
+            value="health-insurance",
             visible=True,
             interactive=True
         )
@@ -1027,7 +1188,7 @@ def launch_gradio_interface():
             label="Contact Name",
             placeholder="Enter contact name",
             interactive=True
-        )
+        ) 
         
         contact_number = gr.Textbox(
             label="Contact Number",
@@ -1059,6 +1220,7 @@ def launch_gradio_interface():
                 return "Please upload a CSV file"
             
             try:
+                # Process CSV and make calls
                 results = process_csv_and_make_calls(file.name, selected_agent)
                 
                 output = "Call Results:\n"
@@ -1074,8 +1236,10 @@ def launch_gradio_interface():
                 
             except Exception as e:
                 return f"Error processing CSV file: {str(e)}"
+        
 
         
+        # Button click handlers
         start_button.click(
             fn=start_vapi_call,
             inputs=[agent_selector, contact_name, contact_number],
@@ -1104,7 +1268,69 @@ def launch_gradio_interface():
             api_name="submit_csv"
         )
     
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+    demo.launch(server_name="0.0.0.0", server_port=7861)
 
 if __name__ == "__main__":
     launch_gradio_interface()
+
+def fetch_and_save_vapi_transcript(call_id=None, api_token=None):
+    """
+    Fetch transcript from VAPI API and save it using TranscriptExtractor
+    
+    Args:
+        call_id (str): Optional specific call ID to fetch
+        api_token (str): VAPI API token
+    """
+    try:
+        if not api_token:
+            api_token = os.getenv('VAPI_AUTH_TOKEN')  # Default token
+            
+        base_url = "https://api.vapi.ai/call"
+        url = f"{base_url}/{call_id}" if call_id else base_url
+        headers = {"Authorization": f"Bearer {api_token}"}
+        
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        
+        # Extract call data
+        calls_data = response.json()    
+        if not calls_data:
+            print("No calls data found")
+            return
+            
+        # Handle both single call and multiple calls
+        calls = [calls_data] if call_id else calls_data.get("calls", [])
+        
+        for call in calls:
+            call_id = call.get("id")
+            messages = []
+            
+            # Extract messages from the call
+            transcript = call.get("transcript", [])
+            for msg in transcript:
+                message = {
+                    "role": "agent" if msg.get("is_agent") else "user",
+                    "content": msg.get("text", ""),
+                    "timestamp": msg.get("timestamp", "")
+                }
+                messages.append(message)
+            
+            if messages:
+                # Use our TranscriptExtractor to save in multiple formats
+                extractor = TranscriptExtractor()
+                txt_output = extractor.generate_readable_transcript(messages, "txt")
+                json_output = extractor.generate_readable_transcript(messages, "json")
+                
+                # Also save to transcript.json for compatibility
+                save_transcript(call_id, messages)
+                
+                print(f"Processed call {call_id}:")
+                print(f"- TXT transcript: {txt_output}")
+                print(f"- JSON transcript: {json_output}")
+            else:
+                print(f"No messages found for call {call_id}")
+                
+    except requests.exceptions.RequestException as e:
+        print(f"API request error: {str(e)}")
+    except Exception as e:
+        print(f"Error processing transcript: {str(e)}")

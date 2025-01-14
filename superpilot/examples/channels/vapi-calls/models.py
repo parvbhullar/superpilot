@@ -202,7 +202,6 @@ class VapiCall:
                 response = requests.post(url, headers=headers)
                 response.raise_for_status()
                 
-                # Stop and save recording
                 self.stop_recording()
                 
                 self.current_call_id = None

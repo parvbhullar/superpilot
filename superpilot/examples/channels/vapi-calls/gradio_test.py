@@ -78,7 +78,7 @@ class Vapi:
             self.conversation_log = []
 
             # Initialize vocabulary path and load vocabulary
-            self.hinglish_vocab_path = 'absolute path to your hinglish vocabulary CSV file'
+            self.hinglish_vocab_path = '/home/dev2/projects/super-pilot/super-pilot/work/superpilot/superpilot/superpilot/examples/channels/vapi-calls/Hinglish Vocab - Hinglish Vocab.csv'
             self.hinglish_vocab = {}
             self.load_hinglish_vocabulary()
 
@@ -109,7 +109,7 @@ class Vapi:
 
     def load_hinglish_vocabulary(self):
         """Load Hinglish vocabulary from the specified CSV file"""
-        file_path = "absolute path to your hinglish vocabulary CSV file"
+        file_path = "/home/dev2/projects/super-pilot/super-pilot/work/superpilot/superpilot/superpilot/examples/channels/vapi-calls/Hinglish Vocab - Hinglish Vocab.csv"
         try:
             self.vocab_df = pd.read_csv(file_path)
             self.hindi_to_english = dict(zip(self.vocab_df['Hindi Word'], self.vocab_df['English Translation']))
@@ -816,7 +816,7 @@ class Vapi:
     def call_all_contacts(self, agent_id):
         """Initiate calls to all contacts in the contact list and allow agent to talk"""
         predefined_contacts = [
-            {'Name': 'AK', 'Number': '12345'},
+            {'Name': 'Arshdeep', 'Number': '918872781496'},
             # Add more predefined contacts as needed
         ]
         for contact in predefined_contacts:
