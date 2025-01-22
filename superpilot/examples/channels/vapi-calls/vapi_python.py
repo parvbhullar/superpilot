@@ -499,24 +499,20 @@ class Vapi:
             budget = self.extract_budget_from_text(translated_message)
             if budget:
                 self.user_budget = budget
-                if budget >= self.min_budget:
-                    self.verification_stage = 2
-                    self.current_question = "location"
-                    self.append_to_transcript("agent", "Excellent Budget (बजट) range! Would you like to explore Properties (प्रॉपर्टी) in Chandigarh (चंडीगढ़)?")
-                else:
-                    self.append_to_transcript("agent", "Our premium Properties (प्रॉपर्टी) start from 40 lakhs. What's your preferred Budget (बजट) range?")
-            else:
-                self.budget_attempts += 1
-                if self.budget_attempts >= self.MAX_ATTEMPTS:
-                    self.budget_attempts = 0  
-                    self.append_to_transcript("agent", "Let's make this easier! Please share your Budget (बजट) like '45 lakhs' or '50 lakhs'.")
-                else:
-                    self.append_to_transcript("agent", "To find the perfect Property (प्रॉपर्टी), what's your Budget (बजट) in lakhs?")
+                if self.user_budget < self.min_budget:
+                    self.append_to_transcript("agent", "Apke budget ke anusar property khoj kr apko call back krwati hu.")
+                    self.disconnect_call()  
+                    return
+
+                print(f"User's budget is {self.user_budget}, which is within acceptable limits.")
+                return "Thank you for providing your budget."
+
+            return "Could not extract a valid budget from your message."
 
         elif self.current_question == "location":
             if self.check_location(translated_message):
                 self.user_location = "Chandigarh"
-                self.verification_stage = 3
+                self.verification_stage = 2
                 self.current_question = "profession"
                 self.append_to_transcript("agent", "Wonderful choice! Chandigarh (चंडीगढ़) has excellent Properties (प्रॉपर्टी). What's your Profession (पेशा)? Are you in the IT sector?")
             else:
@@ -530,7 +526,7 @@ class Vapi:
         elif self.current_question == "profession":
             if self.check_profession(translated_message):
                 self.user_profession = "IT"
-                self.verification_stage = 4
+                self.verification_stage = 3
                 self.current_question = "qualified"
                 self.append_to_transcript("agent", "Perfect match! You'll love our premium Properties (प्रॉपर्टी). Let me share some exciting options with you!")
             else:
@@ -544,105 +540,221 @@ class Vapi:
         print(f"Processing user message: {message}")
 
 
-    def start(self, *, assistant_id=None, assistant=None, assistant_overrides=None, squad_id=None, squad=None):
-        """Start a VAPI call with proper error handling"""
-        print("Starting call...")
-        if self._client:
-            print("Client already exists")
-            return None, None
-        
-        self.start_recording()
-        
+    def start_vapi_call(agent, name, number, mailing_address, source_name=""):
+        """
+        Start a dynamic VAPI call that adjusts based on user input for name, phone number, grade, etc.
+        The conversation with VAPI AI should be dynamic, asking the user for various pieces of information.
+
+        Parameters:
+        - agent: Name of the agent initiating the call.
+        """
         try:
-            if assistant_id:
-                payload = {'assistantId': assistant_id}
-            elif assistant:
-                payload = {'assistant': assistant}
-            elif squad_id:
-                payload = {'squadId': squad_id}
-            elif squad:
-                payload = {'squad': squad}
-            else:
-                raise Exception("Error: No assistant specified.")
+            if not all([agent, name, number, mailing_address]):
+                return "Please provide all required information."
+
+            # Format phone number
+            formatted_number = format_phone_number(number)
+            if not formatted_number:
+                return "Invalid phone number format."
+
+            # Dynamically detect agent ID
+            agent_id = get_agent_id(agent)
+            if not agent_id:
+                return f"Agent {agent} not found."
+
+            # Extract location from address (assuming first word is city)
+            location = mailing_address.split(',')[1].strip() if ',' in mailing_address else mailing_address.strip()
+
+            # Define the conversation flow with dynamic prompts
+            conversation_flow = {
+                "introduction_phase": {
+                    "greeting": {
+                        "initial": f"Before we proceed, am I speaking with {name}?",
+                        "wait_for_confirmation": True,
+                        "introduction": f"Thank you! I'm {agent} from CuriousKid. I see you registered on our website through Instagram and expressed interest in our Robotics and AI courses. Do you remember the registration? I wanted to talk to you about supporting your child's STEM learning journey. Do you have a little time?",
+                        "wait_for_time_confirmation": True
+                    },
+                    "identity_confirmation": {
+                        "confirmed": f"Great, thank you for confirming, {name}!",
+                        "no_response": f"Just to confirm, is this {name}?",
+                        "still_unclear": f"Sorry for the confusion, just to double-check, is your name {name}?",
+                        "final_confirmation": "Awesome, thank you for confirming!",
+                        "acknowledgment": f"That's wonderful, {name}! I'll be happy to assist you in getting more details about our programs and setting up a session for your child."
+                    }
+                },
+                "student_details": {
+                    "gather_info": {
+                        "ask_details": "Please tell me your child's name and their grade?",
+                        "wait_for_response": True,
+                        "age_verification": "Based on their grade, [child_name] would approximately be around [age] years. Is that right?",
+                        "wait_for_age_confirmation": True
+                    },
+                    "location_verification": {
+                        "confirm_location": f"May I confirm your current location? Is it {location}?",
+                        "wait_for_location": True,
+                        "tech_access": "Does [child_name] have access to a laptop and a stable internet connection for the sessions?",
+                        "wait_for_tech_confirmation": True
+                    }
+                },
+                "parent_information": {
+                    "profession": {
+                        "primary": "If I may ask, what do you do for a living?",
+                        "wait_for_primary": True,
+                        "secondary": "Could you also share what your husband does professionally?",
+                        "wait_for_secondary": True
+                    },
+                    "motivation": "I believe you've seen our advertisement on emerging technologies like robotics and artificial intelligence. Could you share what motivated you to register [child_name]?"
+                },
+                "company_overview": {
+                    "introduction": f"That's fantastic to hear, {name}! CuriousKid is India's largest innovation training company, specializing in teaching kids advanced technologies like electronics, robotics, artificial intelligence, and entrepreneurship. Did you know that kids aged 8 to 16 years have achieved over 170 Patent through our programs? It's truly inspiring!"
+                },
+                "Course Introduction Based on Grade": {
+                    "little_innovator": {
+                        "grades": "1-2",
+                        "overview": "This program consists of two modules, each lasting six months.",
+                        "content": [
+                            "Introduction to basic coding concepts",
+                            "Hands-on robotics projects",
+                            "Fun electronics activities that encourage creativity"
+                        ],
+                        "Class Structure": "Classes are held twice a week in small groups of up to 10 students.",
+                        "Trainer Credentials": "Instructors are alumni from prestigious institutions with experience in teaching young learners.",
+                        "Program Benefits": "Focus on cognitive development, creativity, problem-solving skills, and teamwork.",
+                        "Fee Structure": "Eighteen thousand rupees per module."
+                    },
+                    " Emerging Tech Course": {
+                        "grades": "3 and above",
+                        "overview": "This comprehensive program includes five modules, each lasting six months.",
+                        "modules": [
+                            "Electronics: Understanding circuits and components through practical exercises.",
+                            "Embedded Design and Robotics: Designing and building robots using sensors and microcontrollers.",
+                            "Internet of Things (IoT): Learning how devices connect and communicate over the internet.",
+                            "Artificial Intelligence: Basics of AI concepts, including machine learning and data analysis.",
+                            "Entrepreneurship: Encouraging innovation and business skills through project-based learning."
+                        ],
+                        "structure": "Classes are held twice a week in small groups of up to 10 students.",
+                        "trainers": "Instructors are graduates from top engineering colleges with expertise in their respective fields.",
+                        "benefits": "Prepares students for future challenges with an emphasis on creativity, critical thinking, and social skills.",
+                        "fees": "Twenty-four thousand rupees per module."
+                    }
+                },
+                "diagnostic_session": {
+                    "offer": "We offer a free diagnostic session to explore your child's interests through engaging experiments. Would you like to schedule this session today?",
+                    "scheduling": {
+                        "ask_time": "What date and time would work best for you to schedule this session? We are available at various times throughout the week.",
+                        "confirmation": "Great! I've scheduled the session for [time] on [date]. You'll receive a call from our STEM expert shortly for confirmation."
+                    }
+                },
+                "closing": {
+                    "farewell": f"Thank you for your time, {name}! If you have any questions or need further assistance, please don't hesitate to reach out. Have a great day!"
+                }
+            }
+
+            # Create dynamic context with extracted information
+            initial_context = {
+                "customer_info": {
+                    "name": name,
+                    "phone": formatted_number,
+                    "mailing_address": mailing_address,
+                    "location": location
+                },
+                "agent_info": {
+                    "name": agent
+                },
+                "conversation_flow": conversation_flow,
+                "metadata": {
+                    "current_time": "2025-01-20T18:27:45+05:30",
+                    "source": "Instagram",
+                    "registration_type": "website"
+                }
+            }
+
+            # Prepare the payload
+            call_payload = {
+                'assistantId': agent_id,
+                'phoneNumberId': VAPI_PHONE_NUMBER_ID,
+                'customer': {
+                    'name': name,
+                    'number': formatted_number
+                },
+                'metadata': {
+                    'name': name,
+                    'mailing_address': mailing_address,
+                    'location': location,
+                    'agent_name': agent,
+                    'source': 'Instagram'
+                },
+                'assistantOverrides': {
+                    'variableValues': {
+                        'name': name,
+                        'mailing_address': mailing_address,
+                        'location': location,
+                        'agent_name': agent
+                    },
+                    'context': json.dumps(initial_context)
+                }
+            }
+
+            # Log information for debugging
+            print(f"Making call to {formatted_number}")
+            print(f"Using agent ID: {agent_id}")
+            print(f"Call payload: {json.dumps(call_payload, indent=2)}")
+
+            # Make the API call
+            response = requests.post(
+                'https://api.vapi.ai/call/phone',
+                headers={
+                    'Authorization': f'Bearer {auth_token}',
+                    'Content-Type': 'application/json'
+                },
+                json=call_payload
+            )
             
-            print(f"Making API call with payload: {payload}")
-            
-            call_id, web_call_url = self.create_web_call(payload)
-            if not call_id or not web_call_url:
-                raise Exception("Failed to get valid call ID or URL")
+            if response.status_code in [200, 201]:
+                call_data = response.json()
+                call_id = call_data.get('id')
                 
-            print(f"Received call ID: {call_id}, Web call URL: {web_call_url}")
-            
-            self._client = DailyCall()
-            
-            def on_app_message(event):
-                try:
-                    print(f"Raw event received: {event}")
-                    if isinstance(event, str):
-                        print("Processing string message...")
-                        self.handle_agent_message(event)
-                        return
-                    
-                    if isinstance(event, dict):
-                        print("Processing dict message...")
-                        if 'text' in event:
-                            msg = event['text']
-                            print(f"Found text message: {msg}")
-                            self.handle_agent_message(msg)
-                            return
-                            
-                        if 'action' in event:
-                            action = event['action']
-                            print(f"Found action: {action}")
-                            self.append_to_transcript("agent_action", action)
-                            return
-                            
-                        if 'data' in event:
-                            print("Found data field...")
-                            data = event['data']
-                            if isinstance(data, dict) and 'text' in data:
-                                msg = data['text']
-                                print(f"Found text in data: {msg}")
-                                self.handle_agent_message(msg)
-                                return
-                                
-                        print("No recognized message format found in dict")
-                        print(f"Dict keys: {event.keys()}")
-                        
-                    print(f"Unhandled event type: {type(event)}")
-                except Exception as e:
-                    print(f"Error in message handler: {str(e)}")
-                    print(f"Error type: {type(e)}")
-                    import traceback
-                    print(f"Traceback: {traceback.format_exc()}")
-                    self.append_to_transcript("error", f"Message handling error: {str(e)}")
-        
-            print("\nSetting up event handlers...")
-            self._client.on_app_message = on_app_message
-        
-            print("\nJoining call...")
-            if not web_call_url:
-                raise Exception("No valid web call URL")
-            self._client.join(web_call_url)
-            print("Successfully joined the call")
-            
-            print("\nStarting conversation listener...")
-            threading.Thread(target=self.listen_for_conversation, daemon=True).start()
-            
-            self.start_qualification_process()
-            
-            return call_id, web_call_url
-            
+                start_call_recording(call_id, agent_id, name, formatted_number)
+                
+                polling_thread = threading.Thread(
+                    target=poll_call_status,
+                    args=(call_id, agent_id, name, formatted_number, {
+                        'Authorization': f'Bearer {auth_token}',
+                        'Content-Type': 'application/json'
+                    })
+                )
+                polling_thread.daemon = True
+                polling_thread.start()
+                
+                return f"Started call for {name} with phone number {formatted_number}."
+            else:
+                return f"Failed to start call: {response.text}"
+
         except Exception as e:
-            print(f"Error in start: {str(e)}")
-            self.stop_recording()  # Stop recording if call fails
-            if self._client:
-                try:
-                    self._client.leave()
-                except:
-                    pass
-                self._client = None
-            return None, None
+            return f"Error starting call: {str(e)}"
+
+
+    def send_vapi_request(auth_token, payload, prompt):
+        """Send a request to VAPI with a specific prompt."""
+        try:
+            payload['assistantOverrides']['context'] = json.dumps({"prompt": prompt})
+            response = requests.post(
+                'https://api.vapi.ai/call/phone',
+                headers={
+                    'Authorization': f'Bearer {auth_token}',
+                    'Content-Type': 'application/json'
+                },
+                json=payload
+            )
+            if response.status_code in [200, 201]:
+                print(f"Prompt sent: {prompt}")
+                return response.json()
+            else:
+                print(f"Error: {response.status_code} - {response.text}")
+                return None
+        except Exception as e:
+            print(f"Error in send_vapi_request: {str(e)}")
+            return None
 
     def stop(self):
         """Stop the current call and save all recordings"""
@@ -760,7 +872,7 @@ class Vapi:
         
         match = re.search(r'(\d+(?:\.\d+)?)(?:\s*(?:cr|crore|crores))', text)
         if match:
-            return float(match.group(1)) * 10000000  # Convert crores to rupees
+            return float(match.group(1)) * 10000000  
             
         match = re.search(r'(\d+)', text)
         if match:
@@ -917,7 +1029,6 @@ def generate_readable_transcript(self, messages, output_format="txt"):
                 output += f"Time: {msg_time}\n"
             output += "-" * 30 + "\n"
         
-        # Save to file
         filename = f"transcript_{timestamp}.txt"
         filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
         with open(filepath, "w", encoding="utf-8") as f:
@@ -931,7 +1042,6 @@ def generate_readable_transcript(self, messages, output_format="txt"):
             "messages": messages
         }
         
-        # Save to file
         filename = f"transcript_{timestamp}.json"
         filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
         with open(filepath, "w", encoding="utf-8") as f:
@@ -944,7 +1054,6 @@ def save_transcript(call_id, messages):
     try:
         timestamp = datetime.now().isoformat()
         
-        # Create transcript data
         transcript = {
             'call_id': call_id,
             'timestamp': timestamp,
@@ -1051,22 +1160,22 @@ def forward_vapi_call(target_agent):
         print(f"Error in forward_vapi_call: {str(e)}")
         return f"Error forwarding call: {str(e)}"
 
-def start_vapi_call(agent, name, number, student_name, mailing_address):
+def start_vapi_call(agent, name, number, mailing_address, source_name=""):
     """Start a VAPI call with the given contact information dynamically."""
     try:
-        if not all([agent, name, number, student_name, mailing_address]):
-            return "Please provide all required information"
+        if not all([agent, name, number, mailing_address]):
+            return "Please provide all required information."
 
         # Dynamically detect agent ID
         agent_id = get_agent_id(agent)
         if not agent_id:
-            return f"Agent ID not found for {agent}"
+            return f"Agent ID not found for {agent}."
         
         # Fetch VAPI credentials from environment variables
         auth_token = os.getenv('VAPI_AUTH_TOKEN')
         vapi_phone_number_id = os.getenv('VAPI_PHONE_NUMBER_ID')
         if not auth_token or not vapi_phone_number_id:
-            return "Missing VAPI credentials in environment variables"
+            return "Missing VAPI credentials in environment variables."
 
         # Validate and format the phone number
         try:
@@ -1074,16 +1183,60 @@ def start_vapi_call(agent, name, number, student_name, mailing_address):
         except ValueError as e:
             return f"Invalid phone number: {str(e)}"
 
-        # Create dynamic prompts and payloads based on detected information
+        # Construct the full conversation script
+        conversation_script = {
+            "initial_greeting": f"Hi, this is {agent} from CuriousKid. Am I speaking with {name}?",
+            "registration_confirmation": f"I see you registered on our website through {source_name} and expressed interest in our Robotics and AI courses. Do you recall this registration?",
+            "availability_check": "Thank you! I wanted to discuss supporting your child's STEM learning journey. Do you have a few minutes to talk?",
+            "identity_recheck": f"Just to confirm, is this {name}?",
+            "identity_confusion": f"Sorry for the confusion, just to double-check, is your name {name}?",
+            "identity_confirmed": f"That's wonderful, {name}! I'll be happy to assist you in getting more details about our programs and setting up a session for your child.",
+            "student_details": "Could you please tell me your child's name and their grade?",
+            "age_confirmation": "Based on their grade, [Child's Name] would approximately be around [Calculated Age] years old. Is that correct?",
+            "location_confirmation": f"May I confirm your current location? Is it {mailing_address}?",
+            "technical_requirements": "Does [Child's Name] have access to a laptop and a stable internet connection for the sessions?",
+            "parent_profession": "If I may ask, what is your profession?",
+            "spouse_profession": "Could you also share what your spouse does professionally?",
+            "motivation": "I believe you've seen our advertisement on emerging technologies like robotics and artificial intelligence. Could you share what motivated you to register [Child's Name]?",
+            "company_overview": "That's fantastic to hear! CuriousKid is India's largest innovation training company, specializing in teaching kids advanced technologies like electronics, robotics, artificial intelligence, and entrepreneurship. Did you know that kids aged 8 to 16 years have achieved over 170 patents through our programs? It's truly inspiring!",
+            "diagnostic_session": "To facilitate admissions, we conduct a diagnostic session where our STEM expert engages with your child for about 10-15 minutes to assess their interests and aptitude through simple experiments.",
+            "scheduling": "I'd love to schedule this session today! What time works best for you?",
+            "concerns_time": "I completely understand how busy schedules can be. If this is not the right time, we can set up a follow-up call at a more convenient time for you. Does that work?",
+            "concerns_relevance": "I hear you! Many parents wonder if these courses will truly benefit their children. I'd be happy to share examples of how kids have excelled through our programs. For instance, some students as young as 10 have designed their own robots or secured patents! Would you like to know more about their success stories?",
+            "closing": "Thank you for your time! If you have any questions or need further assistance, please don't hesitate to reach out. Have a great day!"
+        }
+
+        # Create dynamic context with the full script
         initial_context = {
             "customer_info": {
                 "name": name,
-                "confirmed_name": name,
-                "student_name": student_name,
-                "mailing_address": mailing_address
+                "mailing_address": mailing_address,
+                "source": source_name
+            },
+            "conversation_script": conversation_script,
+            "course_info": {
+                "little_innovator": {
+                    "grades": "1-2",
+                    "modules": ["Little Innovator 1", "Little Innovator 2"],
+                    "duration": "6 months per module",
+                    "fee": "18000 rupees per module"
+                },
+                "emerging_tech": {
+                    "grades": "3 and above",
+                    "modules": [
+                        "Electronics",
+                        "Embedded Design and Robotics",
+                        "Internet of Things (IoT)",
+                        "Artificial Intelligence",
+                        "Entrepreneurship"
+                    ],
+                    "duration": "6 months per module",
+                    "fee": "24000 rupees per module"
+                }
             }
         }
 
+        # Prepare payload
         call_payload = {
             'assistantId': agent_id,
             'phoneNumberId': vapi_phone_number_id,
@@ -1092,17 +1245,15 @@ def start_vapi_call(agent, name, number, student_name, mailing_address):
                 'number': formatted_number
             },
             'metadata': {
-                'student_name': student_name,
+                'name': name,
                 'mailing_address': mailing_address,
-                'customer_name': name
+                'source': source_name
             },
             'assistantOverrides': {
                 'variableValues': {
-                    'customer_name': name,
-                    'confirmed_name': name,
-                    'caller_name': name,
-                    'student_name': student_name,
-                    'mailing_address': mailing_address
+                    'name': name,
+                    'mailing_address': mailing_address,
+                    'source': source_name
                 },
                 'context': json.dumps(initial_context)
             }
@@ -1123,7 +1274,6 @@ def start_vapi_call(agent, name, number, student_name, mailing_address):
             json=call_payload
         )
         
-        # Process response
         if response.status_code in [200, 201]:
             call_data = response.json()
             call_id = call_data.get('id')
@@ -1140,12 +1290,13 @@ def start_vapi_call(agent, name, number, student_name, mailing_address):
             polling_thread.daemon = True
             polling_thread.start()
             
-            return f"Started call for {name} with phone number {formatted_number}"
+            return f"Started call for {name} with phone number {formatted_number}."
         else:
             return f"Failed to start call: {response.text}"
 
     except Exception as e:
         return f"Error starting call: {str(e)}"
+
 
 def process_csv_and_make_calls(file_path, selected_agent):
     """Process CSV file and make calls to each number"""
@@ -1232,97 +1383,59 @@ def get_agent_id(agent_name):
 
 def launch_gradio_interface():
     """Launch the Gradio interface for VAPI calls"""
+    import gradio as gr
+    
+    # Create the interface
     with gr.Blocks() as demo:
         gr.Markdown("# VAPI Call Interface")
         
         with gr.Row():
-            agent_selector = gr.Dropdown(
-                choices=[
-                    "unpod-English",
-                    "health-insurance",
-                    "unpod-hindi",
-                    "Quriouskid-English",
-                    "Quriouskid-script-hindi",
-                    "Realestate-hindi",
-                    "Realestate-english"
-                ],
-                label="Select Agent",
-                value="unpod-English"
-            )
+            with gr.Column():
+                agent_selector = gr.Dropdown(
+                    choices=[
+                        "unpod-English",
+                        "health-insurance",
+                        "unpod-hindi",
+                        "Quriouskid-English",
+                        "Quriouskid-script-hindi",
+                        "Realestate-hindi",
+                        "Realestate-english"
+                    ],
+                    label="Select Agent",
+                    value="Quriouskid-English"
+                )
+                contact_name = gr.Textbox(label="Contact Name")
+                contact_number = gr.Textbox(label="Contact Number")
+                mailing_address = gr.Textbox(label="Mailing Address")
+                source_name = gr.Textbox(
+                    label="Source Name",
+                    value="Instagram",
+                    placeholder="Enter source (e.g. Instagram, Facebook)"
+                )
+                
+        with gr.Row():
+            start_button = gr.Button("Start Call")
+            
+        output_text = gr.Textbox(label="Output")
 
-        with gr.Tab("Single Call"):
-            contact_number = gr.Textbox(
-                label="Contact Number",
-                placeholder="Enter contact number (e.g., +1234567890)",
-                interactive=True
-            )
-            contact_name = gr.Textbox(
-                label="Contact Name",
-                placeholder="Enter contact name",
-                interactive=True
-            )
-            student_name = gr.Textbox(
-                label="Student Name",
-                placeholder="Enter student name",
-                interactive=True
-            )
-            mailing_address = gr.Textbox(
-                label="Mailing Address",
-                placeholder="Enter mailing address",
-                interactive=True
-            )
-            with gr.Row():
-                start_button = gr.Button("Start Call", variant="primary")
-                disconnect_button = gr.Button("Disconnect Call", variant="stop")
-
-        with gr.Tab("Bulk Calls from CSV"):
-            csv_file = gr.File(
-                label="Upload CSV File (should have contact_name and contact_number columns)",
-                file_types=[".csv"],
-                type="filepath"
-            )
-            with gr.Row():
-                start_csv_button = gr.Button("Start Calls from CSV", variant="primary")
-                disconnect_csv_button = gr.Button("Disconnect Current Call", variant="stop")
-
-        output_text = gr.Textbox(
-            label="Status",
-            placeholder="Call status will appear here...",
-            interactive=False,
-            lines=10
-        )
-
+        def wrapped_start_vapi_call(agent, name, number, address, source):
+            return start_vapi_call(agent, name, number, address, source)
+        
         # Single call button logic
         start_button.click(
-            fn=start_vapi_call,
-            inputs=[agent_selector, contact_name, contact_number, student_name, mailing_address],
+            fn=wrapped_start_vapi_call,
+            inputs=[
+                agent_selector,
+                contact_name,
+                contact_number,
+                mailing_address,
+                source_name
+            ],
             outputs=output_text
         )
-
-        # Bulk call logic
-        start_csv_button.click(
-            fn=process_csv_and_make_calls,
-            inputs=[csv_file, agent_selector],
-            outputs=output_text
-        )
-
-        # Disconnect single call
-        disconnect_button.click(
-            fn=disconnect_vapi_call,
-            inputs=None,
-            outputs=output_text
-        )
-
-        # Disconnect CSV call
-        disconnect_csv_button.click(
-            fn=disconnect_vapi_call,
-            inputs=None,
-            outputs=output_text
-        )
-
-    demo.launch(share=True)
-
-
+        
+    # Launch the interface
+    demo.launch()
 
 class CallRecorder:
     def __init__(self, call_id, agent_id, customer_name, customer_number):
