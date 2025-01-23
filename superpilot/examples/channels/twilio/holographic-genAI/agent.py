@@ -24,7 +24,7 @@ class LiveKitAgent(BaseAgent):
 
     async def run_multimodal_agent(self, ctx: JobContext, participant: rtc.RemoteParticipant):
         logger.info("Starting multimodal agent")
-        
+
         openai_model = OpenAIRealtimeModel().get_model()
         agent_handler = MultimodalAgentHandler(openai_model)
         await agent_handler.start_assistant(ctx, participant)

@@ -4,7 +4,7 @@ import logging
 import asyncio
 import nest_asyncio
 from dotenv import load_dotenv
-from livekit import api, rtc
+from livekit import rtc
 from livekit.agents import JobContext, WorkerOptions, AutoSubscribe, cli
 from models import OpenAIRealtimeModel, MultimodalAgentHandler
 from base import BaseAgent  
