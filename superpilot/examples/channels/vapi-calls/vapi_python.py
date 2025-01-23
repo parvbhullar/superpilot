@@ -552,20 +552,17 @@ class Vapi:
             if not all([agent, name, number, mailing_address]):
                 return "Please provide all required information."
 
-            # Format phone number
             formatted_number = format_phone_number(number)
             if not formatted_number:
                 return "Invalid phone number format."
 
-            # Dynamically detect agent ID
             agent_id = get_agent_id(agent)
             if not agent_id:
                 return f"Agent {agent} not found."
 
-            # Extract location from address (assuming first word is city)
             location = mailing_address.split(',')[1].strip() if ',' in mailing_address else mailing_address.strip()
 
-            # Define the conversation flow with dynamic prompts
+            # Define the conversation flow with dynamic prompts, including course details
             conversation_flow = {
                 "introduction_phase": {
                     "greeting": {
@@ -606,36 +603,37 @@ class Vapi:
                     "motivation": "I believe you've seen our advertisement on emerging technologies like robotics and artificial intelligence. Could you share what motivated you to register [child_name]?"
                 },
                 "company_overview": {
-                    "introduction": f"That's fantastic to hear, {name}! CuriousKid is India's largest innovation training company, specializing in teaching kids advanced technologies like electronics, robotics, artificial intelligence, and entrepreneurship. Did you know that kids aged 8 to 16 years have achieved over 170 Patent through our programs? It's truly inspiring!"
+                    "introduction": f"That's fantastic to hear, {name}! CuriousKid is India's largest innovation training company, specializing in teaching kids advanced technologies like electronics, robotics, artificial intelligence, and entrepreneurship. Did you know that kids aged 8 to 16 years have achieved over 170 Patents through our programs? It's truly inspiring!",
                 },
-                "Course Introduction Based on Grade": {
+                "course_intro": {
+                    "grade_query": "Now, based on [Child's Name]'s grade, let me tell you about our most suitable program.",
                     "little_innovator": {
-                        "grades": "1-2",
-                        "overview": "This program consists of two modules, each lasting six months.",
+                        "grades": [1, 2],
+                        "overview": "For grades 1-2, we have our Little Innovator Program. This is specially designed as an entry-level course focusing on foundational skills.",
                         "content": [
                             "Introduction to basic coding concepts",
                             "Hands-on robotics projects",
                             "Fun electronics activities that encourage creativity"
                         ],
-                        "Class Structure": "Classes are held twice a week in small groups of up to 10 students.",
-                        "Trainer Credentials": "Instructors are alumni from prestigious institutions with experience in teaching young learners.",
-                        "Program Benefits": "Focus on cognitive development, creativity, problem-solving skills, and teamwork.",
-                        "Fee Structure": "Eighteen thousand rupees per module."
+                        "class_structure": "Classes are held twice a week in small groups of up to 10 students.",
+                        "trainer_credentials": "Our instructors are alumni from prestigious institutions with experience in teaching young learners.",
+                        "program_benefits": "The program focuses on cognitive development, creativity, problem-solving skills, and teamwork.",
+                        "fee_structure": "Each module is priced at eighteen thousand rupees."
                     },
-                    " Emerging Tech Course": {
-                        "grades": "3 and above",
-                        "overview": "This comprehensive program includes five modules, each lasting six months.",
+                    "emerging_tech_course": {
+                        "grades": [3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                        "overview": "For grade 3 and above, we offer our comprehensive Emerging Tech Course with five specialized modules.",
                         "modules": [
                             "Electronics: Understanding circuits and components through practical exercises.",
-                            "Embedded Design and Robotics: Designing and building robots using sensors and microcontrollers.",
-                            "Internet of Things (IoT): Learning how devices connect and communicate over the internet.",
-                            "Artificial Intelligence: Basics of AI concepts, including machine learning and data analysis.",
-                            "Entrepreneurship: Encouraging innovation and business skills through project-based learning."
+                            "Embedded Design and Robotics: Building robots with sensors and microcontrollers.",
+                            "Internet of Things (IoT): Learning device connectivity.",
+                            "Artificial Intelligence: Basics of AI concepts and machine learning.",
+                            "Entrepreneurship: Innovation and business skills development."
                         ],
-                        "structure": "Classes are held twice a week in small groups of up to 10 students.",
-                        "trainers": "Instructors are graduates from top engineering colleges with expertise in their respective fields.",
-                        "benefits": "Prepares students for future challenges with an emphasis on creativity, critical thinking, and social skills.",
-                        "fees": "Twenty-four thousand rupees per module."
+                        "class_structure": "Classes are held twice a week in small groups.",
+                        "trainer_credentials": "Our instructors are graduates from top engineering colleges with expertise in their fields.",
+                        "program_benefits": "The program prepares students for future challenges with focus on creativity, critical thinking, and practical skills.",
+                        "fee_structure": "Each module is priced at twenty-four thousand rupees."
                     }
                 },
                 "diagnostic_session": {
@@ -669,7 +667,7 @@ class Vapi:
                 }
             }
 
-            # Prepare the payload
+            # Prepare the payload for API request
             call_payload = {
                 'assistantId': agent_id,
                 'phoneNumberId': VAPI_PHONE_NUMBER_ID,
@@ -700,7 +698,7 @@ class Vapi:
             print(f"Using agent ID: {agent_id}")
             print(f"Call payload: {json.dumps(call_payload, indent=2)}")
 
-            # Make the API call
+            # Make the API call to initiate the VAPI session
             response = requests.post(
                 'https://api.vapi.ai/call/phone',
                 headers={
@@ -709,13 +707,15 @@ class Vapi:
                 },
                 json=call_payload
             )
-            
+
             if response.status_code in [200, 201]:
                 call_data = response.json()
                 call_id = call_data.get('id')
-                
+
+                # Start recording the call (Make sure this function is defined)
                 start_call_recording(call_id, agent_id, name, formatted_number)
-                
+
+                # Start a thread to poll for call status
                 polling_thread = threading.Thread(
                     target=poll_call_status,
                     args=(call_id, agent_id, name, formatted_number, {
@@ -725,14 +725,13 @@ class Vapi:
                 )
                 polling_thread.daemon = True
                 polling_thread.start()
-                
+
                 return f"Started call for {name} with phone number {formatted_number}."
             else:
                 return f"Failed to start call: {response.text}"
 
         except Exception as e:
             return f"Error starting call: {str(e)}"
-
 
     def send_vapi_request(auth_token, payload, prompt):
         """Send a request to VAPI with a specific prompt."""
@@ -1177,7 +1176,6 @@ def start_vapi_call(agent, name, number, mailing_address, source_name=""):
         if not auth_token or not vapi_phone_number_id:
             return "Missing VAPI credentials in environment variables."
 
-        # Validate and format the phone number
         try:
             formatted_number = format_phone_number(number)
         except ValueError as e:
@@ -1219,7 +1217,7 @@ def start_vapi_call(agent, name, number, mailing_address, source_name=""):
                     "grades": "1-2",
                     "modules": ["Little Innovator 1", "Little Innovator 2"],
                     "duration": "6 months per module",
-                    "fee": "18000 rupees per module"
+                    "fee": "eighteen thousandx rupees per module"
                 },
                 "emerging_tech": {
                     "grades": "3 and above",
@@ -1231,12 +1229,11 @@ def start_vapi_call(agent, name, number, mailing_address, source_name=""):
                         "Entrepreneurship"
                     ],
                     "duration": "6 months per module",
-                    "fee": "24000 rupees per module"
+                    "fee": "twenty thousand rupees per module"
                 }
             }
         }
 
-        # Prepare payload
         call_payload = {
             'assistantId': agent_id,
             'phoneNumberId': vapi_phone_number_id,
@@ -1259,12 +1256,10 @@ def start_vapi_call(agent, name, number, mailing_address, source_name=""):
             }
         }
         
-        # Log information for debugging
         print(f"Making call to {formatted_number}")
         print(f"Using agent ID: {agent_id}")
         print(f"Call payload: {json.dumps(call_payload, indent=2)}")
 
-        # Make the API call
         response = requests.post(
             'https://api.vapi.ai/call/phone',
             headers={
@@ -1329,7 +1324,7 @@ def process_csv_and_make_calls(file_path, selected_agent):
                     'message': result
                 })
                 
-                time.sleep(2)  # Optional delay between calls
+                time.sleep(2) 
                 
             except Exception as e:
                 results.append({
@@ -1782,6 +1777,48 @@ def get_agent_prompt(agent_id, auth_token):
         print(f"Error fetching agent prompt: {str(e)}")
         # Continue without prompt instead of failing
         return ""
+
+def get_course_presentation(grade, child_name):
+    """Generate a detailed course presentation based on grade"""
+    if 1 <= grade <= 2:
+        course_type = "little_innovator"
+        presentation = (
+            f"Based on {child_name}'s grade, let me tell you about our Little Innovator Program.\n\n"
+            "This is our entry-level course specially designed for grades 1-2. "
+            "The program consists of two modules, each lasting six months.\n\n"
+            "In this program, your child will learn:\n"
+            "1. Basic coding concepts through interactive sessions\n"
+            "2. Hands-on robotics projects\n"
+            "3. Creative electronics activities\n\n"
+            "Classes are held twice a week in small groups of up to 10 students. "
+            "Our instructors are alumni from prestigious institutions with experience in teaching young learners.\n\n"
+            "The program fee is eighteen thousand rupees per module.\n\n"
+            "(Pause for questions)\n\n"
+            f"Would you like to know how {child_name} can specifically benefit from this program?"
+        )
+    else:
+        course_type = "emerging_tech"
+        presentation = (
+            f"For {child_name}, I recommend our comprehensive Emerging Tech Course, "
+            "which is perfect for grade 3 and above.\n\n"
+            "This advanced program consists of five specialized modules:\n"
+            "1. Electronics: Understanding circuits and components\n"
+            "2. Embedded Design and Robotics: Building robots with sensors\n"
+            "3. Internet of Things (IoT): Learning device connectivity\n"
+            "4. Artificial Intelligence: Basics of AI and machine learning\n"
+            "5. Entrepreneurship: Innovation and business skills\n\n"
+            "Each module lasts 6 months with classes twice a week. "
+            "Our instructors are graduates from top engineering colleges with expertise in their fields.\n\n"
+            "The program fee is twenty-four thousand rupees per module.\n\n"
+            "(Pause for questions)\n\n"
+            f"Would you like to know how this program can prepare {child_name} for future technologies?"
+        )
+    
+    return {
+        "course_type": course_type,
+        "presentation": presentation,
+        "next_step": "Would you like to schedule a diagnostic session to assess your child's interests and aptitude?"
+    }
 
 if __name__ == "__main__":
     launch_gradio_interface()
