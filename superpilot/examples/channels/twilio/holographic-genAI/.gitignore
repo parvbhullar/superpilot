@@ -25,3 +25,6 @@ creds.json
 ../../../superpilot.egg-info/
 ../../.DS_Store
 ../.DS_Store
+sip-participant.json
+=0.12.1
+requirements.txt
