@@ -23,6 +23,11 @@ from bson import Binary
 import pandas as pd
 import pyttsx3
 import random
+import logging
+
+# Set up basic logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Vapi:
     _instance = None
