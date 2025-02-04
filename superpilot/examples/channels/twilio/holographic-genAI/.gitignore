@@ -13,8 +13,6 @@ original/*
 Final/*
 final/*
 .cache
-.env.local
-
 outbound-trunk.json
 inbound-trunk.json
 dispatchRule.json
@@ -31,3 +29,6 @@ requirements.txt
 sip-participant.json
 renovate.json
 msgs.json
+dispatchRule.json
+renovate.json
+.env.local

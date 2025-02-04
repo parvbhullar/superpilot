@@ -4,7 +4,7 @@ import numpy as np
 import noisereduce as nr
 from livekit import rtc
 import speech_recognition as sr
-from elevenlabs.client import ElevenLabs
+
 from livekit.plugins import openai
 from livekit.agents import llm
 from livekit.agents.multimodal import MultimodalAgent
@@ -14,63 +14,32 @@ logger = logging.getLogger("my-worker")
 logger.setLevel(logging.INFO)
 
 class OpenAIRealtimeModel:
+    """
+    OpenAI Realtime Model to configure a real estate agent interacting in Hindi.
+    The agent will attempt to assist the user in finding a property and gather requirements through a conversational flow.
+    """
+
     def __init__(self):
-        # Initialize ElevenLabs client
-        self.elevenlabs_client = ElevenLabs(
-            api_key=os.getenv('ELEVENLABS_API_KEY')
-        )
-        self.voice_id = os.getenv('ELEVENLABS_VOICE_ID')
-        
         self.model = openai.realtime.RealtimeModel(
             instructions=(
-                "आप एक रियल एस्टेट प्रॉपर्टी सलाहकार हैं। उपयोगकर्ता के साथ आपका इंटरफ़ेस आवाज होगा। "
-                "उपयोगकर्ता की आवाज के आधार पर 'सर' या 'मैम' का प्रयोग करें। "
-                "'नमस्कार, मैं आपकी प्रॉपर्टी खोज में मदद करना चाहूंगी।' "
-                "मुझे पता चला है कि आप प्रॉपर्टी देख रहे हैं। मेरे पास आपके लिए बेहतरीन ऑफर्स में प्रॉपर्टी उपलब्ध है। "
-                "क्या मैं आपसे कुछ कीमती समय ले सकती हूँ?' "
-                "बातचीत के अंत में, उनकी प्रॉपर्टी की कीमत, स्थान, क्षेत्रफल और अन्य विवरणों की पुष्टि करें।"
-            ),
+            "आप एक रियल एस्टेट प्रॉपर्टी सलाहकार हैं। उपयोगकर्ता के साथ आपका इंटरफ़ेस आवाज होगा। "
+            "उपयोगकर्ता की आवाज के आधार पर 'सर' या 'मैम' का प्रयोग करें। "
+            "'नमस्कार, मैं आपकी प्रॉपर्टी खोज में मदद करना चाहूंगी।' "
+            "मुझे पता चला है कि आप प्रॉपर्टी देख रहे हैं। मेरे पास आपके लिए बेहतरीन ऑफर्स में प्रॉपर्टी उपलब्ध है। "
+            "क्या मैं आपसे कुछ कीमती समय ले सकती हूँ?' "
+            "बातचीत के अंत में, उनकी प्रॉपर्टी की कीमत, स्थान, क्षेत्रफल और अन्य विवरणों की पुष्टि करें।"
+        ),
             modalities=["audio", "text"],
         )
 
-    def generate_voice_response(self, text):
-        """Generate voice response using ElevenLabs"""
-        try:
-            # Get the specified voice or use the first available voice if not found
-            if self.voice_id:
-                audio = self.elevenlabs_client.generate(
-                    text=text,
-                    voice_id=self.voice_id,
-                    model="eleven_multilingual_v2"
-                )
-            else:
-                voices = self.elevenlabs_client.voices.get_all()
-                audio = self.elevenlabs_client.generate(
-                    text=text,
-                    voice=voices.voices[0],
-                    model="eleven_multilingual_v2"
-                )
-            return audio
-        except Exception as e:
-            logger.error(f"Error generating voice response: {e}")
-            return None
-
     def say_response(self, response, gender=""):
-        """Enhanced response with gender inclusion and ElevenLabs voice."""
+        """Enhanced response with gender inclusion."""
         if gender.lower() == "male":
             response = f"{response} सर।"
         elif gender.lower() == "female":
             response = f"{response} मैम।"
-        
         logger.info(f"Agent says: {response}")
-        
-        # Generate voice using ElevenLabs
-        audio = self.generate_voice_response(response)
-        if audio:
-            self.model.speak(audio)
-        else:
-            # Fallback to default TTS if ElevenLabs fails
-            self.model.speak(response)
+        self.model.speak(response)
 
     async def gather_requirements(self):
         """Conversation flow to gather property requirements."""
