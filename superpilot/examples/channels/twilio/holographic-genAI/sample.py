@@ -56,8 +56,8 @@ def prewarm(proc: JobProcess):
             proc.userdata["elevenlabs_tts"] = elevenlabs.tts.TTS(
                 model="eleven_multilingual_v2",
                 voice=elevenlabs.tts.Voice(
-                    id="EXAVITQu4vr4xnSDxMaL", 
-                    name="Devi",
+                    id="", 
+                    name="",
                     category="general",
                     settings=elevenlabs.tts.VoiceSettings(
                         stability=0.75,
