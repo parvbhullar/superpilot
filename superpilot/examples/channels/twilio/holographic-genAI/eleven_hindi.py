@@ -25,19 +25,45 @@ logger.addHandler(handler)
 
 class WebRTCNoiseSupressor:
     def __init__(self):
-        self.vad = webrtcvad.Vad()
-        self.vad.set_mode(2)  # Moderately aggressive
+        self.vad = webrtcvad.Vad(2)  # Mode 2 for moderate aggressiveness
         logger.info("WebRTC noise suppression initialized")
 
-    def process_audio(self, audio_frame, sample_rate=16000):
+    def process_audio(self, frame: rtc.AudioFrame):
         try:
-            is_speech = self.vad.is_speech(audio_frame, sample_rate)
+            # Convert frame data to bytes
+            pcm_data = frame.data.tobytes()
+            
+            # Check if we have enough samples for VAD (10ms at 16kHz = 160 samples * 2 bytes)
+            if len(pcm_data) < 320:
+                logger.warning("Frame too short for VAD")
+                return frame
+                
+            # Process in 10ms chunks
+            chunk_size = 320  # 10ms at 16kHz
+            is_speech = False
+            
+            # Check each chunk for speech
+            for i in range(0, len(pcm_data) - chunk_size + 1, chunk_size):
+                chunk = pcm_data[i:i + chunk_size]
+                if self.vad.is_speech(chunk, 16000):
+                    is_speech = True
+                    break
+            
             if is_speech:
-                return audio_frame
-            return b'\x00' * len(audio_frame)  
+                return frame
+            else:
+                # Return silence frame of same length
+                silence = b'\x00' * len(pcm_data)
+                return rtc.AudioFrame(
+                    data=silence,
+                    sample_rate=frame.sample_rate,
+                    num_channels=frame.num_channels,
+                    samples_per_channel=frame.samples_per_channel
+                )
+                
         except Exception as e:
-            logger.error(f"Error in noise suppression: {e}")
-            return audio_frame
+            logger.error(f"Audio processing failed: {e}")
+            return frame
 
 class VoiceAssistant:
     def __init__(self, agent, noise_suppressor):
@@ -273,8 +299,8 @@ def prewarm(proc: JobProcess):
             proc.userdata["elevenlabs_tts"] = elevenlabs.tts.TTS(
                 model="eleven_multilingual_v2",
                 voice=elevenlabs.tts.Voice(
-                    id="",  
-                    name="",
+                    id="EXAVITQu4vr4xnSDxMaL",  
+                    name="Devi",
                     category="general",
                     settings=elevenlabs.tts.VoiceSettings(
                         stability=0.75,
@@ -283,6 +309,7 @@ def prewarm(proc: JobProcess):
                         use_speaker_boost=True
                     )
                 ),
+                # Removed language parameter as it is not supported by the model
                 streaming_latency=3,
                 enable_ssml_parsing=False,
                 chunk_length_schedule=[80, 120, 200, 260],

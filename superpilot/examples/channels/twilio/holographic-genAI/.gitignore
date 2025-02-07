@@ -28,7 +28,6 @@ sip-participant.json
 requirements.txt
 sip-participant.json
 renovate.json
-msgs.json
 dispatchRule.json
 renovate.json
 .env.local
