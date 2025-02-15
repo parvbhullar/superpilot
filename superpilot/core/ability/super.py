@@ -100,6 +100,7 @@ class SuperAbilityRegistry(AbilityRegistry, Configurable):
             print("Ability response", response)
             ability_action.success = True
             ability_action.message = str(response)
+            ability_action.raw_response = response
         except AbilityException as e:
             traceback.print_exc()
             self._logger.error("Error %s", str(e))

@@ -12,6 +12,7 @@ class AbilityAction(BaseModel):
     executed: bool = False
     wait_for_user: bool = False
     message: str = ""
+    raw_response: Any = None
     # result: Context = None
     # knowledge: Context = None
     # model_config = ConfigDict(arbitrary_types_allowed=True)
