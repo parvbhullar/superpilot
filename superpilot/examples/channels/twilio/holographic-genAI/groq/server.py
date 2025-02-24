@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__, static_url_path='')
 
 # LiveKit configuration - hardcoded for testing
-api_key = 'APIH2yT5t8Zrcay'
-api_secret = 'yuBQP76ZqxVVBDL4PbVZE10kDXRydKZQcCeNg2p83yG'
+api_key = os.getenv('LIVEKIT_KEY')
+api_secret = os.getenv('LIVEKIT_SECRET')
 livekit_url = 'wss://unpod-ouwdr76k.livekit.cloud'
 
 @app.route('/')
