@@ -5,7 +5,7 @@ superpilot is a library, so the preview is a CLI run of the README quickstart
 
 ```bash
 uv venv -p 3.11 .venv && . .venv/bin/activate
-uv pip install --no-deps -r preview/requirements.lock.txt
+uv pip install --no-deps -r preview/requirements.lock
 preview/run_readme_flow.sh "What is the weather in Mumbai"
 ```
 
