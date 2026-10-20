@@ -4,6 +4,8 @@ build and execute various LLM app using prompt, abilities like text summarizatio
 It leverages machine learning models from providers like OpenAI to perform these tasks. The framework consists of 
 several key components including OpenAI Provider, SimplePrompt, AbilityRegistry, and SuperTaskPilot, which are essential for smooth operation.
 
+> **Roadmap:** see [docs/ROADMAP.md](docs/ROADMAP.md) for a review of the project's current state, unmerged branch work, technical debt and the planned path to 1.0.
+
 # SuperPilot Framework - Quickstart Guide
 
 ## Table of Contents
